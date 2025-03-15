@@ -5,7 +5,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "Bi Çilingir",
-  description: "Tüm çilingirler burada. Hemen hizmetleri keşfet.",
+  description: "Yakınındaki çilingirleri bul, hemen arayın.",
 };
 
 export default function RootLayout({ children }) {
