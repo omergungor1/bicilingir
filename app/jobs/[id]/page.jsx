@@ -44,12 +44,87 @@ const styles = {
     background: 'linear-gradient(to right, #4169E1, #6495ED)',
     color: '#ffffff',
     padding: '48px 0',
+  },
+  starRating: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  star: {
+    color: '#FFD700',
+    marginRight: '2px',
   }
 };
 
-export default async function JobDetail({ params }) {
+// Örnek çilingir verileri
+const locksmithData = [
+  {
+    id: 1,
+    name: "Anahtar Usta",
+    location: "İstanbul, Kadıköy",
+    rating: 4.8,
+    reviewCount: 124,
+    services: ["Kapı Açma", "Kilit Değiştirme", "Çelik Kapı"],
+    price: "150₺ - 300₺",
+    timeAgo: "2 saat önce",
+    description: "7/24 acil kapı açma ve kilit değiştirme hizmetleri. Profesyonel ekip ile hızlı ve güvenilir çözümler sunuyoruz.",
+    phone: "0532 123 45 67",
+    workingHours: "7/24 Açık",
+    experience: "15 yıl",
+    address: "Caferağa Mah. Moda Cad. No:123, Kadıköy/İstanbul",
+    website: "www.anahtarusta.com",
+    detailedDescription: "Anahtar Usta olarak 15 yıldır İstanbul'da hizmet vermekteyiz. Profesyonel ekibimiz ve modern ekipmanlarımızla kapı açma, kilit değiştirme, çelik kapı montajı ve tamiratı gibi tüm çilingir hizmetlerini sunuyoruz. Acil durumlarda 20 dakika içinde kapınızdayız. Tüm hizmetlerimizde kalite ve müşteri memnuniyeti önceliğimizdir. Uygun fiyat garantisi veriyoruz.",
+    certificates: ["TSE Belgesi", "Mesleki Yeterlilik Belgesi", "Ustalık Belgesi"],
+    paymentMethods: ["Nakit", "Kredi Kartı", "Havale/EFT"],
+    reviews: [
+      { user: "Ahmet Y.", rating: 5, comment: "Çok hızlı geldiler ve kapımı hasarsız açtılar. Teşekkürler!", date: "2 hafta önce" },
+      { user: "Ayşe K.", rating: 4, comment: "Kilit değişimi için çağırdım, işlerini profesyonelce yaptılar.", date: "1 ay önce" },
+      { user: "Mehmet S.", rating: 5, comment: "Gece yarısı aradım, 15 dakikada geldiler. Harika hizmet!", date: "3 ay önce" }
+    ]
+  },
+  {
+    id: 2,
+    name: "Hızlı Çilingir",
+    location: "İstanbul, Beşiktaş",
+    rating: 4.6,
+    reviewCount: 98,
+    services: ["Acil Çilingir", "Oto Çilingir", "Kasa Çilingir"],
+    price: "200₺ - 350₺",
+    timeAgo: "5 saat önce",
+    description: "15 dakika içinde kapınızdayız. Oto, ev ve iş yeri için profesyonel çilingir hizmetleri."
+  },
+  {
+    id: 3,
+    name: "Güvenli Anahtar",
+    location: "İstanbul, Şişli",
+    rating: 4.9,
+    reviewCount: 156,
+    services: ["Çelik Kapı", "Kasa Çilingir", "Kilit Değiştirme"],
+    price: "180₺ - 400₺",
+    timeAgo: "1 gün önce",
+    description: "Yüksek güvenlikli kilit sistemleri ve çelik kapı uzmanı. 20 yıllık tecrübe ile hizmetinizdeyiz."
+  }
+];
+
+// Yıldız puanı gösterme fonksiyonu
+const StarRating = ({ rating }) => {
+  return (
+    <div style={styles.starRating}>
+      {[...Array(5)].map((_, i) => (
+        <span key={i} style={styles.star}>
+          {i < Math.floor(rating) ? "★" : (i < rating ? "★" : "☆")}
+        </span>
+      ))}
+      <span className="ml-1 text-gray-700">{rating}</span>
+    </div>
+  );
+};
+
+export default async function LocksmithDetail({ params }) {
   // Next.js 14'te params'ı await ile beklemek gerekiyor
-  const id = params.id;
+  const id = parseInt(params.id);
+  
+  // ID'ye göre çilingir verisini bul
+  const locksmith = locksmithData.find(item => item.id === id) || locksmithData[0];
   
   return (
     <main className="flex min-h-screen flex-col items-center">
@@ -69,17 +144,17 @@ export default async function JobDetail({ params }) {
           {/* Navbar - Orta */}
           <nav className="flex mb-4 md:mb-0">
             <ul className="flex space-x-6">
-              <li><Link href="/" className="text-white hover:text-blue-200 transition-colors">Home</Link></li>
-              <li><Link href="#" className="text-white hover:text-blue-200 transition-colors">About</Link></li>
-              <li><Link href="#" className="text-white hover:text-blue-200 transition-colors">Find Job</Link></li>
-              <li><Link href="#" className="text-white hover:text-blue-200 transition-colors">Subscribe</Link></li>
+              <li><Link href="/" className="text-white hover:text-blue-200 transition-colors">Ana Sayfa</Link></li>
+              <li><Link href="#" className="text-white hover:text-blue-200 transition-colors">Hizmetler</Link></li>
+              <li><Link href="#" className="text-white hover:text-blue-200 transition-colors">Çilingirler</Link></li>
+              <li><Link href="#" className="text-white hover:text-blue-200 transition-colors">Hakkımızda</Link></li>
             </ul>
           </nav>
 
           {/* Aksiyon Butonu - Sağ */}
           <div>
             <Button className="bg-blue-400 hover:bg-blue-500 text-white font-bold">
-              Post a Job
+              Çilingir Ol
             </Button>
           </div>
         </div>
@@ -91,7 +166,7 @@ export default async function JobDetail({ params }) {
           <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
           </svg>
-          <span>Back</span>
+          <span>Geri Dön</span>
         </Link>
       </div>
 
@@ -99,57 +174,77 @@ export default async function JobDetail({ params }) {
       <div className="container mx-auto px-4 py-6">
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="flex flex-col lg:flex-row">
-            {/* Sol Bölüm - İş Detayları */}
+            {/* Sol Bölüm - Çilingir Detayları */}
             <div className="w-full lg:w-2/3 p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-200">
               <div className="mb-6">
                 <div style={styles.companyLogo} className="mb-3">
-                  <span>TV</span>
+                  <span>{locksmith.name.substring(0, 2)}</span>
                 </div>
-                <div className="text-gray-500 mb-1">Microsoft</div>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4">Need Senior MERN Stack Developer</h1>
-                <p className="text-gray-500">İş İlanı ID: {id}</p>
+                <div className="text-gray-500 mb-1">{locksmith.location}</div>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">{locksmith.name}</h1>
+                
+                <div className="flex items-center mb-4">
+                  <StarRating rating={locksmith.rating} />
+                  <span className="ml-2 text-gray-500">({locksmith.reviewCount} yorum)</span>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {locksmith.services.map((service, index) => (
+                    <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{service}</span>
+                  ))}
+                </div>
               </div>
 
               <div className="border-t border-gray-200 pt-6 mb-6">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Description</h2>
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">Overview</h3>
+                <h2 className="text-xl font-bold text-gray-800 mb-4">Hakkında</h2>
                 <p className="text-gray-600 mb-4">
-                  We are looking for a talented Social Media Manager to join our marketing team. As a Social Media Manager, you will be responsible for developing and implementing our social media strategy to increase our online presence and improve our marketing and sales efforts. You will be working closely with the marketing and content teams to ensure brand consistency and develop engaging content for our social media platforms.
-                </p>
-                <p className="text-gray-600 mb-4">
-                  The ideal candidate should have excellent communication skills, be creative, and have experience with social media management tools. You should be able to handle multiple projects simultaneously and work well under pressure.
+                  {locksmith.detailedDescription || locksmith.description}
                 </p>
               </div>
 
               <div className="border-t border-gray-200 pt-6 mb-6">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Requirements</h2>
+                <h2 className="text-xl font-bold text-gray-800 mb-4">Hizmetler</h2>
                 <ul className="list-disc pl-5 text-gray-600 space-y-2">
-                  <li>4+ years experience as UI designer in SaaS or ecommerce</li>
-                  <li>Proficiency in Adobe Creative Suite (Illustrator, InDesign, Photoshop)</li>
-                  <li>Prototyping tools like Sketch</li>
-                  <li>HTML5, CSS3, and JavaScript skills</li>
-                  <li>Attention to detail and aesthetics</li>
-                  <li>Communication skills</li>
-                  <li>Track record of success in fast-paced environments</li>
+                  {locksmith.services.map((service, index) => (
+                    <li key={index}>{service}</li>
+                  ))}
                 </ul>
               </div>
 
-              <div className="border-t border-gray-200 pt-6 mb-6">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Skill & Experience</h2>
-                <ul className="list-disc pl-5 text-gray-600 space-y-2">
-                  <li>4+ years experience as UI designer in SaaS or ecommerce</li>
-                  <li>Proficiency in Adobe Creative Suite (Illustrator, InDesign, Photoshop)</li>
-                  <li>Prototyping tools like Sketch</li>
-                  <li>HTML5, CSS3, and JavaScript skills</li>
-                  <li>Attention to detail and aesthetics</li>
-                  <li>Communication skills</li>
-                  <li>Track record of success in fast-paced environments</li>
-                </ul>
-              </div>
+              {locksmith.certificates && (
+                <div className="border-t border-gray-200 pt-6 mb-6">
+                  <h2 className="text-xl font-bold text-gray-800 mb-4">Sertifikalar ve Belgeler</h2>
+                  <ul className="list-disc pl-5 text-gray-600 space-y-2">
+                    {locksmith.certificates.map((certificate, index) => (
+                      <li key={index}>{certificate}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {locksmith.reviews && (
+                <div className="border-t border-gray-200 pt-6 mb-6">
+                  <h2 className="text-xl font-bold text-gray-800 mb-4">Müşteri Yorumları</h2>
+                  <div className="space-y-4">
+                    {locksmith.reviews.map((review, index) => (
+                      <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="font-semibold">{review.user}</span>
+                          <div className="flex items-center">
+                            <StarRating rating={review.rating} />
+                            <span className="ml-2 text-gray-500 text-sm">{review.date}</span>
+                          </div>
+                        </div>
+                        <p className="text-gray-600">{review.comment}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="border-t border-gray-200 pt-6 mb-6">
                 <div className="flex items-center mb-4">
-                  <span className="font-semibold text-gray-700 mr-3">Share:</span>
+                  <span className="font-semibold text-gray-700 mr-3">Paylaş:</span>
                   <div className="flex space-x-2">
                     <a href="#" className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -161,9 +256,9 @@ export default async function JobDetail({ params }) {
                         <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"></path>
                       </svg>
                     </a>
-                    <a href="#" className="w-8 h-8 rounded-full bg-pink-600 flex items-center justify-center text-white">
+                    <a href="#" className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path>
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path>
                       </svg>
                     </a>
                     <a href="#" className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white">
@@ -173,47 +268,46 @@ export default async function JobDetail({ params }) {
                     </a>
                   </div>
                 </div>
-
-                <div className="mt-6">
-                  <p className="font-semibold text-gray-800 mb-1">Interested in this job?</p>
-                  <p className="text-gray-500 mb-4">100 days left to apply</p>
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-lg flex items-center">
-                    Apply Now
-                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                    </svg>
-                  </Button>
-                </div>
               </div>
 
-              {/* İlgili İşler */}
+              {/* Benzer Çilingirler */}
               <div className="border-t border-gray-200 pt-6">
-                <h2 className="text-xl font-bold text-gray-800 mb-6">Related Jobs</h2>
+                <h2 className="text-xl font-bold text-gray-800 mb-6">Benzer Çilingirler</h2>
                 <div className="space-y-4">
-                  {[1, 2, 3].map((item) => (
-                    <div key={item} style={styles.jobCard} className="hover:transform hover:translate-y-[-2px] hover:shadow-lg">
+                  {locksmithData.filter(item => item.id !== id).slice(0, 3).map((item) => (
+                    <div key={item.id} style={styles.jobCard} className="hover:transform hover:translate-y-[-2px] hover:shadow-lg">
                       <div className="flex flex-col md:flex-row md:items-center">
                         <div className="mb-4 md:mb-0 md:mr-4">
                           <div style={styles.smallCompanyLogo}>
-                            <span>TV</span>
+                            <span>{item.name.substring(0, 2)}</span>
                           </div>
                         </div>
                         
                         <div className="flex-grow">
-                          <h3 className="text-lg font-bold text-gray-800 mb-1">Frontend Developer</h3>
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="text-lg font-bold text-gray-800 mb-1">{item.name}</h3>
+                              <p className="text-gray-600 mb-2">{item.location}</p>
+                            </div>
+                            <div className="flex items-center">
+                              <StarRating rating={item.rating} />
+                              <span className="ml-2 text-gray-500">({item.reviewCount})</span>
+                            </div>
+                          </div>
                           <div className="flex flex-wrap gap-2 mb-2">
-                            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Full Time</span>
-                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">$5k-$7k</span>
-                            <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">2 days ago</span>
+                            {item.services.slice(0, 2).map((service, index) => (
+                              <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{service}</span>
+                            ))}
+                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{item.price}</span>
                           </div>
                           <p className="text-gray-500 text-sm mb-3 line-clamp-2">
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                            {item.description}
                           </p>
                         </div>
                         
                         <div className="mt-4 md:mt-0 md:ml-4">
-                          <Link href={`/jobs/${item}`} className="text-blue-600 hover:text-blue-800 flex items-center">
-                            View Job
+                          <Link href={`/jobs/${item.id}`} className="text-blue-600 hover:text-blue-800 flex items-center">
+                            Detaylar
                             <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
                             </svg>
@@ -226,38 +320,60 @@ export default async function JobDetail({ params }) {
               </div>
             </div>
 
-            {/* Sağ Bölüm - Özet Detaylar */}
+            {/* Sağ Bölüm - İletişim ve Özet */}
             <div className="w-full lg:w-1/3 p-6 lg:p-8">
               <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 mb-6">
-                Apply for this position
+                Hemen Ara: {locksmith.phone || "0532 XXX XX XX"}
               </Button>
 
               <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">Job Details</h3>
+                <h3 className="text-lg font-bold text-gray-800 mb-4">Çilingir Bilgileri</h3>
                 
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Date Posted:</span>
-                    <span className="text-gray-800 font-medium">Apr 04, 2023</span>
+                    <span className="text-gray-600">Konum:</span>
+                    <span className="text-gray-800 font-medium">{locksmith.location}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Job Type:</span>
-                    <span className="text-gray-800 font-medium">Full Time</span>
+                    <span className="text-gray-600">Çalışma Saatleri:</span>
+                    <span className="text-gray-800 font-medium">{locksmith.workingHours || "7/24"}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Job Role:</span>
-                    <span className="text-gray-800 font-medium">Product Designer</span>
+                    <span className="text-gray-600">Tecrübe:</span>
+                    <span className="text-gray-800 font-medium">{locksmith.experience || "10+ yıl"}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Salary:</span>
-                    <span className="text-gray-800 font-medium">$5k - 7k</span>
+                    <span className="text-gray-600">Fiyat Aralığı:</span>
+                    <span className="text-gray-800 font-medium">{locksmith.price}</span>
                   </div>
+                  {locksmith.paymentMethods && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Ödeme Yöntemleri:</span>
+                      <span className="text-gray-800 font-medium">{locksmith.paymentMethods.join(", ")}</span>
+                    </div>
+                  )}
                 </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-6 mb-6">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">Adres</h3>
+                <p className="text-gray-700 mb-4">{locksmith.address || `${locksmith.location} bölgesinde hizmet vermektedir.`}</p>
+                <div className="bg-gray-200 h-48 rounded-lg flex items-center justify-center text-gray-500">
+                  Harita Görünümü
+                </div>
+              </div>
+
+              <div className="bg-yellow-100 rounded-lg p-6 mb-6">
+                <h3 className="text-lg font-bold text-gray-800 mb-2">Acil Durum mu?</h3>
+                <p className="text-gray-700 mb-4">Kapınız kilitli kaldıysa veya acil çilingir hizmetine ihtiyacınız varsa hemen arayın!</p>
+                <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold">
+                  Acil Çilingir Çağır
+                </Button>
               </div>
 
               {/* Reklam Alanı */}
               <div className="bg-gray-200 h-64 rounded-lg flex items-center justify-center text-gray-500 text-center p-4">
-                You can place ads 300x250
+                Reklam Alanı (300x250)
               </div>
             </div>
           </div>
@@ -267,15 +383,15 @@ export default async function JobDetail({ params }) {
       {/* Bülten Bölümü */}
       <section style={styles.newsletterSection} className="w-full mt-12">
         <div className="container mx-auto px-4 py-16 text-center">
-          <h2 className="text-3xl font-bold mb-4">Subscribe Newsletter</h2>
+          <h2 className="text-3xl font-bold mb-4">Bültenimize Abone Olun</h2>
           <p className="text-lg mb-8 max-w-2xl mx-auto">
-            Sign up to our newsletter to get $10 off your first order, as well as news of our latest offers and product releases.
+            Kampanyalardan, indirimlerden ve yeni hizmetlerimizden haberdar olmak için bültenimize abone olun.
           </p>
           
           <div className="max-w-md mx-auto flex">
             <Input 
               type="email" 
-              placeholder="Your email address" 
+              placeholder="E-posta adresiniz" 
               className="bg-white text-gray-800 rounded-l-lg w-full"
             />
             <Button className="bg-white text-blue-600 font-bold py-2 px-6 rounded-r-lg">
