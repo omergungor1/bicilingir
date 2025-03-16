@@ -162,7 +162,7 @@ export default async function Home() {
       {/* Hero Bölümü */}
       <Hero 
         title="Profesyonel Çilingir Hizmeti" 
-        description="Kapınız kilitli kaldı? Anahtarınızı kaybettiniz? Endişelenmeyin, Bi Çilingir yanınızda!"
+        description="Kapınız kilitli mi kaldı? Anahtarınızı mı kaybettiniz? Endişelenmeyin, Bi Çilingir yanınızda!"
       >
         <SearchForm />
       </Hero>

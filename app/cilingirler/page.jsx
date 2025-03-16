@@ -105,9 +105,6 @@ export default function CilingirlerPage() {
       >
         <div className="flex flex-col gap-4">
           <SearchForm />
-          <Button className="bg-white text-blue-600 hover:bg-gray-100 font-bold text-lg px-8 py-4 mt-4 self-center">
-            Hemen Başvur
-          </Button>
         </div>
       </Hero>
 
