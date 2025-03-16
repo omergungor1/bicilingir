@@ -1,7 +1,10 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import Hero from "@/components/Hero";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import SearchForm from "@/components/SearchForm";
 
 const services = [
   {
@@ -109,7 +112,9 @@ export default function HizmetlerPage() {
       <Hero 
         title="Çilingir Hizmetlerimiz" 
         description="Bi Çilingir olarak, kapsamlı çilingir hizmetleri sunuyoruz. Acil durumlardan rutin bakımlara kadar tüm ihtiyaçlarınız için profesyonel çözümler."
-      />
+      >
+        <SearchForm />
+      </Hero>
 
       {/* Hizmetler Listesi */}
       <section className="w-full py-16 px-4 bg-gray-50">

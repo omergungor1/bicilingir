@@ -1,7 +1,10 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import Hero from "@/components/Hero";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import SearchForm from "@/components/SearchForm";
 
 const teamMembers = [
   {
@@ -75,7 +78,9 @@ export default function HakkimizdaPage() {
       <Hero 
         title="Hakkımızda" 
         description="Bi Çilingir, çilingir hizmetlerini daha erişilebilir, güvenilir ve şeffaf hale getirmek için kurulmuş bir platformdur."
-      />
+      >
+        <SearchForm />
+      </Hero>
 
       {/* Hikayemiz Bölümü */}
       <section className="w-full py-16 px-4 bg-white">
@@ -83,10 +88,10 @@ export default function HakkimizdaPage() {
           <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">Hikayemiz</h2>
           <div className="prose prose-lg mx-auto">
             <p className="text-gray-600 mb-4">
-              Bi Çilingir, 2020 yılında Ali Yılmaz tarafından kuruldu. Ali, bir gün evinin anahtarını kaybettiğinde güvenilir bir çilingir bulmakta zorlandı. Saatlerce araştırma yaptıktan sonra, sonunda bir çilingir bulabildi, ancak bu süreç oldukça stresli ve zaman alıcıydı.
+              Bi Çilingir, 2020 yılında kuruldu. Ömer, bir gün evinin anahtarını kaybettiğinde güvenilir bir çilingir bulmakta zorlandı. Saatlerce araştırma yaptıktan sonra, sonunda bir çilingir bulabildi, ancak bu süreç oldukça stresli ve zaman alıcıydı.
             </p>
             <p className="text-gray-600 mb-4">
-              Bu deneyimden sonra, Ali çilingir hizmetlerini daha erişilebilir hale getirmek için bir platform oluşturmaya karar verdi. Böylece Bi Çilingir doğdu - insanların güvenilir, profesyonel ve uygun fiyatlı çilingirlere hızlıca ulaşabilecekleri bir platform.
+              Bu deneyimden sonra, Ömer çilingir hizmetlerini daha erişilebilir hale getirmek için bir platform oluşturmaya karar verdi. Böylece Bi Çilingir doğdu - insanların güvenilir, profesyonel ve uygun fiyatlı çilingirlere hızlıca ulaşabilecekleri bir platform.
             </p>
             <p className="text-gray-600 mb-4">
               Bugün, Bi Çilingir Türkiye'nin 81 ilinde hizmet veren 500'den fazla profesyonel çilingiri bir araya getiriyor. Platformumuz sayesinde, müşteriler ihtiyaç duydukları çilingir hizmetine sadece birkaç tıkla ulaşabiliyorlar.

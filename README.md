@@ -1,4 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Bi Çilingir Projesi
+
+Bu proje, Türkiye'nin en büyük çilingir pazaryeri olan Bi Çilingir'in web sitesini içerir.
+
+## Kurulum
+
+1. Projeyi klonlayın:
+```bash
+git clone <repo-url>
+cd bi-cilingir
+```
+
+2. Bağımlılıkları yükleyin:
+```bash
+npm install
+```
+
+3. Geliştirme sunucusunu başlatın:
+```bash
+npm run dev
+```
+
+4. Tarayıcınızda [http://localhost:3000](http://localhost:3000) adresine gidin.
+
+## Özellikler
+
+- Türkiye il ve ilçe bazlı adres arama
+- Çilingir hizmetleri arama
+- Responsive tasarım
+
+## Adres Arama Sistemi
+
+Bu projede harici bir API kullanmak yerine, Türkiye'deki tüm il ve ilçeleri içeren statik bir veri kaynağı kullanılmaktadır. Kullanıcılar adres arama alanına yazdıkça, sistem otomatik olarak eşleşen il ve ilçeleri filtreleyerek gösterir.
+
+Adres arama sistemi şu özelliklere sahiptir:
+- Türkiye'deki 81 il ve tüm ilçeleri içerir
+- Kullanıcı girişine göre gerçek zamanlı filtreleme
+- İl veya ilçe bazında arama yapabilme
+- Seçilen adresin tam formatını otomatik oluşturma
+
+## Lisans
+
+Bu proje [MIT lisansı](LICENSE) altında lisanslanmıştır.
 
 ## Getting Started
 

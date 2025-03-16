@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Hero from "@/components/Hero";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import SearchForm from "@/components/SearchForm";
 
 const benefits = [
   {
@@ -101,9 +103,12 @@ export default function CilingirlerPage() {
         title="Çilingir Ağımıza Katılın" 
         description="Türkiye'nin en büyük çilingir ağına katılarak işinizi büyütün, daha fazla müşteriye ulaşın ve kazancınızı artırın."
       >
-        <Button className="bg-white text-blue-600 hover:bg-gray-100 font-bold text-lg px-8 py-4">
-          Hemen Başvur
-        </Button>
+        <div className="flex flex-col gap-4">
+          <SearchForm />
+          <Button className="bg-white text-blue-600 hover:bg-gray-100 font-bold text-lg px-8 py-4 mt-4 self-center">
+            Hemen Başvur
+          </Button>
+        </div>
       </Hero>
 
       {/* Avantajlar Bölümü */}

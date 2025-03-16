@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import Hero from "@/components/Hero";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import SearchForm from "@/components/SearchForm";
 
 const styles = {
   accentButton: {
@@ -162,26 +164,7 @@ export default async function Home() {
         title="Profesyonel Çilingir Hizmeti" 
         description="Kapınız kilitli kaldı? Anahtarınızı kaybettiniz? Endişelenmeyin, Bi Çilingir yanınızda!"
       >
-        <div className="mt-8">
-          <div className="flex flex-col md:flex-row">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
-              </div>
-              <Input 
-                type="text" 
-                placeholder="Adresinizi girin (Mahalle, İlçe, Şehir)" 
-                className="pl-10 py-3 bg-white text-gray-800 border-0 rounded-l-lg focus:ring-2 focus:ring-blue-500 w-full"
-              />
-            </div>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-r-lg">
-              Çilingir Bul
-            </Button>
-          </div>
-        </div>
+        <SearchForm />
       </Hero>
 
       {/* Çilingir Listesi Bölümü */}
