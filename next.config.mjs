@@ -1,11 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Font optimizasyonunu devre dışı bırakalım
-  optimizeFonts: false,
   // Statik dosyaların yolunu düzeltelim
   poweredByHeader: false,
   reactStrictMode: true,
-  swcMinify: true,
   // CSS sorunlarını çözmek için ek yapılandırmalar
   experimental: {
     optimizeCss: {
@@ -32,4 +29,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default nextConfig; 
