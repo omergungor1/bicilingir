@@ -1,17 +1,20 @@
-import { Inter } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"] });
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 export const metadata = {
   title: "Bi Çilingir",
-  description: "Yakınındaki çilingirleri bul, hemen arayın.",
+  description: "Türkiye'nin en büyük çilingir pazaryeri",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="tr">
-      <body className={inter.className}>{children}</body>
+      <body className="font-sans">
+        <Header />
+        {children}
+        <Footer />
+      </body>
     </html>
   );
 } 
