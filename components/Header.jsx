@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -25,10 +26,8 @@ export default function Header() {
         {/* Logo */}
         <div className="flex items-center justify-between w-full md:w-auto">
           <div className="flex items-center">
-            <div className="w-10 h-10 mr-2 bg-white rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12.65 10A5.99 5.99 0 0 0 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6a5.99 5.99 0 0 0 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" />
-              </svg>
+            <div className="w-10 h-10 mr-2 rounded-full flex items-center justify-center">
+              <Image src="/logo.png" alt="Bi Çilingir" width={100} height={100} />
             </div>
             <Link href="/" className="text-xl font-bold text-white">Bi Çilingir</Link>
           </div>
@@ -59,7 +58,7 @@ export default function Header() {
             <li>
               <Link 
                 href="/" 
-                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/' ? ' border-2 md:border-0 border-white md:border-b-2 border-white' : ''}`}
+                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/' ? ' border-b-2 border-white' : ''}`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Ana Sayfa
@@ -68,7 +67,7 @@ export default function Header() {
             <li>
               <Link 
                 href="/hizmetler" 
-                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/hizmetler' ? '  border-2 md:border-0 border-white md:border-b-2 border-white' : ''}`}
+                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/hizmetler' ? '  border-b-2 border-white' : ''}`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Hizmetler
@@ -77,7 +76,7 @@ export default function Header() {
             <li>
               <Link 
                 href="/cilingirler" 
-                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/cilingirler' ? '  border-2 md:border-0 border-white md:border-b-2 border-white' : ''}`}
+                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/cilingirler' ? '  border-b-2 border-white' : ''}`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Çilingirler
@@ -86,10 +85,19 @@ export default function Header() {
             <li>
               <Link 
                 href="/hakkimizda" 
-                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/hakkimizda' ? '  border-2 md:border-0 border-white md:border-b-2 border-white' : ''}`}
+                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/hakkimizda' ? '  border-b-2 border-white' : ''}`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Hakkımızda
+              </Link>
+            </li>
+            <li>
+              <Link 
+                href="/iletisim" 
+                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/iletisim' ? '  border-b-2 border-white' : ''}`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                İletişim
               </Link>
             </li>
           </ul>

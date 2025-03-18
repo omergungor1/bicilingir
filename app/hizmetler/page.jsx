@@ -147,15 +147,17 @@ export default function HizmetlerPage() {
       </section>
 
       {/* Acil Durum Bölümü */}
-      <section className="w-full py-16 px-4 bg-red-600 text-white">
+      <section className="w-full py-16 px-4 bg-blue-600 text-white">
         <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">Acil Çilingir Hizmeti</h2>
+          <h2 className="text-3xl font-bold mb-4">Hızlı Çilingir Hizmeti</h2>
           <p className="text-xl max-w-3xl mx-auto mb-8">
-            Kapınız kilitli kaldı? Anahtarınızı kaybettiniz? Endişelenmeyin, 7/24 acil çilingir hizmetimiz ile 15 dakika içinde yanınızdayız.
+            Kapınız kilitli kaldı? Anahtarınızı kaybettiniz? Endişelenmeyin, 7/24 hızlı çilingir hizmeti ile en kısa sürede yanınızdayız.
           </p>
-          <Button className="bg-white text-red-600 hover:bg-gray-100 font-bold text-lg px-8 py-4">
-            <Link href="/">Acil Çilingir Çağır</Link>
+          <Link href="/">
+          <Button className="bg-white text-blue-600 hover:bg-gray-100 font-bold text-lg px-8 py-4 cursor-pointer">
+            Hızlı Çilingir Bul
           </Button>
+          </Link>
         </div>
       </section>
     </main>

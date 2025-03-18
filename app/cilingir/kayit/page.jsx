@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
-import Link from "next/link";
 import { SelectableCard } from "../../../components/ui/selectable-card";
+import  turkiyeIlIlce  from "../../../data/turkiye-il-ilce";
 
 export default function CilingirKayit() {
   const [activeStep, setActiveStep] = useState(1);
@@ -35,7 +35,6 @@ export default function CilingirKayit() {
   });
 
   // İlleri temsil eden örnek veri
-  const iller = ["İstanbul", "Ankara", "İzmir", "Bursa", "Antalya"];
   
   // Seçilen ile göre ilçeler (örnek veri)
   const ilceler = {
@@ -280,7 +279,7 @@ export default function CilingirKayit() {
                       required
                     >
                       <option value="">İl seçin</option>
-                      {iller.map((il) => (
+                      {Object.keys(turkiyeIlIlce).map((il) => (
                         <option key={il} value={il}>{il}</option>
                       ))}
                     </select>
@@ -296,7 +295,7 @@ export default function CilingirKayit() {
                       disabled={!formData.il}
                     >
                       <option value="">İlçe seçin</option>
-                      {formData.il && ilceler[formData.il].map((ilce) => (
+                      {turkiyeIlIlce[formData.il] && turkiyeIlIlce[formData.il].map((ilce) => (
                         <option key={ilce} value={ilce}>{ilce}</option>
                       ))}
                     </select>
@@ -355,7 +354,7 @@ export default function CilingirKayit() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {ilceler[formData.il].map((ilce) => (
+                    {turkiyeIlIlce[formData.il] && turkiyeIlIlce[formData.il].map((ilce) => (
                       <SelectableCard
                         key={ilce}
                         selected={formData.hizmetBolgeleri.includes(ilce)}
@@ -693,11 +692,11 @@ export default function CilingirKayit() {
                 </div>
                 <h2 className="text-2xl font-bold mb-4">Başvurunuz Alındı!</h2>
                 <p className="text-gray-600 mb-8">
-                  Başvurunuz inceleme için ekibimize iletilmiştir. En kısa sürede size dönüş yapacağız. Başvurunuzun durumunu panel üzerinden takip edebilirsiniz. Bunun için size mail ile gönderdiğimiz şifre ve mail adresiniz ile giriş yapabilirsiniz. Giriş yapmak için <Link className="text-blue-500" href="cilingir/login">buraya</Link> tıklayınız.
+                  Başvurunuz inceleme için ekibimize iletilmiştir. En kısa sürede size dönüş yapacağız. Başvurunuzun durumunu panel üzerinden takip edebilirsiniz. Bunun için size mail ile gönderdiğimiz şifre ve mail adresiniz ile giriş yapabilirsiniz.
                 </p>
                 <div className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3 justify-center">
                   <Button variant="outline" type="button" onClick={() => window.location.href = "/"}>Ana Sayfaya Dön</Button>
-                  <Button type="button" onClick={() => window.location.href = "/cilingir"}>Panele Git</Button>
+                  <Button type="button" onClick={() => window.location.href = "/cilingir/login"}>Panele Git</Button>
                 </div>
               </div>
             )}

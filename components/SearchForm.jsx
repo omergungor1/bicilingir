@@ -4,8 +4,10 @@ import React, { useState } from "react";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import AdresArama from "./AdresArama";
+import { useRouter } from "next/navigation";
 
-export default function SearchForm() {
+export default function SearchForm({ onSearch }) {
+  const router = useRouter();
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [selectedService, setSelectedService] = useState("");
 
@@ -20,18 +22,25 @@ export default function SearchForm() {
   };
 
   const handleSearch = () => {
-    if (!selectedPlace) {
-      alert("Lütfen bir adres girin");
-      return;
-    }
-
-    console.log("Arama yapılıyor:", {
-      adres: selectedPlace.formatted_address,
-      hizmet: selectedService
-    });
+    // Eğer ana sayfada değilsek, ana sayfaya yönlendir
+    const isHomePage = window.location.pathname === "/" || window.location.pathname === "";
     
-    // Burada arama işlemini gerçekleştirebilirsiniz
-    // Örneğin: router.push(`/search?address=${encodeURIComponent(selectedPlace.formatted_address)}&service=${selectedService}`);
+    if (!isHomePage) {
+      // URL'ye parametre ekleyerek ana sayfaya yönlendir
+      const params = new URLSearchParams();
+      if (selectedPlace) {
+        params.append("location", selectedPlace.formatted_address);
+      }
+      if (selectedService) {
+        params.append("service", selectedService);
+      }
+      
+      const searchParams = params.toString() ? `?${params.toString()}` : "";
+      router.push(`/${searchParams}`);
+    } else {
+      // Ana sayfadaysak, doğrudan arama fonksiyonunu çağır
+      if (onSearch) onSearch();
+    }
   };
 
   return (
