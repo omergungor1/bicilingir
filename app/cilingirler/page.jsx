@@ -102,8 +102,12 @@ export default function CilingirlerPage() {
         title="Çilingir Ağımıza Katılın" 
         description="Türkiye'nin en büyük çilingir ağına katılarak işinizi büyütün, daha fazla müşteriye ulaşın ve kazancınızı artırın."
       >
-        <div className="flex flex-col gap-4">
-          <SearchForm />
+        <div className="w-full max-w-4xl mx-auto">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="w-full">
+              <SearchForm />
+            </div>
+          </div>
         </div>
       </Hero>
 
@@ -119,6 +123,25 @@ export default function CilingirlerPage() {
                 <p className="text-gray-600">{benefit.description}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+
+      {/* Login Section */}
+      <section className="w-full py-16 px-4 bg-blue-600 text-white">
+        <div className="container mx-auto text-center flex flex-col items-center">
+          <h2 className="text-3xl font-bold mb-4">Çilingir misiniz?</h2>
+          <p className="text-xl max-w-3xl mx-auto mb-8">
+            Kayıt ol veya giriş yap
+          </p>
+          <div className="flex space-x-3">
+            <Link href="/cilingir/login" className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded transition-colors">
+              Giriş Yap
+            </Link>
+            <Link href="/cilingir/kayit" className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors">
+              Kayıt Ol
+            </Link>
           </div>
         </div>
       </section>

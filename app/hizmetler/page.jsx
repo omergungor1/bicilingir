@@ -113,7 +113,13 @@ export default function HizmetlerPage() {
         title="Çilingir Hizmetlerimiz" 
         description="Bi Çilingir olarak, kapsamlı çilingir hizmetleri sunuyoruz. Acil durumlardan rutin bakımlara kadar tüm ihtiyaçlarınız için profesyonel çözümler."
       >
-        <SearchForm />
+                <div className="w-full max-w-4xl mx-auto">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="w-full">
+              <SearchForm />
+            </div>
+          </div>
+        </div>
       </Hero>
 
       {/* Hizmetler Listesi */}

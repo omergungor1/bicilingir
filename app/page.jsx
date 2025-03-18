@@ -170,10 +170,16 @@ export default function Home() {
       
       {/* Hero Bölümü */}
       <Hero 
-        title="Profesyonel Çilingir Hizmeti" 
+        title="En yakın çilingirleri bulun" 
         description="Kapınız kilitli mi kaldı? Anahtarınızı mı kaybettiniz? Endişelenmeyin, Bi Çilingir yanınızda!"
       >
-        <SearchForm onSearch={handleSearch} />
+        <div className="w-full max-w-4xl mx-auto">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="w-full">
+              <SearchForm onSearch={handleSearch} />
+            </div>
+          </div>
+        </div>
       </Hero>
 
       {/* Loading Göstergesi */}
