@@ -63,12 +63,30 @@ const locksmithData = [
     location: "İstanbul, Kadıköy",
     rating: 4.8,
     reviewCount: 124,
-    services: ["Kapı Açma", "Kilit Değiştirme", "Çelik Kapı"],
+    services: [
+      { name: "Kapı Açma"},
+      { name: "Kilit Değiştirme"},
+      { name: "Çelik Kapı"}
+    ],
     price: "150₺ - 300₺",
     timeAgo: "2 saat önce",
     description: "7/24 acil kapı açma ve kilit değiştirme hizmetleri. Profesyonel ekip ile hızlı ve güvenilir çözümler sunuyoruz.",
     phone: "0532 123 45 67",
-    workingHours: "7/24 Açık",
+    workingHours: {
+      Pazartesi: { open: "09:00", close: "18:00", isOpen: true },
+      Salı: { open: "09:00", close: "18:00", isOpen: true },
+      Çarşamba: { open: "09:00", close: "18:00", isOpen: true },
+      Perşembe: { open: "09:00", close: "18:00", isOpen: true },
+      Cuma: { open: "09:00", close: "18:00", isOpen: true },
+      Cumartesi: { open: "10:00", close: "16:00", isOpen: true },
+      Pazar: { open: "Kapalı", close: "Kapalı", isOpen: false }
+    },
+    images: [
+      "/images/dukkan1.jpg",
+      "/images/dukkan2.jpg",
+      "/images/dukkan3.jpg",
+      "/images/dukkan4.jpg"
+    ],
     experience: "15 yıl",
     address: "Caferağa Mah. Moda Cad. No:123, Kadıköy/İstanbul",
     website: "www.anahtarusta.com",
@@ -87,10 +105,29 @@ const locksmithData = [
     location: "İstanbul, Beşiktaş",
     rating: 4.6,
     reviewCount: 98,
-    services: ["Acil Çilingir", "Oto Çilingir", "Kasa Çilingir"],
+    services: [
+      { name: "Acil Çilingir" },
+      { name: "Oto Çilingir" },
+      { name: "Kasa Çilingir" }
+    ],
     price: "200₺ - 350₺",
     timeAgo: "5 saat önce",
-    description: "15 dakika içinde kapınızdayız. Oto, ev ve iş yeri için profesyonel çilingir hizmetleri."
+    description: "15 dakika içinde kapınızdayız. Oto, ev ve iş yeri için profesyonel çilingir hizmetleri.",
+    workingHours: {
+      Pazartesi: { open: "00:00", close: "24:00", isOpen: true },
+      Salı: { open: "00:00", close: "24:00", isOpen: true },
+      Çarşamba: { open: "00:00", close: "24:00", isOpen: true },
+      Perşembe: { open: "00:00", close: "24:00", isOpen: true },
+      Cuma: { open: "00:00", close: "24:00", isOpen: true },
+      Cumartesi: { open: "00:00", close: "24:00", isOpen: true },
+      Pazar: { open: "00:00", close: "24:00", isOpen: true }
+    },
+    images: [
+      "/images/dukkan1.jpg",
+      "/images/dukkan2.jpg",
+      "/images/dukkan3.jpg",
+      "/images/dukkan4.jpg"
+    ]
   },
   {
     id: 3,
@@ -98,10 +135,29 @@ const locksmithData = [
     location: "İstanbul, Şişli",
     rating: 4.9,
     reviewCount: 156,
-    services: ["Çelik Kapı", "Kasa Çilingir", "Kilit Değiştirme"],
+    services: [
+      { name: "Çelik Kapı" },
+      { name: "Kasa Çilingir" },
+      { name: "Kilit Değiştirme" }
+    ],
     price: "180₺ - 400₺",
     timeAgo: "1 gün önce",
-    description: "Yüksek güvenlikli kilit sistemleri ve çelik kapı uzmanı. 20 yıllık tecrübe ile hizmetinizdeyiz."
+    description: "Yüksek güvenlikli kilit sistemleri ve çelik kapı uzmanı. 20 yıllık tecrübe ile hizmetinizdeyiz.",
+    workingHours: {
+      Pazartesi: { open: "08:00", close: "20:00", isOpen: true },
+      Salı: { open: "08:00", close: "20:00", isOpen: true },
+      Çarşamba: { open: "08:00", close: "20:00", isOpen: true },
+      Perşembe: { open: "08:00", close: "20:00", isOpen: true },
+      Cuma: { open: "08:00", close: "20:00", isOpen: true },
+      Cumartesi: { open: "09:00", close: "18:00", isOpen: true },
+      Pazar: { open: "10:00", close: "16:00", isOpen: true }
+    },
+    images: [
+      "/images/dukkan1.jpg",
+      "/images/dukkan2.jpg",
+      "/images/dukkan3.jpg",
+      "/images/dukkan4.jpg"
+    ]
   }
 ];
 
@@ -158,7 +214,7 @@ export default async function LocksmithDetail({ params }) {
                 
                 <div className="flex flex-wrap gap-2 mb-4">
                   {locksmith.services.map((service, index) => (
-                    <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{service}</span>
+                    <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{service.name}</span>
                   ))}
                 </div>
               </div>
@@ -174,7 +230,7 @@ export default async function LocksmithDetail({ params }) {
                 <h2 className="text-xl font-bold text-gray-800 mb-4">Hizmetler</h2>
                 <ul className="list-disc pl-5 text-gray-600 space-y-2">
                   {locksmith.services.map((service, index) => (
-                    <li key={index}>{service}</li>
+                    <li key={index}>{service.name}</li>
                   ))}
                 </ul>
               </div>
@@ -264,7 +320,7 @@ export default async function LocksmithDetail({ params }) {
                           </div>
                           <div className="flex flex-wrap gap-2 mb-2">
                             {item.services.slice(0, 2).map((service, index) => (
-                              <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{service}</span>
+                              <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{service.name}</span>
                             ))}
                             <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{item.price}</span>
                           </div>
@@ -294,32 +350,36 @@ export default async function LocksmithDetail({ params }) {
                 Hemen Ara: {locksmith.phone || "0532 XXX XX XX"}
               </Button>
 
+              {/* Çalışma Saatleri */}
+              {locksmith.workingHours && (
+                <div className="bg-gray-50 rounded-lg p-6 mb-6">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">Çalışma Saatleri</h3>
+                  <div className="space-y-2">
+                    {Object.entries(locksmith.workingHours).map(([day, hours]) => (
+                      <div key={day} className="flex justify-between items-center">
+                        <span className="text-gray-600">{day}</span>
+                        <span className={`text-sm font-medium ${hours.isOpen ? 'text-green-600' : 'text-red-500'}`}>
+                          {hours.isOpen ? `${hours.open} - ${hours.close}` : 'Kapalı'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Resim Galerisi */}
               <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">Çilingir Bilgileri</h3>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Konum:</span>
-                    <span className="text-gray-800 font-medium">{locksmith.location}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Çalışma Saatleri:</span>
-                    <span className="text-gray-800 font-medium">{locksmith.workingHours || "7/24"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tecrübe:</span>
-                    <span className="text-gray-800 font-medium">{locksmith.experience || "10+ yıl"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Fiyat Aralığı:</span>
-                    <span className="text-gray-800 font-medium">{locksmith.price}</span>
-                  </div>
-                  {locksmith.paymentMethods && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Ödeme Yöntemleri:</span>
-                      <span className="text-gray-800 font-medium">{locksmith.paymentMethods.join(", ")}</span>
+                <h3 className="text-lg font-bold text-gray-800 mb-4">Galeri</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {locksmith.images.map((image, index) => (
+                    <div key={index} className="aspect-square relative overflow-hidden rounded-lg">
+                      <img
+                        src={image}
+                        alt={`${locksmith.name} - Resim ${index + 1}`}
+                        className="object-cover w-full h-full hover:scale-110 transition-transform duration-300"
+                      />
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
 
@@ -339,69 +399,10 @@ export default async function LocksmithDetail({ params }) {
                 </Button>
               </div>
 
-              {/* Reklam Alanı */}
-              <div className="bg-gray-200 h-64 rounded-lg flex items-center justify-center text-gray-500 text-center p-4">
-                Reklam Alanı (300x250)
-              </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Bülten Bölümü */}
-      <section style={styles.newsletterSection} className="w-full mt-12">
-        <div className="container mx-auto px-4 py-16 text-center">
-          <h2 className="text-3xl font-bold mb-4">Bültenimize Abone Olun</h2>
-          <p className="text-lg mb-8 max-w-2xl mx-auto">
-            Kampanyalardan, indirimlerden ve yeni hizmetlerimizden haberdar olmak için bültenimize abone olun.
-          </p>
-          
-          <div className="max-w-md mx-auto flex">
-            <Input 
-              type="email" 
-              placeholder="E-posta adresiniz" 
-              className="bg-white text-gray-800 rounded-l-lg w-full"
-            />
-            <Button className="bg-white text-blue-600 font-bold py-2 px-6 rounded-r-lg">
-              SUBSCRIBE
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer Bölümü */}
-      <footer className="w-full bg-gray-800 text-white py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-            <div className="flex items-center mb-4 md:mb-0">
-              <div className="w-10 h-10 mr-2 bg-white rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12.65 10A5.99 5.99 0 0 0 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6a5.99 5.99 0 0 0 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" />
-                </svg>
-              </div>
-              <span className="text-xl font-bold">Bi Çilingir</span>
-            </div>
-            
-            <nav>
-              <ul className="flex flex-wrap justify-center gap-6">
-                <li><Link href="/" className="hover:text-blue-300 transition-colors">Home</Link></li>
-                <li><Link href="#" className="hover:text-blue-300 transition-colors">About</Link></li>
-                <li><Link href="#" className="hover:text-blue-300 transition-colors">Find Job</Link></li>
-                <li><Link href="#" className="hover:text-blue-300 transition-colors">Contact</Link></li>
-              </ul>
-            </nav>
-            
-            <div className="flex gap-4 mt-4 md:mt-0">
-              <Link href="#" className="hover:text-blue-300 transition-colors">Terms of Service</Link>
-              <Link href="#" className="hover:text-blue-300 transition-colors">Privacy Policy</Link>
-            </div>
-          </div>
-          
-          <div className="text-center text-gray-400 text-sm">
-            <p>© 2023 JS Template. All Right Reserved.</p>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 } 

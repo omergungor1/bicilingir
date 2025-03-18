@@ -137,6 +137,12 @@ export default function Home() {
   const [showResults, setShowResults] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedLocksmith, setSelectedLocksmith] = useState(null);
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [toast, setToast] = useState({ show: false, message: "", type: "" });
 
   const handleSearch = () => {
     setIsLoading(true);
@@ -157,6 +163,36 @@ export default function Home() {
     }, [searchParams]);
 
     return null;
+  };
+
+  const handleCallLocksmith = (locksmith) => {
+    setSelectedLocksmith(locksmith);
+    setShowRatingModal(true);
+  };
+
+  const handleRatingSubmit = (e) => {
+    e.preventDefault();
+    // Burada API'ye gönderilecek
+    console.log(`Değerlendirme: ${rating} yıldız, Yorum: ${comment}, Çilingir: ${selectedLocksmith.name}`);
+    
+    // Form temizle
+    setRating(0);
+    setComment("");
+    
+    // Modal kapat
+    setShowRatingModal(false);
+    
+    // Toast bildirimini göster
+    setToast({
+      show: true,
+      message: "Değerlendirmeniz için teşekkür ederiz!",
+      type: "success"
+    });
+    
+    // 3 saniye sonra toast'ı kapat
+    setTimeout(() => {
+      setToast({ show: false, message: "", type: "" });
+    }, 3000);
   };
 
   return (
@@ -331,7 +367,10 @@ export default function Home() {
                         </div>
                         
                         <div className="mt-4 md:mt-0 md:ml-4 flex flex-col gap-2">
-                          <Button className="bg-blue-600 hover:bg-blue-700 text-white w-full">
+                          <Button 
+                            className="bg-blue-600 hover:bg-blue-700 text-white w-full"
+                            onClick={() => handleCallLocksmith(locksmith)}
+                          >
                             Ara
                           </Button>
                           <Button className="bg-white text-blue-600 border border-blue-600 hover:bg-blue-50 w-full">
@@ -444,6 +483,127 @@ export default function Home() {
           </Button>
         </div>
       </section>
+
+      {/* Derecelendirme Modalı */}
+      {showRatingModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+            <button 
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+              onClick={() => setShowRatingModal(false)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            <div className="mb-6 text-center">
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Çilingir Hizmet Değerlendirmesi</h3>
+              <p className="text-gray-600">
+                {selectedLocksmith?.name} çilingiri için değerlendirmenizi paylaşın
+              </p>
+            </div>
+            
+            <form onSubmit={handleRatingSubmit}>
+              <div className="mb-6">
+                <div className="text-center mb-2">
+                  <p className="text-gray-700 mb-2">Hizmet kalitesini puanlayın</p>
+                  <div className="flex justify-center space-x-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setRating(star)}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        className="text-3xl focus:outline-none"
+                      >
+                        {star <= (hoverRating || rating) ? (
+                          <span className="text-yellow-400">★</span>
+                        ) : (
+                          <span className="text-gray-300">☆</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {rating === 1 && "Çok Kötü"}
+                    {rating === 2 && "Kötü"}
+                    {rating === 3 && "Orta"}
+                    {rating === 4 && "İyi"}
+                    {rating === 5 && "Çok İyi"}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <label htmlFor="comment" className="block text-gray-700 mb-2">
+                  Yorumunuz
+                </label>
+                <textarea
+                  id="comment"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows="4"
+                  placeholder="Deneyiminizi paylaşın (opsiyonel)"
+                ></textarea>
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <Button 
+                  type="button" 
+                  className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                  onClick={() => setShowRatingModal(false)}
+                >
+                  İptal
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={rating === 0}
+                >
+                  Gönder
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Bildirimi */}
+      {toast.show && (
+        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg flex items-center ${
+          toast.type === "success" ? "bg-green-500" : 
+          toast.type === "error" ? "bg-red-500" : 
+          "bg-blue-500"
+        } text-white transition-all duration-300 transform translate-y-0`}>
+          {toast.type === "success" && (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+          {toast.type === "error" && (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
+          {toast.type === "info" && (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          )}
+          <span>{toast.message}</span>
+          <button 
+            onClick={() => setToast({ show: false, message: "", type: "" })}
+            className="ml-3 text-white"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
     </main>
   );
 } 
