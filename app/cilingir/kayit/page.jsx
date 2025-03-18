@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
-import { Checkbox } from "../../../components/ui/checkbox";
+import Link from "next/link";
+import { SelectableCard } from "../../../components/ui/selectable-card";
 
 export default function CilingirKayit() {
   const [activeStep, setActiveStep] = useState(1);
@@ -20,6 +21,13 @@ export default function CilingirKayit() {
     tecrube: "",
     hizmetBolgeleri: [],
     hizmetler: [],
+    kimlikBelgesi: null,
+    ruhsat: null,
+    isletmeBelgesi: null,
+    digerBelgeler: []
+  });
+
+  const [previewUrls, setPreviewUrls] = useState({
     kimlikBelgesi: null,
     ruhsat: null,
     isletmeBelgesi: null,
@@ -99,34 +107,61 @@ export default function CilingirKayit() {
         ...formData,
         [fieldName]: file
       });
+      
+      // Dosya önizleme URL'sini oluştur
+      const fileUrl = URL.createObjectURL(file);
+      setPreviewUrls({
+        ...previewUrls,
+        [fieldName]: fileUrl
+      });
     }
   };
 
   const handleMultipleFileChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length > 0) {
+      // Dosyaları form verisine ekle
       setFormData({
         ...formData,
         digerBelgeler: [...formData.digerBelgeler, ...files]
+      });
+      
+      // Önizleme URL'lerini oluştur
+      const newPreviewUrls = files.map(file => URL.createObjectURL(file));
+      setPreviewUrls({
+        ...previewUrls,
+        digerBelgeler: [...previewUrls.digerBelgeler, ...newPreviewUrls]
       });
     }
   };
 
   const removeDiğerBelge = (index) => {
+    // Dosyayı form verisinden kaldır
     const yeniBelgeler = [...formData.digerBelgeler];
     yeniBelgeler.splice(index, 1);
     setFormData({
       ...formData,
       digerBelgeler: yeniBelgeler
     });
+    
+    // Önizleme URL'sini kaldır
+    const yeniPreviewUrls = [...previewUrls.digerBelgeler];
+    URL.revokeObjectURL(yeniPreviewUrls[index]); // Önizleme URL'sini serbest bırak
+    yeniPreviewUrls.splice(index, 1);
+    setPreviewUrls({
+      ...previewUrls,
+      digerBelgeler: yeniPreviewUrls
+    });
   };
 
   const nextStep = () => {
     setActiveStep(activeStep + 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const prevStep = () => {
     setActiveStep(activeStep - 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSubmit = (e) => {
@@ -135,6 +170,7 @@ export default function CilingirKayit() {
     console.log("Form verileri:", formData);
     // Başvuru tamamlandı mesajını göster
     setActiveStep(5);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -320,14 +356,14 @@ export default function CilingirKayit() {
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {ilceler[formData.il].map((ilce) => (
-                      <div key={ilce} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`ilce-${ilce}`}
-                          checked={formData.hizmetBolgeleri.includes(ilce)}
-                          onCheckedChange={() => handleIlceChange(ilce)}
-                        />
-                        <label htmlFor={`ilce-${ilce}`} className="text-sm">{ilce}</label>
-                      </div>
+                      <SelectableCard
+                        key={ilce}
+                        selected={formData.hizmetBolgeleri.includes(ilce)}
+                        onClick={() => handleIlceChange(ilce)}
+                        className="p-4"
+                      >
+                        <span className="text-sm font-medium">{ilce}</span>
+                      </SelectableCard>
                     ))}
                   </div>
                 )}
@@ -348,14 +384,14 @@ export default function CilingirKayit() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {hizmetListesi.map((hizmet) => (
-                    <div key={hizmet.id} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`hizmet-${hizmet.id}`}
-                        checked={formData.hizmetler.includes(hizmet.id)}
-                        onCheckedChange={() => handleHizmetChange(hizmet.id)}
-                      />
-                      <label htmlFor={`hizmet-${hizmet.id}`} className="text-sm">{hizmet.name}</label>
-                    </div>
+                    <SelectableCard
+                      key={hizmet.id}
+                      selected={formData.hizmetler.includes(hizmet.id)}
+                      onClick={() => handleHizmetChange(hizmet.id)}
+                      className="p-4"
+                    >
+                      <span className="text-sm font-medium">{hizmet.name}</span>
+                    </SelectableCard>
                   ))}
                 </div>
                 
@@ -381,13 +417,38 @@ export default function CilingirKayit() {
                     </p>
                     <div className="flex items-center space-x-4">
                       <label className="block w-full">
-                        <div className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center cursor-pointer hover:bg-gray-50">
-                          <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          <p className="mt-2 text-sm text-gray-500">
-                            {formData.kimlikBelgesi ? formData.kimlikBelgesi.name : "Dosya seçin veya buraya sürükleyin"}
-                          </p>
+                        <div className={`border-2 border-dashed ${formData.kimlikBelgesi ? 'border-blue-400' : 'border-gray-300'} rounded-md p-6 text-center cursor-pointer hover:bg-gray-50 relative`}>
+                          {!formData.kimlikBelgesi ? (
+                            <>
+                              <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                              <p className="mt-2 text-sm text-gray-500">
+                                Dosya seçin veya buraya sürükleyin
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              {formData.kimlikBelgesi.type.startsWith('image/') ? (
+                                <div className="flex flex-col items-center">
+                                  <img 
+                                    src={previewUrls.kimlikBelgesi} 
+                                    alt="Kimlik belgesi önizleme" 
+                                    className="max-h-40 object-contain mb-3 rounded"
+                                  />
+                                  <p className="text-sm text-gray-500">{formData.kimlikBelgesi.name}</p>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center">
+                                  <svg className="w-12 h-12 text-blue-500 mb-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                                  </svg>
+                                  <p className="text-sm text-blue-600 font-medium">PDF dosyası</p>
+                                  <p className="text-sm text-gray-500 mt-1">{formData.kimlikBelgesi.name}</p>
+                                </div>
+                              )}
+                            </>
+                          )}
                           <input 
                             type="file"
                             className="hidden"
@@ -401,7 +462,11 @@ export default function CilingirKayit() {
                         <Button 
                           type="button" 
                           variant="outline" 
-                          onClick={() => setFormData({...formData, kimlikBelgesi: null})}
+                          onClick={() => {
+                            URL.revokeObjectURL(previewUrls.kimlikBelgesi);
+                            setFormData({...formData, kimlikBelgesi: null});
+                            setPreviewUrls({...previewUrls, kimlikBelgesi: null});
+                          }}
                           className="shrink-0"
                         >
                           Kaldır
@@ -417,13 +482,38 @@ export default function CilingirKayit() {
                     </p>
                     <div className="flex items-center space-x-4">
                       <label className="block w-full">
-                        <div className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center cursor-pointer hover:bg-gray-50">
-                          <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          <p className="mt-2 text-sm text-gray-500">
-                            {formData.ruhsat ? formData.ruhsat.name : "Dosya seçin veya buraya sürükleyin"}
-                          </p>
+                        <div className={`border-2 border-dashed ${formData.ruhsat ? 'border-blue-400' : 'border-gray-300'} rounded-md p-6 text-center cursor-pointer hover:bg-gray-50 relative`}>
+                          {!formData.ruhsat ? (
+                            <>
+                              <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                              <p className="mt-2 text-sm text-gray-500">
+                                Dosya seçin veya buraya sürükleyin
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              {formData.ruhsat.type.startsWith('image/') ? (
+                                <div className="flex flex-col items-center">
+                                  <img 
+                                    src={previewUrls.ruhsat} 
+                                    alt="Ruhsat önizleme" 
+                                    className="max-h-40 object-contain mb-3 rounded"
+                                  />
+                                  <p className="text-sm text-gray-500">{formData.ruhsat.name}</p>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center">
+                                  <svg className="w-12 h-12 text-blue-500 mb-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                                  </svg>
+                                  <p className="text-sm text-blue-600 font-medium">PDF dosyası</p>
+                                  <p className="text-sm text-gray-500 mt-1">{formData.ruhsat.name}</p>
+                                </div>
+                              )}
+                            </>
+                          )}
                           <input 
                             type="file"
                             className="hidden"
@@ -436,7 +526,11 @@ export default function CilingirKayit() {
                         <Button 
                           type="button" 
                           variant="outline" 
-                          onClick={() => setFormData({...formData, ruhsat: null})}
+                          onClick={() => {
+                            URL.revokeObjectURL(previewUrls.ruhsat);
+                            setFormData({...formData, ruhsat: null});
+                            setPreviewUrls({...previewUrls, ruhsat: null});
+                          }}
                           className="shrink-0"
                         >
                           Kaldır
@@ -452,13 +546,38 @@ export default function CilingirKayit() {
                     </p>
                     <div className="flex items-center space-x-4">
                       <label className="block w-full">
-                        <div className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center cursor-pointer hover:bg-gray-50">
-                          <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          <p className="mt-2 text-sm text-gray-500">
-                            {formData.isletmeBelgesi ? formData.isletmeBelgesi.name : "Dosya seçin veya buraya sürükleyin"}
-                          </p>
+                        <div className={`border-2 border-dashed ${formData.isletmeBelgesi ? 'border-blue-400' : 'border-gray-300'} rounded-md p-6 text-center cursor-pointer hover:bg-gray-50 relative`}>
+                          {!formData.isletmeBelgesi ? (
+                            <>
+                              <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                              <p className="mt-2 text-sm text-gray-500">
+                                Dosya seçin veya buraya sürükleyin
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              {formData.isletmeBelgesi.type.startsWith('image/') ? (
+                                <div className="flex flex-col items-center">
+                                  <img 
+                                    src={previewUrls.isletmeBelgesi} 
+                                    alt="İşletme belgesi önizleme" 
+                                    className="max-h-40 object-contain mb-3 rounded"
+                                  />
+                                  <p className="text-sm text-gray-500">{formData.isletmeBelgesi.name}</p>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center">
+                                  <svg className="w-12 h-12 text-blue-500 mb-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                                  </svg>
+                                  <p className="text-sm text-blue-600 font-medium">PDF dosyası</p>
+                                  <p className="text-sm text-gray-500 mt-1">{formData.isletmeBelgesi.name}</p>
+                                </div>
+                              )}
+                            </>
+                          )}
                           <input 
                             type="file"
                             className="hidden"
@@ -472,7 +591,11 @@ export default function CilingirKayit() {
                         <Button 
                           type="button" 
                           variant="outline" 
-                          onClick={() => setFormData({...formData, isletmeBelgesi: null})}
+                          onClick={() => {
+                            URL.revokeObjectURL(previewUrls.isletmeBelgesi);
+                            setFormData({...formData, isletmeBelgesi: null});
+                            setPreviewUrls({...previewUrls, isletmeBelgesi: null});
+                          }}
                           className="shrink-0"
                         >
                           Kaldır
@@ -509,18 +632,42 @@ export default function CilingirKayit() {
                     {formData.digerBelgeler.length > 0 && (
                       <div className="mt-4">
                         <h4 className="text-sm font-medium mb-2">Yüklenen Dosyalar</h4>
-                        <ul className="space-y-2">
+                        <ul className="grid grid-cols-2 md:grid-cols-3 gap-3">
                           {formData.digerBelgeler.map((belge, index) => (
-                            <li key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
-                              <span className="text-sm truncate max-w-[250px]">{belge.name}</span>
-                              <Button 
-                                type="button" 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => removeDiğerBelge(index)}
-                              >
-                                Kaldır
-                              </Button>
+                            <li key={index} className="bg-gray-50 p-3 rounded-md border border-gray-200">
+                              <div className="flex flex-col h-full">
+                                {belge.type?.startsWith('image/') && previewUrls.digerBelgeler[index] && (
+                                  <div className="mb-2 flex-1 flex items-center justify-center">
+                                    <img 
+                                      src={previewUrls.digerBelgeler[index]} 
+                                      alt={`Belge ${index + 1} önizleme`} 
+                                      className="max-h-28 max-w-full object-contain rounded-md"
+                                    />
+                                  </div>
+                                )}
+                                {belge.type === 'application/pdf' && (
+                                  <div className="mb-2 flex-1 flex flex-col items-center justify-center text-blue-600">
+                                    <svg className="w-10 h-10 mb-1" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                                    </svg>
+                                    <span className="text-sm">PDF dosyası</span>
+                                  </div>
+                                )}
+                                <div className="flex items-center justify-between mt-auto">
+                                  <span className="text-xs truncate max-w-[120px]">{belge.name}</span>
+                                  <Button 
+                                    type="button" 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => removeDiğerBelge(index)}
+                                    className="h-6 w-6 p-0 rounded-full"
+                                  >
+                                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                  </Button>
+                                </div>
+                              </div>
                             </li>
                           ))}
                         </ul>
@@ -546,7 +693,7 @@ export default function CilingirKayit() {
                 </div>
                 <h2 className="text-2xl font-bold mb-4">Başvurunuz Alındı!</h2>
                 <p className="text-gray-600 mb-8">
-                  Başvurunuz inceleme için ekibimize iletilmiştir. En kısa sürede size dönüş yapacağız. Başvurunuzun durumunu panel üzerinden takip edebilirsiniz.
+                  Başvurunuz inceleme için ekibimize iletilmiştir. En kısa sürede size dönüş yapacağız. Başvurunuzun durumunu panel üzerinden takip edebilirsiniz. Bunun için size mail ile gönderdiğimiz şifre ve mail adresiniz ile giriş yapabilirsiniz. Giriş yapmak için <Link className="text-blue-500" href="cilingir/login">buraya</Link> tıklayınız.
                 </p>
                 <div className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3 justify-center">
                   <Button variant="outline" type="button" onClick={() => window.location.href = "/"}>Ana Sayfaya Dön</Button>

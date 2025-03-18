@@ -325,11 +325,6 @@ export default async function Home() {
                 ))}
               </div>
               
-              <div className="mt-8 text-center">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3">
-                  DAHA FAZLA GÖSTER
-                </Button>
-              </div>
             </div>
           </div>
         </div>

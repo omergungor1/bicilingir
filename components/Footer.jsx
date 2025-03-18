@@ -17,10 +17,9 @@ export default function Footer() {
           <div>
             <h3 className="text-xl font-bold mb-4">Hizmetlerimiz</h3>
             <ul className="space-y-2 text-gray-300">
-              <li><Link href="/hizmetler" className="hover:text-white">Kapı Açma</Link></li>
-              <li><Link href="/hizmetler" className="hover:text-white">Kilit Değişimi</Link></li>
-              <li><Link href="/hizmetler" className="hover:text-white">Oto Çilingir</Link></li>
-              <li><Link href="/hizmetler" className="hover:text-white">Kasa Çilingir</Link></li>
+              <li><Link href="/cilingirler" className="hover:text-white">Çilingir Bul</Link></li>
+              <li><Link href="/cilingir/kayit" className="hover:text-white">Çilingir Kayıt</Link></li>
+              <li><Link href="/hakkimizda" className="hover:text-white">Hakkımızda</Link></li>
             </ul>
           </div>
           <div>
