@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import turkiyeIlIlce from "@/data/turkiye-il-ilce";
+import turkiyeIlIlce from "../data/turkiye-il-ilce";
 
 export default function AdresArama({ onPlaceSelect, placeholder, className }) {
   const [inputValue, setInputValue] = useState("");

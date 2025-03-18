@@ -1,10 +1,10 @@
 import React from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import Hero from "@/components/Hero";
-import SearchForm from "@/components/SearchForm";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Checkbox } from "../components/ui/checkbox";
+import Hero from "../components/Hero";
+import SearchForm from "../components/SearchForm";
 
 const styles = {
   accentButton: {
