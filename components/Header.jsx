@@ -59,7 +59,7 @@ export default function Header() {
             <li>
               <Link 
                 href="/" 
-                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/' ? ' border-2 md:border-0 border-white rounded-lg md:border-b-2 border-white' : ''}`}
+                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/' ? ' border-2 md:border-0 border-white md:border-b-2 border-white' : ''}`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Ana Sayfa
@@ -68,7 +68,7 @@ export default function Header() {
             <li>
               <Link 
                 href="/hizmetler" 
-                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/hizmetler' ? '  border-2 md:border-0 border-white rounded-lg  md:border-b-2 border-white' : ''}`}
+                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/hizmetler' ? '  border-2 md:border-0 border-white md:border-b-2 border-white' : ''}`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Hizmetler
@@ -77,7 +77,7 @@ export default function Header() {
             <li>
               <Link 
                 href="/cilingirler" 
-                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/cilingirler' ? '  border-2 md:border-0 border-white rounded-lg  md:border-b-2 border-white' : ''}`}
+                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/cilingirler' ? '  border-2 md:border-0 border-white md:border-b-2 border-white' : ''}`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Çilingirler
@@ -86,7 +86,7 @@ export default function Header() {
             <li>
               <Link 
                 href="/hakkimizda" 
-                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/hakkimizda' ? '  border-2 md:border-0 border-white rounded-lg  md:border-b-2 border-white' : ''}`}
+                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/hakkimizda' ? '  border-2 md:border-0 border-white md:border-b-2 border-white' : ''}`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Hakkımızda
