@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import Hero from "@/components/Hero";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SearchForm from "@/components/SearchForm";
 
 const styles = {
@@ -34,11 +33,6 @@ const styles = {
     justifyContent: 'center',
     color: '#ffffff',
     fontWeight: 'bold',
-  },
-  newsletterSection: {
-    background: 'linear-gradient(to right, #4169E1, #6495ED)',
-    color: '#ffffff',
-    padding: '48px 0',
   },
   starRating: {
     display: 'flex',
@@ -341,37 +335,16 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Acil Durum Bölümü */}
+      {/* Çilingir Lazım Bölümü */}
       <section className="w-full bg-yellow-400 py-12 px-4">
         <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4 text-gray-800">Acil Durumda mısınız?</h2>
+          <h2 className="text-3xl font-bold mb-4 text-gray-800">Çilingir mi lazım?</h2>
           <p className="text-lg mb-8 max-w-2xl mx-auto text-gray-800">
             7/24 hizmet veren çilingir ağımız ile en yakın çilingire hemen ulaşın.
           </p>
           <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-4 text-lg rounded-lg shadow-lg">
-            Acil Çilingir Çağır
+            Hemen Çilingir Çağır
           </Button>
-        </div>
-      </section>
-
-      {/* Bülten Bölümü */}
-      <section style={styles.newsletterSection} className="w-full">
-        <div className="container mx-auto px-4 py-16 text-center">
-          <h2 className="text-3xl font-bold mb-4">Bültenimize Abone Olun</h2>
-          <p className="text-lg mb-8 max-w-2xl mx-auto">
-            Kampanyalardan, indirimlerden ve yeni hizmetlerimizden haberdar olmak için bültenimize abone olun.
-          </p>
-          
-          <div className="max-w-md mx-auto flex">
-            <Input 
-              type="email" 
-              placeholder="E-posta adresiniz" 
-              className="bg-white text-gray-800 rounded-l-lg w-full"
-            />
-            <Button className="bg-white text-blue-600 font-bold py-2 px-6 rounded-r-lg">
-              ABONE OL
-            </Button>
-          </div>
         </div>
       </section>
     </main>

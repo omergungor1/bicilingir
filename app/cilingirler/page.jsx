@@ -1,10 +1,9 @@
 import React from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import Hero from "@/components/Hero";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import SearchForm from "@/components/SearchForm";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import Hero from "../../components/Hero";
+import SearchForm from "../../components/SearchForm";
 
 const benefits = [
   {
@@ -21,9 +20,9 @@ const benefits = [
   },
   {
     id: 3,
-    title: "Kolay Ödeme",
-    icon: "💰",
-    description: "Güvenli ve hızlı ödeme sistemi ile ödemelerinizi zamanında alın. Nakit veya kredi kartı ile ödeme seçenekleri."
+    title: "Kolay Yönetim Paneli",
+    icon: "👨‍💼",
+    description: "Kolay yönetim paneli ile online profilinizi kolayca yönetin. Siz işinize odaklanın, biz kalan işleri halledelim."
   },
   {
     id: 4,
@@ -59,12 +58,12 @@ const steps = [
   {
     id: 3,
     title: "Onay Bekleyin",
-    description: "Ekibimiz belgelerinizi kontrol edecek ve profilinizi onaylayacaktır."
+    description: "Ekibimiz belgelerinizi kontrol edecek ve en kısa sürede profilinizi onaylayacaktır."
   },
   {
     id: 4,
     title: "İşleri Kabul Edin",
-    description: "Onaylanan profiliniz ile size gelen iş tekliflerini kabul edin ve çalışmaya başlayın."
+    description: "Onaylanan profiliniz ile size gelen çağrıları kabul edin ve çalışmaya başlayın."
   }
 ];
 
@@ -177,50 +176,19 @@ export default function CilingirlerPage() {
         </div>
       </section>
 
-      {/* Kayıt Formu */}
+
+      {/* CTA Bölümü */}
       <section className="w-full py-16 px-4 bg-blue-600 text-white">
-        <div className="container mx-auto">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-8">Hemen Kayıt Olun</h2>
-            <p className="text-center mb-8">
-              Bi Çilingir ağına katılmak için aşağıdaki formu doldurun. Ekibimiz en kısa sürede sizinle iletişime geçecektir.
-            </p>
-            <div className="bg-white rounded-lg p-8 shadow-lg">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label className="block text-gray-700 mb-2">Ad Soyad</label>
-                  <Input type="text" placeholder="Ad Soyad" className="w-full" />
-                </div>
-                <div>
-                  <label className="block text-gray-700 mb-2">Telefon</label>
-                  <Input type="tel" placeholder="0555 123 4567" className="w-full" />
-                </div>
-                <div>
-                  <label className="block text-gray-700 mb-2">E-posta</label>
-                  <Input type="email" placeholder="ornek@mail.com" className="w-full" />
-                </div>
-                <div>
-                  <label className="block text-gray-700 mb-2">Şehir</label>
-                  <Input type="text" placeholder="İstanbul" className="w-full" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-gray-700 mb-2">Hizmet Verdiğiniz Bölgeler</label>
-                  <Input type="text" placeholder="Kadıköy, Üsküdar, Beşiktaş" className="w-full" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-gray-700 mb-2">Sunduğunuz Hizmetler</label>
-                  <Input type="text" placeholder="Kapı Açma, Kilit Değişimi, Oto Çilingir" className="w-full" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-gray-700 mb-2">Tecrübeniz</label>
-                  <Input type="text" placeholder="5 yıl" className="w-full" />
-                </div>
-              </div>
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3">
-                Başvuruyu Gönder
-              </Button>
-            </div>
-          </div>
+        <div className="container mx-auto text-center">
+          <h2 className="text-3xl font-bold mb-4">Hemen Bi Çilingir Ağına Katılın</h2>
+          <p className="text-xl max-w-3xl mx-auto mb-8">
+            Türkiye'nin en büyük çilingir ağının bir parçası olun, işinizi büyütün ve kazancınızı artırın.
+          </p>
+          <Link href="/cilingir/kayit">
+          <Button className="bg-white text-blue-600 hover:bg-gray-100 font-bold text-lg px-8 py-4 cursor-pointer">
+            Şimdi Başvur
+          </Button>
+          </Link>
         </div>
       </section>
 
@@ -244,7 +212,7 @@ export default function CilingirlerPage() {
             <div className="bg-white rounded-lg p-6 shadow-md">
               <h3 className="text-xl font-bold mb-2 text-gray-800">Ödemeler nasıl yapılıyor?</h3>
               <p className="text-gray-600">
-                Ödemeler, müşteriden doğrudan size yapılır. Müşteri, hizmet bedelini nakit veya kredi kartı ile ödeyebilir. Bi Çilingir, her tamamlanan iş için küçük bir komisyon alır.
+                Ödemeler, müşteriden doğrudan size yapılır. Müşteri, hizmet bedelini nakit veya kredi kartı ile sizin tercihinize göre ödeyebilir. Bi Çilingir, sadece müşteri ile çilingir arasında bağlantı kurar ve reklam ücreti alır.
               </p>
             </div>
             <div className="bg-white rounded-lg p-6 shadow-md">
@@ -257,16 +225,25 @@ export default function CilingirlerPage() {
         </div>
       </section>
 
-      {/* CTA Bölümü */}
-      <section className="w-full py-16 px-4 bg-blue-600 text-white">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">Hemen Bi Çilingir Ağına Katılın</h2>
-          <p className="text-xl max-w-3xl mx-auto mb-8">
-            Türkiye'nin en büyük çilingir ağının bir parçası olun, işinizi büyütün ve kazancınızı artırın.
+
+      {/* Bülten Bölümü */}
+      <section className="w-full bg-gradient-to-r from-[#4169E1] to-[#6495ED] text-white py-16">
+        <div className="container mx-auto px-4 py-16 text-center">
+          <h2 className="text-3xl font-bold mb-4">Bültenimize Abone Olun</h2>
+          <p className="text-lg mb-8 max-w-2xl mx-auto">
+            Kampanyalardan, indirimlerden ve yeni hizmetlerimizden haberdar olmak için çilingirler için özenle hazırladığımız bültenimize abone olun. Güncel haberleri kaçırmayın!
           </p>
-          <Button className="bg-white text-blue-600 hover:bg-gray-100 font-bold text-lg px-8 py-4">
-            Şimdi Başvur
-          </Button>
+          
+          <div className="max-w-md mx-auto flex gap-2">
+            <Input 
+              type="email" 
+              placeholder="E-posta adresiniz" 
+              className="bg-white text-gray-800 rounded-l-lg w-full"
+            />
+            <Button className="bg-white text-blue-600 font-bold py-2 px-6 rounded-r-lg cursor-pointer">
+              ABONE OL
+            </Button>
+          </div>
         </div>
       </section>
     </main>

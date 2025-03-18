@@ -1,10 +1,8 @@
 import React from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import Hero from "@/components/Hero";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import SearchForm from "@/components/SearchForm";
+import { Button } from "../../components/ui/button";
+import Hero from "../../components/Hero";
+import SearchForm from "../../components/SearchForm";
 
 const teamMembers = [
   {
