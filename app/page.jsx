@@ -7,6 +7,7 @@ import { Button } from "../components/ui/button";
 import { Checkbox } from "../components/ui/checkbox";
 import Hero from "../components/Hero";
 import SearchForm from "../components/SearchForm";
+import { useToast } from "../components/ToastContext";
 
 const styles = {
   accentButton: {
@@ -142,7 +143,9 @@ export default function Home() {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
-  const [toast, setToast] = useState({ show: false, message: "", type: "" });
+  
+  // Toast context hook
+  const { showToast } = useToast();
 
   const handleSearch = () => {
     setIsLoading(true);
@@ -183,16 +186,7 @@ export default function Home() {
     setShowRatingModal(false);
     
     // Toast bildirimini göster
-    setToast({
-      show: true,
-      message: "Değerlendirmeniz için teşekkür ederiz!",
-      type: "success"
-    });
-    
-    // 3 saniye sonra toast'ı kapat
-    setTimeout(() => {
-      setToast({ show: false, message: "", type: "" });
-    }, 3000);
+    showToast("Değerlendirmeniz için teşekkür ederiz!", "success", 3000);
   };
 
   return (
@@ -568,40 +562,6 @@ export default function Home() {
               </div>
             </form>
           </div>
-        </div>
-      )}
-
-      {/* Toast Bildirimi */}
-      {toast.show && (
-        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg flex items-center ${
-          toast.type === "success" ? "bg-green-500" : 
-          toast.type === "error" ? "bg-red-500" : 
-          "bg-blue-500"
-        } text-white transition-all duration-300 transform translate-y-0`}>
-          {toast.type === "success" && (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          )}
-          {toast.type === "error" && (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          )}
-          {toast.type === "info" && (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          )}
-          <span>{toast.message}</span>
-          <button 
-            onClick={() => setToast({ show: false, message: "", type: "" })}
-            className="ml-3 text-white"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
         </div>
       )}
     </main>
