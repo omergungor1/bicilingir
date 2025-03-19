@@ -5,14 +5,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Checkbox } from "../../components/ui/checkbox";
-import { Info, Phone, Star, Eye, PhoneCall, Instagram } from "lucide-react";
+import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X } from "lucide-react";
 import { useToast } from "../../components/ToastContext";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function CilingirPanel() {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [activeFilter, setActiveFilter] = useState("all");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [rocketBalance, setRocketBalance] = useState(1500); // Örnek roket bakiyesi
   const [dailyRockets, setDailyRockets] = useState({
     Pazartesi: 10,
@@ -93,12 +95,30 @@ export default function CilingirPanel() {
   };
 
   return (
-    <div className="container mx-auto py-10 px-2">
-      <h1 className="text-3xl font-bold mb-8">Çilingir Yönetim Paneli</h1>
+    <div className="container mx-auto pb-10 px-2">
+      <div className="md:hidden sticky top-2 flex justify-between items-center mb-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg">
+        <div className="flex items-center space-x-2">
+          <Image src="/logo.png" alt="Bi Çilingir" width={40} height={40} />
+          <div>
+            <h1 className="text-xl md:text-3xl font-bold">Bi Çilingir</h1>
+            <p className="text-sm">Yönetim Paneli</p>
+          </div>
+        </div>
+        <button 
+          className="md:hidden p-2 rounded-md bg-blue-50 text-blue-600"
+          onClick={() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setMobileMenuOpen(!mobileMenuOpen)}
+          }
+        >
+          {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
+      </div>
       
+      <h1 className="hidden md:block text-xl md:text-3xl font-bold my-6">Bi Çilingir Yönetim Paneli</h1>
       <div className="grid grid-cols-12 gap-6">
-        {/* Sidebar */}
-        <div className="col-span-12 md:col-span-3">
+        {/* Sidebar - Desktop */}
+        <div className={`md:col-span-3 col-span-12 ${mobileMenuOpen ? 'block' : 'hidden md:block'}`}>
           <Card className="sticky top-4">
             <CardContent className="p-0">
               <div className="p-4 border-b">
@@ -116,7 +136,11 @@ export default function CilingirPanel() {
               </div>
               <nav className="flex flex-col p-2">
                 <button 
-                  onClick={() => setActiveTab("dashboard")}
+                  onClick={() => {
+                    setActiveTab("dashboard");
+                    setMobileMenuOpen(false);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                   className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "dashboard" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -126,7 +150,11 @@ export default function CilingirPanel() {
                 </button>
                 
                 <button 
-                  onClick={() => setActiveTab("profile")}
+                  onClick={() => {
+                    setActiveTab("profile");
+                    setMobileMenuOpen(false);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                   className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "profile" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -136,7 +164,11 @@ export default function CilingirPanel() {
                 </button>
                 
                 <button 
-                  onClick={() => setActiveTab("services")}
+                  onClick={() => {
+                    setActiveTab("services");
+                    setMobileMenuOpen(false);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                   className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "services" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -146,7 +178,11 @@ export default function CilingirPanel() {
                 </button>
                 
                 <button 
-                  onClick={() => setActiveTab("jobs")}
+                  onClick={() => {
+                    setActiveTab("jobs");
+                    setMobileMenuOpen(false);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                   className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "jobs" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -156,7 +192,11 @@ export default function CilingirPanel() {
                 </button>
                 
                 <button 
-                  onClick={() => setActiveTab("reviews")}
+                  onClick={() => {
+                    setActiveTab("reviews");
+                    setMobileMenuOpen(false);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                   className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "reviews" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -166,7 +206,11 @@ export default function CilingirPanel() {
                 </button>
 
                 <button 
-                  onClick={() => setActiveTab("social")}
+                  onClick={() => {
+                    setActiveTab("social");
+                    setMobileMenuOpen(false);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                   className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "social" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -176,7 +220,11 @@ export default function CilingirPanel() {
                 </button>
                 
                 <button 
-                  onClick={() => setActiveTab("advertising")}
+                  onClick={() => {
+                    setActiveTab("advertising");
+                    setMobileMenuOpen(false);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                   className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "advertising" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -186,7 +234,11 @@ export default function CilingirPanel() {
                 </button>
                 
                 <button 
-                  onClick={() => setActiveTab("settings")}
+                  onClick={() => {
+                    setActiveTab("settings");
+                    setMobileMenuOpen(false);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                   className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "settings" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -201,7 +253,7 @@ export default function CilingirPanel() {
                 <Link href="/cilingir/login">
                   <button 
                     onClick={() => {/* Güvenli çıkış işlemi */}}
-                    className="flex items-center space-x-3 p-3 rounded-lg text-left text-red-600 hover:bg-red-50 transition-colors"
+                    className="flex items-center space-x-3 p-3 rounded-lg text-left text-red-600 hover:bg-red-50 transition-colors w-full"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -369,9 +421,9 @@ export default function CilingirPanel() {
                               )}
                             </div>
                             <div className="flex-grow">
-                              <div className="flex justify-between items-start">
+                              <div className="flex md:justify-between items-start md:items-center md:flex-row flex-col justify-between">
                                 <h5 className="font-medium text-gray-900">{item.title}</h5>
-                                <span className="text-sm text-gray-500 flex items-center">
+                                <span className="text-sm text-gray-500 flex items-center md:mt-0 mt-2">
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                   </svg>
@@ -395,7 +447,10 @@ export default function CilingirPanel() {
                   </div>
                   <div className="mt-4 text-center">
                     <Button 
-                    onClick={() => {setActiveTab("jobs")}}
+                    onClick={() => {
+                      setActiveTab("jobs")
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
                     variant="outline" className="text-blue-600 border-blue-600 hover:bg-blue-50">
                       Tüm İşlemleri Görüntüle
                     </Button>
@@ -456,7 +511,7 @@ export default function CilingirPanel() {
                     <h4 className="font-medium mb-4">Çalışma Saatleri</h4>
                     <div className="space-y-4">
                       {["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"].map((day) => (
-                        <div key={day} className="flex items-center justify-between border p-3 rounded-md bg-gray-50">
+                        <div key={day} className="flex md:items-center items-start md:flex-row flex-col justify-between border p-3 rounded-md bg-gray-50">
                           <div className="flex items-center space-x-3">
                             <Checkbox 
                               id={`workday-${day}`} 
@@ -475,7 +530,7 @@ export default function CilingirPanel() {
                               {day}
                             </label>
                           </div>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2 md:mt-0 mt-2">
                             <Input 
                               defaultValue="09:00" 
                               disabled={!workDaysOpen[day]}
@@ -497,7 +552,11 @@ export default function CilingirPanel() {
                   </div>
                   
                   <div className="pt-4">
-                    <Button>Değişiklikleri Kaydet</Button>
+                    <Button
+                      onClick={() => {
+                        showToast("Profil bilgileri kaydedildi", "success");
+                      }}
+                    >Değişiklikleri Kaydet</Button>
                   </div>
                 </div>
               </CardContent>
@@ -585,15 +644,11 @@ export default function CilingirPanel() {
               </CardHeader>
               <CardContent>
                 <div className="flex justify-between items-center mb-6">
-                  <div className="flex space-x-2">
+                  <div className="flex space-x-2 w-full overflow-x-auto scrollbar-hide ">
                     <Button variant="outline" className={`${activeFilter === 'all' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => setActiveFilter('all')}>Tümü</Button>
                     <Button variant="outline" className={`${activeFilter === 'views' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => setActiveFilter('views')}>Görüntülenmeler</Button>
                     <Button variant="outline" className={`${activeFilter === 'calls' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => setActiveFilter('calls')}>Çağrılar</Button>
                     <Button variant="outline" className={`${activeFilter === 'reviews' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => setActiveFilter('reviews')}>Değerlendirmeler</Button>
-                  </div>
-                  <div className="flex items-center">
-                    <Input placeholder="Ara..." className="w-64 mr-2" />
-                    <Button variant="outline">Filtrele</Button>
                   </div>
                 </div>
                 
@@ -692,12 +747,12 @@ export default function CilingirPanel() {
                             {activity.icon}
                           </div>
                           <div className="flex-grow">
-                            <div className="flex justify-between items-start">
+                            <div className="flex md:flex-row flex-col justify-between items-start">
                               <div>
                                 <h5 className="font-medium text-gray-900">{activity.title}</h5>
                                 <p className="text-sm text-gray-600 mt-1">{activity.description}</p>
                               </div>
-                              <span className="text-sm text-gray-500 flex items-center">
+                              <span className="text-sm text-gray-500 flex items-center md:mt-0 mt-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -712,7 +767,6 @@ export default function CilingirPanel() {
                                 </svg>
                                 {activity.location} - {activity.service}
                               </div>
-                              <Button variant="outline" size="sm" className="text-sm">Detaylar</Button>
                             </div>
                           </div>
                         </div>

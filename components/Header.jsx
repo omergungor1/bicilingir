@@ -19,7 +19,11 @@ export default function Header() {
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
-  
+
+  if (pathname === '/cilingir' || pathname === '/admin') {
+    return null;
+  }
+
   return (
     <header style={styles.header} className="w-full text-white">
       <div className="container mx-auto px-4 py-3 flex flex-col md:flex-row items-center justify-between">
