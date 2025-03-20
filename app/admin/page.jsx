@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
+import Link from "next/link";
 import { 
   Menu, 
   X, 
@@ -35,19 +36,147 @@ import {
   BarChart3,
   ArrowUpRight,
   ArrowDownRight,
-  UserPlus
+  UserPlus,
+  FileText,
+  ShoppingCart,
+  DollarSign,
+  Filter,
+  ChevronDown
 } from "lucide-react";
 import Image from "next/image";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { DatePickerWithRange } from "../../components/ui/date-range-picker";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../components/ui/dialog";
+import { useToast } from "../../components/ToastContext";
+import { Checkbox } from "../../components/ui/checkbox";
 
 export default function AdminPanel() {
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dateRange, setDateRange] = useState({ from: new Date(), to: new Date() });
   const [selectedCity, setSelectedCity] = useState("all");
   const [selectedDistrict, setSelectedDistrict] = useState("all");
   const [selectedTimeRange, setSelectedTimeRange] = useState("7");
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [showPackageModal, setShowPackageModal] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [packageToDelete, setPackageToDelete] = useState(null);
+  const [newService, setNewService] = useState({
+    name: "",
+    category: "",
+    minPrice: "",
+    maxPrice: ""
+  });
+  const [newPackage, setNewPackage] = useState({
+    name: "",
+    rocketAmount: "",
+    price: "",
+    isActive: true,
+    isUnlimited: false,
+    validFrom: new Date(),
+    validTo: new Date(new Date().setMonth(new Date().getMonth() + 1)) // 1 ay sonrası
+  });
+  const [serviceCategories, setServiceCategories] = useState([
+    "Kapı Açma",
+    "Kilit Değiştirme",
+    "Anahtar Yapımı",
+    "Kasa İşlemleri",
+    "Oto Çilingir",
+    "Diğer"
+  ]);
+  const [activeReviewFilter, setActiveReviewFilter] = useState("all");
+
+  const handleNewServiceChange = (field, value) => {
+    setNewService(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const isNewServiceValid = () => {
+    return (
+      newService.name.trim() !== "" && 
+      newService.category !== "" && 
+      newService.minPrice !== "" && 
+      newService.maxPrice !== "" &&
+      Number(newService.minPrice) <= Number(newService.maxPrice)
+    );
+  };
+
+  const handleAddService = () => {
+    // Burada API'ye yeni hizmet eklemek için istek yapılabilir
+    console.log("Yeni hizmet eklendi:", newService);
+    
+    // Modal'ı kapat
+    setShowServiceModal(false);
+    
+    // Form'u sıfırla
+    setNewService({
+      name: "",
+      category: "",
+      minPrice: "",
+      maxPrice: ""
+    });
+    
+    // Başarılı bildirim göster
+    showToast("Yeni hizmet başarıyla eklendi!", "success");
+  };
+
+  const handleNewPackageChange = (field, value) => {
+    setNewPackage(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const isNewPackageValid = () => {
+    return (
+      newPackage.name.trim() !== "" && 
+      newPackage.rocketAmount.toString().trim() !== "" &&
+      Number(newPackage.rocketAmount) > 0 &&
+      newPackage.price.toString().trim() !== "" &&
+      Number(newPackage.price) > 0 &&
+      (newPackage.isUnlimited || 
+        (newPackage.validFrom && newPackage.validTo && newPackage.validFrom <= newPackage.validTo))
+    );
+  };
+
+  const handleAddPackage = () => {
+    // Burada API'ye yeni paket eklemek için istek yapılabilir
+    console.log("Yeni paket eklendi:", newPackage);
+    
+    // Modal'ı kapat
+    setShowPackageModal(false);
+    
+    // Form'u sıfırla
+    setNewPackage({
+      name: "",
+      rocketAmount: "",
+      price: "",
+      isActive: true,
+      isUnlimited: false,
+      validFrom: new Date(),
+      validTo: new Date(new Date().setMonth(new Date().getMonth() + 1))
+    });
+    
+    // Başarılı bildirim göster
+    showToast("Yeni paket başarıyla eklendi!", "success");
+  };
+
+  const handleDeletePackage = () => {
+    // Gerçek bir API entegrasyonunda silme işlemi burada yapılır
+    console.log("Paket silindi:", packageToDelete);
+    
+    // Silme modalını kapat
+    setShowDeleteConfirmModal(false);
+    
+    // Silinen paket bilgisini temizle
+    setPackageToDelete(null);
+    
+    // Başarılı bildirim göster
+    showToast("Paket başarıyla silindi!", "success");
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -186,6 +315,20 @@ export default function AdminPanel() {
                       <span>Site Ayarları</span>
                       <ChevronRight className={`h-5 w-5 ml-auto transition-transform ${activeTab === "settings" ? "rotate-90" : ""}`} />
                     </button>
+
+                    <div className="border-t my-2"></div>
+
+                  <Link href="/cilingir/login">
+                    <button 
+                      onClick={() => {/* Güvenli çıkış işlemi */}}
+                      className="flex items-center space-x-3 p-3 rounded-lg text-left text-red-600 hover:bg-red-50 transition-colors w-full"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      <span>Güvenli Çıkış</span>
+                    </button>
+                  </Link>
                   </nav>
                 </CardContent>
               </Card>
@@ -381,7 +524,13 @@ export default function AdminPanel() {
                         ))}
                       </div>
                       <div className="mt-4 text-center">
-                        <Button variant="outline" className="text-blue-600 border-blue-600 hover:bg-blue-50">
+                        <Button 
+                        onClick={() => {
+                          setActiveTab("activities");
+                          setMobileMenuOpen(false);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        variant="outline" className="text-blue-600 border-blue-600 hover:bg-blue-50">
                           Tüm Aktiviteleri Görüntüle
                         </Button>
                       </div>
@@ -399,7 +548,6 @@ export default function AdminPanel() {
                   <CardContent>
                     <div className="flex justify-between items-center mb-6">
                       <Input placeholder="Çilingir ara..." className="max-w-sm" />
-                      <Button>Yeni Çilingir</Button>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full">
@@ -409,6 +557,7 @@ export default function AdminPanel() {
                             <th className="text-left p-3">İşletme Adı</th>
                             <th className="text-left p-3">Bölge</th>
                             <th className="text-left p-3">Durum</th>
+                            <th className="text-left p-3">Created At</th>
                             <th className="text-left p-3">İşlemler</th>
                           </tr>
                         </thead>
@@ -423,10 +572,12 @@ export default function AdminPanel() {
                                   {item % 2 === 0 ? "Aktif" : "Onay Bekliyor"}
                                 </span>
                               </td>
+                              <td className="p-3">2024-03-19</td>
                               <td className="p-3">
                                 <div className="flex space-x-2">
-                                  <Button variant="outline" size="sm">Düzenle</Button>
-                                  <Button variant="outline" size="sm" className="text-red-500">Sil</Button>
+                                  <Link href={`/cilingir`}>
+                                    <Button variant="outline" size="sm">Düzenle</Button>
+                                  </Link>
                                 </div>
                               </td>
                             </tr>
@@ -445,9 +596,8 @@ export default function AdminPanel() {
                     <CardDescription>Platformdaki hizmetleri yönet</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex justify-between items-center mb-6">
-                      <Input placeholder="Hizmet ara..." className="max-w-sm" />
-                      <Button>Yeni Hizmet</Button>
+                    <div className="flex justify-start items-center mb-6">
+                      <Button onClick={() => setShowServiceModal(true)}>Yeni Hizmet</Button>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full">
@@ -503,7 +653,11 @@ export default function AdminPanel() {
                               <Package className="h-5 w-5 text-blue-600" />
                               <CardTitle className="text-lg">Roket Paketleri</CardTitle>
                             </div>
-                            <Button size="sm" className="bg-blue-600">
+                            <Button 
+                              size="sm" 
+                              className="bg-blue-600"
+                              onClick={() => setShowPackageModal(true)}
+                            >
                               <Plus className="h-4 w-4 mr-1" /> Yeni Paket
                             </Button>
                           </div>
@@ -528,10 +682,19 @@ export default function AdminPanel() {
                                       <p className="text-sm text-gray-500 mt-1">₺{packet.price.toLocaleString()}</p>
                                     </div>
                                     <div className="flex space-x-2">
-                                      <Button size="sm" variant="outline">
+                                      <Button 
+                                        onClick={() => {
+                                          setShowPackageModal(true)
+                                        }}
+                                      size="sm" variant="outline">
                                         <Edit className="h-4 w-4" />
                                       </Button>
-                                      <Button size="sm" variant="outline" className="text-red-500 border-red-200 hover:bg-red-50">
+                                      <Button
+                                      onClick={() => {
+                                        setPackageToDelete(packet);
+                                        setShowDeleteConfirmModal(true);
+                                      }}
+                                      size="sm" variant="outline" className="text-red-500 border-red-200 hover:bg-red-50">
                                         <Trash2 className="h-4 w-4" />
                                       </Button>
                                     </div>
@@ -852,7 +1015,7 @@ export default function AdminPanel() {
                               <div className="flex flex-col md:flex-row justify-between">
                                 <div className="mb-3 md:mb-0">
                                   <div className="flex items-center space-x-2 mb-1">
-                                    <h3 className="font-semibold text-gray-800">{review.user}</h3>
+                                    <h3 className="font-semibold text-gray-900">{review.user}</h3>
                                     <span className="text-sm text-gray-500">→</span>
                                     <span className="font-medium text-blue-600">{review.locksmith}</span>
                                     <span className={`px-2 py-0.5 rounded-full text-xs ${
@@ -1074,9 +1237,7 @@ export default function AdminPanel() {
                                   ${activity.color === "blue" ? "bg-blue-100 text-blue-600" : 
                                     activity.color === "yellow" ? "bg-yellow-100 text-yellow-600" : 
                                     activity.color === "red" ? "bg-red-100 text-red-600" :
-                                    activity.color === "green" ? "bg-green-100 text-green-600" :
-                                    activity.color === "purple" ? "bg-purple-100 text-purple-600" :
-                                    "bg-orange-100 text-orange-600"}`}>
+                                    "bg-green-100 text-green-600"}`}>
                                   {activity.icon}
                                 </div>
                                 <div className="flex-grow">
@@ -1454,6 +1615,276 @@ export default function AdminPanel() {
           </div>
         </div>
       </div>
+
+      {/* Hizmet Ekleme Modal */}
+      <Dialog open={showServiceModal} onOpenChange={setShowServiceModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Yeni Hizmet Ekle</DialogTitle>
+            <DialogDescription>
+              Platformda kullanılacak yeni bir hizmet tanımı ekleyin.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="service-name" className="text-right text-sm font-medium">
+                Hizmet Adı
+              </label>
+              <Input
+                id="service-name"
+                placeholder="Örn: Kasa Açma"
+                className="col-span-3"
+                value={newService.name}
+                onChange={(e) => handleNewServiceChange("name", e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="service-category" className="text-right text-sm font-medium">
+                Kategori
+              </label>
+              <Select 
+                value={newService.category} 
+                onValueChange={(value) => handleNewServiceChange("category", value)}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Kategori seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  {serviceCategories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="min-price" className="text-right text-sm font-medium">
+                Min. Fiyat
+              </label>
+              <div className="col-span-3 flex items-center">
+                <Input
+                  id="min-price"
+                  type="number"
+                  placeholder="150"
+                  value={newService.minPrice}
+                  onChange={(e) => handleNewServiceChange("minPrice", e.target.value)}
+                  className="w-full"
+                />
+                <span className="ml-2 text-sm font-medium">₺</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="max-price" className="text-right text-sm font-medium">
+                Max. Fiyat
+              </label>
+              <div className="col-span-3 flex items-center">
+                <Input
+                  id="max-price"
+                  type="number"
+                  placeholder="300"
+                  value={newService.maxPrice}
+                  onChange={(e) => handleNewServiceChange("maxPrice", e.target.value)}
+                  className="w-full"
+                />
+                <span className="ml-2 text-sm font-medium">₺</span>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowServiceModal(false)}>
+              İptal
+            </Button>
+            <Button 
+              onClick={handleAddService} 
+              disabled={!isNewServiceValid()}
+              className={!isNewServiceValid() ? "opacity-50 cursor-not-allowed" : ""}
+            >
+              Kaydet
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Paket Ekleme Modal */}
+      <Dialog open={showPackageModal} onOpenChange={setShowPackageModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Yeni Paket Ekle</DialogTitle>
+            <DialogDescription>
+              Platformda kullanılacak yeni bir paket tanımı ekleyin.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="package-name" className="text-right text-sm font-medium">
+                Paket Adı
+              </label>
+              <Input
+                id="package-name"
+                placeholder="Örn: Pro Paket"
+                className="col-span-3"
+                value={newPackage.name}
+                onChange={(e) => handleNewPackageChange("name", e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="rocket-amount" className="text-right text-sm font-medium">
+                Roket Miktarı
+              </label>
+              <div className="col-span-3 flex items-center">
+                <Input
+                  id="rocket-amount"
+                  type="number"
+                  placeholder="1000"
+                  value={newPackage.rocketAmount}
+                  onChange={(e) => handleNewPackageChange("rocketAmount", e.target.value)}
+                  className="w-full"
+                />
+                <span className="ml-2 text-sm font-medium"> <Rocket className="h-4 w-4 text-orange-500" />
+                </span>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="price" className="text-right text-sm font-medium">
+                Fiyat
+              </label>
+              <div className="col-span-3 flex items-center">
+                <Input
+                  id="price"
+                  type="number"
+                  placeholder="5000"
+                  value={newPackage.price}
+                  onChange={(e) => handleNewPackageChange("price", e.target.value)}
+                  className="w-full"
+                />
+                <span className="ml-2 text-sm font-medium">₺</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="is-unlimited" className="text-right text-sm font-medium">
+                Sınırsız
+              </label>
+              <div className="col-span-3 flex items-center">
+                <Checkbox
+                  id="is-unlimited"
+                  checked={newPackage.isUnlimited}
+                  onCheckedChange={(checked) => handleNewPackageChange("isUnlimited", checked)}
+                />
+                <label htmlFor="is-unlimited" className="ml-2 text-sm font-medium">
+                  Süresiz Paket
+                </label>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="is-active" className="text-right text-sm font-medium">
+                Durum
+              </label>
+              <div className="col-span-3 flex items-center">
+                <Checkbox
+                  id="is-active"
+                  checked={newPackage.isActive}
+                  onCheckedChange={(checked) => handleNewPackageChange("isActive", checked)}
+                />
+                <label htmlFor="is-active" className="ml-2 text-sm font-medium">
+                  Aktif
+                </label>
+              </div>
+            </div>
+            {!newPackage.isUnlimited && (
+              <>
+               <div className="grid grid-cols-4 items-center gap-4">
+                 <label htmlFor="valid-from" className="text-right text-sm font-medium">
+                   Geçerlilik Başlangıç
+                 </label>
+                 <div className="col-span-3 flex items-center">
+                   <Input
+                     id="valid-from"
+                     type="date"
+                     value={newPackage.validFrom.toISOString().split('T')[0]}
+                     onChange={(e) => handleNewPackageChange("validFrom", new Date(e.target.value))}
+                     disabled={newPackage.isUnlimited}
+                   />
+                 </div>
+               </div>
+               <div className="grid grid-cols-4 items-center gap-4">
+                 <label htmlFor="valid-to" className="text-right text-sm font-medium">
+                   Geçerlilik Bitiş
+                 </label>
+                 <div className="col-span-3 flex items-center">
+                   <Input
+                     id="valid-to"
+                     type="date"
+                     value={newPackage.validTo.toISOString().split('T')[0]}
+                     onChange={(e) => handleNewPackageChange("validTo", new Date(e.target.value))}
+                     disabled={newPackage.isUnlimited}
+                   />
+                 </div>
+               </div>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPackageModal(false)}>
+              İptal
+            </Button>
+            <Button 
+              onClick={handleAddPackage} 
+              disabled={!isNewPackageValid()}
+              className={!isNewPackageValid() ? "opacity-50 cursor-not-allowed" : ""}
+            >
+              Kaydet
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Paket Silme Onay Modalı */}
+      <Dialog open={showDeleteConfirmModal} onOpenChange={setShowDeleteConfirmModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Paketi Sil</DialogTitle>
+            <DialogDescription>
+              Bu işlem geri alınamaz. Silmek istediğinize emin misiniz?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {packageToDelete && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-2">{packageToDelete.name}</h4>
+                <div className="flex items-center space-x-2 text-sm text-gray-700">
+                  <Rocket className="h-4 w-4 text-orange-500" />
+                  <span>{packageToDelete.rockets.toLocaleString()} Roket</span>
+                  <span className="text-gray-400">•</span>
+                  <span>₺{packageToDelete.price.toLocaleString()}</span>
+                </div>
+              </div>
+            )}
+            <p className="mt-4 text-sm text-gray-500">
+              Bu paketi sildiğinizde, bu paket üzerinden yapılan tüm işlemler geçerliliğini koruyacaktır, 
+              ancak yeni satın alımlar yapılamayacaktır.
+            </p>
+          </div>
+          <DialogFooter className="flex space-x-2 justify-end">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowDeleteConfirmModal(false);
+                setPackageToDelete(null);
+              }}
+            >
+              İptal
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleDeletePackage}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Paketi Sil
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

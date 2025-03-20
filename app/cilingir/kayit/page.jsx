@@ -323,16 +323,18 @@ export default function CilingirKayit() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Tecrübe Yılı *</label>
-                    <Input 
+                    <label className="block text-sm font-medium mb-2">İşe Başlangıç Yılı *</label>
+                    <Input
                       name="tecrube"
+                      id="tecrube"
+                      type="date"
+                      placeholder="Örn: 2014"
+                      min="1900"
+                      max={new Date().getFullYear()}  
+                      required
                       value={formData.tecrube}
                       onChange={handleChange}
-                      type="number"
-                      placeholder="Örn: 5"
-                      min="0"
-                      required
-                    />
+                   />
                   </div>
                 </div>
                 <div className="flex justify-end mt-8">

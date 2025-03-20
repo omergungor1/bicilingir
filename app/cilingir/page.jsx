@@ -16,14 +16,15 @@ export default function CilingirPanel() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [rocketBalance, setRocketBalance] = useState(1500); // Örnek roket bakiyesi
-  const [dailyRockets, setDailyRockets] = useState({
-    Pazartesi: 10,
-    Salı: 10,
-    Çarşamba: 10,
-    Perşembe: 10,
-    Cuma: 10,
-    Cumartesi: 15,
-    Pazar: 15
+
+  const [dailyHours, setDailyHours] = useState({
+    Pazartesi: { start: "09:00", end: "18:00", is24Hours: false },
+    Salı: { start: "09:00", end: "18:00", is24Hours: false },
+    Çarşamba: { start: "09:00", end: "18:00", is24Hours: false },
+    Perşembe: { start: "09:00", end: "18:00", is24Hours: false },
+    Cuma: { start: "09:00", end: "18:00", is24Hours: false },
+    Cumartesi: { start: "09:00", end: "18:00", is24Hours: false },
+    Pazar: { start: "09:00", end: "18:00", is24Hours: false }
   });
   const [workDaysOpen, setWorkDaysOpen] = useState({
     Pazartesi: true,
@@ -46,6 +47,15 @@ export default function CilingirPanel() {
     { id: 9, name: "Pencere Kilidi Değişimi", active: false, minPrice: 100, maxPrice: 250 },
     { id: 10, name: "Oto Kapı Açma", active: false, minPrice: 200, maxPrice: 400 }
   ]);
+
+  const [experienceYear, setExperienceYear] = useState(2014);
+  const [businessImages, setBusinessImages] = useState([
+    "/images/dukkan1.jpg",
+    "/images/dukkan2.jpg",
+    "/images/dukkan3.jpg",
+    "/images/dukkan4.jpg",
+  ]);
+  const [mainImageIndex, setMainImageIndex] = useState(0);
 
   const rocketPackages = [
     { id: 1, amount: 1000, price: 5000, description: "Başlangıç Paketi" },
@@ -92,6 +102,67 @@ export default function CilingirPanel() {
   const handleSocialMediaUpdate = () => {
     // API çağrısı simülasyonu
     showToast(`Sosyal medya hesaplarınız başarıyla güncellendi!`, "success");
+  };
+
+  // İşletme resimleri için fonksiyonlar
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    
+    if (businessImages.length + files.length > 10) {
+      showToast("En fazla 10 resim yükleyebilirsiniz.", "error");
+      return;
+    }
+    
+    const validFiles = files.filter(file => {
+      // 5MB kontrolü
+      if (file.size > 5 * 1024 * 1024) {
+        showToast(`${file.name} dosyası 5MB'dan büyük!`, "error");
+        return false;
+      }
+
+      // Resim kontrolü
+      if (!file.type.startsWith('image/')) {
+        showToast(`${file.name} bir resim dosyası değil!`, "error");
+        return false;
+      }
+      
+      return true;
+    });
+    
+    setBusinessImages(prev => [...prev, ...validFiles]);
+    showToast(`${validFiles.length} resim başarıyla yüklendi.`, "success");
+  };
+
+  const handleRemoveImage = (index) => {
+    setBusinessImages(prev => {
+      const newImages = [...prev];
+      newImages.splice(index, 1);
+      
+      showToast("Resim başarıyla kaldırıldı.", "success");
+
+      // Ana görsel kaldırıldıysa, ana görseli ilk resme ayarla
+      if (index === mainImageIndex) {
+        setMainImageIndex(newImages.length > 0 ? 0 : -1);
+      } else if (index < mainImageIndex) {
+        // Eğer kaldırılan görsel ana görselden önceyse, ana görsel indexini güncelle
+        setMainImageIndex(mainImageIndex - 1);
+      }
+      
+      return newImages;
+    });
+    showToast("Resim başarıyla kaldırıldı.", "success");
+  };
+
+  const setMainImage = (index) => {
+    setMainImageIndex(index);
+    showToast("Ana görsel güncellendi.", "success");
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    handleImageUpload({ target: { files } });
   };
 
   return (
@@ -494,6 +565,25 @@ export default function CilingirPanel() {
                       <label className="block text-sm mb-1">Telefon</label>
                       <Input defaultValue="+90 555 123 4567" />
                     </div>
+                    <div>
+                      <label className="block text-sm mb-1">İşe Başlangıç Yılı</label>
+                      <Input 
+                        type="number" 
+                        onChange={(e) => setExperienceYear(e.target.value)}
+                        value={experienceYear}
+                        min="1950" 
+                        max={new Date().getFullYear()} 
+                        placeholder="Örn: 2014" 
+                      />
+                      <p className="text-sm text-gray-500 mt-1">{(new Date().getFullYear() - experienceYear)} yıllık deneyim</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-1">Deneyim Belgesi</label>
+                      <div className="flex items-center space-x-2">
+                        <Button variant="outline" className="w-full">Belge Yükle</Button>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1">PDF, JPG veya PNG (max 5MB)</p>
+                    </div>
                     <div className="md:col-span-2">
                       <label className="block text-sm mb-1">Adres</label>
                       <Input defaultValue="Kadıköy, İstanbul" />
@@ -507,8 +597,81 @@ export default function CilingirPanel() {
                     </div>
                   </div>
                   
+                  <div className="mt-6">
+                    <h4 className="font-medium mb-4">İşletme Resimleri</h4>
+                    <div className="space-y-4">
+                      <div 
+                        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50 hover:bg-gray-100 transition cursor-pointer"
+                        onDrop={handleDrop}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDragEnter={(e) => {
+                          e.preventDefault();
+                          e.currentTarget.classList.add('border-blue-400', 'bg-blue-50');
+                        }}
+                        onDragLeave={(e) => {
+                          e.preventDefault();
+                          e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+                        }}
+                      >
+                        <label htmlFor="businessImages" className="cursor-pointer flex flex-col items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <p className="text-gray-500 mb-1">Fotoğrafları buraya sürükleyin veya</p>
+                          <Button variant="outline" size="sm" className="mt-2">Dosya Seç</Button>
+                          <p className="text-sm text-gray-500 mt-2">En fazla 10 resim, her biri 5MB'dan küçük (JPEG, PNG)</p>
+                          <input 
+                            id="businessImages" 
+                            type="file" 
+                            multiple 
+                            accept="image/*" 
+                            className="hidden"
+                            onChange={handleImageUpload}
+                          />
+                        </label>
+                      </div>
+                      
+                      {businessImages.length > 0 && (
+                        <div className="mt-4">
+                          <h5 className="font-medium mb-3">Mevcut Resimler ({businessImages.length}/10)</h5>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            {businessImages.map((image, index) => (
+                              <div key={index} className="relative group">
+                                <div className="aspect-square overflow-hidden rounded-lg border border-gray-200">
+                                  <Image
+                                    src={typeof image === 'string' ? image : URL.createObjectURL(image)}
+                                    alt={`İşletme resmi ${index + 1}`}
+                                    width={200}
+                                    height={200}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <button
+                                  onClick={() => handleRemoveImage(index)}
+                                  className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-md border border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
+                                    onClick={() => setMainImage(index)}
+                                    className={`bg-white text-xs rounded-full px-2 py-1 text-gray-700 font-medium border ${mainImageIndex === index ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-gray-300'}`}
+                                  >
+                                    {mainImageIndex === index ? 'Ana Görsel' : 'Ana Görsel Yap'}
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
                   <div>
-                    <h4 className="font-medium mb-4">Çalışma Saatleri</h4>
+                    <h4 className="font-medium mb-4 mt-6">Çalışma Saatleri</h4>
                     <div className="space-y-4">
                       {["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"].map((day) => (
                         <div key={day} className="flex md:items-center items-start md:flex-row flex-col justify-between border p-3 rounded-md bg-gray-50">
@@ -531,16 +694,60 @@ export default function CilingirPanel() {
                             </label>
                           </div>
                           <div className="flex items-center space-x-2 md:mt-0 mt-2">
+                            <div className="flex items-center space-x-2 mr-4">
+                              <Checkbox 
+                                id={`24hours-${day}`}
+                                checked={workDaysOpen[day] && dailyHours?.[day]?.is24Hours}
+                                onCheckedChange={(checked) => {
+                                  setDailyHours(prev => ({
+                                    ...prev,
+                                    [day]: {
+                                      ...prev?.[day],
+                                      is24Hours: checked,
+                                      start: checked ? "00:00" : "09:00",
+                                      end: checked ? "00:00" : "18:00"
+                                    }
+                                  }));
+                                }}
+                                disabled={!workDaysOpen[day]}
+                              />
+                              <label 
+                                htmlFor={`24hours-${day}`}
+                                className={`text-sm ${!workDaysOpen[day] ? "text-gray-400" : ""}`}
+                              >
+                                24 Saat
+                              </label>
+                            </div>
                             <Input 
-                              defaultValue="09:00" 
-                              disabled={!workDaysOpen[day]}
-                              className={`w-24 ${!workDaysOpen[day] ? "bg-gray-100 text-gray-400" : ""}`}
+                              type="time"
+                              value={dailyHours?.[day]?.start || "09:00"}
+                              onChange={(e) => {
+                                setDailyHours(prev => ({
+                                  ...prev,
+                                  [day]: {
+                                    ...prev?.[day],
+                                    start: e.target.value
+                                  }
+                                }));
+                              }}
+                              disabled={!workDaysOpen[day] || dailyHours?.[day]?.is24Hours}
+                              className={`w-24 ${(!workDaysOpen[day] || dailyHours?.[day]?.is24Hours) ? "bg-gray-100 text-gray-400" : ""}`}
                             />
                             <span className={!workDaysOpen[day] ? "text-gray-400" : ""}>-</span>
                             <Input 
-                              defaultValue="18:00" 
-                              disabled={!workDaysOpen[day]}
-                              className={`w-24 ${!workDaysOpen[day] ? "bg-gray-100 text-gray-400" : ""}`}
+                              type="time"
+                              value={dailyHours?.[day]?.end || "18:00"}
+                              onChange={(e) => {
+                                setDailyHours(prev => ({
+                                  ...prev,
+                                  [day]: {
+                                    ...prev?.[day],
+                                    end: e.target.value
+                                  }
+                                }));
+                              }}
+                              disabled={!workDaysOpen[day] || dailyHours?.[day]?.is24Hours}
+                              className={`w-24 ${(!workDaysOpen[day] || dailyHours?.[day]?.is24Hours) ? "bg-gray-100 text-gray-400" : ""}`}
                             />
                             <span className={`ml-2 text-sm ${workDaysOpen[day] ? "text-green-600" : "text-red-500"}`}>
                               {workDaysOpen[day] ? "Açık" : "Kapalı"}
@@ -909,19 +1116,87 @@ export default function CilingirPanel() {
                 {/* Günlük Roket Ayarları */}
                 <div>
                   <h3 className="text-xl font-bold text-gray-800 mb-4">Günlük Roket Kullanım Tercihleriniz</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {Object.entries(dailyRockets).map(([day, amount]) => (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {Object.entries(dailyHours).map(([day, { start, end, is24Hours }]) => (
                       <div key={day} className="border rounded-lg p-4 bg-gray-10">
                         <label className="block text-md font-bold text-gray-700 mb-2">{day}</label>
                         <div className="flex items-center space-x-2">
-                          <Input
-                            type="number"
-                            min="0"
-                            value={amount}
-                            onChange={(e) => handleDailyRocketChange(day, e.target.value)}
-                            className="w-16"
+                          <Checkbox 
+                            id={`workday-${day}`} 
+                            checked={workDaysOpen[day]}
+                            onCheckedChange={(checked) => {
+                              setWorkDaysOpen(prev => ({
+                                ...prev,
+                                [day]: !!checked
+                              }));
+                            }}
                           />
-                          <span className="text-gray-600">Roket/gün</span>
+                          <label 
+                            htmlFor={`workday-${day}`} 
+                            className={`font-medium ${!workDaysOpen[day] ? "text-gray-400" : ""}`}
+                          >
+                            {day}
+                          </label>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`24hours-${day}`}
+                              checked={is24Hours}
+                              onCheckedChange={(checked) => {
+                                setDailyHours(prev => ({
+                                  ...prev,
+                                  [day]: {
+                                    ...prev?.[day],
+                                    is24Hours: checked,
+                                    start: checked ? "00:00" : "09:00",
+                                    end: checked ? "00:00" : "18:00"
+                                  }
+                                }));
+                              }}
+                              disabled={!workDaysOpen[day]}
+                            />
+                            <label 
+                              htmlFor={`24hours-${day}`}
+                              className={`text-sm ${!workDaysOpen[day] ? "text-gray-400" : ""}`}
+                            >
+                              24 Saat
+                            </label>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2 md:mt-0 mt-2">
+                          <Input 
+                            type="time"
+                            value={start || "09:00"}
+                            onChange={(e) => {
+                              setDailyHours(prev => ({
+                                ...prev,
+                                [day]: {
+                                  ...prev?.[day],
+                                  start: e.target.value
+                                }
+                              }));
+                            }}
+                            disabled={!workDaysOpen[day] || is24Hours}
+                            className={`w-24 ${(!workDaysOpen[day] || is24Hours) ? "bg-gray-100 text-gray-400" : ""}`}
+                          />
+                          <span className={!workDaysOpen[day] ? "text-gray-400" : ""}>-</span>
+                          <Input 
+                            type="time"
+                            value={end || "18:00"}
+                            onChange={(e) => {
+                              setDailyHours(prev => ({
+                                ...prev,
+                                [day]: {
+                                  ...prev?.[day],
+                                  end: e.target.value
+                                }
+                              }));
+                            }}
+                            disabled={!workDaysOpen[day] || is24Hours}
+                            className={`w-24 ${(!workDaysOpen[day] || is24Hours) ? "bg-gray-100 text-gray-400" : ""}`}
+                          />
+                          <span className={`ml-2 text-sm ${workDaysOpen[day] ? "text-green-600" : "text-red-500"}`}>
+                            {workDaysOpen[day] ? "Açık" : "Kapalı"}
+                          </span>
                         </div>
                       </div>
                     ))}
