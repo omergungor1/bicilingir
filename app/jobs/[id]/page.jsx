@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
+import { getLocksmithById, getSimilarLocksmiths } from "../../actions";
 
 const styles = {
   header: {
@@ -55,112 +56,6 @@ const styles = {
   }
 };
 
-// Örnek çilingir verileri
-const locksmithData = [
-  {
-    id: 1,
-    name: "Anahtar Usta",
-    location: "İstanbul, Kadıköy",
-    rating: 4.8,
-    reviewCount: 124,
-    services: [
-      { name: "Kapı Açma"},
-      { name: "Kilit Değiştirme"},
-      { name: "Çelik Kapı"}
-    ],
-    price: "150₺ - 300₺",
-    timeAgo: "2 saat önce",
-    description: "7/24 acil kapı açma ve kilit değiştirme hizmetleri. Profesyonel ekip ile hızlı ve güvenilir çözümler sunuyoruz.",
-    phone: "0532 123 45 67",
-    workingHours: {
-      Pazartesi: { open: "09:00", close: "18:00", isOpen: true },
-      Salı: { open: "09:00", close: "18:00", isOpen: true },
-      Çarşamba: { open: "09:00", close: "18:00", isOpen: true },
-      Perşembe: { open: "09:00", close: "18:00", isOpen: true },
-      Cuma: { open: "09:00", close: "18:00", isOpen: true },
-      Cumartesi: { open: "10:00", close: "16:00", isOpen: true },
-      Pazar: { open: "Kapalı", close: "Kapalı", isOpen: false }
-    },
-    images: [
-      "/images/dukkan1.jpg",
-      "/images/dukkan2.jpg",
-      "/images/dukkan3.jpg",
-      "/images/dukkan4.jpg"
-    ],
-    experience: "15 yıl",
-    address: "Caferağa Mah. Moda Cad. No:123, Kadıköy/İstanbul",
-    website: "www.anahtarusta.com",
-    detailedDescription: "Anahtar Usta olarak 15 yıldır İstanbul'da hizmet vermekteyiz. Profesyonel ekibimiz ve modern ekipmanlarımızla kapı açma, kilit değiştirme, çelik kapı montajı ve tamiratı gibi tüm çilingir hizmetlerini sunuyoruz. Acil durumlarda 20 dakika içinde kapınızdayız. Tüm hizmetlerimizde kalite ve müşteri memnuniyeti önceliğimizdir. Uygun fiyat garantisi veriyoruz.",
-    certificates: ["TSE Belgesi", "Mesleki Yeterlilik Belgesi", "Ustalık Belgesi"],
-    paymentMethods: ["Nakit", "Kredi Kartı", "Havale/EFT"],
-    reviews: [
-      { user: "Ahmet Y.", rating: 5, comment: "Çok hızlı geldiler ve kapımı hasarsız açtılar. Teşekkürler!", date: "2 hafta önce" },
-      { user: "Ayşe K.", rating: 4, comment: "Kilit değişimi için çağırdım, işlerini profesyonelce yaptılar.", date: "1 ay önce" },
-      { user: "Mehmet S.", rating: 5, comment: "Gece yarısı aradım, 15 dakikada geldiler. Harika hizmet!", date: "3 ay önce" }
-    ]
-  },
-  {
-    id: 2,
-    name: "Hızlı Çilingir",
-    location: "İstanbul, Beşiktaş",
-    rating: 4.6,
-    reviewCount: 98,
-    services: [
-      { name: "Acil Çilingir" },
-      { name: "Oto Çilingir" },
-      { name: "Kasa Çilingir" }
-    ],
-    price: "200₺ - 350₺",
-    timeAgo: "5 saat önce",
-    description: "15 dakika içinde kapınızdayız. Oto, ev ve iş yeri için profesyonel çilingir hizmetleri.",
-    workingHours: {
-      Pazartesi: { open: "00:00", close: "24:00", isOpen: true },
-      Salı: { open: "00:00", close: "24:00", isOpen: true },
-      Çarşamba: { open: "00:00", close: "24:00", isOpen: true },
-      Perşembe: { open: "00:00", close: "24:00", isOpen: true },
-      Cuma: { open: "00:00", close: "24:00", isOpen: true },
-      Cumartesi: { open: "00:00", close: "24:00", isOpen: true },
-      Pazar: { open: "00:00", close: "24:00", isOpen: true }
-    },
-    images: [
-      "/images/dukkan1.jpg",
-      "/images/dukkan2.jpg",
-      "/images/dukkan3.jpg",
-      "/images/dukkan4.jpg"
-    ]
-  },
-  {
-    id: 3,
-    name: "Güvenli Anahtar",
-    location: "İstanbul, Şişli",
-    rating: 4.9,
-    reviewCount: 156,
-    services: [
-      { name: "Çelik Kapı" },
-      { name: "Kasa Çilingir" },
-      { name: "Kilit Değiştirme" }
-    ],
-    price: "180₺ - 400₺",
-    timeAgo: "1 gün önce",
-    description: "Yüksek güvenlikli kilit sistemleri ve çelik kapı uzmanı. 20 yıllık tecrübe ile hizmetinizdeyiz.",
-    workingHours: {
-      Pazartesi: { open: "08:00", close: "20:00", isOpen: true },
-      Salı: { open: "08:00", close: "20:00", isOpen: true },
-      Çarşamba: { open: "08:00", close: "20:00", isOpen: true },
-      Perşembe: { open: "08:00", close: "20:00", isOpen: true },
-      Cuma: { open: "08:00", close: "20:00", isOpen: true },
-      Cumartesi: { open: "09:00", close: "18:00", isOpen: true },
-      Pazar: { open: "10:00", close: "16:00", isOpen: true }
-    },
-    images: [
-      "/images/dukkan1.jpg",
-      "/images/dukkan2.jpg",
-      "/images/dukkan3.jpg",
-      "/images/dukkan4.jpg"
-    ]
-  }
-];
-
 // Yıldız puanı gösterme fonksiyonu
 const StarRating = ({ rating }) => {
   return (
@@ -176,11 +71,26 @@ const StarRating = ({ rating }) => {
 };
 
 export default async function LocksmithDetail({ params }) {
-  // Next.js 14'te params'ı await ile beklemek gerekiyor
-  const id = parseInt(params.id);
+  // Next.js 14 için params'ı beklememiz gerekiyor
+  const id = await params.id;
   
-  // ID'ye göre çilingir verisini bul
-  const locksmith = locksmithData.find(item => item.id === id) || locksmithData[0];
+  // ID'ye göre çilingir verisini getir
+  const { locksmith, error } = await getLocksmithById(id);
+  const { similarLocksmiths, error: similarError } = await getSimilarLocksmiths(id);
+  
+  // Hata durumunda yedek veri kullan
+  if (error) {
+    console.error('Çilingir verileri getirilirken hata oluştu:', error);
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center">
+        <h1 className="text-2xl font-bold mb-4">Bir hata oluştu</h1>
+        <p className="mb-4">Çilingir bilgileri getirilirken bir sorun oluştu.</p>
+        <Link href="/" className="text-blue-600 hover:text-blue-800">
+          Ana Sayfaya Dön
+        </Link>
+      </div>
+    );
+  }
   
   return (
     <main className="flex min-h-screen flex-col items-center">
@@ -235,7 +145,7 @@ export default async function LocksmithDetail({ params }) {
                 </ul>
               </div>
 
-              {locksmith.certificates && (
+              {locksmith.certificates && locksmith.certificates.length > 0 && (
                 <div className="border-t border-gray-200 pt-6 mb-6">
                   <h2 className="text-xl font-bold text-gray-800 mb-4">Sertifikalar ve Belgeler</h2>
                   <ul className="list-disc pl-5 text-gray-600 space-y-2">
@@ -246,7 +156,7 @@ export default async function LocksmithDetail({ params }) {
                 </div>
               )}
 
-              {locksmith.reviews && (
+              {locksmith.reviews && locksmith.reviews.length > 0 && (
                 <div className="border-t border-gray-200 pt-6 mb-6">
                   <h2 className="text-xl font-bold text-gray-800 mb-4">Müşteri Yorumları</h2>
                   <div className="space-y-4">
@@ -294,11 +204,11 @@ export default async function LocksmithDetail({ params }) {
                 </div>
               </div>
 
-              {/* Benzer Çilingirler */}
+              {/* Benzer Çilingirler - Gelecekte Implementasyonu Yapılabilir */}
               <div className="border-t border-gray-200 pt-6">
                 <h2 className="text-xl font-bold text-gray-800 mb-6">Benzer Çilingirler</h2>
                 <div className="space-y-4">
-                  {locksmithData.filter(item => item.id !== id).slice(0, 3).map((item) => (
+                  {similarLocksmiths.map((item) => (
                     <div key={item.id} style={styles.jobCard} className="hover:transform hover:translate-y-[-2px] hover:shadow-lg">
                       <div className="flex flex-col md:flex-row md:items-center">
                         <div className="mb-4 md:mb-0 md:mr-4">
@@ -358,9 +268,9 @@ export default async function LocksmithDetail({ params }) {
                     {Object.entries(locksmith.workingHours).map(([day, hours]) => (
                       <div key={day} className="flex justify-between items-center">
                         <span className="text-gray-600">{day}</span>
-                        <span className={`text-sm font-medium ${hours.isOpen ? 'text-green-600' : 'text-red-500'}`}>
+                        {hours.is24Hours ? <span className="text-green-600">24 Saat Açık</span> : <span className={`text-sm font-medium ${hours.isOpen ? 'text-green-600' : 'text-red-500'}`}>
                           {hours.isOpen ? `${hours.open} - ${hours.close}` : 'Kapalı'}
-                        </span>
+                        </span>}
                       </div>
                     ))}
                   </div>
@@ -368,20 +278,22 @@ export default async function LocksmithDetail({ params }) {
               )}
 
               {/* Resim Galerisi */}
-              <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">Galeri</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {locksmith.images.map((image, index) => (
-                    <div key={index} className="aspect-square relative overflow-hidden rounded-lg">
-                      <img
-                        src={image}
-                        alt={`${locksmith.name} - Resim ${index + 1}`}
-                        className="object-cover w-full h-full hover:scale-110 transition-transform duration-300"
-                      />
-                    </div>
-                  ))}
+              {locksmith.images && locksmith.images.length > 0 && (
+                <div className="bg-gray-50 rounded-lg p-6 mb-6">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">Galeri</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {locksmith.images.map((image, index) => (
+                      <div key={index} className="aspect-square relative overflow-hidden rounded-lg">
+                        <img
+                          src={image}
+                          alt={`${locksmith.name} - Resim ${index + 1}`}
+                          className="object-cover w-full h-full hover:scale-110 transition-transform duration-300"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="bg-gray-50 rounded-lg p-6 mb-6">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">Adres</h3>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { useToast } from "../../../components/ToastContext";
+import Image from "next/image";
 
 export default function CilingirLogin() {
   const [formData, setFormData] = useState({
@@ -54,14 +55,12 @@ export default function CilingirLogin() {
         <div className="text-center mb-10">
           <Link href="/" className="flex justify-center mb-6">
             <span className="sr-only">Bi Çilingir</span>
-            <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center text-white text-xl font-bold">
-              BÇ
-            </div>
+            <Image src="/logo.png" alt="Bi Çilingir" width={60} height={60} />
           </Link>
           <h2 className="text-3xl font-extrabold text-gray-900">Çilingir Girişi</h2>
           <p className="mt-2 text-sm text-gray-600">
             Hesabınız yok mu?{" "}
-            <Link href="/cilingir/kayit" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href="/auth/register" className="font-medium text-blue-600 hover:text-blue-500">
               Hemen kayıt olun
             </Link>
           </p>
@@ -119,7 +118,7 @@ export default function CilingirLogin() {
               </div>
 
               <div className="text-sm">
-                <Link href="/cilingir/sifremi-unuttum" className="font-medium text-blue-600 hover:text-blue-500">
+                <Link href="/auth/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
                   Şifremi unuttum
                 </Link>
               </div>
@@ -145,37 +144,12 @@ export default function CilingirLogin() {
               </Button>
             </div>
           </form>
-          
-          {/* Test Butonları */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <h3 className="text-sm font-medium text-gray-700 mb-4">Toast Bildirim Test Butonları</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => showToast("Bu bir bilgi mesajıdır.", "info")}
-                className="bg-blue-100 text-blue-800 py-2 px-4 rounded-md text-sm hover:bg-blue-200 transition-colors"
-              >
-                Bilgi Toast
-              </button>
-              <button
-                onClick={() => showToast("İşlem başarıyla tamamlandı!", "success")}
-                className="bg-green-100 text-green-800 py-2 px-4 rounded-md text-sm hover:bg-green-200 transition-colors"
-              >
-                Başarılı Toast
-              </button>
-              <button
-                onClick={() => showToast("Dikkat! Bu bir uyarı mesajıdır.", "warning")}
-                className="bg-yellow-100 text-yellow-800 py-2 px-4 rounded-md text-sm hover:bg-yellow-200 transition-colors"
-              >
-                Uyarı Toast
-              </button>
-              <button
-                onClick={() => showToast("Bir hata oluştu! Lütfen tekrar deneyin.", "error")}
-                className="bg-red-100 text-red-800 py-2 px-4 rounded-md text-sm hover:bg-red-200 transition-colors"
-              >
-                Hata Toast
-              </button>
-            </div>
+          <div className="flex flex-col space-y-4">
+        
+          <div className="text-xs mt-2 text-center text-gray-500">
+            Giriş yaparak, Bi Çilingir'in <Link href="/terms" className="text-blue-600 hover:underline">hizmet şartlarını</Link> ve <Link href="/privacy" className="text-blue-600 hover:underline">gizlilik politikasını</Link> kabul etmiş olursunuz.
           </div>
+        </div>
         </div>
       </div>
     </main>

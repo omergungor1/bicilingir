@@ -8,6 +8,8 @@ import { Checkbox } from "../components/ui/checkbox";
 import Hero from "../components/Hero";
 import SearchForm from "../components/SearchForm";
 import { useToast } from "../components/ToastContext";
+import { getLocksmiths } from "./actions";
+import { ChevronRight } from "lucide-react";
 
 const styles = {
   accentButton: {
@@ -47,65 +49,6 @@ const styles = {
   }
 };
 
-// Örnek çilingir verileri
-const locksmithData = [
-  {
-    id: 1,
-    name: "Anahtar Usta",
-    location: "İstanbul, Kadıköy",
-    rating: 4.8,
-    reviewCount: 124,
-    services: ["Kapı Açma", "Kilit Değiştirme", "Çelik Kapı"],
-    price: "150₺ - 300₺",
-    timeAgo: "2 saat önce",
-    description: "7/24 acil kapı açma ve kilit değiştirme hizmetleri. Profesyonel ekip ile hızlı ve güvenilir çözümler sunuyoruz."
-  },
-  {
-    id: 2,
-    name: "Hızlı Çilingir",
-    location: "İstanbul, Beşiktaş",
-    rating: 4.6,
-    reviewCount: 98,
-    services: ["Acil Çilingir", "Oto Çilingir", "Kasa Çilingir"],
-    price: "200₺ - 350₺",
-    timeAgo: "5 saat önce",
-    description: "15 dakika içinde kapınızdayız. Oto, ev ve iş yeri için profesyonel çilingir hizmetleri."
-  },
-  {
-    id: 3,
-    name: "Güvenli Anahtar",
-    location: "İstanbul, Şişli",
-    rating: 4.9,
-    reviewCount: 156,
-    services: ["Çelik Kapı", "Kasa Çilingir", "Kilit Değiştirme"],
-    price: "180₺ - 400₺",
-    timeAgo: "1 gün önce",
-    description: "Yüksek güvenlikli kilit sistemleri ve çelik kapı uzmanı. 20 yıllık tecrübe ile hizmetinizdeyiz."
-  },
-  {
-    id: 4,
-    name: "Usta Çilingir",
-    location: "İstanbul, Ümraniye",
-    rating: 4.7,
-    reviewCount: 87,
-    services: ["Kapı Açma", "Oto Çilingir", "Anahtar Kopyalama"],
-    price: "120₺ - 250₺",
-    timeAgo: "3 saat önce",
-    description: "Uygun fiyat garantisi ile tüm çilingir hizmetleri. Anahtar kopyalama ve oto çilingir konusunda uzmanız."
-  },
-  {
-    id: 5,
-    name: "Profesyonel Çilingir",
-    location: "İstanbul, Maltepe",
-    rating: 4.5,
-    reviewCount: 76,
-    services: ["Acil Çilingir", "Kilit Değiştirme", "Çelik Kapı"],
-    price: "170₺ - 320₺",
-    timeAgo: "6 saat önce",
-    description: "Profesyonel ekip ve ekipmanlarla kaliteli çilingir hizmetleri. 7/24 acil servis mevcuttur."
-  },
-];
-
 // Yıldız puanı gösterme fonksiyonu
 const StarRating = ({ rating }) => {
   return (
@@ -143,17 +86,34 @@ export default function Home() {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [locksmiths, setLocksmiths] = useState([]);
+  const [error, setError] = useState(null);
   
   // Toast context hook
   const { showToast } = useToast();
+  
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     setIsLoading(true);
-    // API çağrısını simüle etmek için 2 saniye bekle
-    setTimeout(() => {
-      setIsLoading(false);
-      setShowResults(true);
-    }, 2000);
+    
+    try {
+      const { locksmiths: fetchedLocksmiths, error } = await getLocksmiths();
+      
+      if (error) {
+        setError(error);
+        showToast("Çilingirler yüklenirken bir hata oluştu", "error", 3000);
+        return;
+      }
+      
+      setLocksmiths(fetchedLocksmiths);
+    } catch (err) {
+      console.error("Çilingirler getirilirken hata:", err);
+      setError("Veri yüklenirken bir hata oluştu");
+      showToast("Beklenmeyen bir hata oluştu", "error", 3000);
+    }
+
+    setShowResults(true);
+    setIsLoading(false);
   };
 
   // SearchParamsHandler bileşeni
@@ -212,178 +172,142 @@ export default function Home() {
         </div>
       </Hero>
 
-      {/* Loading Göstergesi */}
-      {isLoading && <LoadingSpinner />}
-
-      {/* Çilingir Listesi Bölümü - Sadece sonuçlar gösterildiğinde görünür */}
-      {showResults && !isLoading && (
-        <section className="w-full bg-gray-50 py-16 px-4">
-          <div className="container mx-auto">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-800">Çilingirler</h2>
-              <span className="text-gray-500">5 çilingir bulundu</span>
+      {/* Çilingir Sonuçları */}
+      {showResults && (
+        <div className="w-full max-w-6xl mx-auto px-4 my-12">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800">Bölgenizdeki Çilingirler</h2>
+            <button 
+              onClick={() => setShowFilters(!showFilters)}
+              className="text-blue-600 flex items-center gap-1"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+              </svg>
+              {showFilters ? "Gizle" : "Filtrele"}
+            </button>
+          </div>
+          
+          {/* Yüklenirken spinner göster */}
+          {isLoading ? (
+            <LoadingSpinner />
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-500 mb-4">{error}</p>
+              <Button onClick={() => window.location.reload()}>Tekrar Dene</Button>
             </div>
-            
-            <div className="flex flex-col md:flex-row gap-8">
-              {/* Sol Sidebar - Filtreler */}
-              <div className="w-full md:w-1/4">
-                {/* Mobil görünümde sadece filtreler butonu görünsün */}
-                <div className="mb-4 block md:hidden">
-                  <Button 
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold"
-                    onClick={() => setShowFilters(!showFilters)}
-                  >
-                    {showFilters ? 'Filtreleri Gizle' : 'Filtreleri Göster'}
-                    {showFilters ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                      </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    )}
-                  </Button>
-                </div>
-
-                {/* Filtreler - Masaüstünde her zaman görünür, mobilde butona tıklayınca görünür */}
-                <div className={`bg-white p-6 rounded-lg shadow-sm mb-6 ${showFilters ? 'block' : 'hidden md:block'}`}>
-                  <h3 className="text-lg font-bold mb-4 text-gray-800">Hizmet Türü</h3>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center">
-                      <Checkbox id="acilCilingir" />
-                      <label htmlFor="acilCilingir" className="ml-2 text-gray-700">Acil Çilingir</label>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <Checkbox id="kapiAcma" />
-                      <label htmlFor="kapiAcma" className="ml-2 text-gray-700">Kapı Açma</label>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <Checkbox id="otoCilingir" />
-                      <label htmlFor="otoCilingir" className="ml-2 text-gray-700">Oto Çilingir</label>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <Checkbox id="kasaCilingir" />
-                      <label htmlFor="kasaCilingir" className="ml-2 text-gray-700">Kasa Çilingir</label>
-                    </div>
-
-                    <div className="flex items-center">
-                      <Checkbox id="celikKapi" />
-                      <label htmlFor="celikKapi" className="ml-2 text-gray-700">Çelik Kapı</label>
-                    </div>
-
-                    <div className="flex items-center">
-                      <Checkbox id="kilitDegistirme" />
-                      <label htmlFor="kilitDegistirme" className="ml-2 text-gray-700">Kilit Değiştirme</label>
-                    </div>
-
-                    <div className="flex items-center">
-                      <Checkbox id="anahtarKopyalama" />
-                      <label htmlFor="anahtarKopyalama" className="ml-2 text-gray-700">Anahtar Kopyalama</label>
-                    </div>
-                  </div>
-                  
-                  
-
-                  <h3 className="text-lg font-bold mb-4 mt-6 text-gray-800">Fiyat Aralığı</h3>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center">
-                      <Checkbox id="price1" />
-                      <label htmlFor="price1" className="ml-2 text-gray-700">100₺ - 200₺</label>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <Checkbox id="price2" />
-                      <label htmlFor="price2" className="ml-2 text-gray-700">200₺ - 300₺</label>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <Checkbox id="price3" />
-                      <label htmlFor="price3" className="ml-2 text-gray-700">300₺ - 400₺</label>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <Checkbox id="price4" />
-                      <label htmlFor="price4" className="ml-2 text-gray-700">400₺+</label>
-                    </div>
-                  </div>
-                  
-                  <Button className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold">
-                    Filtreleri Uygula
-                  </Button>
-                  
-                  <Button className="mt-2 w-full bg-white text-blue-600 border border-blue-600 hover:bg-blue-50">
-                    Temizle
-                  </Button>
-                </div>
-              </div>
-              
-              {/* Çilingir Listesi */}
-              <div className="w-full md:w-3/4">
-                <div className="space-y-4">
-                  {locksmithData.map((locksmith) => (
-                    <div key={locksmith.id} style={styles.jobCard} className="hover:shadow-md transition-shadow">
-                      <div className="flex flex-col md:flex-row md:items-center">
-                        <div className="mb-4 md:mb-0 md:mr-4">
-                          <div style={styles.companyLogo}>
-                            <span>{locksmith.name.substring(0, 2)}</span>
+          ) : (
+            <>
+              {/* Filtre Paneli */}
+              {showFilters && (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <h3 className="font-medium mb-2">Hizmet Türü</h3>
+                      <div className="space-y-2">
+                        {['Kapı Açma', 'Kilit Değiştirme', 'Çelik Kapı', 'Oto Çilingir', 'Kasa Çilingir'].map((service) => (
+                          <div key={service} className="flex items-center">
+                            <Checkbox id={service} />
+                            <label htmlFor={service} className="ml-2 text-sm text-gray-700">{service}</label>
                           </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-medium mb-2">Değerlendirme</h3>
+                      <div className="space-y-2">
+                        {[4, 3, 2, 1].map((rating) => (
+                          <div key={rating} className="flex items-center">
+                            <Checkbox id={`rating-${rating}`} />
+                            <label htmlFor={`rating-${rating}`} className="ml-2 text-sm text-gray-700">
+                              {rating}+ <span className="text-yellow-500">★</span>
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-medium mb-2">Çalışma Saatleri</h3>
+                      <div className="space-y-2">
+                        <div className="flex items-center">
+                          <Checkbox id="24-hours" />
+                          <label htmlFor="24-hours" className="ml-2 text-sm text-gray-700">24 Saat Açık</label>
                         </div>
-                        
-                        <div className="flex-grow">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="text-xl font-bold text-gray-800 mb-1">{locksmith.name}</h3>
-                              <p className="text-gray-600 mb-2">{locksmith.location}</p>
-                            </div>
-                            <div className="flex items-center">
-                              <StarRating rating={locksmith.rating} />
-                              <span className="ml-2 text-gray-500">({locksmith.reviewCount} yorum)</span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex flex-wrap gap-2 mb-2">
-                            {locksmith.services.map((service, index) => (
-                              <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{service}</span>
-                            ))}
-                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{locksmith.price}</span>
-                            <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">{locksmith.timeAgo}</span>
-                          </div>
-                          
-                          <p className="text-gray-500 text-sm mb-3">
-                            {locksmith.description}
-                          </p>
-                        </div>
-                        
-                        <div className="mt-4 md:mt-0 md:ml-4 flex flex-col gap-2">
-                          <Button 
-                            className="bg-blue-600 hover:bg-blue-700 text-white w-full"
-                            onClick={() => handleCallLocksmith(locksmith)}
-                          >
-                            Ara
-                          </Button>
-                          <Button className="bg-white text-blue-600 border border-blue-600 hover:bg-blue-50 w-full">
-                            <Link href={`/jobs/${locksmith.id}`} className="flex items-center justify-center">
-                              Detaylar
-                              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                              </svg>
-                            </Link>
-                          </Button>
+                        <div className="flex items-center">
+                          <Checkbox id="weekend" />
+                          <label htmlFor="weekend" className="ml-2 text-sm text-gray-700">Hafta Sonu Açık</label>
                         </div>
                       </div>
                     </div>
-                  ))}
+                  </div>
+                  
+                  <div className="flex justify-end mt-4">
+                    <Button variant="outline" className="mr-2">Temizle</Button>
+                    <Button>Filtrele</Button>
+                  </div>
                 </div>
+              )}
+              
+              {/* Çilingir Listesi */}
+              <div className="space-y-6">
+                {locksmiths.length === 0 ? (
+                  <p className="text-center py-12 text-gray-500">Bu bölgede hiç çilingir bulunamadı.</p>
+                ) : (
+                  locksmiths.map((locksmith) => (
+                    <div key={locksmith.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                      <div className="flex flex-col md:flex-row">
+                        <div className="p-6 flex-1">
+                          <div className="flex items-start mb-4">
+                            <div style={styles.companyLogo} className="mr-4 flex-shrink-0">
+                              <span>{locksmith.name.substring(0, 2)}</span>
+                            </div>
+                            <div>
+                              <h3 className="text-xl font-bold text-gray-800">{locksmith.name}</h3>
+                              <p className="text-gray-600">{locksmith.location}</p>
+                              <div className="flex flex-col md:flex-row md:items-center mt-1">
+                                <StarRating rating={locksmith.rating} />
+                                <span className="md:ml-2 text-sm text-gray-500">({locksmith.reviewCount} değerlendirme)</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <p className="text-gray-700 mb-4">{locksmith.description}</p>
+                          
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {locksmith.services.map((service, index) => (
+                              <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{service.name}</span>
+                            ))}
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <span className="mr-4 text-sm text-gray-600">Ortalama Ücret: {locksmith.price}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="p-6 flex flex-col justify-center md:w-64">
+                          <div className="space-y-3">
+                            <Button 
+                              onClick={() => handleCallLocksmith(locksmith)}
+                              className="w-full bg-[#4169E1]"
+                            >
+                              Ara
+                            </Button>
+                            <Link href={`/jobs/${locksmith.id}`} passHref>
+                              <Button variant="outline" className="w-full">
+                                Detaylar
+                                <ChevronRight className="w-4 h-4" />
+                              </Button>
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
-            </div>
-          </div>
-        </section>
+            </>
+          )}
+        </div>
       )}
 
       {/* Bi Çilingir Hakkında Bölümü */}

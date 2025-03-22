@@ -270,23 +270,6 @@ export default function Iletisim() {
                     </p>
                   </div>
                 </div>
-                
-                <div className="flex items-start">
-                  <div className="bg-blue-100 p-3 rounded-full mr-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-gray-700 font-medium">Çalışma Saatleri</h3>
-                    <p className="text-gray-600">
-                      Pazartesi - Cuma: 09:00 - 18:00<br />
-                      Cumartesi: 10:00 - 14:00<br />
-                      Pazar: Kapalı
-                    </p>
-                  </div>
-                </div>
-              </div>
               
               <div className="mt-8">
                 <h3 className="text-gray-700 font-medium mb-4">Bizi Takip Edin</h3>

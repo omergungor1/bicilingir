@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle,CardFooter } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { SelectableCard } from "../../../components/ui/selectable-card";
 import  turkiyeIlIlce  from "../../../data/turkiye-il-ilce";
+import Link from "next/link";
 
 export default function CilingirKayit() {
   const [activeStep, setActiveStep] = useState(1);
@@ -172,6 +173,11 @@ export default function CilingirKayit() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleStepClick = (step) => {
+      setActiveStep(step);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="container mx-auto py-10">
       <h1 className="text-3xl font-bold mb-8 text-center">Çilingir Kayıt</h1>
@@ -181,7 +187,8 @@ export default function CilingirKayit() {
           {[1, 2, 3, 4].map((step) => (
             <div key={step} className="flex flex-col items-center relative z-10">
               <div 
-                className={`w-10 h-10 rounded-full flex items-center justify-center 
+                onClick={() => handleStepClick(step)}
+                className={`w-10 h-10 rounded-full flex items-center justify-center cursor-pointer  
                   ${activeStep >= step ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}
               >
                 {step}
@@ -704,6 +711,11 @@ export default function CilingirKayit() {
             )}
           </form>
         </CardContent>
+        <CardFooter className="flex flex-col space-y-4">
+          <div className="text-xs text-center text-gray-500">
+            Kayıt olarak, Bi Çilingir'in <Link href="/terms" className="text-blue-600 hover:underline">hizmet şartlarını</Link> ve <Link href="/privacy" className="text-blue-600 hover:underline">gizlilik politikasını</Link> kabul etmiş olursunuz.
+          </div>
+        </CardFooter>
       </Card>
     </div>
   );

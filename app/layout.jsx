@@ -4,8 +4,8 @@ import Footer from "../components/Footer";
 import ToastProvider from '../components/ToastContext'
 
 export const metadata = {
-  title: "Bi Çilingir",
-  description: "Türkiye'nin en büyük çilingir pazaryeri",
+  title: "Bi Çilingir - En yakın çilingiri bul",
+  description: "Türkiye'nin en büyük çilingir arama platformu",
   icons: {
     icon: "/favicon.ico",
   },

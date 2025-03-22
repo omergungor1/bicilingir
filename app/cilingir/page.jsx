@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Checkbox } from "../../components/ui/checkbox";
-import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X } from "lucide-react";
+import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X,Footprints } from "lucide-react";
 import { useToast } from "../../components/ToastContext";
 import Link from "next/link";
 import Image from "next/image";
@@ -15,7 +15,17 @@ export default function CilingirPanel() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [activeFilter, setActiveFilter] = useState("all");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [rocketBalance, setRocketBalance] = useState(1500); // Örnek roket bakiyesi
+  const [keyBalance, setKeyBalance] = useState(1500); // Örnek roket bakiyesi
+  const [maxCustomersPerHour, setMaxCustomersPerHour] = useState(2);
+  const [dailyKeys, setDailyKeys] = useState({
+    Pazartesi: {key: 50, isOpen: true},
+    Salı: {key: 50, isOpen: true},
+    Çarşamba: {key: 50, isOpen: true},
+    Perşembe: {key: 50, isOpen: true},
+    Cuma: {key: 50, isOpen: true},
+    Cumartesi: {key: 100, isOpen: true},
+    Pazar: {key: 100, isOpen: true},
+  });
 
   const [dailyHours, setDailyHours] = useState({
     Pazartesi: { start: "09:00", end: "18:00", is24Hours: false },
@@ -26,6 +36,7 @@ export default function CilingirPanel() {
     Cumartesi: { start: "09:00", end: "18:00", is24Hours: false },
     Pazar: { start: "09:00", end: "18:00", is24Hours: false }
   });
+
   const [workDaysOpen, setWorkDaysOpen] = useState({
     Pazartesi: true,
     Salı: true,
@@ -57,7 +68,7 @@ export default function CilingirPanel() {
   ]);
   const [mainImageIndex, setMainImageIndex] = useState(0);
 
-  const rocketPackages = [
+  const keyPackages = [
     { id: 1, amount: 1000, price: 5000, description: "Başlangıç Paketi" },
     { id: 2, amount: 3000, price: 12000, description: "Orta Paket" },
     { id: 3, amount: 7000, price: 25000, description: "Pro Paket" },
@@ -73,10 +84,10 @@ export default function CilingirPanel() {
     linkedin: ""
   });
 
-  const handleDailyRocketChange = (day, value) => {
-    setDailyRockets(prev => ({
+  const handleDailyKeyChange = (day, value) => {
+    setDailyKeys(prev => ({
       ...prev,
-      [day]: parseInt(value) || 0
+      [day]: { ...prev[day], key: parseInt(value) || 0 }
     }));
   };
 
@@ -165,6 +176,10 @@ export default function CilingirPanel() {
     handleImageUpload({ target: { files } });
   };
 
+  const handlePackagePurchase = (id) => {
+    showToast("Anahtar paketi satın almak için lütfen iletişime geçiniz.", "info");
+  };
+
   return (
     <div className="container mx-auto pb-10 px-2">
       <div className="md:hidden sticky top-2 flex justify-between items-center mb-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg">
@@ -186,7 +201,10 @@ export default function CilingirPanel() {
         </button>
       </div>
       
-      <h1 className="hidden md:block text-xl md:text-3xl font-bold my-6">Bi Çilingir Yönetim Paneli</h1>
+      <div className="hidden md:flex items-center gap-2">
+        <Image src="/logo.png" alt="Bi Çilingir" width={40} height={40} />
+        <h1 className="text-xl md:text-2xl font-bold my-6">Bi Çilingir Yönetim Paneli</h1>
+      </div>
       <div className="grid grid-cols-12 gap-6">
         {/* Sidebar - Desktop */}
         <div className={`md:col-span-3 col-span-12 ${mobileMenuOpen ? 'block' : 'hidden md:block'}`}>
@@ -274,20 +292,6 @@ export default function CilingirPanel() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                   </svg>
                   <span>Değerlendirmeler</span>
-                </button>
-
-                <button 
-                  onClick={() => {
-                    setActiveTab("social");
-                    setMobileMenuOpen(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "social" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                  </svg>
-                  <span>Sosyal Medya</span>
                 </button>
                 
                 <button 
@@ -596,6 +600,8 @@ export default function CilingirPanel() {
                       ></textarea>
                     </div>
                   </div>
+
+                  <div className="border-t border-gray-200 my-6"></div>
                   
                   <div className="mt-6">
                     <h4 className="font-medium mb-4">İşletme Resimleri</h4>
@@ -669,6 +675,23 @@ export default function CilingirPanel() {
                       )}
                     </div>
                   </div>
+
+                  <div className="border-t border-gray-200 my-6"></div>
+                  <div>
+                    <h4 className="font-medium mb-4 mt-6">Bir saat içinde maksimum kaç müşteriye hizmet verebilirsiniz?</h4>
+                    <div className="flex items-center space-x-2">
+                      <p className="text-sm text-gray-500">Maksimum müşteri sayısı</p>
+                      <Input 
+                      className="w-24"
+                      type="number" 
+                      defaultValue={maxCustomersPerHour} 
+                      onChange={(e) => setMaxCustomersPerHour(e.target.value)} 
+                      placeholder="Örn: 10" />
+                      <p className="text-sm text-gray-500">/saat</p>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-200 my-6"></div>
                   
                   <div>
                     <h4 className="font-medium mb-4 mt-6">Çalışma Saatleri</h4>
@@ -755,6 +778,81 @@ export default function CilingirPanel() {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-200 my-6"></div>
+
+                  <h4 className="font-medium mb-4 mt-6">Sosyal Medya Hesapları</h4>
+                  <div className="space-y-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Instagram */}
+                    <div className="pb-6">
+                      <div className="flex items-center mb-4">
+                        <Instagram className="h-6 w-6 text-pink-600 mr-2" />
+                        <h3 className="text-lg font-medium">Instagram</h3>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <Input 
+                          placeholder="Instagram kullanıcı adınız" 
+                          value={socialMedia.instagram}
+                          onChange={(e) => handleSocialMediaChange('instagram', e.target.value)}
+                          className="flex-grow"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Facebook */}
+                    <div className="pb-6">
+                      <div className="flex items-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                        <h3 className="text-lg font-medium">Facebook</h3>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <Input 
+                          placeholder="Facebook sayfa linkiniz" 
+                          value={socialMedia.facebook}
+                          onChange={(e) => handleSocialMediaChange('facebook', e.target.value)}
+                          className="flex-grow"
+                        />
+                      </div>
+                    </div>
+
+                    {/* YouTube */}
+                    <div className="pb-6">
+                      <div className="flex items-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                        </svg>
+                        <h3 className="text-lg font-medium">YouTube</h3>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <Input 
+                          placeholder="YouTube kanal linkiniz" 
+                          value={socialMedia.youtube}
+                          onChange={(e) => handleSocialMediaChange('youtube', e.target.value)}
+                          className="flex-grow"
+                        />
+                      </div>
+                    </div>
+
+                    {/* TikTok */}
+                    <div className="pb-6">
+                      <div className="flex items-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black mr-2" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+                        </svg>
+                        <h3 className="text-lg font-medium">TikTok</h3>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <Input 
+                          placeholder="TikTok kullanıcı adınız" 
+                          value={socialMedia.tiktok}
+                          onChange={(e) => handleSocialMediaChange('tiktok', e.target.value)}
+                          className="flex-grow"
+                        />
+                      </div>
                     </div>
                   </div>
                   
@@ -872,6 +970,16 @@ export default function CilingirPanel() {
                       color: 'blue'
                     },
                     {
+                      type: 'visit',
+                      title: 'Profiliniz Ziyaret Edildi',
+                      description: 'Oto Çilingir hizmeti aramasında profiliniz ziyaret edildi',
+                      location: 'Osmangazi',
+                      service: 'Oto Çilingir',
+                      date: '15 Mart 2024, 15:30',
+                      icon: <Footprints className="h-6 w-6" />,
+                      color: 'orange'
+                    },
+                    {
                       type: 'call',
                       title: 'Bir Arama Aldınız',
                       description: 'Müşteri, Kilit Değiştirme hizmeti için sizi aradı',
@@ -943,12 +1051,13 @@ export default function CilingirPanel() {
                     }
                   ].map((activity, index) => (
                     <Card key={index} className="hover:shadow-md transition-all border-l-4" 
-                          style={{ borderLeftColor: activity.color === "blue" ? "#3b82f6" : activity.color === "yellow" ? "#f59e0b" : "#22c55e" }}>
+                          style={{ borderLeftColor: activity.color === "blue" ? "#3b82f6" : activity.color === "yellow" ? "#f59e0b" : activity.color === "orange" ? "#f97316" : "#22c55e" }}>
                       <CardContent className="p-4">
                         <div className="flex items-start">
                           <div className={`p-3 rounded-full mr-4 flex-shrink-0 ${
                             activity.color === "blue" ? "bg-blue-100 text-blue-600" : 
                             activity.color === "yellow" ? "bg-yellow-100 text-yellow-600" : 
+                            activity.color === "orange" ? "bg-orange-100 text-orange-600" : 
                             "bg-green-100 text-green-600"
                           }`}>
                             {activity.icon}
@@ -1071,131 +1180,91 @@ export default function CilingirPanel() {
             <Card>
               <CardHeader>
                 <CardTitle>Reklam Yönetimi</CardTitle>
-                <CardDescription>Roket paketleri ve reklam ayarlarınızı yönetin</CardDescription>
+                <CardDescription>Anahtar paketleri ve reklam ayarlarınızı yönetin</CardDescription>
               </CardHeader>
               <CardContent>
-                {/* Mevcut Roket Bakiyesi */}
+                {/* Mevcut Anahtar Bakiyesi */}
                 <div className="mb-8">
                   <div className="bg-blue-50 p-6 rounded-lg">
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">Roket Bakiyeniz</h3>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">Anahtar Bakiyeniz</h3>
                     <div className="flex items-center">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                       </svg>
-                      <span className="text-3xl font-bold text-blue-600"> {rocketBalance} Roket</span>
+                      <span className="text-3xl font-bold text-blue-600"> {keyBalance} Anahtar</span>
                     </div>
                     <div className="flex items-center ml-2 mt-2 text-gray-600">
                       <Info className="w-4 h-4 mr-2"/>
-                      <p className="text-sm">Tahmini roket bitiş tarihi: 10.04.2025</p> 
+                      <p className="text-sm">Tahmini anahtar bitiş tarihi: 10.04.2025</p> 
                     </div>
                   </div>
                 </div>
 
-                {/* Roket Paketleri */}
+                {/* Anahtar Paketleri */}
                 <div className="mb-8">
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">Roket Paketleri</h3>
+                  <h3 className="text-xl font-bold text-gray-800 mb-4">Anahtar Paketleri</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {rocketPackages.map((pkg) => (
+                    {keyPackages.map((pkg) => (
                       <div key={pkg.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                         <div className="text-center mb-4">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-blue-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                           </svg>
-                          <h4 className="font-bold text-lg">{pkg.amount} Roket</h4>
-                          <p className="text-sm text-gray-600 mb-2">{pkg.description}</p>
-                          <p className="text-xl font-bold text-blue-600">{pkg.price}₺</p>
+                          <h4 className="font-bold text-lg">{pkg.amount} Anahtar</h4>
                         </div>
-                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                          Satın Al
-                        </Button>
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-lg">{pkg.price} ₺</span>
+                          <Button 
+                          onClick={() => handlePackagePurchase(pkg.id)}
+                          variant="outline" size="sm">Satın Al</Button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Günlük Roket Ayarları */}
+                {/* Günlük Anahtar Kullanım Tercihleri */}
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">Günlük Roket Kullanım Tercihleriniz</h3>
+                  <h3 className="text-xl font-bold text-gray-800 mb-4">Günlük Anahtar Kullanım Tercihleriniz</h3>
+                  <p className="text-sm text-gray-500 mb-4 flex items-center"><Info className="w-4 h-4 mr-2"/> Tahmini Aylık Anahtar Kullanımı: {Object.values(dailyKeys).reduce((sum, day) => sum + (4*day.key || 0), 0)} Anahtar</p>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {Object.entries(dailyHours).map(([day, { start, end, is24Hours }]) => (
+                    {Object.entries(dailyKeys).map(([day, _]) => (
                       <div key={day} className="border rounded-lg p-4 bg-gray-10">
                         <label className="block text-md font-bold text-gray-700 mb-2">{day}</label>
                         <div className="flex items-center space-x-2">
                           <Checkbox 
-                            id={`workday-${day}`} 
-                            checked={workDaysOpen[day]}
+                            id={`adday-${day}`} 
+                            checked={dailyKeys[day].isOpen}
                             onCheckedChange={(checked) => {
-                              setWorkDaysOpen(prev => ({
+                              setDailyKeys(prev => ({
                                 ...prev,
-                                [day]: !!checked
+                                [day]: { ...prev[day], isOpen: !!checked }
                               }));
                             }}
                           />
                           <label 
-                            htmlFor={`workday-${day}`} 
-                            className={`font-medium ${!workDaysOpen[day] ? "text-gray-400" : ""}`}
+                            htmlFor={`adday-${day}`} 
+                            className={`font-medium ${!dailyKeys[day].isOpen ? "text-gray-400" : ""}`}
                           >
-                            {day}
+                            Reklam Açık
                           </label>
-                          <div className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={`24hours-${day}`}
-                              checked={is24Hours}
-                              onCheckedChange={(checked) => {
-                                setDailyHours(prev => ({
-                                  ...prev,
-                                  [day]: {
-                                    ...prev?.[day],
-                                    is24Hours: checked,
-                                    start: checked ? "00:00" : "09:00",
-                                    end: checked ? "00:00" : "18:00"
-                                  }
-                                }));
-                              }}
-                              disabled={!workDaysOpen[day]}
-                            />
-                            <label 
-                              htmlFor={`24hours-${day}`}
-                              className={`text-sm ${!workDaysOpen[day] ? "text-gray-400" : ""}`}
-                            >
-                              24 Saat
-                            </label>
-                          </div>
                         </div>
-                        <div className="flex items-center space-x-2 md:mt-0 mt-2">
+                        <div className="flex items-center space-x-2 md:mt-2 mt-2">
+                          <label className={`font-medium ${!dailyKeys[day].isOpen ? "text-gray-400" : ""}`}>
+                            Günlük Anahtar:
+                          </label>
                           <Input 
-                            type="time"
-                            value={start || "09:00"}
-                            onChange={(e) => {
-                              setDailyHours(prev => ({
-                                ...prev,
-                                [day]: {
-                                  ...prev?.[day],
-                                  start: e.target.value
-                                }
-                              }));
-                            }}
-                            disabled={!workDaysOpen[day] || is24Hours}
-                            className={`w-24 ${(!workDaysOpen[day] || is24Hours) ? "bg-gray-100 text-gray-400" : ""}`}
+                            type="number"
+                            min="1"
+                            max="100"
+                            value={dailyKeys[day].key || 10}
+                            onChange={(e) => handleDailyKeyChange(day, parseInt(e.target.value))}
+                            disabled={!dailyKeys[day].isOpen}
+                            className={`w-20 ${!dailyKeys[day].isOpen ? "bg-gray-100 text-gray-400" : ""}`}
                           />
-                          <span className={!workDaysOpen[day] ? "text-gray-400" : ""}>-</span>
-                          <Input 
-                            type="time"
-                            value={end || "18:00"}
-                            onChange={(e) => {
-                              setDailyHours(prev => ({
-                                ...prev,
-                                [day]: {
-                                  ...prev?.[day],
-                                  end: e.target.value
-                                }
-                              }));
-                            }}
-                            disabled={!workDaysOpen[day] || is24Hours}
-                            className={`w-24 ${(!workDaysOpen[day] || is24Hours) ? "bg-gray-100 text-gray-400" : ""}`}
-                          />
-                          <span className={`ml-2 text-sm ${workDaysOpen[day] ? "text-green-600" : "text-red-500"}`}>
-                            {workDaysOpen[day] ? "Açık" : "Kapalı"}
+                          <span className={`ml-2 text-sm ${dailyKeys[day].isOpen ? "text-green-600" : "text-red-500"}`}>
+                            {dailyKeys[day].isOpen ? "Reklam Açık" : "Reklam Kapalı"}
                           </span>
                         </div>
                       </div>
@@ -1274,133 +1343,6 @@ export default function CilingirPanel() {
                     </p>
                     <Button variant="outline" className="text-red-600 border-red-600 hover:bg-red-50">
                       Hesabımı Sil
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {activeTab === "social" && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Sosyal Medya Hesapları</CardTitle>
-                <CardDescription>Sosyal medya hesaplarınızı yönetin</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {/* Instagram */}
-                  <div className="pb-6">
-                    <div className="flex items-center mb-4">
-                      <Instagram className="h-6 w-6 text-pink-600 mr-2" />
-                      <h3 className="text-lg font-medium">Instagram</h3>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <Input 
-                        placeholder="Instagram kullanıcı adınız" 
-                        value={socialMedia.instagram}
-                        onChange={(e) => handleSocialMediaChange('instagram', e.target.value)}
-                        className="flex-grow"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Facebook */}
-                  <div className="pb-6">
-                    <div className="flex items-center mb-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                      </svg>
-                      <h3 className="text-lg font-medium">Facebook</h3>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <Input 
-                        placeholder="Facebook sayfa linkiniz" 
-                        value={socialMedia.facebook}
-                        onChange={(e) => handleSocialMediaChange('facebook', e.target.value)}
-                        className="flex-grow"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Twitter/X */}
-                  <div className="pb-6">
-                    <div className="flex items-center mb-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black mr-2" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                      </svg>
-                      <h3 className="text-lg font-medium">X (Twitter)</h3>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <Input 
-                        placeholder="X (Twitter) kullanıcı adınız" 
-                        value={socialMedia.twitter}
-                        onChange={(e) => handleSocialMediaChange('twitter', e.target.value)}
-                        className="flex-grow"
-                      />
-                    </div>
-                  </div>
-
-                  {/* YouTube */}
-                  <div className="pb-6">
-                    <div className="flex items-center mb-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                      </svg>
-                      <h3 className="text-lg font-medium">YouTube</h3>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <Input 
-                        placeholder="YouTube kanal linkiniz" 
-                        value={socialMedia.youtube}
-                        onChange={(e) => handleSocialMediaChange('youtube', e.target.value)}
-                        className="flex-grow"
-                      />
-                    </div>
-                  </div>
-
-                  {/* TikTok */}
-                  <div className="pb-6">
-                    <div className="flex items-center mb-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black mr-2" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
-                      </svg>
-                      <h3 className="text-lg font-medium">TikTok</h3>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <Input 
-                        placeholder="TikTok kullanıcı adınız" 
-                        value={socialMedia.tiktok}
-                        onChange={(e) => handleSocialMediaChange('tiktok', e.target.value)}
-                        className="flex-grow"
-                      />
-                    </div>
-                  </div>
-
-                  {/* LinkedIn */}
-                  <div className="pb-6">
-                    <div className="flex items-center mb-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-700 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                      </svg>
-                      <h3 className="text-lg font-medium">LinkedIn</h3>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <Input 
-                        placeholder="LinkedIn profil linkiniz" 
-                        value={socialMedia.linkedin}
-                        onChange={(e) => handleSocialMediaChange('linkedin', e.target.value)}
-                        className="flex-grow"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-4 col-span-full">
-                    <Button 
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={handleSocialMediaUpdate}
-                    >
-                      Tüm Değişiklikleri Kaydet
                     </Button>
                   </div>
                 </div>
