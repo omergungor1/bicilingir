@@ -101,89 +101,13 @@ export async function getLocksmiths() {
   }
 }
 
-export async function similarLocksmiths(location, services) {
+export async function getSimilarLocksmiths(id) {
   // Test modunda ise test verilerinden ilk 2 çilingiri döndür
   if (isTestMode) {
-    return { locksmiths: testLocksmiths.slice(0, 2) };
+    return { similarLocksmiths: testLocksmiths.slice(0, 2) };
   }
   
-  const supabase = getSupabase();
-  
-  try {
-    // Konum ve hizmetlere göre benzer çilingirleri getir
-    let query = supabase
-      .from('locksmiths')
-      .select(`
-        *,
-        locksmith_services(
-          service_id,
-          services(name)
-        ),
-        working_hours(day, open_time, close_time, is_open),
-        images(id, storage_path, is_profile)
-      `)
-      .eq('is_active', true)
-      .eq('is_verified', true)
-      .limit(2);
-    
-    // Eğer konum belirtilmişse filtrele
-    if (location) {
-      query = query.ilike('location', `%${location}%`);
-    }
-    
-    const { data: locksmiths, error } = await query;
-    
-    if (error) {
-      console.error('Benzer çilingirler getirilirken hata oluştu:', error);
-      return { error };
-    }
-    
-    // Verileri formatla
-    const formattedLocksmiths = locksmiths.map((locksmith) => {
-      // Hizmetleri formatla
-      const services = locksmith.locksmith_services.map(
-        (service) => service.services?.name
-      ).filter(Boolean);
-      
-      // Profil resmi varsa al
-      const profileImage = locksmith.images.find((img) => img.is_profile);
-      const imageUrl = profileImage ? profileImage.storage_path : null;
-      
-      // Çalışma saatlerini formatla
-      const workingHours = locksmith.working_hours.reduce((acc, curr) => {
-        acc[curr.day] = {
-          open: curr.open_time,
-          close: curr.close_time,
-          isOpen: curr.is_open
-        };
-        return acc;
-      }, {});
-      
-      return {
-        id: locksmith.id,
-        name: locksmith.name,
-        location: locksmith.location,
-        rating: locksmith.average_rating,
-        reviewCount: locksmith.review_count,
-        services,
-        price: locksmith.price_range,
-        description: locksmith.description,
-        detailed_description: locksmith.detailed_description,
-        phone: locksmith.phone,
-        experience: locksmith.experience,
-        address: locksmith.address,
-        website: locksmith.website,
-        workingHours,
-        imageUrl,
-        images: locksmith.images.map(img => img.storage_path),
-      };
-    });
-    
-    return { locksmiths: formattedLocksmiths };
-  } catch (error) {
-    console.error('Benzer çilingirler getirilirken beklenmeyen hata:', error);
-    return { error: 'Veritabanı işlemi sırasında bir hata oluştu.' };
-  }
+  return { similarLocksmiths: testLocksmiths.slice(0, 2) };
 }
 
 /**
