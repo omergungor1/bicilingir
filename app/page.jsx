@@ -10,6 +10,8 @@ import SearchForm from "../components/SearchForm";
 import { useToast } from "../components/ToastContext";
 import { getLocksmiths } from "./actions";
 import { ChevronRight } from "lucide-react";
+import { Input } from "../components/ui/input";
+import { formatPhoneNumber } from "../lib/utils";
 
 const styles = {
   accentButton: {
@@ -77,15 +79,24 @@ function SearchParamsWrapper({ children }) {
   return children(searchParams);
 }
 
+
+
 export default function Home() {
   const [showResults, setShowResults] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedLocksmith, setSelectedLocksmith] = useState(null);
-  const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
-  const [comment, setComment] = useState("");
+
+
+  const [customerFeedback, setCustomerFeedback] = useState({
+    rating: 0,
+    comment: "",
+    phone: "",
+  });
+
+
   const [locksmiths, setLocksmiths] = useState([]);
   const [error, setError] = useState(null);
   
@@ -95,8 +106,22 @@ export default function Home() {
 
   const handleSearch = async () => {
     setIsLoading(true);
-    
+    setShowResults(true);
+
+    // Sonuç kısmına kaydırma işlemi için düzeltme
+    setTimeout(() => {
+      const resultsSection = document.getElementById('results-section');
+      if (resultsSection) {
+        // Mobil uyumlu, daha güvenilir kaydırma yöntemi
+        window.scrollTo({
+          top: resultsSection.offsetTop - 20,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
+
     try {
+      
       const { locksmiths: fetchedLocksmiths, error } = await getLocksmiths();
       
       if (error) {
@@ -111,9 +136,11 @@ export default function Home() {
       setError("Veri yüklenirken bir hata oluştu");
       showToast("Beklenmeyen bir hata oluştu", "error", 3000);
     }
-
-    setShowResults(true);
-    setIsLoading(false);
+    
+    setTimeout(async () => {
+      setIsLoading(false);
+      setShowResults(true);
+    }, 1000); 
   };
 
   // SearchParamsHandler bileşeni
@@ -130,17 +157,31 @@ export default function Home() {
 
   const handleCallLocksmith = (locksmith) => {
     setSelectedLocksmith(locksmith);
-    setShowRatingModal(true);
+
+    // Telefon numarasını çağırma işlemi
+    const phoneNumber = locksmith.phone;
+    // if (phoneNumber) {
+    //   window.location.href = `tel:${phoneNumber}`;
+    // } else {
+    //   showToast("Bu çilingirin telefon numarası bulunamadı", "error", 3000);
+    // }
+    
+    setTimeout(() => {
+      setShowRatingModal(true);
+    }, 1000);
   };
 
   const handleRatingSubmit = (e) => {
     e.preventDefault();
     // Burada API'ye gönderilecek
-    console.log(`Değerlendirme: ${rating} yıldız, Yorum: ${comment}, Çilingir: ${selectedLocksmith.name}`);
+    console.log(`Değerlendirme: ${customerFeedback.rating} yıldız, Yorum: ${customerFeedback.comment}, Çilingir: ${selectedLocksmith.name}`);
     
     // Form temizle
-    setRating(0);
-    setComment("");
+    setCustomerFeedback({
+      rating: 0,
+      comment: "",
+      phone: ""
+    });
     
     // Modal kapat
     setShowRatingModal(false);
@@ -174,9 +215,9 @@ export default function Home() {
 
       {/* Çilingir Sonuçları */}
       {showResults && (
-        <div className="w-full max-w-6xl mx-auto px-4 my-12">
+        <div className="w-full max-w-6xl mx-auto px-4 my-12" id="results-section">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-800">Bölgenizdeki Çilingirler</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800">En Yakın Çilingirler</h2>
             <button 
               onClick={() => setShowFilters(!showFilters)}
               className="text-blue-600 flex items-center gap-1"
@@ -253,17 +294,33 @@ export default function Home() {
                 {locksmiths.length === 0 ? (
                   <p className="text-center py-12 text-gray-500">Bu bölgede hiç çilingir bulunamadı.</p>
                 ) : (
-                  locksmiths.map((locksmith) => (
-                    <div key={locksmith.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                  locksmiths.map((locksmith, index) => (
+                    <div key={locksmith.id} className={`border ${index === 0 ? 'border-blue-400 border-2 shadow-lg relative transform transition hover:scale-[1.02]' : 'border-gray-200 hover:shadow-md transition'} rounded-lg overflow-hidden ${index === 0 ? 'bg-blue-50' : ''}`}>
+                      {index === 0 && (
+                        <div className="bg-blue-600 text-white py-1 px-4 absolute top-0 left-0 rounded-br-lg font-medium text-sm shadow-md z-10">
+                          En İyi Eşleşme
+                        </div>
+                      )}
                       <div className="flex flex-col md:flex-row">
-                        <div className="p-6 flex-1">
+                        <div className={`p-6 flex-1 ${index === 0 ? 'pt-10' : ''}`}>
                           <div className="flex items-start mb-4">
-                            <div style={styles.companyLogo} className="mr-4 flex-shrink-0">
+                            <div style={styles.companyLogo} className={`mr-4 flex-shrink-0 ${index === 0 ? 'bg-blue-600 text-white shadow-md' : ''}`}>
                               <span>{locksmith.name.substring(0, 2)}</span>
                             </div>
                             <div>
-                              <h3 className="text-xl font-bold text-gray-800">{locksmith.name}</h3>
-                              <p className="text-gray-600">{locksmith.location}</p>
+                              <div className="flex flex-col md:flex-row md:items-center mt-1 gap-2">
+                                <h3 className={`text-xl font-bold ${index === 0 ? 'text-blue-800' : 'text-gray-800'}`}>{locksmith.name}</h3>
+                                {index === 0 && (
+                                  <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Onaylı Çilingir
+                                  </span>
+                                )}
+                                <div className="w-1 h-1 bg-gray-400 rounded-full hidden md:block" />
+                                <p className="text-gray-600">{locksmith.location}</p>
+                              </div>
                               <div className="flex flex-col md:flex-row md:items-center mt-1">
                                 <StarRating rating={locksmith.rating} />
                                 <span className="md:ml-2 text-sm text-gray-500">({locksmith.reviewCount} değerlendirme)</span>
@@ -273,14 +330,11 @@ export default function Home() {
                           
                           <p className="text-gray-700 mb-4">{locksmith.description}</p>
                           
-                          <div className="flex flex-wrap gap-2 mb-4">
+                          <div className="flex flex-wrap gap-2">
                             {locksmith.services.map((service, index) => (
                               <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{service.name}</span>
                             ))}
-                          </div>
-                          
-                          <div className="flex items-center justify-between">
-                            <span className="mr-4 text-sm text-gray-600">Ortalama Ücret: {locksmith.price}</span>
+                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{locksmith.price}</span>
                           </div>
                         </div>
                         
@@ -288,9 +342,14 @@ export default function Home() {
                           <div className="space-y-3">
                             <Button 
                               onClick={() => handleCallLocksmith(locksmith)}
-                              className="w-full bg-[#4169E1]"
+                              className={`w-full ${index === 0 ? 'bg-blue-600 hover:bg-blue-700 text-white font-bold animate-pulse shadow-md' : 'bg-[#4169E1]'}`}
                             >
-                              Ara
+                              {index === 0 ? 'Hemen Ara' : 'Ara'}
+                              {index === 0 && (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                              )}
                             </Button>
                             <Link href={`/jobs/${locksmith.id}`} passHref>
                               <Button variant="outline" className="w-full">
@@ -431,12 +490,12 @@ export default function Home() {
                       <button
                         key={star}
                         type="button"
-                        onClick={() => setRating(star)}
+                        onClick={() => setCustomerFeedback({ ...customerFeedback, rating: star })}
                         onMouseEnter={() => setHoverRating(star)}
                         onMouseLeave={() => setHoverRating(0)}
                         className="text-3xl focus:outline-none"
                       >
-                        {star <= (hoverRating || rating) ? (
+                        {star <= (hoverRating || customerFeedback.rating) ? (
                           <span className="text-yellow-400">★</span>
                         ) : (
                           <span className="text-gray-300">☆</span>
@@ -445,11 +504,11 @@ export default function Home() {
                     ))}
                   </div>
                   <p className="text-sm text-gray-500 mt-1">
-                    {rating === 1 && "Çok Kötü"}
-                    {rating === 2 && "Kötü"}
-                    {rating === 3 && "Orta"}
-                    {rating === 4 && "İyi"}
-                    {rating === 5 && "Çok İyi"}
+                    {customerFeedback.rating === 1 && "Çok Kötü"}
+                    {customerFeedback.rating === 2 && "Kötü"}
+                    {customerFeedback.rating === 3 && "Orta"}
+                    {customerFeedback.rating === 4 && "İyi"}
+                    {customerFeedback.rating === 5 && "Çok İyi"}
                   </p>
                 </div>
               </div>
@@ -460,26 +519,50 @@ export default function Home() {
                 </label>
                 <textarea
                   id="comment"
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
+                  value={customerFeedback.comment}
+                  onChange={(e) => setCustomerFeedback({ ...customerFeedback, comment: e.target.value })}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows="4"
                   placeholder="Deneyiminizi paylaşın (opsiyonel)"
                 ></textarea>
+
+                {/* Telefon numarası */}
+                <div className="mb-6">
+                  <label htmlFor="phone" className="block text-gray-700 mb-2">
+                    Telefon Numarası
+                  </label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formatPhoneNumber(customerFeedback.phone)}
+                    onChange={(e) => {
+                      // Sadece rakam girişine izin ver
+                      const newValue = e.target.value.replace(/[^0-9]/g, '');
+                      // Maksimum 11 karakter (0599 999 99 99 formatı için)
+                      if (newValue.length <= 11) {
+                        setCustomerFeedback({ ...customerFeedback, phone: newValue });
+                      }
+                    }}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="05XX XXX XX XX"
+                    maxLength={14}
+                  />
+                </div>
+                
               </div>
               
               <div className="flex justify-end space-x-3">
-                <Button 
+                {/* <Button 
                   type="button" 
                   className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                   onClick={() => setShowRatingModal(false)}
                 >
                   İptal
-                </Button>
+                </Button> */}
                 <Button 
                   type="submit" 
                   className="bg-blue-600 hover:bg-blue-700 text-white"
-                  disabled={rating === 0}
+                  disabled={customerFeedback.rating === 0 || customerFeedback.phone.length !== 11 || customerFeedback.comment.length === 0 }
                 >
                   Gönder
                 </Button>

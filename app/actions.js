@@ -106,8 +106,6 @@ export async function getSimilarLocksmiths(id) {
   if (isTestMode) {
     return { similarLocksmiths: testLocksmiths.slice(0, 2) };
   }
-  
-  return { similarLocksmiths: testLocksmiths.slice(0, 2) };
 }
 
 /**

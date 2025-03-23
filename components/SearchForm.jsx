@@ -5,23 +5,40 @@ import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import AdresArama from "./AdresArama";
 import { useRouter } from "next/navigation";
+import { useToast } from "./ToastContext";
 
 export default function SearchForm({ onSearch }) {
   const router = useRouter();
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [selectedService, setSelectedService] = useState("");
+  const [warnLocation, setWarnLocation] = useState(false);
+  const [warnService, setWarnService] = useState(false);
+  const { showToast } = useToast();
 
   const handlePlaceSelect = (place) => {
     setSelectedPlace(place);
     console.log("Seçilen adres:", place.formatted_address);
+    setWarnLocation(false);
   };
 
   const handleServiceSelect = (value) => {
     setSelectedService(value);
     console.log("Seçilen hizmet:", value);
+    setWarnService(false);
   };
 
   const handleSearch = () => {
+    // Form kontrolü
+    if (selectedPlace === null && selectedService === "") {
+      showToast("Lütfen hem konum hem de hizmet seçiniz", "error", 3000);
+      return;
+    } else if (selectedPlace === null) {
+      showToast("Lütfen bir konum (il veya ilçe) seçiniz", "error", 3000);
+      return;
+    } else if (selectedService === "") {
+      showToast("Lütfen bir hizmet türü seçiniz", "error", 3000);
+      return;
+    }
     // Eğer ana sayfada değilsek, ana sayfaya yönlendir
     const isHomePage = window.location.pathname === "/" || window.location.pathname === "";
     
@@ -43,10 +60,26 @@ export default function SearchForm({ onSearch }) {
     }
   };
 
+  const handleButtonClick = () => {
+    if (selectedPlace === null && selectedService === "") {
+      setWarnLocation(true);
+      setWarnService(true);
+      showToast("Lütfen ilçenizi seçiniz", "warning", 3000);
+    } else if (selectedPlace === null) {
+      setWarnLocation(true);
+      showToast("Lütfen ilçenizi seçiniz", "warning", 3000);
+    } else if (selectedService === "") {
+      setWarnService(true);
+      showToast("Lütfen bir hizmet türü seçiniz", "warning", 3000);
+    } else {
+      handleSearch();
+    }
+  };
+
   return (
     <div className="mt-8">
       <div className="flex flex-col md:flex-row gap-2 justify-center items-center w-full">
-        <div className="relative w-full md:w-1/3">
+        <div className={`relative w-full md:w-1/3 ${warnLocation ? 'border-red-500 border-2 rounded-lg' : ''}`}>
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
             <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
@@ -57,31 +90,28 @@ export default function SearchForm({ onSearch }) {
           <AdresArama 
             onPlaceSelect={handlePlaceSelect}
             placeholder="Adresinizi girin (İl veya İlçe)"
-            className="pl-10 h-10 md:h-14 py-3 bg-white text-gray-800 border-0 rounded-lg focus:ring-2 focus:ring-blue-500 w-full"
+            className={`pl-10 h-10 md:h-14 py-3 bg-white text-gray-800 border-0 rounded-lg focus:ring-2 focus:ring-blue-500 w-full`}
           />
         </div>
         
-        <div className="w-full md:w-1/4 mt-2 md:mt-0">
+        <div className={`w-full md:w-1/4 mt-2 md:mt-0 ${warnService ? 'border-red-500 border-2 rounded-lg' : ''}`}>
           <Select onValueChange={handleServiceSelect}>
-            <SelectTrigger className="h-10 md:h-14 bg-white text-gray-800 border-0 rounded-lg focus:ring-2 focus:ring-blue-500">
+            <SelectTrigger className={`h-10 md:h-14 bg-white text-gray-800 border-0 rounded-lg focus:ring-2 focus:ring-blue-500`}>
               <SelectValue placeholder="Hizmet Seçin" />
             </SelectTrigger>
             <SelectContent className="select-content">
+              <SelectItem value="acil-cilingir" className="select-item">Acil Çilingir</SelectItem>
+              <SelectItem value="7-24-cilingir" className="select-item">7/24 Çilingir</SelectItem>
               <SelectItem value="kapi-acma" className="select-item">Kapı Açma</SelectItem>
               <SelectItem value="oto-cilingir" className="select-item">Oto Çilingir</SelectItem>
               <SelectItem value="kasa-cilingir" className="select-item">Kasa Çilingir</SelectItem>
-              <SelectItem value="kilit-degistirme" className="select-item">Kilit Değiştirme</SelectItem>
-              <SelectItem value="celik-kapi" className="select-item">Çelik Kapı</SelectItem>
-              <SelectItem value="anahtar-kopyalama" className="select-item">Anahtar Kopyalama</SelectItem>
-              <SelectItem value="elektronik-kilit" className="select-item">Elektronik Kilit</SelectItem>
-              <SelectItem value="acil-cilingir" className="select-item">Acil Çilingir</SelectItem>
             </SelectContent>
           </Select>
         </div>
         
         <Button 
-          onClick={handleSearch}
-          className="bg-blue-600 h-10 md:h-14 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg mt-2 md:mt-0 w-full md:w-auto"
+          onClick={handleButtonClick}
+          className={`bg-blue-600 h-10 md:h-14 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg mt-2 md:mt-0 w-full md:w-auto ${!(selectedPlace && selectedService) ? 'opacity-90 cursor-pointer' : ''}`}
         >
           Çilingir Bul
         </Button>

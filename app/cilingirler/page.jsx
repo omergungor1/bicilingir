@@ -136,10 +136,10 @@ export default function CilingirlerPage() {
             Kayıt ol veya giriş yap
           </p>
           <div className="flex space-x-3">
-            <Link href="/cilingir/login" className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded transition-colors">
+            <Link href="/auth/login" className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded transition-colors">
               Giriş Yap
             </Link>
-            <Link href="/cilingir/kayit" className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors">
+            <Link href="/auth/register" className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors">
               Kayıt Ol
             </Link>
           </div>
