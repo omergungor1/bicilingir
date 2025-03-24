@@ -6,6 +6,7 @@ import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { SelectableCard } from "../../../components/ui/selectable-card";
 import  turkiyeIlIlce  from "../../../data/turkiye-il-ilce";
+import { formatPhoneNumber } from "../../../lib/utils";
 import Link from "next/link";
 
 export default function CilingirKayit() {
@@ -15,6 +16,7 @@ export default function CilingirKayit() {
     telefon: "",
     email: "",
     isletmeAdi: "",
+    personelSayisi: "",
     il: "",
     ilce: "",
     acikAdres: "",
@@ -247,24 +249,38 @@ export default function CilingirKayit() {
                     <label className="block text-sm font-medium mb-2">Telefon *</label>
                     <Input 
                       name="telefon"
-                      value={formData.telefon}
+                      value={formatPhoneNumber(formData.telefon)}
                       onChange={handleChange}
                       placeholder="05XX XXX XX XX"
+                      maxLength={14}
                       required
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">E-posta *</label>
-                  <Input 
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    type="email"
-                    placeholder="ornek@email.com"
-                    required
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">E-posta *</label>
+                    <Input 
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      type="email"
+                      placeholder="ornek@email.com"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Personel Sayısı</label>
+                    <Input 
+                      name="personelSayisi"
+                      value={formData.personelSayisi}
+                      onChange={handleChange}
+                      placeholder="Örn: 2"
+                      type="number"
+                    />
+                  </div>
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium mb-2">İşletme Adı *</label>
                   <Input 
@@ -326,7 +342,10 @@ export default function CilingirKayit() {
                       name="postaKodu"
                       value={formData.postaKodu}
                       onChange={handleChange}
-                      placeholder="34XXX"
+                      placeholder="Örn: 34XXX"
+                      type="number"
+                      maxLength={5}
+                      required
                     />
                   </div>
                   <div>
@@ -705,7 +724,7 @@ export default function CilingirKayit() {
                 </p>
                 <div className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3 justify-center">
                   <Button variant="outline" type="button" onClick={() => window.location.href = "/"}>Ana Sayfaya Dön</Button>
-                  <Button type="button" onClick={() => window.location.href = "/cilingir/login"}>Panele Git</Button>
+                  <Button type="button" onClick={() => window.location.href = "/auth/login"}>Panele Git</Button>
                 </div>
               </div>
             )}

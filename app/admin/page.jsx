@@ -318,7 +318,7 @@ export default function AdminPanel() {
 
                     <div className="border-t my-2"></div>
 
-                  <Link href="/cilingir/login">
+                  <Link href="/auth/login">
                     <button 
                       onClick={() => {/* Güvenli çıkış işlemi */}}
                       className="flex items-center space-x-3 p-3 rounded-lg text-left text-red-600 hover:bg-red-50 transition-colors w-full"
@@ -1571,7 +1571,7 @@ export default function AdminPanel() {
                           </div>
                           <div>
                             <label className="block text-sm mb-1">Site Açıklaması</label>
-                            <Input defaultValue="Türkiye'nin en büyük çilingir pazaryeri" />
+                            <Input defaultValue="En yakın çilingiri bul" />
                           </div>
                         </div>
                       </div>

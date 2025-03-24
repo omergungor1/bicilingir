@@ -26,6 +26,17 @@ export default function CilingirPanel() {
     Cumartesi: {key: 100, isOpen: true},
     Pazar: {key: 100, isOpen: true},
   });
+  const [keyUsageHistory, setKeyUsageHistory] = useState([
+    { id: 1, keyUsage: 5, activite: "Aramada listelendin", date: "2025-03-23 10:00:00"},
+    { id: 2, keyUsage: 30, activite: "Bir arama aldınız", date: "2025-03-23 10:00:00" },
+    { id: 3, keyUsage: 5, activite: "Aramada listelendin", date: "2025-03-23 10:00:00" },
+    { id: 4, keyUsage: 5, activite: "Aramada listelendin", date: "2025-03-23 10:00:00" },
+    { id: 5, keyUsage: 30, activite: "Bir arama aldınız", date: "2025-03-23 10:00:00" },
+    { id: 6, keyUsage: 30, activite: "Bir arama aldınız", date: "2025-03-23 10:00:00" },
+    { id: 7, keyUsage: 5, activite: "Aramada listelendin", date: "2025-03-23 10:00:00" },
+    { id: 8, keyUsage: 5, activite: "Aramada listelendin", date: "2025-03-23 10:00:00" },
+    
+  ]);
 
   const [dailyHours, setDailyHours] = useState({
     Pazartesi: { start: "09:00", end: "18:00", is24Hours: false },
@@ -325,7 +336,7 @@ export default function CilingirPanel() {
 
                 <div className="border-t my-2"></div>
 
-                <Link href="/cilingir/login">
+                <Link href="/auth/login">
                   <button 
                     onClick={() => {/* Güvenli çıkış işlemi */}}
                     className="flex items-center space-x-3 p-3 rounded-lg text-left text-red-600 hover:bg-red-50 transition-colors w-full"
@@ -1270,6 +1281,50 @@ export default function CilingirPanel() {
                       </div>
                     ))}
                   </div>
+                  
+                {/* Anahtar Kullanım Geçmişi */}
+                <div className="my-8">
+                  <h3 className="text-xl font-bold text-gray-800 mb-4">Anahtar Kullanım Geçmişi</h3>
+                  <div className="bg-white shadow-sm rounded-lg border border-gray-100">
+                    {keyUsageHistory.length === 0 ? (
+                      <div className="p-6 text-center text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                        </svg>
+                        <p>Henüz anahtar kullanım geçmişiniz bulunmamaktadır.</p>
+                      </div>
+                    ) : (
+                      <ul className="divide-y divide-gray-100">
+                        {keyUsageHistory.map((activity) => (
+                          <li key={activity.id} className="flex items-center p-4 hover:bg-blue-50 transition-colors">
+                            <div className="flex-shrink-0 mr-4">
+                              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-gray-900 truncate">{activity.activite}</p>
+                              <p className="text-sm text-gray-500">{activity.date}</p>
+                            </div>
+                            <div className="inline-flex items-center text-base font-semibold text-blue-600">
+                              {activity.keyUsage} Anahtar
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {keyUsageHistory.length > 0 && (
+                      <div className="px-4 py-3 bg-gray-50 text-right rounded-b-lg">
+                        <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                          Tüm Geçmişi Görüntüle
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                   <div className="mt-6">
                     <Button className="bg-green-600 hover:bg-green-700 text-white">
                       Değişiklikleri Kaydet

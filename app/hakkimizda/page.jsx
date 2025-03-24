@@ -76,15 +76,7 @@ export default function HakkimizdaPage() {
       <Hero 
         title="Hakkımızda" 
         description="Bi Çilingir, çilingir hizmetlerini daha erişilebilir, güvenilir ve şeffaf hale getirmek için kurulmuş bir platformdur."
-      >
-      <div className="w-full max-w-4xl mx-auto">
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="w-full">
-            <SearchForm />
-          </div>
-        </div>
-      </div>
-      </Hero>
+      />
 
       {/* Hikayemiz Bölümü */}
       <section className="w-full py-16 px-4 bg-white">

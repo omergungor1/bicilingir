@@ -10,8 +10,6 @@ import SearchForm from "../components/SearchForm";
 import { useToast } from "../components/ToastContext";
 import { getLocksmiths } from "./actions";
 import { ChevronRight } from "lucide-react";
-import { Input } from "../components/ui/input";
-import { formatPhoneNumber } from "../lib/utils";
 
 const styles = {
   accentButton: {
@@ -525,44 +523,12 @@ export default function Home() {
                   rows="4"
                   placeholder="Deneyiminizi paylaşın (opsiyonel)"
                 ></textarea>
-
-                {/* Telefon numarası */}
-                <div className="mb-6">
-                  <label htmlFor="phone" className="block text-gray-700 mb-2">
-                    Telefon Numarası
-                  </label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={formatPhoneNumber(customerFeedback.phone)}
-                    onChange={(e) => {
-                      // Sadece rakam girişine izin ver
-                      const newValue = e.target.value.replace(/[^0-9]/g, '');
-                      // Maksimum 11 karakter (0599 999 99 99 formatı için)
-                      if (newValue.length <= 11) {
-                        setCustomerFeedback({ ...customerFeedback, phone: newValue });
-                      }
-                    }}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="05XX XXX XX XX"
-                    maxLength={14}
-                  />
-                </div>
-                
               </div>
-              
               <div className="flex justify-end space-x-3">
-                {/* <Button 
-                  type="button" 
-                  className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-                  onClick={() => setShowRatingModal(false)}
-                >
-                  İptal
-                </Button> */}
                 <Button 
                   type="submit" 
                   className="bg-blue-600 hover:bg-blue-700 text-white"
-                  disabled={customerFeedback.rating === 0 || customerFeedback.phone.length !== 11 || customerFeedback.comment.length === 0 }
+                  disabled={customerFeedback.rating === 0 }
                 >
                   Gönder
                 </Button>
