@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Checkbox } from "../../components/ui/checkbox";
-import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X,Footprints, File, ExternalLinkIcon } from "lucide-react";
+import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X,Footprints, File, ExternalLinkIcon, Clock } from "lucide-react";
 import { useToast } from "../../components/ToastContext";
 import Link from "next/link";
 import Image from "next/image";
@@ -411,7 +411,7 @@ function CilingirPanelContent() {
                   className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "advertising" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                   </svg>
                   <span>Reklam Yönetimi</span>
                 </button>
@@ -546,8 +546,8 @@ function CilingirPanelContent() {
                         title: "Bir Müşteri Profilinizi Ziyaret Etti",
                         location: "Kadıköy - Profil Görüntüleme",
                         date: "16 Mart 2024, 16:45",
-                        icon: "user",
-                        color: "indigo"
+                        icon: "Footprints",
+                        color: "orange"
                       },
                       {
                         title: "Bir Aramada Görüntülendiniz",
@@ -576,6 +576,7 @@ function CilingirPanelContent() {
                               item.color === "blue" ? "#3b82f6" : 
                               item.color === "yellow" ? "#f59e0b" : 
                               item.color === "green" ? "#22c55e" :
+                              item.color === "orange" ? "#f97316":
                               item.color === "indigo" ? "#6366f1" : "#3b82f6"
                             }}>
                         <CardContent className="p-4">
@@ -584,6 +585,7 @@ function CilingirPanelContent() {
                               item.color === "blue" ? "bg-blue-100 text-blue-600" : 
                               item.color === "yellow" ? "bg-yellow-100 text-yellow-600" : 
                               item.color === "green" ? "bg-green-100 text-green-600" :
+                              item.color === "orange" ? "bg-orange-100 text-orange-600" :
                               item.color === "indigo" ? "bg-indigo-100 text-indigo-600" :
                               "bg-blue-100 text-blue-600"
                             }`}>
@@ -593,6 +595,8 @@ function CilingirPanelContent() {
                                 <Star className="h-6 w-6" />
                               ) : item.icon === "phone" ? (
                                 <PhoneCall className="h-6 w-6" />
+                              ) : item.icon === "Footprints" ? (
+                                <Footprints className="h-6 w-6" />
                               ) : (
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -1317,17 +1321,17 @@ function CilingirPanelContent() {
                     </div>
                     
                     <div className="flex-1">
-                      {testReviews.map((review) => (
-                        <div key={review.id} className="flex items-center space-x-2 mb-1">
-                          <div className="text-sm w-2">{review.rating}</div>
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="flex items-center space-x-2 mb-1">
+                          <div className="text-sm w-2">{5-i}</div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div 
                               className="bg-yellow-400 h-2 rounded-full" 
-                              style={{ width: `${review.rating === 5 ? 70 : review.rating === 4 ? 20 : review.rating === 3 ? 5 : review.rating === 2 ? 3 : 2}%` }}
+                              style={{ width: `${i === 0 ? 70 : i === 1 ? 20 : i === 2 ? 5 : i === 3 ? 3 : 2}%` }}
                             ></div>
                           </div>
                           <div className="text-sm text-gray-500">
-                            {review.rating === 5 ? 70 : review.rating === 4 ? 20 : review.rating === 3 ? 5 : review.rating === 2 ? 3 : 2}%
+                            {i === 0 ? 70 : i === 1 ? 20 : i === 2 ? 5 : i === 3 ? 3 : 2}%
                           </div>
                         </div>
                       ))}
@@ -1461,7 +1465,10 @@ function CilingirPanelContent() {
                   
                 {/* Anahtar Kullanım Geçmişi */}
                 <div className="my-8">
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">Anahtar Kullanım Geçmişi</h3>
+                  <div className="flex items-center mb-4">
+                    <Clock className="h-6 w-6 text-blue-600 mr-2" />
+                    <h3 className="text-xl font-bold text-gray-800">Anahtar Kullanım Geçmişi</h3>
+                  </div>
                   <div className="bg-white shadow-sm rounded-lg border border-gray-100">
                     {keyUsageHistory.length === 0 ? (
                       <div className="p-6 text-center text-gray-500">

@@ -10,6 +10,7 @@ import SearchForm from "../components/SearchForm";
 import { useToast } from "../components/ToastContext";
 import { getLocksmiths } from "./actions";
 import { ChevronRight } from "lucide-react";
+import { testServices } from "../lib/test-data";
 
 const styles = {
   accentButton: {
@@ -317,7 +318,7 @@ export default function Home() {
                                   </span>
                                 )}
                                 <div className="w-1 h-1 bg-gray-400 rounded-full hidden md:block" />
-                                <p className="text-gray-600">{locksmith.location}</p>
+                                <p className="text-gray-600">{locksmith.city} - {locksmith.district}</p>
                               </div>
                               <div className="flex flex-col md:flex-row md:items-center mt-1">
                                 <StarRating rating={locksmith.rating} />
@@ -329,10 +330,10 @@ export default function Home() {
                           <p className="text-gray-700 mb-4">{locksmith.description}</p>
                           
                           <div className="flex flex-wrap gap-2">
-                            {locksmith.services.map((service, index) => (
-                              <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{service.name}</span>
+                            {locksmith.serviceIds.map((serviceId, index) => (
+                              <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{testServices.find(service => service.id === serviceId)?.name}</span>
                             ))}
-                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{locksmith.price}</span>
+                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{testServices.find(service => service.id === locksmith.serviceIds[0])?.price.max}₺ - {testServices.find(service => service.id === locksmith.serviceIds[0])?.price.min}₺</span>
                           </div>
                         </div>
                         
