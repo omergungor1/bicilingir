@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { 
   Menu, 
   X, 
@@ -50,9 +51,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useToast } from "../../components/ToastContext";
 import { Checkbox } from "../../components/ui/checkbox";
 
-export default function AdminPanel() {
+function AdminPanelContent() {
   const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const tabParam = searchParams.get('tab');
+  
+  const [activeTab, setActiveTab] = useState(tabParam || "dashboard");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dateRange, setDateRange] = useState({ from: new Date(), to: new Date() });
   const [selectedCity, setSelectedCity] = useState("all");
@@ -86,6 +91,23 @@ export default function AdminPanel() {
     "Diğer"
   ]);
   const [activeReviewFilter, setActiveReviewFilter] = useState("all");
+
+  useEffect(() => {
+    if (tabParam && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+  
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // URL'yi güncelle
+    const params = new URLSearchParams(searchParams);
+    params.set('tab', tab);
+    router.push(`?${params.toString()}`);
+  };
 
   const handleNewServiceChange = (field, value) => {
     setNewService(prev => ({
@@ -213,11 +235,7 @@ export default function AdminPanel() {
                 <CardContent className="p-0">
                   <nav className="flex flex-col p-2">
                     <button 
-                      onClick={() => {
-                        setActiveTab("dashboard");
-                        setMobileMenuOpen(false);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
+                      onClick={() => handleTabChange("dashboard")}
                       className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "dashboard" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                     >
                       <LayoutDashboard className="h-5 w-5" />
@@ -226,11 +244,7 @@ export default function AdminPanel() {
                     </button>
                     
                     <button 
-                      onClick={() => {
-                        setActiveTab("locksmiths");
-                        setMobileMenuOpen(false);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
+                      onClick={() => handleTabChange("locksmiths")}
                       className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "locksmiths" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                     >
                       <Key className="h-5 w-5" />
@@ -239,11 +253,7 @@ export default function AdminPanel() {
                     </button>
                     
                     <button 
-                      onClick={() => {
-                        setActiveTab("services");
-                        setMobileMenuOpen(false);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
+                      onClick={() => handleTabChange("services")}
                       className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "services" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                     >
                       <Wrench className="h-5 w-5" />
@@ -252,11 +262,7 @@ export default function AdminPanel() {
                     </button>
                     
                     <button 
-                      onClick={() => {
-                        setActiveTab("rockets");
-                        setMobileMenuOpen(false);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
+                      onClick={() => handleTabChange("rockets")}
                       className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "rockets" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                     >
                       <Rocket className="h-5 w-5" />
@@ -265,11 +271,7 @@ export default function AdminPanel() {
                     </button>
                     
                     <button 
-                      onClick={() => {
-                        setActiveTab("reviews");
-                        setMobileMenuOpen(false);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
+                      onClick={() => handleTabChange("reviews")}
                       className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "reviews" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                     >
                       <Star className="h-5 w-5" />
@@ -278,11 +280,7 @@ export default function AdminPanel() {
                     </button>
                     
                     <button 
-                      onClick={() => {
-                        setActiveTab("activities");
-                        setMobileMenuOpen(false);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
+                      onClick={() => handleTabChange("activities")}
                       className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "activities" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                     >
                       <Activity className="h-5 w-5" />
@@ -291,11 +289,7 @@ export default function AdminPanel() {
                     </button>
                     
                     <button 
-                      onClick={() => {
-                        setActiveTab("kpi");
-                        setMobileMenuOpen(false);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
+                      onClick={() => handleTabChange("kpi")}
                       className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "kpi" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                     >
                       <BarChart3 className="h-5 w-5" />
@@ -304,11 +298,7 @@ export default function AdminPanel() {
                     </button>
                     
                     <button 
-                      onClick={() => {
-                        setActiveTab("settings");
-                        setMobileMenuOpen(false);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
+                      onClick={() => handleTabChange("settings")}
                       className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "settings" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                     >
                       <Settings className="h-5 w-5" />
@@ -526,7 +516,7 @@ export default function AdminPanel() {
                       <div className="mt-4 text-center">
                         <Button 
                         onClick={() => {
-                          setActiveTab("activities");
+                          handleTabChange("activities");
                           setMobileMenuOpen(false);
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
@@ -677,9 +667,9 @@ export default function AdminPanel() {
                                       <h4 className="font-medium text-gray-900">{packet.name}</h4>
                                       <div className="flex items-center space-x-2 mt-1">
                                         <Rocket className="h-4 w-4 text-orange-500" />
-                                        <span className="text-sm font-semibold">{packet.rockets.toLocaleString()} Roket</span>
+                                        <span className="text-sm font-semibold">{packet.rockets.toLocaleString('tr-TR')} Roket</span>
                                       </div>
-                                      <p className="text-sm text-gray-500 mt-1">₺{packet.price.toLocaleString()}</p>
+                                      <p className="text-sm text-gray-500 mt-1">₺{packet.price.toLocaleString('tr-TR')}</p>
                                     </div>
                                     <div className="flex space-x-2">
                                       <Button 
@@ -740,7 +730,7 @@ export default function AdminPanel() {
                                       <p className="text-sm text-gray-500">{locksmith.location}</p>
                                       <div className="flex items-center space-x-2 mt-1">
                                         <Rocket className="h-4 w-4 text-orange-500" />
-                                        <span className="text-sm font-semibold">{locksmith.currentRockets.toLocaleString()} Roket</span>
+                                        <span className="text-sm font-semibold">{locksmith.currentRockets.toLocaleString('tr-TR')} Roket</span>
                                       </div>
                                     </div>
                                     <div className="flex items-center space-x-2">
@@ -834,10 +824,10 @@ export default function AdminPanel() {
                                   <td className="p-3">
                                     <div className="flex items-center space-x-1">
                                       <Rocket className="h-3 w-3 text-orange-500" />
-                                      <span>{sale.amount.toLocaleString()}</span>
+                                      <span>{sale.amount.toLocaleString('tr-TR')}</span>
                                     </div>
                                   </td>
-                                  <td className="p-3">₺{sale.price.toLocaleString()}</td>
+                                  <td className="p-3">₺{sale.price.toLocaleString('tr-TR')}</td>
                                   <td className="p-3">
                                     <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
                                       {sale.status}
@@ -1854,9 +1844,9 @@ export default function AdminPanel() {
                 <h4 className="font-medium text-gray-900 mb-2">{packageToDelete.name}</h4>
                 <div className="flex items-center space-x-2 text-sm text-gray-700">
                   <Rocket className="h-4 w-4 text-orange-500" />
-                  <span>{packageToDelete.rockets.toLocaleString()} Roket</span>
+                  <span>{packageToDelete.rockets.toLocaleString('tr-TR')} Roket</span>
                   <span className="text-gray-400">•</span>
-                  <span>₺{packageToDelete.price.toLocaleString()}</span>
+                  <span>₺{packageToDelete.price.toLocaleString('tr-TR')}</span>
                 </div>
               </div>
             )}
@@ -1886,5 +1876,20 @@ export default function AdminPanel() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function AdminPanel() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Yükleniyor...</h2>
+          <p className="text-gray-500">Lütfen bekleyin, admin paneli hazırlanıyor.</p>
+        </div>
+      </div>
+    }>
+      <AdminPanelContent />
+    </Suspense>
   );
 } 

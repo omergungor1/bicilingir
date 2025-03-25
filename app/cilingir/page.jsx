@@ -1,22 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Checkbox } from "../../components/ui/checkbox";
-import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X,Footprints } from "lucide-react";
+import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X,Footprints, File, ExternalLinkIcon } from "lucide-react";
 import { useToast } from "../../components/ToastContext";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams, useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "../../components/ui/dialog"
+import turkiyeIlIlce from "../../data/turkiye-il-ilce.js";
+import { getServices } from "../actions";
 
-export default function CilingirPanel() {
+function CilingirPanelContent() {
   const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const tabParam = searchParams.get('tab');
+  
+  const [activeTab, setActiveTab] = useState(tabParam || "dashboard");
+  const [isCertificateDialogOpen, setIsCertificateDialogOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("all");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [keyBalance, setKeyBalance] = useState(1500); // Örnek roket bakiyesi
   const [maxCustomersPerHour, setMaxCustomersPerHour] = useState(2);
+  const [selectedCity, setSelectedCity] = useState("İstanbul");
+  const [selectedDistrict, setSelectedDistrict] = useState("Kadıköy");
   const [dailyKeys, setDailyKeys] = useState({
     Pazartesi: {key: 50, isOpen: true},
     Salı: {key: 50, isOpen: true},
@@ -57,26 +76,38 @@ export default function CilingirPanel() {
     Cumartesi: true,
     Pazar: true
   });
-  const [services, setServices] = useState([
-    { id: 1, name: "Kapı Açma", active: true, minPrice: 150, maxPrice: 300 },
-    { id: 2, name: "Çelik Kapı Açma", active: true, minPrice: 250, maxPrice: 500 },
-    { id: 3, name: "Kasa Açma", active: false, minPrice: 500, maxPrice: 1000 },
-    { id: 4, name: "Anahtar Kopyalama", active: true, minPrice: 30, maxPrice: 100 },
-    { id: 5, name: "Kilit Değiştirme", active: true, minPrice: 200, maxPrice: 400 },
-    { id: 6, name: "Çilingir Anahtar Yapımı", active: false, minPrice: 50, maxPrice: 200 },
-    { id: 7, name: "Kırılmaz Kilit Montajı", active: false, minPrice: 300, maxPrice: 600 },
-    { id: 8, name: "Kapı Kilidi Değişimi", active: false, minPrice: 150, maxPrice: 350 },
-    { id: 9, name: "Pencere Kilidi Değişimi", active: false, minPrice: 100, maxPrice: 250 },
-    { id: 10, name: "Oto Kapı Açma", active: false, minPrice: 200, maxPrice: 400 }
-  ]);
+  // const [services, setServices] = useState([
+  //   { id: 1, name: "Kapı Açma", active: true, minPrice: 150, maxPrice: 300 },
+  //   { id: 2, name: "Çelik Kapı Açma", active: true, minPrice: 250, maxPrice: 500 },
+  //   { id: 3, name: "Kasa Açma", active: false, minPrice: 500, maxPrice: 1000 },
+  //   { id: 4, name: "Anahtar Kopyalama", active: true, minPrice: 30, maxPrice: 100 },
+  //   { id: 5, name: "Kilit Değiştirme", active: true, minPrice: 200, maxPrice: 400 },
+  //   { id: 6, name: "Çilingir Anahtar Yapımı", active: false, minPrice: 50, maxPrice: 200 },
+  //   { id: 7, name: "Kırılmaz Kilit Montajı", active: false, minPrice: 300, maxPrice: 600 },
+  //   { id: 8, name: "Kapı Kilidi Değişimi", active: false, minPrice: 150, maxPrice: 350 },
+  //   { id: 9, name: "Pencere Kilidi Değişimi", active: false, minPrice: 100, maxPrice: 250 },
+  //   { id: 10, name: "Oto Kapı Açma", active: false, minPrice: 200, maxPrice: 400 }
+  // ]);
 
-  const [experienceYear, setExperienceYear] = useState(2014);
+  const [serviceList, setServiceList] = useState([]);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      const response = await getServices();
+      setServiceList(response.services);
+    };
+    fetchServices();
+  }, []);
+
+  const [activeServices, setActiveServices] = useState([1,2,4]);
+
   const [businessImages, setBusinessImages] = useState([
     "/images/dukkan1.jpg",
     "/images/dukkan2.jpg",
     "/images/dukkan3.jpg",
     "/images/dukkan4.jpg",
   ]);
+
   const [mainImageIndex, setMainImageIndex] = useState(0);
 
   const keyPackages = [
@@ -87,13 +118,74 @@ export default function CilingirPanel() {
   ];
 
   const [socialMedia, setSocialMedia] = useState({
-    instagram: "@anahtarcilingir",
-    facebook: "facebook.com/anahtarcilingir",
-    twitter: "@anahtarcilingir",
-    youtube: "",
-    tiktok: "",
-    linkedin: ""
+    instagram: "www.instagram.com/anahtarcilingir",
+    facebook: "www.facebook.com/anahtarcilingir",
+    youtube: "www.youtube.com/anahtarcilingir",
+    tiktok: "www.tiktok.com/anahtarcilingir",
   });
+
+  const [certificates, setCertificates] = useState([
+    { name: "TSE Belgesi", url: "https://www.tse.gov.tr/images/belge/tse-belgesi.pdf" },
+    { name: "Mesleki Yeterlilik Belgesi", url: "https://www.tse.gov.tr/images/belge/mesleki-yeterlilik-belgesi.pdf" },
+    { name: "Ustalık Belgesi", url: "https://www.tse.gov.tr/images/belge/ustalik-belgesi.pdf" },
+  ]);
+
+  const testReviews = [
+    {
+      id: 1,
+      name: "Ahmet Yılmaz",
+      rating: 5,
+      comment: "Harika bir hizmet, çok memnun kaldım.",
+      date: "2025-03-23 10:00:00"
+    },
+    {
+      id: 2,
+      name: "Ayşe Kaya",
+      rating: 2,
+      comment: "Güzel bir hizmet, ancak biraz daha hızlı olabilirdi.",
+      date: "2025-03-23 10:00:00"
+    },
+    {
+      id: 3,
+      name: "Mehmet Demir",
+      rating: 1,
+      comment: "İyi bir hizmet, ancak biraz daha ucuz olabilirdi.",
+      date: "2025-03-23 10:00:00"
+    },
+    {
+      id: 4,
+      name: "Fatma Yılmaz",
+      rating: 2,
+      comment: "Kötü bir hizmet, çok memnun kaldım.",
+      date: "2025-03-23 10:00:00"
+    },
+    {
+      id: 5,
+      name: "Ali Yılmaz",
+      rating: 1,
+      comment: "Kötü bir hizmet, memnun kalmadım.",
+      date: "2025-03-23 10:00:00"
+    }
+  ];
+
+  const [newCertificate, setNewCertificate] = useState({ name: '', file: null, fileSize: 0, fileType: '' });
+
+  useEffect(() => {
+    if (tabParam && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+  
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // URL'yi güncelle
+    const params = new URLSearchParams(searchParams);
+    params.set('tab', tab);
+    router.push(`?${params.toString()}`);
+  };
 
   const handleDailyKeyChange = (day, value) => {
     setDailyKeys(prev => ({
@@ -103,15 +195,11 @@ export default function CilingirPanel() {
   };
 
   const handleServiceActiveChange = (id, checked) => {
-    setServices(prevServices => prevServices.map(service => 
-      service.id === id ? { ...service, active: checked } : service
-    ));
-  };
-
-  const handleServicePriceChange = (id, field, value) => {
-    setServices(prevServices => prevServices.map(service => 
-      service.id === id ? { ...service, [field]: parseInt(value) || 0 } : service
-    ));
+    if (checked) {
+      setActiveServices(prevServices => [...prevServices, id]);
+    } else {
+      setActiveServices(prevServices => prevServices.filter(s => s !== id));
+    }
   };
 
   const handleSocialMediaChange = (platform, value) => {
@@ -161,8 +249,6 @@ export default function CilingirPanel() {
       const newImages = [...prev];
       newImages.splice(index, 1);
       
-      showToast("Resim başarıyla kaldırıldı.", "success");
-
       // Ana görsel kaldırıldıysa, ana görseli ilk resme ayarla
       if (index === mainImageIndex) {
         setMainImageIndex(newImages.length > 0 ? 0 : -1);
@@ -189,6 +275,41 @@ export default function CilingirPanel() {
 
   const handlePackagePurchase = (id) => {
     showToast("Anahtar paketi satın almak için lütfen iletişime geçiniz.", "info");
+  };
+
+
+  const handleAddCertificate = () => {
+    if (!newCertificate.name || !newCertificate.file) return;
+    
+    if (certificates.length < 5) {
+      setCertificates([...certificates, newCertificate]);
+      // Formu temizle
+      setNewCertificate({ name: '', file: null, fileSize: 0, fileType: '' });
+      showToast('Sertifika başarıyla eklendi.', "success");
+    } else {
+      showToast('En fazla 5 sertifika ekleyebilirsiniz.', "error");
+    }
+    setIsCertificateDialogOpen(false);
+  };
+
+  const handleRemoveCertificate = (index) => {
+    const updatedCertificates = [...certificates];
+    updatedCertificates.splice(index, 1);
+    setCertificates(updatedCertificates);
+    showToast("Sertifika başarıyla kaldırıldı.", "success");
+  };
+
+  // Sertifika görüntüleme
+  const handleViewCertificate = (cert) => {
+    if (cert.file) {
+      if (cert.file instanceof File) {  
+        // Dosya henüz yüklendi ve bir File objesi
+        showToast(`${cert.name} sertifikası başarıyla yüklendi, kaydedildikten sonra görüntülenebilecek.`, "success");
+      } else {
+        // Dosya zaten sunucuda ve bir URL
+        window.open(cert.file, '_blank');
+      }
+    }
   };
 
   return (
@@ -236,11 +357,7 @@ export default function CilingirPanel() {
               </div>
               <nav className="flex flex-col p-2">
                 <button 
-                  onClick={() => {
-                    setActiveTab("dashboard");
-                    setMobileMenuOpen(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
+                  onClick={() => handleTabChange("dashboard")}
                   className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "dashboard" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -250,11 +367,7 @@ export default function CilingirPanel() {
                 </button>
                 
                 <button 
-                  onClick={() => {
-                    setActiveTab("profile");
-                    setMobileMenuOpen(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
+                  onClick={() => handleTabChange("profile")}
                   className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "profile" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -264,11 +377,7 @@ export default function CilingirPanel() {
                 </button>
                 
                 <button 
-                  onClick={() => {
-                    setActiveTab("services");
-                    setMobileMenuOpen(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
+                  onClick={() => handleTabChange("services")}
                   className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "services" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -278,11 +387,7 @@ export default function CilingirPanel() {
                 </button>
                 
                 <button 
-                  onClick={() => {
-                    setActiveTab("jobs");
-                    setMobileMenuOpen(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
+                  onClick={() => handleTabChange("jobs")}
                   className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "jobs" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -292,11 +397,7 @@ export default function CilingirPanel() {
                 </button>
                 
                 <button 
-                  onClick={() => {
-                    setActiveTab("reviews");
-                    setMobileMenuOpen(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
+                  onClick={() => handleTabChange("reviews")}
                   className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "reviews" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -306,11 +407,7 @@ export default function CilingirPanel() {
                 </button>
                 
                 <button 
-                  onClick={() => {
-                    setActiveTab("advertising");
-                    setMobileMenuOpen(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
+                  onClick={() => handleTabChange("advertising")}
                   className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "advertising" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -320,11 +417,7 @@ export default function CilingirPanel() {
                 </button>
                 
                 <button 
-                  onClick={() => {
-                    setActiveTab("settings");
-                    setMobileMenuOpen(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
+                  onClick={() => handleTabChange("settings")}
                   className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "settings" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -569,7 +662,7 @@ export default function CilingirPanel() {
                       <Input defaultValue="Anahtar Çilingir" />
                     </div>
                     <div>
-                      <label className="block text-sm mb-1">Sahibi</label>
+                      <label className="block text-sm mb-1">Ad Soyad</label>
                       <Input defaultValue="Ahmet Yılmaz" />
                     </div>
                     <div>
@@ -580,28 +673,30 @@ export default function CilingirPanel() {
                       <label className="block text-sm mb-1">Telefon</label>
                       <Input defaultValue="+90 555 123 4567" />
                     </div>
-                    <div>
-                      <label className="block text-sm mb-1">İşe Başlangıç Yılı</label>
-                      <Input 
-                        type="number" 
-                        onChange={(e) => setExperienceYear(e.target.value)}
-                        value={experienceYear}
-                        min="1950" 
-                        max={new Date().getFullYear()} 
-                        placeholder="Örn: 2014" 
-                      />
-                      <p className="text-sm text-gray-500 mt-1">{(new Date().getFullYear() - experienceYear)} yıllık deneyim</p>
+                    {/* İl - ilçe seçimi */}  
+                    <div className="md:col-span-1">
+                      <label className="block text-sm mb-1">İl</label>
+                      <select 
+                        className="w-full p-2 border rounded-md" 
+                        onChange={(e) => setSelectedCity(e.target.value)}
+                        value={selectedCity}
+                      >
+                        {Object.keys(turkiyeIlIlce).map((il) => (
+                          <option key={il} value={il}>{il}</option>
+                        ))}
+                      </select>
                     </div>
-                    <div>
-                      <label className="block text-sm mb-1">Deneyim Belgesi</label>
-                      <div className="flex items-center space-x-2">
-                        <Button variant="outline" className="w-full">Belge Yükle</Button>
-                      </div>
-                      <p className="text-sm text-gray-500 mt-1">PDF, JPG veya PNG (max 5MB)</p>
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm mb-1">Adres</label>
-                      <Input defaultValue="Kadıköy, İstanbul" />
+                    <div className="md:col-span-1">
+                      <label className="block text-sm mb-1">İlçe</label>
+                      <select 
+                        className="w-full p-2 border rounded-md" 
+                        onChange={(e) => setSelectedDistrict(e.target.value)}
+                        value={selectedDistrict}
+                      >
+                        {turkiyeIlIlce[selectedCity].map((ilce) => (
+                          <option key={ilce} value={ilce}>{ilce}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="md:col-span-2">
                       <label className="block text-sm mb-1">Hakkında</label>
@@ -612,11 +707,85 @@ export default function CilingirPanel() {
                     </div>
                   </div>
 
-                  <div className="border-t border-gray-200 my-6"></div>
+                  <div className="border-t border-gray-200 my-6" />
+
+                  <div className="mt-6">
+                    <h4 className="font-medium mb-4">Sertifikalar</h4>
+                    <div className="space-y-4">
+                      {/* Sertifika Yükleme Alanı */}
+
+                      <Dialog
+                        open={isCertificateDialogOpen}
+                        onOpenChange={setIsCertificateDialogOpen}
+                      >
+                        <DialogTrigger asChild>
+                          <Button>Sertifika Yükle</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Sertifika Yükle</DialogTitle>
+                            <DialogDescription>Yeni bir sertifika yüklemek için lütfen dosyayı seçin ve sertifika adını girin.</DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4 py-4">
+                            <Input type="file" onChange={(e) => {
+                              setNewCertificate({ ...newCertificate, file: e.target.files[0] });
+                            }} />
+                            <Input type="text" placeholder="Sertifika Adı" onChange={(e) => setNewCertificate({ ...newCertificate, name: e.target.value })} />
+                          </div>
+                          <DialogFooter>
+                            <Button onClick={handleAddCertificate}>Yükle</Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+
+
+                      {certificates.length > 0 ? (
+                        <div className="mt-4">
+                          <h5 className="font-medium mb-3">Mevcut Sertifikalar ({certificates.length}/5)</h5>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            {certificates.map((cert, index) => (
+                              <div key={index} className="relative group">
+                                <div className="aspect-square overflow-hidden rounded-lg hover:border hover:transition-all hover:duration-100 hover:border-blue-500">
+                                  {/* name and Url */}
+                                  <div 
+                                  onClick={() => handleViewCertificate(cert)}
+                                  className="w-full h-full flex items-center justify-center bg-gray-100 border-2 cursor-pointer"
+                                  >
+                                    <div className="text-center">
+                                        <ExternalLinkIcon className="h-10 w-10 text-gray-400" />
+                                    </div>
+                                  </div>
+                                </div>
+                                <h3 className="text-sm text-center font-medium">{cert.name}</h3>
+                                <button
+                                  onClick={() => handleRemoveCertificate(index)}
+                                  className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-md border border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ):(
+                      <div className="mt-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <Info className="h-5 w-5 text-gray-400" />
+                          <p className="text-sm text-gray-500">Henüz sertifika yüklemediniz.</p>
+                        </div>
+                      </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-200 my-6" />
                   
                   <div className="mt-6">
-                    <h4 className="font-medium mb-4">İşletme Resimleri</h4>
+                    <h4 className="font-medium mb-4">İşletme Fotoğrafları</h4>
                     <div className="space-y-4">
+                      {/* Fotoğraf Yükleme Alanı */}
                       <div 
                         className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50 hover:bg-gray-100 transition cursor-pointer"
                         onDrop={handleDrop}
@@ -648,29 +817,20 @@ export default function CilingirPanel() {
                         </label>
                       </div>
                       
-                      {businessImages.length > 0 && (
+                      {/* Mevcut Fotoğraflar */}
+                      {businessImages.length > 0 ? (
                         <div className="mt-4">
-                          <h5 className="font-medium mb-3">Mevcut Resimler ({businessImages.length}/10)</h5>
+                          <h5 className="font-medium mb-3">Mevcut Fotoğraflar ({businessImages.length}/10)</h5>
                           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                             {businessImages.map((image, index) => (
                               <div key={index} className="relative group">
                                 <div className="aspect-square overflow-hidden rounded-lg border border-gray-200">
-                                  <Image
-                                    src={typeof image === 'string' ? image : URL.createObjectURL(image)}
-                                    alt={`İşletme resmi ${index + 1}`}
-                                    width={200}
-                                    height={200}
+                                  <img
+                                    src={typeof image === 'string' && image ? image : image instanceof File ? URL.createObjectURL(image) : null}
+                                    alt={`İşletme fotoğrafı ${index + 1}`}
                                     className="w-full h-full object-cover"
                                   />
                                 </div>
-                                <button
-                                  onClick={() => handleRemoveImage(index)}
-                                  className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-md border border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
-                                </button>
                                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                   <button
                                     onClick={() => setMainImage(index)}
@@ -679,15 +839,31 @@ export default function CilingirPanel() {
                                     {mainImageIndex === index ? 'Ana Görsel' : 'Ana Görsel Yap'}
                                   </button>
                                 </div>
+                                <button
+                                  onClick={() => handleRemoveImage(index)}
+                                  className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-md border border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
                               </div>
                             ))}
                           </div>
                         </div>
-                      )}
+                      ):
+                      <div className="mt-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <Info className="h-5 w-5 text-gray-400" />
+                          <p className="text-sm text-gray-500">Henüz fotoğraf yüklemediniz.</p>
+                        </div>
+                      </div>
+                      }
                     </div>
                   </div>
 
-                  <div className="border-t border-gray-200 my-6"></div>
+                  <div className="border-t border-gray-200 my-6" />
+
                   <div>
                     <h4 className="font-medium mb-4 mt-6">Bir saat içinde maksimum kaç müşteriye hizmet verebilirsiniz?</h4>
                     <div className="flex items-center space-x-2">
@@ -702,7 +878,7 @@ export default function CilingirPanel() {
                     </div>
                   </div>
 
-                  <div className="border-t border-gray-200 my-6"></div>
+                  <div className="border-t border-gray-200 my-6" />
                   
                   <div>
                     <h4 className="font-medium mb-4 mt-6">Çalışma Saatleri</h4>
@@ -792,7 +968,7 @@ export default function CilingirPanel() {
                     </div>
                   </div>
 
-                  <div className="border-t border-gray-200 my-6"></div>
+                  <div className="border-t border-gray-200 my-6" />
 
                   <h4 className="font-medium mb-4 mt-6">Sosyal Medya Hesapları</h4>
                   <div className="space-y-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -887,50 +1063,51 @@ export default function CilingirPanel() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4 mb-6">
-                  {services.map((service, index) => (
-                    <Card key={index} className={`${!service.active ? 'bg-gray-50' : ''}`}>
+                  {serviceList.map((service, index) => (
+                    <Card key={index} className={`${!activeServices.includes(service.id) ? 'bg-gray-50' : ''}`}>
                       <CardContent className="p-4">
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
                           <div className="flex items-center mb-2 md:mb-0">
                             <Checkbox 
                               id={`service-${service.id}`} 
-                              checked={service.active}
+                              checked={activeServices.includes(service.id)}
                               onCheckedChange={(checked) => handleServiceActiveChange(service.id, checked)}
                               className="mr-3"
                             />
                             <label 
                               htmlFor={`service-${service.id}`} 
-                              className={`font-medium ${!service.active ? 'text-gray-500' : ''}`}
+                              className={`font-medium ${!activeServices.includes(service.id) ? 'text-gray-500' : ''}`}
                             >
                               {service.name}
                             </label>
                           </div>
                           <div className="flex items-center space-x-2 pl-6 md:pl-0">
                             <div className="flex items-center space-x-2">
-                              <span className={`text-sm ${!service.active ? 'text-gray-400' : 'text-gray-600'}`}>₺</span>
+                              <span className={`text-sm ${!activeServices.includes(service.id) ? 'text-gray-400' : 'text-gray-600'}`}>₺</span>
                               <Input 
                                 type="number" 
-                                value={service.minPrice} 
-                                onChange={(e) => handleServicePriceChange(service.id, 'minPrice', e.target.value)}
-                                disabled={!service.active}
-                                className={`w-24 ${!service.active ? 'bg-gray-100 text-gray-400' : ''}`}
+                                value={service.price.min} 
+                                disabled={true}
+                                className={`w-24 ${!activeServices.includes(service.id) ? 'bg-gray-100 text-gray-400' : ''}`}
                                 placeholder="Min"
                               />
-                              <span className={`text-sm ${!service.active ? 'text-gray-400' : 'text-gray-600'}`}>-</span>
+                              <span className={`text-sm ${!activeServices.includes(service.id) ? 'text-gray-400' : 'text-gray-600'}`}>-</span>
                               <Input 
                                 type="number" 
-                                value={service.maxPrice} 
-                                onChange={(e) => handleServicePriceChange(service.id, 'maxPrice', e.target.value)}
-                                disabled={!service.active}
-                                className={`w-24 ${!service.active ? 'bg-gray-100 text-gray-400' : ''}`}
+                                value={service.price.max} 
+                                disabled={true}
+                                className={`w-24 ${!activeServices.includes(service.id) ? 'bg-gray-100 text-gray-400' : ''}`}
                                 placeholder="Max"
                               />
+                              <Info 
+                              onClick={()=>showToast('Varsayılan hizmet fiyat listesidir. Müşteriler bu fiyatı görecektir.', "info")}
+                              className="h-6 w-6 text-gray-400"/>
                             </div>
                           </div>
                         </div>
-                        {!service.active && (
+                        {!activeServices.includes(service.id) && (
                           <div className="pl-9 mt-2">
-                            <span className="text-xs text-gray-400 italic">Bu hizmet şu anda pasif durumda</span>
+                            <span className="text-xs text-gray-400 italic">Bu hizmeti vermiyorsunuz</span>
                           </div>
                         )}
                       </CardContent>
@@ -938,8 +1115,10 @@ export default function CilingirPanel() {
                   ))}
                 </div>
                 
-                <div className="flex justify-star">
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                <div className="flex justify-start">
+                  <Button 
+                  onClick={()=>console.log(activeServices)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white">
                     Değişiklikleri Kaydet
                   </Button>
                 </div>
@@ -1138,17 +1317,17 @@ export default function CilingirPanel() {
                     </div>
                     
                     <div className="flex-1">
-                      {[5, 4, 3, 2, 1].map((rating) => (
-                        <div key={rating} className="flex items-center space-x-2 mb-1">
-                          <div className="text-sm w-2">{rating}</div>
+                      {testReviews.map((review) => (
+                        <div key={review.id} className="flex items-center space-x-2 mb-1">
+                          <div className="text-sm w-2">{review.rating}</div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div 
                               className="bg-yellow-400 h-2 rounded-full" 
-                              style={{ width: `${rating === 5 ? 70 : rating === 4 ? 20 : rating === 3 ? 5 : rating === 2 ? 3 : 2}%` }}
+                              style={{ width: `${review.rating === 5 ? 70 : review.rating === 4 ? 20 : review.rating === 3 ? 5 : review.rating === 2 ? 3 : 2}%` }}
                             ></div>
                           </div>
                           <div className="text-sm text-gray-500">
-                            {rating === 5 ? 70 : rating === 4 ? 20 : rating === 3 ? 5 : rating === 2 ? 3 : 2}%
+                            {review.rating === 5 ? 70 : review.rating === 4 ? 20 : review.rating === 3 ? 5 : review.rating === 2 ? 3 : 2}%
                           </div>
                         </div>
                       ))}
@@ -1157,28 +1336,26 @@ export default function CilingirPanel() {
                 </div>
                 
                 <div className="space-y-6">
-                  {[1, 2, 3, 4, 5].map((item) => (
-                    <div key={item} className="border-b pb-6">
+                  {testReviews.map((review) => (
+                    <div key={review.id} className="border-b pb-6">
                       <div className="flex justify-between mb-2">
                         <div className="flex items-center">
                           <div className="w-10 h-10 rounded-full bg-gray-200 mr-3"></div>
                           <div>
-                            <p className="font-medium">Müşteri {item}</p>
+                            <p className="font-medium">{review.name}</p>
                             <div className="flex">
                               {[...Array(5)].map((_, i) => (
-                                <svg key={i} className={`w-4 h-4 ${i < (6 - Math.min(item, 5)) ? "text-yellow-400" : "text-gray-300"}`} fill="currentColor" viewBox="0 0 20 20">
+                                <svg key={i} className={`w-4 h-4 ${i < review.rating ? "text-yellow-400" : "text-gray-300"}`} fill="currentColor" viewBox="0 0 20 20">
                                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
                                 </svg>
                               ))}
                             </div>
                           </div>
                         </div>
-                        <div className="text-sm text-gray-500">10 Mart 2024</div>
+                        <div className="text-sm text-gray-500">{review.date.split(' ')[0]}</div>
                       </div>
                       <p className="text-gray-700">
-                        {item % 2 === 0 
-                          ? "Çok hızlı ve profesyonel hizmet aldım. Kesinlikle tavsiye ederim." 
-                          : "Zamanında geldi ve işini çok iyi yaptı. Fiyat da gayet uygundu. Teşekkürler."}
+                        {review.comment}
                       </p>
                     </div>
                   ))}
@@ -1407,5 +1584,20 @@ export default function CilingirPanel() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CilingirPanel() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Yükleniyor...</h2>
+          <p className="text-gray-500">Lütfen bekleyin, çilingir paneli hazırlanıyor.</p>
+        </div>
+      </div>
+    }>
+      <CilingirPanelContent />
+    </Suspense>
   );
 } 

@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@supabase/supabase-js';
-import { testLocksmiths, testPackages, testReviews, testActivities } from '../lib/test-data';
+import { testLocksmiths, testPackages, testReviews, testActivities,testServices } from '../lib/test-data';
+
 
 // Test modu kontrolü
 const isTestMode = process.env.NEXT_PUBLIC_TEST_MODE === 'true';
@@ -220,6 +221,15 @@ export async function getLocksmithById(id) {
     console.error('Çilingir detayları getirilirken beklenmeyen hata:', error);
     return { error: 'Veritabanı işlemi sırasında bir hata oluştu.' };
   }
+}
+
+export async function getServices() {
+  // Test modunda ise test verileri kullan
+  if (isTestMode) {
+    return { services: testServices };
+  }
+
+  return { services: null };
 }
 
 /**

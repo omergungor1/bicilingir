@@ -2,8 +2,15 @@
 
 import React from "react";
 import Link from "next/link";
-
+import { usePathname } from "next/navigation";
 export default function Footer() {
+  const pathname = usePathname();
+
+
+  if (pathname === '/cilingir' || pathname === '/admin') {
+    return null;
+  }
+
   return (
     <footer className="w-full bg-gray-800 text-white py-12 px-4">
       <div className="container mx-auto">
