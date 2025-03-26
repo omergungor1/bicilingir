@@ -20,22 +20,25 @@ import {
   DialogFooter,
 } from "../../components/ui/dialog"
 import turkiyeIlIlce from "../../data/turkiye-il-ilce.js";
-import { getServices } from "../actions";
+import { getServices,getLocksmithsReviews } from "../actions";
 
 function CilingirPanelContent() {
   const { showToast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
   const tabParam = searchParams.get('tab');
-  
+  const locksmithId = searchParams.get('locksmithId')||1;
+
   const [activeTab, setActiveTab] = useState(tabParam || "dashboard");
   const [isCertificateDialogOpen, setIsCertificateDialogOpen] = useState(false);
+  const [reviews, setReviews] = useState([]);
   const [activeFilter, setActiveFilter] = useState("all");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [keyBalance, setKeyBalance] = useState(1500); // Örnek roket bakiyesi
   const [maxCustomersPerHour, setMaxCustomersPerHour] = useState(2);
   const [selectedCity, setSelectedCity] = useState("İstanbul");
   const [selectedDistrict, setSelectedDistrict] = useState("Kadıköy");
+  const [activeReviewFilter, setActiveReviewFilter] = useState("all");
   const [dailyKeys, setDailyKeys] = useState({
     Pazartesi: {key: 50, isOpen: true},
     Salı: {key: 50, isOpen: true},
@@ -76,18 +79,6 @@ function CilingirPanelContent() {
     Cumartesi: true,
     Pazar: true
   });
-  // const [services, setServices] = useState([
-  //   { id: 1, name: "Kapı Açma", active: true, minPrice: 150, maxPrice: 300 },
-  //   { id: 2, name: "Çelik Kapı Açma", active: true, minPrice: 250, maxPrice: 500 },
-  //   { id: 3, name: "Kasa Açma", active: false, minPrice: 500, maxPrice: 1000 },
-  //   { id: 4, name: "Anahtar Kopyalama", active: true, minPrice: 30, maxPrice: 100 },
-  //   { id: 5, name: "Kilit Değiştirme", active: true, minPrice: 200, maxPrice: 400 },
-  //   { id: 6, name: "Çilingir Anahtar Yapımı", active: false, minPrice: 50, maxPrice: 200 },
-  //   { id: 7, name: "Kırılmaz Kilit Montajı", active: false, minPrice: 300, maxPrice: 600 },
-  //   { id: 8, name: "Kapı Kilidi Değişimi", active: false, minPrice: 150, maxPrice: 350 },
-  //   { id: 9, name: "Pencere Kilidi Değişimi", active: false, minPrice: 100, maxPrice: 250 },
-  //   { id: 10, name: "Oto Kapı Açma", active: false, minPrice: 200, maxPrice: 400 }
-  // ]);
 
   const [serviceList, setServiceList] = useState([]);
 
@@ -97,6 +88,13 @@ function CilingirPanelContent() {
       setServiceList(response.services);
     };
     fetchServices();
+
+    const fetchReviews = async () => {
+      const response = await getLocksmithsReviews(locksmithId);
+      setReviews(response.reviews);
+      console.log(response,'Locksmith ID:',locksmithId);
+    };
+    fetchReviews();
   }, []);
 
   const [activeServices, setActiveServices] = useState([1,2,4]);
@@ -130,43 +128,6 @@ function CilingirPanelContent() {
     { name: "Ustalık Belgesi", url: "https://www.tse.gov.tr/images/belge/ustalik-belgesi.pdf" },
   ]);
 
-  const testReviews = [
-    {
-      id: 1,
-      name: "Ahmet Yılmaz",
-      rating: 5,
-      comment: "Harika bir hizmet, çok memnun kaldım.",
-      date: "2025-03-23 10:00:00"
-    },
-    {
-      id: 2,
-      name: "Ayşe Kaya",
-      rating: 2,
-      comment: "Güzel bir hizmet, ancak biraz daha hızlı olabilirdi.",
-      date: "2025-03-23 10:00:00"
-    },
-    {
-      id: 3,
-      name: "Mehmet Demir",
-      rating: 1,
-      comment: "İyi bir hizmet, ancak biraz daha ucuz olabilirdi.",
-      date: "2025-03-23 10:00:00"
-    },
-    {
-      id: 4,
-      name: "Fatma Yılmaz",
-      rating: 2,
-      comment: "Kötü bir hizmet, çok memnun kaldım.",
-      date: "2025-03-23 10:00:00"
-    },
-    {
-      id: 5,
-      name: "Ali Yılmaz",
-      rating: 1,
-      comment: "Kötü bir hizmet, memnun kalmadım.",
-      date: "2025-03-23 10:00:00"
-    }
-  ];
 
   const [newCertificate, setNewCertificate] = useState({ name: '', file: null, fileSize: 0, fileType: '' });
 
@@ -1286,7 +1247,7 @@ function CilingirPanelContent() {
                 </div>
                 
                 <div className="flex justify-between items-center mt-6">
-                  <p className="text-sm text-gray-500">120 aktivite gösteriliyor</p>
+                  <p className="text-sm text-gray-500">10 aktivite gösteriliyor</p>
                   <div className="flex items-center">
                     <span className="mr-4 text-sm">Sayfa 1 / 15</span>
                     <div className="flex space-x-2">
@@ -1337,16 +1298,38 @@ function CilingirPanelContent() {
                       ))}
                     </div>
                   </div>
+
+                  {/* Yıldız Filtreleme Butonları */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <button 
+                      className={`flex items-center space-x-1 border border-gray-200 hover:bg-blue-50 hover:border-blue-200 rounded-lg px-3 py-1.5 transition-colors ${activeReviewFilter === "all" ? "bg-blue-50 border-blue-200" : ""}`}
+                      onClick={() => setActiveReviewFilter("all")}
+                    >
+                      Tümü
+                    </button>
+                    {[5, 4, 3, 2, 1].map((star) => (
+                      <button 
+                        key={star}
+                        className={`flex items-center space-x-1 border border-gray-200 hover:bg-blue-50 hover:border-blue-200 rounded-lg px-3 py-1.5 transition-colors ${activeReviewFilter === star.toString() ? "bg-blue-50 border-blue-200" : ""}`}
+                        onClick={() => setActiveReviewFilter(star.toString())}
+                      >
+                        <span className="font-medium">{star}</span>
+                        <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                        </svg>
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 
                 <div className="space-y-6">
-                  {testReviews.map((review) => (
+                  {reviews.map((review) => (
                     <div key={review.id} className="border-b pb-6">
                       <div className="flex justify-between mb-2">
                         <div className="flex items-center">
                           <div className="w-10 h-10 rounded-full bg-gray-200 mr-3"></div>
                           <div>
-                            <p className="font-medium">{review.name}</p>
+                            <p className="font-medium">{review.userName}</p>
                             <div className="flex">
                               {[...Array(5)].map((_, i) => (
                                 <svg key={i} className={`w-4 h-4 ${i < review.rating ? "text-yellow-400" : "text-gray-300"}`} fill="currentColor" viewBox="0 0 20 20">
@@ -1356,13 +1339,23 @@ function CilingirPanelContent() {
                             </div>
                           </div>
                         </div>
-                        <div className="text-sm text-gray-500">{review.date.split(' ')[0]}</div>
+                        <div className="text-sm text-gray-500">{review.createdAt.split(' ')[0]}</div>
                       </div>
                       <p className="text-gray-700">
                         {review.comment}
                       </p>
                     </div>
                   ))}
+                </div>
+                <div className="flex justify-between items-center mt-6">
+                  <p className="text-sm text-gray-500">10 yorum gösteriliyor</p>
+                  <div className="flex items-center">
+                    <span className="mr-4 text-sm">Sayfa 1 / 1</span>
+                    <div className="flex space-x-2">
+                      <Button variant="outline" size="sm">Önceki</Button>
+                      <Button variant="outline" size="sm">Sonraki</Button>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

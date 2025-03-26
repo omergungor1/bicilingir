@@ -21,6 +21,21 @@ const getSupabase = () => {
   );
 };
 
+export async function getMe() {
+  if(isTestMode){
+    return {
+      id: 1,
+      name: 'Ahmet Yılmaz',
+      email: 'ahmet@gmail.com',
+      phone: '1234567890',
+      address: '1234567890',
+    }
+  }
+  // const supabase = getSupabase();
+  // const { data, error } = await supabase.auth.getUser();
+  // return { data, error };
+}
+
 /**
  * Tüm aktif çilingirleri getir
  */
@@ -394,6 +409,16 @@ export async function deletePackage(id) {
 }
 
 // Değerlendirmeleri getir
+
+export async function getLocksmithsReviews(locksmithId) {
+  // Test modunda ise test verileri kullan
+  if (isTestMode) {
+      return { reviews: testReviews.filter(r => r.locksmithId == locksmithId && r.status == 'approved')};
+  }
+  
+  
+}
+
 export async function getReviews(status = null) {
   // Test modunda ise test verileri kullan
   if (isTestMode) {
@@ -404,31 +429,6 @@ export async function getReviews(status = null) {
     return { reviews };
   }
   
-  const supabase = getSupabase();
-  
-  try {
-    let query = supabase
-      .from('reviews')
-      .select(`
-        *,
-        locksmiths(name, location)
-      `)
-      .order('created_at', { ascending: false });
-    
-    // Eğer durum belirtilmişse filtrele
-    if (status) {
-      query = query.eq('status', status);
-    }
-    
-    const { data, error } = await query;
-    
-    if (error) throw error;
-    
-    return { reviews: data };
-  } catch (error) {
-    console.error('Değerlendirmeler getirilirken hata:', error);
-    return { error: 'Değerlendirmeler getirilirken bir hata oluştu.' };
-  }
 }
 
 // Değerlendirme durumunu güncelle (onayla/reddet)
