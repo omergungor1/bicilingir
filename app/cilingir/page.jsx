@@ -33,12 +33,13 @@ function CilingirPanelContent() {
   const [isCertificateDialogOpen, setIsCertificateDialogOpen] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [activeFilter, setActiveFilter] = useState("all");
+  const [activeReviewFilter, setActiveReviewFilter] = useState("all");
+  const [activeDashboardFilter, setActiveDashboardFilter] = useState("all");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [keyBalance, setKeyBalance] = useState(1500); // Örnek roket bakiyesi
   const [maxCustomersPerHour, setMaxCustomersPerHour] = useState(2);
   const [selectedCity, setSelectedCity] = useState("İstanbul");
   const [selectedDistrict, setSelectedDistrict] = useState("Kadıköy");
-  const [activeReviewFilter, setActiveReviewFilter] = useState("all");
   const [dailyKeys, setDailyKeys] = useState({
     Pazartesi: {key: 50, isOpen: true},
     Salı: {key: 50, isOpen: true},
@@ -415,12 +416,40 @@ function CilingirPanelContent() {
                 <CardDescription>Hesap genel bakış</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {/* Filter buttons -> Today, Yedterday, last 7 days, last 30 days, All time */}
+                <div className="flex justify-start gap-1 mb-4 w-full overflow-x-auto scrollbar-hide scrollbar-thumb-blue-500 scrollbar-track-gray-100">
+                  <Button
+                  onClick={() => setActiveDashboardFilter("today")}
+                  variant="outline"
+                  className={`${activeDashboardFilter === "today" ? "bg-blue-500 text-white" : "bg-white text-gray-800"}`}
+                  >Bugün</Button>
+                  <Button
+                  onClick={() => setActiveDashboardFilter("yesterday")}
+                  variant="outline"
+                  className={`${activeDashboardFilter === "yesterday" ? "bg-blue-500 text-white" : "bg-white text-gray-800"}`}
+                  >Dün</Button>
+                  <Button
+                  onClick={() => setActiveDashboardFilter("last7days")}
+                  variant="outline"
+                  className={`${activeDashboardFilter === "last7days" ? "bg-blue-500 text-white" : "bg-white text-gray-800"}`}
+                  >Son 7 Gün</Button>
+                  <Button
+                  onClick={() => setActiveDashboardFilter("last30days")}
+                  variant="outline"
+                  className={`${activeDashboardFilter === "last30days" ? "bg-blue-500 text-white" : "bg-white text-gray-800"}`}
+                  >Son 30 Gün</Button>
+                  <Button 
+                  onClick={() => setActiveDashboardFilter("all")}
+                  variant="outline"
+                  className={`${activeDashboardFilter === "all" ? "bg-blue-500 text-white" : "bg-white text-gray-800"}`}
+                  >Tümü</Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                   <Card className="hover:shadow-lg transition-shadow">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm text-gray-500 mb-1">Toplam Görüntülenme</p>
+                          <p className="text-sm text-gray-500 mb-1">Görüntülenme</p>
                           <h3 className="text-3xl font-bold text-gray-800">345</h3>
                           <p className="text-sm text-green-600 mt-2 flex items-center">
                             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -446,7 +475,7 @@ function CilingirPanelContent() {
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm text-gray-500 mb-1">Toplam Arama</p>
+                          <p className="text-sm text-gray-500 mb-1">Arama</p>
                           <h3 className="text-3xl font-bold text-gray-800">213</h3>
                           <p className="text-sm text-green-600 mt-2 flex items-center">
                             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -467,19 +496,44 @@ function CilingirPanelContent() {
                     </CardContent>
                   </Card>
 
+                  {/* Toplam Profil Ziyareti */}
                   <Card className="hover:shadow-lg transition-shadow">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm text-gray-500 mb-1">Ortalama Puan</p>
-                          <h3 className="text-3xl font-bold text-gray-800">4.8/5</h3>
-                          <div className="flex items-center mt-2">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <svg key={star} className={`w-4 h-4 ${star <= 4 ? "text-yellow-400" : "text-gray-300"}`} fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                            ))}
+                          <p className="text-sm text-gray-500 mb-1">Profil Ziyareti</p>
+                          <h3 className="text-3xl font-bold text-gray-800">123</h3>
+                          <p className="text-sm text-green-600 mt-2 flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                            </svg>
+                            %8.3 artış
+                          </p>
+                        </div>
+                        <div className="bg-green-100 p-3 rounded-full">
+                          <Footprints className="h-8 w-8 text-green-600" />
+                        </div>
+                      </div>
+                      <div className="mt-4 h-1 w-full bg-gray-100 rounded">
+                        <div className="h-1 bg-green-500 rounded" style={{ width: '80%' }}></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="hover:shadow-lg transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">Yorum</p>
+                          <div className="flex items-center">
+                            <h3 className="text-3xl font-bold text-gray-800">123</h3>
                           </div>
+                            <p className="text-sm text-green-600 mt-2 flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                            </svg>
+                            %1.2 artış
+                          </p>
                         </div>
                         <div className="bg-yellow-100 p-3 rounded-full">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -1,0 +1,309 @@
+-- Servis Kategorileri Tablosu
+CREATE TABLE services (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    icon_url TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- İl (Province) Tablosu
+CREATE TABLE provinces (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    code TEXT
+);
+
+-- İlçe (District) Tablosu
+CREATE TABLE districts (
+    id SERIAL PRIMARY KEY,
+    province_id INTEGER NOT NULL REFERENCES provinces(id),
+    name TEXT NOT NULL,
+    UNIQUE(province_id, name)
+);
+
+-- Çilingir Paketleri Tablosu
+CREATE TABLE key_packages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    description TEXT,
+    key_amount INTEGER NOT NULL,
+    price NUMERIC(10,2) NOT NULL,
+    is_unlimited BOOLEAN DEFAULT FALSE,
+    startDate DATE,
+    endDate DATE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Çilingirler Tablosu
+CREATE TABLE locksmiths (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    slug TEXT UNIQUE NOT NULL,
+    provinceId INTEGER REFERENCES provinces(id),
+    districtId INTEGER REFERENCES districts(id),
+    businessName TEXT,
+    fullName TEXT NOT NULL,
+    tagline TEXT,
+    email TEXT UNIQUE NOT NULL,
+    phoneNumber TEXT UNIQUE NOT NULL,
+    whatsappNumber TEXT UNIQUE,
+    customerLimitPerHour INTEGER DEFAULT 5,
+    avgRating NUMERIC(3,2) DEFAULT 0,
+    totalReviewCount INTEGER DEFAULT 0,
+    profileImageUrl TEXT,
+    isVerified BOOLEAN DEFAULT FALSE,
+    isActive BOOLEAN DEFAULT FALSE
+);
+
+-- Çilingir Detayları Tablosu
+CREATE TABLE locksmith_details (
+    locksmithId UUID PRIMARY KEY REFERENCES locksmiths(id),
+    taxNumber TEXT UNIQUE,
+    fullAddress TEXT,
+    aboutText TEXT,
+    certificates JSONB,
+    documents JSONB,
+    socialMedia JSONB,
+    websiteUrl TEXT,
+    imagesUrls TEXT[],
+    startDate DATE,
+    isEmailVerified BOOLEAN DEFAULT FALSE,
+    isPhoneVerified BOOLEAN DEFAULT FALSE,
+    totalReviewsCount INTEGER DEFAULT 0,
+    avgRating NUMERIC(3,2) DEFAULT 0,
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    createdAt TIMESTAMPTZ DEFAULT NOW(),
+    lastLogin TIMESTAMPTZ
+);
+
+-- Çilingir Çalışma Saatleri Tablosu
+CREATE TABLE locksmith_working_hours (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    locksmithId UUID REFERENCES locksmiths(id) ON DELETE CASCADE,
+    dayOfWeek INTEGER CHECK (dayOfWeek BETWEEN 0 AND 6), -- 0 = Pazar, 6 = Cumartesi
+    is24HOpen BOOLEAN DEFAULT FALSE, -- 24 saat açık mı?
+    isWorking BOOLEAN DEFAULT TRUE, -- O gün çalışıyor mu?
+    openTime TIME, -- Açılış saati
+    closeTime TIME, -- Kapanış saati
+    UNIQUE (locksmithId, dayOfWeek) -- Aynı çilingir için aynı gün tekrar eklenemesin
+);
+
+-- Çilingir Servis İlişkileri Tablosu
+CREATE TABLE locksmith_services (
+    locksmithId UUID REFERENCES locksmiths(id) ON DELETE CASCADE,
+    serviceId UUID REFERENCES services(id) ON DELETE CASCADE,
+    isActive BOOLEAN DEFAULT TRUE,
+    updatedAt TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (locksmithId, serviceId)
+);
+
+-- Hizmet Alanları Tablosu
+CREATE TABLE service_areas (
+    locksmithId UUID REFERENCES locksmiths(id) ON DELETE CASCADE,
+    provinceId INTEGER REFERENCES provinces(id),
+    districtId INTEGER REFERENCES districts(id),
+    timePeriod VARCHAR(10) CHECK (timePeriod IN ('day', 'night')),
+    PRIMARY KEY (locksmithId, provinceId, districtId, timePeriod)
+);
+
+-- Çilingir Key Bakiyesi Tablosu
+CREATE TABLE key_balance (
+    locksmithId UUID PRIMARY KEY REFERENCES locksmiths(id),
+    totalKeyBalance INTEGER DEFAULT 0,
+    lastUpdated TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Günlük Key Tercihleri Tablosu
+CREATE TABLE daily_key_preferences (
+    locksmithId UUID REFERENCES locksmiths(id),
+    dayOfWeek INTEGER CHECK (dayOfWeek BETWEEN 0 AND 6),
+    keyAmount INTEGER DEFAULT 0,
+    PRIMARY KEY (locksmithId, dayOfWeek)
+);
+
+-- Key Kullanım Logları Tablosu
+CREATE TABLE key_usage_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    locksmithId UUID NOT NULL REFERENCES locksmiths(id),
+    keyAmount INTEGER NOT NULL,
+    usageType TEXT NOT NULL CHECK (
+        usageType IN ('listing', 'call', 'other')
+    ),
+    description TEXT,
+    usageTimestamp TIMESTAMPTZ DEFAULT NOW(),
+    additionalDetails JSONB,
+    createdAt TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Key İşlemleri Tablosu
+CREATE TABLE key_transactions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    locksmithId UUID NOT NULL REFERENCES locksmiths(id),
+    packageId UUID REFERENCES key_packages(id),
+    keyAmount INTEGER NOT NULL,
+    transactionType TEXT NOT NULL CHECK (
+        transactionType IN ('purchase', 'bonus', 'refund', 'system_adjustment')
+    ),
+    paidAmount NUMERIC(10,2),
+    balanceBefore INTEGER NOT NULL,
+    balanceAfter INTEGER NOT NULL,
+    createdAt TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- İncelemeler Tablosu
+CREATE TABLE reviews (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    locksmithId UUID NOT NULL REFERENCES locksmiths(id),
+    userName TEXT,
+    rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT,
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    ipAddress INET,
+    deviceType TEXT,
+    userAgent TEXT,
+    moderatorId UUID,    -- Yorumun onaylayan admin/moderatör kimliği
+    approvedAt TIMESTAMPTZ, -- Onaylandığı tarih
+    createdAt TIMESTAMPTZ DEFAULT NOW(),
+    isSuspicious BOOLEAN DEFAULT FALSE, -- Yorumun şüpheli olup olmadığını belirten alan
+    commentCountPerUser INTEGER DEFAULT 0, -- Kullanıcı başına yapılan yorum sayısı
+    lastCommentTime TIMESTAMPTZ -- Son yorumun zamanı
+);
+
+
+-- Kullanıcı Aktivite Türleri
+CREATE TYPE user_activity_type_enum AS ENUM (
+    'search',
+    'locksmith_list_view',
+    'locksmith_detail_view',
+    'call_request',
+    'review_submit',
+    'profile_visit'
+);
+
+-- Çilingir Aktivite Türleri
+CREATE TYPE locksmith_activity_type_enum AS ENUM (
+    'account_created',
+    'account_activated',
+    'account_deactivated',
+    'account_deleted',
+    'package_purchase',
+    'profile_update',
+    'certificate_upload',
+    'document_upload',
+    'service_add',
+    'service_remove',
+    'working_hours_update',
+    'login',
+    'logout',
+    'password_reset'
+);
+
+-- Kullanıcı Aktivite Logları Tablosu
+CREATE TABLE user_activity_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    userIp INET,
+    userAgent TEXT,
+    sessionId UUID,
+    
+    searchProvinceId INTEGER REFERENCES provinces(id),
+    searchDistrictId INTEGER REFERENCES districts(id),
+    searchServiceId UUID REFERENCES services(id),
+    
+    activityType user_activity_type_enum NOT NULL,
+    locksmithId UUID REFERENCES locksmiths(id),
+    
+    isSuspicious BOOLEAN DEFAULT FALSE,
+    isRepeated BOOLEAN DEFAULT FALSE,
+    activityCount INTEGER DEFAULT 0,
+    lastActivityTime TIMESTAMPTZ,
+    isFraudulent BOOLEAN DEFAULT FALSE,
+    
+    createdAt TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Çilingir Aktivite Logları Tablosu
+CREATE TABLE locksmith_activity_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    locksmithId UUID NOT NULL REFERENCES locksmiths(id),
+    userIp INET,
+    userAgent TEXT,
+    sessionId UUID,
+    
+    activityType locksmith_activity_type_enum NOT NULL,
+    
+    additionalInfo JSONB,
+    createdAt TIMESTAMPTZ DEFAULT NOW()
+);
+
+
+
+
+-- Provinces Table Indexes
+CREATE INDEX idx_provinces_name ON provinces(name);
+
+-- Districts Table Indexes
+CREATE INDEX idx_districts_province_id ON districts(province_id);
+CREATE INDEX idx_districts_name ON districts(name);
+CREATE INDEX idx_districts_province_name ON districts(province_id, name);
+
+-- Locksmiths Table Indexes
+CREATE INDEX idx_locksmiths_province_district ON locksmiths(provinceId, districtId);
+CREATE INDEX idx_locksmiths_business_name ON locksmiths(businessName);
+CREATE INDEX idx_locksmiths_email ON locksmiths(email);
+CREATE INDEX idx_locksmiths_phone ON locksmiths(phoneNumber);
+CREATE INDEX idx_locksmiths_verification_status ON locksmiths(isVerified, isActive);
+
+-- Locksmith Details Table Indexes
+CREATE INDEX idx_locksmith_details_status ON locksmith_details(status);
+CREATE INDEX idx_locksmith_details_email_verified ON locksmith_details(isEmailVerified);
+CREATE INDEX idx_locksmith_details_phone_verified ON locksmith_details(isPhoneVerified);
+CREATE INDEX idx_locksmith_details_ratings ON locksmith_details(avgRating, totalReviewsCount);
+
+-- Services Table Indexes
+CREATE INDEX idx_services_name ON services(name);
+CREATE INDEX idx_services_active ON services(is_active);
+
+-- Locksmith Services Table Indexes
+CREATE INDEX idx_locksmith_services_locksmith_id ON locksmith_services(locksmithId);
+CREATE INDEX idx_locksmith_services_service_id ON locksmith_services(serviceId);
+
+-- Service Areas Table Indexes
+CREATE INDEX idx_service_areas_locksmith_id ON service_areas(locksmithId);
+CREATE INDEX idx_service_areas_province_id ON service_areas(provinceId);
+CREATE INDEX idx_service_areas_district_id ON service_areas(districtId);
+CREATE INDEX idx_service_areas_time_period ON service_areas(timePeriod);
+
+-- Key Packages Table Indexes
+CREATE INDEX idx_key_packages_active ON key_packages(is_active);
+CREATE INDEX idx_key_packages_date_range ON key_packages(startDate, endDate);
+
+-- Key Balance Table Indexes
+CREATE INDEX idx_key_balance_locksmith_id ON key_balance(locksmithId);
+
+-- Key Usage Logs Table Indexes
+CREATE INDEX idx_key_usage_logs_locksmith_id ON key_usage_logs(locksmithId);
+CREATE INDEX idx_key_usage_logs_usage_type ON key_usage_logs(usageType);
+CREATE INDEX idx_key_usage_logs_timestamp ON key_usage_logs(usageTimestamp);
+
+-- Key Transactions Table Indexes
+CREATE INDEX idx_key_transactions_locksmith_id ON key_transactions(locksmithId);
+CREATE INDEX idx_key_transactions_package_id ON key_transactions(packageId);
+CREATE INDEX idx_key_transactions_type ON key_transactions(transactionType);
+
+-- Reviews Table Indexes
+CREATE INDEX idx_reviews_locksmith_id ON reviews(locksmithId);
+CREATE INDEX idx_reviews_status ON reviews(status);
+CREATE INDEX idx_reviews_rating ON reviews(rating);
+CREATE INDEX idx_reviews_suspicious ON reviews(isSuspicious);
+
+-- User Activity Logs Table Indexes
+CREATE INDEX idx_user_activity_logs_search_filters ON user_activity_logs(searchProvinceId, searchDistrictId, searchServiceId);
+CREATE INDEX idx_user_activity_logs_activity_type ON user_activity_logs(activityType);
+CREATE INDEX idx_user_activity_logs_suspicious ON user_activity_logs(isSuspicious, isFraudulent);
+
+-- Locksmith Activity Logs Table Indexes
+CREATE INDEX idx_locksmith_activity_logs_locksmith_id ON locksmith_activity_logs(locksmithId);
+CREATE INDEX idx_locksmith_activity_logs_activity_type ON locksmith_activity_logs(activityType);

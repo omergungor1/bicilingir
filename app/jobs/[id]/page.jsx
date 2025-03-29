@@ -273,7 +273,7 @@ export default async function LocksmithDetail({ params }) {
             {/* Sağ Bölüm - İletişim ve Özet */}
             <div className="w-full lg:w-1/3 p-6 lg:p-8">
               <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 mb-6">
-                Hemen Ara: {locksmith.phone || "0532 XXX XX XX"}
+                Hemen Ara: {locksmith.phone.mobile || "0532 XXX XX XX"}
               </Button>
 
               {/* Çalışma Saatleri */}

@@ -1,311 +1,1250 @@
 // Türkiye'deki il ve ilçeler
 const turkiyeIlIlce = {
-  "Adana": [
-    "Aladağ", "Ceyhan", "Çukurova", "Feke", "İmamoğlu", "Karaisalı", "Karataş", 
-    "Kozan", "Pozantı", "Saimbeyli", "Sarıçam", "Seyhan", "Tufanbeyli", "Yumurtalık", "Yüreğir"
-  ],
-  "Adıyaman": [
-    "Besni", "Çelikhan", "Gerger", "Gölbaşı", "Kahta", "Merkez", "Samsat", "Sincik", "Tut"
-  ],
-  "Afyonkarahisar": [
-    "Başmakçı", "Bayat", "Bolvadin", "Çay", "Çobanlar", "Dazkırı", "Dinar", "Emirdağ", 
-    "Evciler", "Hocalar", "İhsaniye", "İscehisar", "Kızılören", "Merkez", "Sandıklı", 
-    "Sinanpaşa", "Sultandağı", "Şuhut"
-  ],
-  "Ağrı": [
-    "Diyadin", "Doğubayazıt", "Eleşkirt", "Hamur", "Merkez", "Patnos", "Taşlıçay", "Tutak"
-  ],
-  "Aksaray": [
-    "Ağaçören", "Eskil", "Gülağaç", "Güzelyurt", "Merkez", "Ortaköy", "Sarıyahşi", "Sultanhanı"
-  ],
-  "Amasya": [
-    "Göynücek", "Gümüşhacıköy", "Hamamözü", "Merkez", "Merzifon", "Suluova", "Taşova"
-  ],
-  "Ankara": [
-    "Akyurt", "Altındağ", "Ayaş", "Bala", "Beypazarı", "Çamlıdere", "Çankaya", "Çubuk", 
-    "Elmadağ", "Etimesgut", "Evren", "Gölbaşı", "Güdül", "Haymana", "Kahramankazan", "Kalecik", 
-    "Keçiören", "Kızılcahamam", "Mamak", "Nallıhan", "Polatlı", "Pursaklar", "Sincan", 
-    "Şereflikoçhisar", "Yenimahalle"
-  ],
-  "Antalya": [
-    "Akseki", "Aksu", "Alanya", "Demre", "Döşemealtı", "Elmalı", "Finike", "Gazipaşa", 
-    "Gündoğmuş", "İbradı", "Kaş", "Kemer", "Kepez", "Konyaaltı", "Korkuteli", "Kumluca", 
-    "Manavgat", "Muratpaşa", "Serik"
-  ],
-  "Ardahan": [
-    "Çıldır", "Damal", "Göle", "Hanak", "Merkez", "Posof"
-  ],
-  "Artvin": [
-    "Ardanuç", "Arhavi", "Borçka", "Hopa", "Kemalpaşa", "Merkez", "Murgul", "Şavşat", "Yusufeli"
-  ],
-  "Aydın": [
-    "Bozdoğan", "Buharkent", "Çine", "Didim", "Efeler", "Germencik", "İncirliova", "Karacasu", 
-    "Karpuzlu", "Koçarlı", "Köşk", "Kuşadası", "Kuyucak", "Nazilli", "Söke", "Sultanhisar", "Yenipazar"
-  ],
-  "Balıkesir": [
-    "Altıeylül", "Ayvalık", "Balya", "Bandırma", "Bigadiç", "Burhaniye", "Dursunbey", "Edremit", 
-    "Erdek", "Gömeç", "Gönen", "Havran", "İvrindi", "Karesi", "Kepsut", "Manyas", "Marmara", 
-    "Savaştepe", "Sındırgı", "Susurluk"
-  ],
-  "Bartın": [
-    "Amasra", "Kurucaşile", "Merkez", "Ulus"
-  ],
-  "Batman": [
-    "Beşiri", "Gercüş", "Hasankeyf", "Kozluk", "Merkez", "Sason"
-  ],
-  "Bayburt": [
-    "Aydıntepe", "Demirözü", "Merkez"
-  ],
-  "Bilecik": [
-    "Bozüyük", "Gölpazarı", "İnhisar", "Merkez", "Osmaneli", "Pazaryeri", "Söğüt", "Yenipazar"
-  ],
-  "Bingöl": [
-    "Adaklı", "Genç", "Karlıova", "Kiğı", "Merkez", "Solhan", "Yayladere", "Yedisu"
-  ],
-  "Bitlis": [
-    "Adilcevaz", "Ahlat", "Güroymak", "Hizan", "Merkez", "Mutki", "Tatvan"
-  ],
-  "Bolu": [
-    "Dörtdivan", "Gerede", "Göynük", "Kıbrıscık", "Mengen", "Merkez", "Mudurnu", "Seben", "Yeniçağa"
-  ],
-  "Burdur": [
-    "Ağlasun", "Altınyayla", "Bucak", "Çavdır", "Çeltikçi", "Gölhisar", "Karamanlı", 
-    "Kemer", "Merkez", "Tefenni", "Yeşilova"
-  ],
-  "Bursa": [
-    "Büyükorhan", "Gemlik", "Gürsu", "Harmancık", "İnegöl", "İznik", "Karacabey", "Keles", 
-    "Kestel", "Mudanya", "Mustafakemalpaşa", "Nilüfer", "Orhaneli", "Orhangazi", "Osmangazi", 
-    "Yenişehir", "Yıldırım"
-  ],
-  "Çanakkale": [
-    "Ayvacık", "Bayramiç", "Biga", "Bozcaada", "Çan", "Eceabat", "Ezine", "Gelibolu", 
-    "Gökçeada", "Lapseki", "Merkez", "Yenice"
-  ],
-  "Çankırı": [
-    "Atkaracalar", "Bayramören", "Çerkeş", "Eldivan", "Ilgaz", "Kızılırmak", "Korgun", 
-    "Kurşunlu", "Merkez", "Orta", "Şabanözü", "Yapraklı"
-  ],
-  "Çorum": [
-    "Alaca", "Bayat", "Boğazkale", "Dodurga", "İskilip", "Kargı", "Laçin", "Mecitözü", 
-    "Merkez", "Oğuzlar", "Ortaköy", "Osmancık", "Sungurlu", "Uğurludağ"
-  ],
-  "Denizli": [
-    "Acıpayam", "Babadağ", "Baklan", "Bekilli", "Beyağaç", "Bozkurt", "Buldan", "Çal", 
-    "Çameli", "Çardak", "Çivril", "Güney", "Honaz", "Kale", "Merkezefendi", "Pamukkale", 
-    "Sarayköy", "Serinhisar", "Tavas"
-  ],
-  "Diyarbakır": [
-    "Bağlar", "Bismil", "Çermik", "Çınar", "Çüngüş", "Dicle", "Eğil", "Ergani", "Hani", 
-    "Hazro", "Kayapınar", "Kocaköy", "Kulp", "Lice", "Silvan", "Sur", "Yenişehir"
-  ],
-  "Düzce": [
-    "Akçakoca", "Çilimli", "Cumayeri", "Gölyaka", "Gümüşova", "Kaynaşlı", "Merkez", "Yığılca"
-  ],
-  "Edirne": [
-    "Enez", "Havsa", "İpsala", "Keşan", "Lalapaşa", "Meriç", "Merkez", "Süloğlu", "Uzunköprü"
-  ],
-  "Elazığ": [
-    "Ağın", "Alacakaya", "Arıcak", "Baskil", "Karakoçan", "Keban", "Kovancılar", "Maden", 
-    "Merkez", "Palu", "Sivrice"
-  ],
-  "Erzincan": [
-    "Çayırlı", "İliç", "Kemah", "Kemaliye", "Merkez", "Otlukbeli", "Refahiye", "Tercan", "Üzümlü"
-  ],
-  "Erzurum": [
-    "Aşkale", "Aziziye", "Çat", "Hınıs", "Horasan", "İspir", "Karaçoban", "Karayazı", 
-    "Köprüköy", "Narman", "Oltu", "Olur", "Palandöken", "Pasinler", "Pazaryolu", 
-    "Şenkaya", "Tekman", "Tortum", "Uzundere", "Yakutiye"
-  ],
-  "Eskişehir": [
-    "Alpu", "Beylikova", "Çifteler", "Günyüzü", "Han", "İnönü", "Mahmudiye", "Mihalgazi", 
-    "Mihalıççık", "Odunpazarı", "Sarıcakaya", "Seyitgazi", "Sivrihisar", "Tepebaşı"
-  ],
-  "Gaziantep": [
-    "Araban", "İslahiye", "Karkamış", "Nizip", "Nurdağı", "Oğuzeli", "Şahinbey", "Şehitkamil", "Yavuzeli"
-  ],
-  "Giresun": [
-    "Alucra", "Bulancak", "Çamoluk", "Çanakçı", "Dereli", "Doğankent", "Espiye", "Eynesil", 
-    "Görele", "Güce", "Keşap", "Merkez", "Piraziz", "Şebinkarahisar", "Tirebolu", "Yağlıdere"
-  ],
-  "Gümüşhane": [
-    "Kelkit", "Köse", "Kürtün", "Merkez", "Şiran", "Torul"
-  ],
-  "Hakkari": [
-    "Çukurca", "Derecik", "Merkez", "Şemdinli", "Yüksekova"
-  ],
-  "Hatay": [
-    "Altınözü", "Antakya", "Arsuz", "Belen", "Defne", "Dörtyol", "Erzin", "Hassa", 
-    "İskenderun", "Kırıkhan", "Kumlu", "Payas", "Reyhanlı", "Samandağ", "Yayladağı"
-  ],
-  "Iğdır": [
-    "Aralık", "Karakoyunlu", "Merkez", "Tuzluca"
-  ],
-  "Isparta": [
-    "Aksu", "Atabey", "Eğirdir", "Gelendost", "Gönen", "Keçiborlu", "Merkez", 
-    "Senirkent", "Sütçüler", "Şarkikaraağaç", "Uluborlu", "Yalvaç", "Yenişarbademli"
-  ],
-  "İstanbul": [
-    "Adalar", "Arnavutköy", "Ataşehir", "Avcılar", "Bağcılar", "Bahçelievler", "Bakırköy", 
-    "Başakşehir", "Bayrampaşa", "Beşiktaş", "Beykoz", "Beylikdüzü", "Beyoğlu", "Büyükçekmece", 
-    "Çatalca", "Çekmeköy", "Esenler", "Esenyurt", "Eyüpsultan", "Fatih", "Gaziosmanpaşa", 
-    "Güngören", "Kadıköy", "Kağıthane", "Kartal", "Küçükçekmece", "Maltepe", "Pendik", 
-    "Sancaktepe", "Sarıyer", "Silivri", "Sultanbeyli", "Sultangazi", "Şile", "Şişli", 
-    "Tuzla", "Ümraniye", "Üsküdar", "Zeytinburnu"
-  ],
-  "İzmir": [
-    "Aliağa", "Balçova", "Bayındır", "Bayraklı", "Bergama", "Beydağ", "Bornova", "Buca", 
-    "Çeşme", "Çiğli", "Dikili", "Foça", "Gaziemir", "Güzelbahçe", "Karabağlar", "Karaburun", 
-    "Karşıyaka", "Kemalpaşa", "Kınık", "Kiraz", "Konak", "Menderes", "Menemen", "Narlıdere", 
-    "Ödemiş", "Seferihisar", "Selçuk", "Tire", "Torbalı", "Urla"
-  ],
-  "Kahramanmaraş": [
-    "Afşin", "Andırın", "Çağlayancerit", "Dulkadiroğlu", "Ekinözü", "Elbistan", "Göksun", 
-    "Nurhak", "Onikişubat", "Pazarcık", "Türkoğlu"
-  ],
-  "Karabük": [
-    "Eflani", "Eskipazar", "Merkez", "Ovacık", "Safranbolu", "Yenice"
-  ],
-  "Karaman": [
-    "Ayrancı", "Başyayla", "Ermenek", "Kazımkarabekir", "Merkez", "Sarıveliler"
-  ],
-  "Kars": [
-    "Akyaka", "Arpaçay", "Digor", "Kağızman", "Merkez", "Sarıkamış", "Selim", "Susuz"
-  ],
-  "Kastamonu": [
-    "Abana", "Ağlı", "Araç", "Azdavay", "Bozkurt", "Cide", "Çatalzeytin", "Daday", "Devrekani", 
-    "Doğanyurt", "Hanönü", "İhsangazi", "İnebolu", "Küre", "Merkez", "Pınarbaşı", "Seydiler", 
-    "Şenpazar", "Taşköprü", "Tosya"
-  ],
-  "Kayseri": [
-    "Akkışla", "Bünyan", "Develi", "Felahiye", "Hacılar", "İncesu", "Kocasinan", "Melikgazi", 
-    "Özvatan", "Pınarbaşı", "Sarıoğlan", "Sarız", "Talas", "Tomarza", "Yahyalı", "Yeşilhisar"
-  ],
-  "Kırıkkale": [
-    "Bahşılı", "Balışeyh", "Çelebi", "Delice", "Karakeçili", "Keskin", "Merkez", "Sulakyurt", "Yahşihan"
-  ],
-  "Kırklareli": [
-    "Babaeski", "Demirköy", "Kofçaz", "Lüleburgaz", "Merkez", "Pehlivanköy", "Pınarhisar", "Vize"
-  ],
-  "Kırşehir": [
-    "Akçakent", "Akpınar", "Boztepe", "Çiçekdağı", "Kaman", "Merkez", "Mucur"
-  ],
-  "Kilis": [
-    "Elbeyli", "Merkez", "Musabeyli", "Polateli"
-  ],
-  "Kocaeli": [
-    "Başiskele", "Çayırova", "Darıca", "Derince", "Dilovası", "Gebze", "Gölcük", 
-    "İzmit", "Kandıra", "Karamürsel", "Kartepe", "Körfez"
-  ],
-  "Konya": [
-    "Ahırlı", "Akören", "Akşehir", "Altınekin", "Beyşehir", "Bozkır", "Cihanbeyli", 
-    "Çeltik", "Çumra", "Derbent", "Derebucak", "Doğanhisar", "Emirgazi", "Ereğli", 
-    "Güneysınır", "Hadim", "Halkapınar", "Hüyük", "Ilgın", "Kadınhanı", "Karapınar", 
-    "Karatay", "Kulu", "Meram", "Sarayönü", "Selçuklu", "Seydişehir", "Taşkent", 
-    "Tuzlukçu", "Yalıhüyük", "Yunak"
-  ],
-  "Kütahya": [
-    "Altıntaş", "Aslanapa", "Çavdarhisar", "Domaniç", "Dumlupınar", "Emet", "Gediz", 
-    "Hisarcık", "Merkez", "Pazarlar", "Şaphane", "Simav", "Tavşanlı"
-  ],
-  "Malatya": [
-    "Akçadağ", "Arapgir", "Arguvan", "Battalgazi", "Darende", "Doğanşehir", "Doğanyol", 
-    "Hekimhan", "Kale", "Kuluncak", "Pütürge", "Yazıhan", "Yeşilyurt"
-  ],
-  "Manisa": [
-    "Ahmetli", "Akhisar", "Alaşehir", "Demirci", "Gölmarmara", "Gördes", "Kırkağaç", 
-    "Köprübaşı", "Kula", "Salihli", "Sarıgöl", "Saruhanlı", "Selendi", "Soma", "Şehzadeler", "Turgutlu", "Yunusemre"
-  ],
-  "Mardin": [
-    "Artuklu", "Dargeçit", "Derik", "Kızıltepe", "Mazıdağı", "Midyat", "Nusaybin", 
-    "Ömerli", "Savur", "Yeşilli"
-  ],
-  "Mersin": [
-    "Akdeniz", "Anamur", "Aydıncık", "Bozyazı", "Çamlıyayla", "Erdemli", "Gülnar", 
-    "Mezitli", "Mut", "Silifke", "Tarsus", "Toroslar", "Yenişehir"
-  ],
-  "Muğla": [
-    "Bodrum", "Dalaman", "Datça", "Fethiye", "Kavaklıdere", "Köyceğiz", "Marmaris", 
-    "Menteşe", "Milas", "Ortaca", "Seydikemer", "Ula", "Yatağan"
-  ],
-  "Muş": [
-    "Bulanık", "Hasköy", "Korkut", "Malazgirt", "Merkez", "Varto"
-  ],
-  "Nevşehir": [
-    "Acıgöl", "Avanos", "Derinkuyu", "Gülşehir", "Hacıbektaş", "Kozaklı", "Merkez", "Ürgüp"
-  ],
-  "Niğde": [
-    "Altunhisar", "Bor", "Çamardı", "Çiftlik", "Merkez", "Ulukışla"
-  ],
-  "Ordu": [
-    "Akkuş", "Altınordu", "Aybastı", "Çamaş", "Çatalpınar", "Çaybaşı", "Fatsa", "Gölköy", 
-    "Gülyalı", "Gürgentepe", "İkizce", "Kabadüz", "Kabataş", "Korgan", "Kumru", "Mesudiye", 
-    "Perşembe", "Ulubey", "Ünye"
-  ],
-  "Osmaniye": [
-    "Bahçe", "Düziçi", "Hasanbeyli", "Kadirli", "Merkez", "Sumbas", "Toprakkale"
-  ],
-  "Rize": [
-    "Ardeşen", "Çamlıhemşin", "Çayeli", "Derepazarı", "Fındıklı", "Güneysu", "Hemşin", 
-    "İkizdere", "İyidere", "Kalkandere", "Merkez", "Pazar"
-  ],
-  "Sakarya": [
-    "Adapazarı", "Akyazı", "Arifiye", "Erenler", "Ferizli", "Geyve", "Hendek", "Karapürçek", 
-    "Karasu", "Kaynarca", "Kocaali", "Pamukova", "Sapanca", "Serdivan", "Söğütlü", "Taraklı"
-  ],
-  "Samsun": [
-    "19 Mayıs", "Alaçam", "Asarcık", "Atakum", "Ayvacık", "Bafra", "Canik", "Çarşamba", 
-    "Havza", "İlkadım", "Kavak", "Ladik", "Salıpazarı", "Tekkeköy", "Terme", "Vezirköprü", "Yakakent"
-  ],
-  "Siirt": [
-    "Baykan", "Eruh", "Kurtalan", "Merkez", "Pervari", "Şirvan", "Tillo"
-  ],
-  "Sinop": [
-    "Ayancık", "Boyabat", "Dikmen", "Durağan", "Erfelek", "Gerze", "Merkez", "Saraydüzü", "Türkeli"
-  ],
-  "Sivas": [
-    "Akıncılar", "Altınyayla", "Divriği", "Doğanşar", "Gemerek", "Gölova", "Hafik", 
-    "İmranlı", "Kangal", "Koyulhisar", "Merkez", "Şarkışla", "Suşehri", "Ulaş", "Yıldızeli", "Zara"
-  ],
-  "Şanlıurfa": [
-    "Akçakale", "Birecik", "Bozova", "Ceylanpınar", "Eyyübiye", "Halfeti", "Haliliye", 
-    "Harran", "Hilvan", "Karaköprü", "Siverek", "Suruç", "Viranşehir"
-  ],
-  "Şırnak": [
-    "Beytüşşebap", "Cizre", "Güçlükonak", "İdil", "Merkez", "Silopi", "Uludere"
-  ],
-  "Tekirdağ": [
-    "Çerkezköy", "Çorlu", "Ergene", "Hayrabolu", "Kapaklı", "Malkara", "Marmaraereğlisi", 
-    "Muratlı", "Saray", "Süleymanpaşa", "Şarköy"
-  ],
-  "Tokat": [
-    "Almus", "Artova", "Başçiftlik", "Erbaa", "Merkez", "Niksar", "Pazar", "Reşadiye", 
-    "Sulusaray", "Turhal", "Yeşilyurt", "Zile"
-  ],
-  "Trabzon": [
-    "Akçaabat", "Araklı", "Arsin", "Beşikdüzü", "Çarşıbaşı", "Çaykara", "Dernekpazarı", 
-    "Düzköy", "Hayrat", "Köprübaşı", "Maçka", "Of", "Ortahisar", "Sürmene", "Şalpazarı", 
-    "Tonya", "Vakfıkebir", "Yomra"
-  ],
-  "Tunceli": [
-    "Çemişgezek", "Hozat", "Mazgirt", "Merkez", "Nazımiye", "Ovacık", "Pertek", "Pülümür"
-  ],
-  "Uşak": [
-    "Banaz", "Eşme", "Karahallı", "Merkez", "Sivaslı", "Ulubey"
-  ],
-  "Van": [
-    "Bahçesaray", "Başkale", "Çaldıran", "Çatak", "Edremit", "Erciş", "Gevaş", "Gürpınar", 
-    "İpekyolu", "Muradiye", "Özalp", "Saray", "Tuşba"
-  ],
-  "Yalova": [
-    "Altınova", "Armutlu", "Çınarcık", "Çiftlikköy", "Merkez", "Termal"
-  ],
-  "Yozgat": [
-    "Akdağmadeni", "Aydıncık", "Boğazlıyan", "Çandır", "Çayıralan", "Çekerek", "Kadışehri", 
-    "Merkez", "Saraykent", "Sarıkaya", "Şefaatli", "Sorgun", "Yenifakılı", "Yerköy"
-  ],
-  "Zonguldak": [
-    "Alaplı", "Çaycuma", "Devrek", "Ereğli", "Gökçebey", "Kilimli", "Kozlu", "Merkez"
+  provinces: [
+    { id: 1, name: "Adana" },
+    { id: 2, name: "Adıyaman" },
+    { id: 3, name: "Afyonkarahisar" },
+    { id: 4, name: "Ağrı" },
+    { id: 68, name: "Aksaray" },
+    { id: 5, name: "Amasya" },
+    { id: 6, name: "Ankara" },
+    { id: 7, name: "Antalya" },
+    { id: 75, name: "Ardahan" },
+    { id: 8, name: "Artvin" },
+    { id: 9, name: "Aydın" },
+    { id: 10, name: "Balıkesir" },
+    { id: 74, name: "Bartın" },
+    { id: 72, name: "Batman" },
+    { id: 69, name: "Bayburt" },
+    { id: 11, name: "Bilecik" },
+    { id: 12, name: "Bingöl" },
+    { id: 13, name: "Bitlis" },
+    { id: 14, name: "Bolu" },
+    { id: 15, name: "Burdur" },
+    { id: 16, name: "Bursa" },
+    { id: 17, name: "Çanakkale" },
+    { id: 18, name: "Çankırı" },
+    { id: 19, name: "Çorum" },
+    { id: 20, name: "Denizli" },
+    { id: 21, name: "Diyarbakır" },
+    { id: 81, name: "Düzce" },
+    { id: 22, name: "Edirne" },
+    { id: 23, name: "Elazığ" },
+    { id: 24, name: "Erzincan" },
+    { id: 25, name: "Erzurum" },
+    { id: 26, name: "Eskişehir" },
+    { id: 27, name: "Gaziantep" },
+    { id: 28, name: "Giresun" },
+    { id: 29, name: "Gümüşhane" },
+    { id: 30, name: "Hakkari" },
+    { id: 31, name: "Hatay" },
+    { id: 76, name: "Iğdır" },
+    { id: 32, name: "Isparta" },
+    { id: 34, name: "İstanbul" },
+    { id: 35, name: "İzmir" },
+    { id: 46, name: "Kahramanmaraş" },
+    { id: 78, name: "Karabük" },
+    { id: 70, name: "Karaman" },
+    { id: 36, name: "Kars" },
+    { id: 37, name: "Kastamonu" },
+    { id: 38, name: "Kayseri" },
+    { id: 71, name: "Kırıkkale" },
+    { id: 39, name: "Kırklareli" },
+    { id: 40, name: "Kırşehir" },
+    { id: 79, name: "Kilis" },
+    { id: 41, name: "Kocaeli" },
+    { id: 42, name: "Konya" },
+    { id: 43, name: "Kütahya" },
+    { id: 44, name: "Malatya" },
+    { id: 45, name: "Manisa" },
+    { id: 47, name: "Mardin" },
+    { id: 33, name: "Mersin" },
+    { id: 48, name: "Muğla" },
+    { id: 49, name: "Muş" },
+    { id: 50, name: "Nevşehir" },
+    { id: 51, name: "Niğde" },
+    { id: 52, name: "Ordu" },
+    { id: 80, name: "Osmaniye" },
+    { id: 53, name: "Rize" },
+    { id: 54, name: "Sakarya" },
+    { id: 55, name: "Samsun" },
+    { id: 56, name: "Siirt" },
+    { id: 57, name: "Sinop" },
+    { id: 58, name: "Sivas" },
+    { id: 63, name: "Şanlıurfa" },
+    { id: 73, name: "Şırnak" },
+    { id: 59, name: "Tekirdağ" },
+    { id: 60, name: "Tokat" },
+    { id: 61, name: "Trabzon" },
+    { id: 62, name: "Tunceli" },
+    { id: 64, name: "Uşak" },
+    { id: 65, name: "Van" },
+    { id: 77, name: "Yalova" },
+    { id: 66, name: "Yozgat" },
+    { id: 67, name: "Zonguldak" }
+  ],
+  districts: [
+    // Adana (1)
+    { id: 1, province_id: 1, name: "Aladağ" },
+    { id: 2, province_id: 1, name: "Ceyhan" },
+    { id: 3, province_id: 1, name: "Çukurova" },
+    { id: 4, province_id: 1, name: "Feke" },
+    { id: 5, province_id: 1, name: "İmamoğlu" },
+    { id: 6, province_id: 1, name: "Karaisalı" },
+    { id: 7, province_id: 1, name: "Karataş" },
+    { id: 8, province_id: 1, name: "Kozan" },
+    { id: 9, province_id: 1, name: "Pozantı" },
+    { id: 10, province_id: 1, name: "Saimbeyli" },
+    { id: 11, province_id: 1, name: "Sarıçam" },
+    { id: 12, province_id: 1, name: "Seyhan" },
+    { id: 13, province_id: 1, name: "Tufanbeyli" },
+    { id: 14, province_id: 1, name: "Yumurtalık" },
+    { id: 15, province_id: 1, name: "Yüreğir" },
+
+    // Adıyaman (2)
+    { id: 16, province_id: 2, name: "Besni" },
+    { id: 17, province_id: 2, name: "Çelikhan" },
+    { id: 18, province_id: 2, name: "Gerger" },
+    { id: 19, province_id: 2, name: "Gölbaşı" },
+    { id: 20, province_id: 2, name: "Kahta" },
+    { id: 21, province_id: 2, name: "Merkez" },
+    { id: 22, province_id: 2, name: "Samsat" },
+    { id: 23, province_id: 2, name: "Sincik" },
+    { id: 24, province_id: 2, name: "Tut" },
+
+    // Afyonkarahisar (3)
+    { id: 25, province_id: 3, name: "Başmakçı" },
+    { id: 26, province_id: 3, name: "Bayat" },
+    { id: 27, province_id: 3, name: "Bolvadin" },
+    { id: 28, province_id: 3, name: "Çay" },
+    { id: 29, province_id: 3, name: "Çobanlar" },
+    { id: 30, province_id: 3, name: "Dazkırı" },
+    { id: 31, province_id: 3, name: "Dinar" },
+    { id: 32, province_id: 3, name: "Emirdağ" },
+    { id: 33, province_id: 3, name: "Evciler" },
+    { id: 34, province_id: 3, name: "Hocalar" },
+    { id: 35, province_id: 3, name: "İhsaniye" },
+    { id: 36, province_id: 3, name: "İscehisar" },
+    { id: 37, province_id: 3, name: "Kızılören" },
+    { id: 38, province_id: 3, name: "Merkez" },
+    { id: 39, province_id: 3, name: "Sandıklı" },
+    { id: 40, province_id: 3, name: "Sinanpaşa" },
+    { id: 41, province_id: 3, name: "Sultandağı" },
+    { id: 42, province_id: 3, name: "Şuhut" },
+
+    // Ağrı (4)
+    { id: 43, province_id: 4, name: "Diyadin" },
+    { id: 44, province_id: 4, name: "Doğubayazıt" },
+    { id: 45, province_id: 4, name: "Eleşkirt" },
+    { id: 46, province_id: 4, name: "Hamur" },
+    { id: 47, province_id: 4, name: "Merkez" },
+    { id: 48, province_id: 4, name: "Patnos" },
+    { id: 49, province_id: 4, name: "Taşlıçay" },
+    { id: 50, province_id: 4, name: "Tutak" },
+
+    // Aksaray (68)
+    { id: 51, province_id: 68, name: "Ağaçören" },
+    { id: 52, province_id: 68, name: "Eskil" },
+    { id: 53, province_id: 68, name: "Gülağaç" },
+    { id: 54, province_id: 68, name: "Güzelyurt" },
+    { id: 55, province_id: 68, name: "Merkez" },
+    { id: 56, province_id: 68, name: "Ortaköy" },
+    { id: 57, province_id: 68, name: "Sarıyahşi" },
+    { id: 58, province_id: 68, name: "Sultanhanı" },
+
+    // Amasya (5)
+    { id: 59, province_id: 5, name: "Göynücek" },
+    { id: 60, province_id: 5, name: "Gümüşhacıköy" },
+    { id: 61, province_id: 5, name: "Hamamözü" },
+    { id: 62, province_id: 5, name: "Merkez" },
+    { id: 63, province_id: 5, name: "Merzifon" },
+    { id: 64, province_id: 5, name: "Suluova" },
+    { id: 65, province_id: 5, name: "Taşova" },
+
+    // Ankara (6)
+    { id: 66, province_id: 6, name: "Akyurt" },
+    { id: 67, province_id: 6, name: "Altındağ" },
+    { id: 68, province_id: 6, name: "Ayaş" },
+    { id: 69, province_id: 6, name: "Bala" },
+    { id: 70, province_id: 6, name: "Beypazarı" },
+    { id: 71, province_id: 6, name: "Çamlıdere" },
+    { id: 72, province_id: 6, name: "Çankaya" },
+    { id: 73, province_id: 6, name: "Çubuk" },
+    { id: 74, province_id: 6, name: "Elmadağ" },
+    { id: 75, province_id: 6, name: "Etimesgut" },
+    { id: 76, province_id: 6, name: "Evren" },
+    { id: 77, province_id: 6, name: "Gölbaşı" },
+    { id: 78, province_id: 6, name: "Güdül" },
+    { id: 79, province_id: 6, name: "Haymana" },
+    { id: 80, province_id: 6, name: "Kahramankazan" },
+    { id: 81, province_id: 6, name: "Kalecik" },
+    { id: 82, province_id: 6, name: "Keçiören" },
+    { id: 83, province_id: 6, name: "Kızılcahamam" },
+    { id: 84, province_id: 6, name: "Mamak" },
+    { id: 85, province_id: 6, name: "Nallıhan" },
+    { id: 86, province_id: 6, name: "Polatlı" },
+    { id: 87, province_id: 6, name: "Pursaklar" },
+    { id: 88, province_id: 6, name: "Sincan" },
+    { id: 89, province_id: 6, name: "Şereflikoçhisar" },
+    { id: 90, province_id: 6, name: "Yenimahalle" },
+
+    // Antalya (7)
+    { id: 91, province_id: 7, name: "Akseki" },
+    { id: 92, province_id: 7, name: "Aksu" },
+    { id: 93, province_id: 7, name: "Alanya" },
+    { id: 94, province_id: 7, name: "Demre" },
+    { id: 95, province_id: 7, name: "Döşemealtı" },
+    { id: 96, province_id: 7, name: "Elmalı" },
+    { id: 97, province_id: 7, name: "Finike" },
+    { id: 98, province_id: 7, name: "Gazipaşa" },
+    { id: 99, province_id: 7, name: "Gündoğmuş" },
+    { id: 100, province_id: 7, name: "İbradı" },
+    { id: 101, province_id: 7, name: "Kaş" },
+    { id: 102, province_id: 7, name: "Kemer" },
+    { id: 103, province_id: 7, name: "Kepez" },
+    { id: 104, province_id: 7, name: "Konyaaltı" },
+    { id: 105, province_id: 7, name: "Korkuteli" },
+    { id: 106, province_id: 7, name: "Kumluca" },
+    { id: 107, province_id: 7, name: "Manavgat" },
+    { id: 108, province_id: 7, name: "Muratpaşa" },
+    { id: 109, province_id: 7, name: "Serik" },
+
+    // Ardahan (75)
+    { id: 110, province_id: 75, name: "Çıldır" },
+    { id: 111, province_id: 75, name: "Damal" },
+    { id: 112, province_id: 75, name: "Göle" },
+    { id: 113, province_id: 75, name: "Hanak" },
+    { id: 114, province_id: 75, name: "Merkez" },
+    { id: 115, province_id: 75, name: "Posof" },
+
+    // Artvin (8)
+    { id: 116, province_id: 8, name: "Ardanuç" },
+    { id: 117, province_id: 8, name: "Arhavi" },
+    { id: 118, province_id: 8, name: "Borçka" },
+    { id: 119, province_id: 8, name: "Hopa" },
+    { id: 120, province_id: 8, name: "Kemalpaşa" },
+    { id: 121, province_id: 8, name: "Merkez" },
+    { id: 122, province_id: 8, name: "Murgul" },
+    { id: 123, province_id: 8, name: "Şavşat" },
+    { id: 124, province_id: 8, name: "Yusufeli" },
+
+    // Aydın (9)
+    { id: 125, province_id: 9, name: "Bozdoğan" },
+    { id: 126, province_id: 9, name: "Buharkent" },
+    { id: 127, province_id: 9, name: "Çine" },
+    { id: 128, province_id: 9, name: "Didim" },
+    { id: 129, province_id: 9, name: "Efeler" },
+    { id: 130, province_id: 9, name: "Germencik" },
+    { id: 131, province_id: 9, name: "İncirliova" },
+    { id: 132, province_id: 9, name: "Karacasu" },
+    { id: 133, province_id: 9, name: "Karpuzlu" },
+    { id: 134, province_id: 9, name: "Koçarlı" },
+    { id: 135, province_id: 9, name: "Köşk" },
+    { id: 136, province_id: 9, name: "Kuşadası" },
+    { id: 137, province_id: 9, name: "Kuyucak" },
+    { id: 138, province_id: 9, name: "Nazilli" },
+    { id: 139, province_id: 9, name: "Söke" },
+    { id: 140, province_id: 9, name: "Sultanhisar" },
+    { id: 141, province_id: 9, name: "Yenipazar" },
+
+    // Balıkesir (10)
+    { id: 142, province_id: 10, name: "Altıeylül" },
+    { id: 143, province_id: 10, name: "Ayvalık" },
+    { id: 144, province_id: 10, name: "Balya" },
+    { id: 145, province_id: 10, name: "Bandırma" },
+    { id: 146, province_id: 10, name: "Bigadiç" },
+    { id: 147, province_id: 10, name: "Burhaniye" },
+    { id: 148, province_id: 10, name: "Dursunbey" },
+    { id: 149, province_id: 10, name: "Edremit" },
+    { id: 150, province_id: 10, name: "Erdek" },
+    { id: 151, province_id: 10, name: "Gömeç" },
+    { id: 152, province_id: 10, name: "Gönen" },
+    { id: 153, province_id: 10, name: "Havran" },
+    { id: 154, province_id: 10, name: "İvrindi" },
+    { id: 155, province_id: 10, name: "Karesi" },
+    { id: 156, province_id: 10, name: "Kepsut" },
+    { id: 157, province_id: 10, name: "Manyas" },
+    { id: 158, province_id: 10, name: "Marmara" },
+    { id: 159, province_id: 10, name: "Savaştepe" },
+    { id: 160, province_id: 10, name: "Sındırgı" },
+    { id: 161, province_id: 10, name: "Susurluk" },
+
+    // Bartın (74)
+    { id: 162, province_id: 74, name: "Amasra" },
+    { id: 163, province_id: 74, name: "Kurucaşile" },
+    { id: 164, province_id: 74, name: "Merkez" },
+    { id: 165, province_id: 74, name: "Ulus" },
+
+    // Batman (72)
+    { id: 166, province_id: 72, name: "Beşiri" },
+    { id: 167, province_id: 72, name: "Gercüş" },
+    { id: 168, province_id: 72, name: "Hasankeyf" },
+    { id: 169, province_id: 72, name: "Kozluk" },
+    { id: 170, province_id: 72, name: "Merkez" },
+    { id: 171, province_id: 72, name: "Sason" },
+
+    // Bayburt (69)
+    { id: 172, province_id: 69, name: "Aydıntepe" },
+    { id: 173, province_id: 69, name: "Demirözü" },
+    { id: 174, province_id: 69, name: "Merkez" },
+
+    // Bilecik (11)
+    { id: 175, province_id: 11, name: "Bozüyük" },
+    { id: 176, province_id: 11, name: "Gölpazarı" },
+    { id: 177, province_id: 11, name: "İnhisar" },
+    { id: 178, province_id: 11, name: "Merkez" },
+    { id: 179, province_id: 11, name: "Osmaneli" },
+    { id: 180, province_id: 11, name: "Pazaryeri" },
+    { id: 181, province_id: 11, name: "Söğüt" },
+    { id: 182, province_id: 11, name: "Yenipazar" },
+
+    // Bingöl (12)
+    { id: 183, province_id: 12, name: "Adaklı" },
+    { id: 184, province_id: 12, name: "Genç" },
+    { id: 185, province_id: 12, name: "Karlıova" },
+    { id: 186, province_id: 12, name: "Kiğı" },
+    { id: 187, province_id: 12, name: "Merkez" },
+    { id: 188, province_id: 12, name: "Solhan" },
+    { id: 189, province_id: 12, name: "Yayladere" },
+    { id: 190, province_id: 12, name: "Yedisu" },
+
+    // Bitlis (13)
+    { id: 191, province_id: 13, name: "Adilcevaz" },
+    { id: 192, province_id: 13, name: "Ahlat" },
+    { id: 193, province_id: 13, name: "Güroymak" },
+    { id: 194, province_id: 13, name: "Hizan" },
+    { id: 195, province_id: 13, name: "Merkez" },
+    { id: 196, province_id: 13, name: "Mutki" },
+    { id: 197, province_id: 13, name: "Tatvan" },
+
+    // Bolu (14)
+    { id: 198, province_id: 14, name: "Dörtdivan" },
+    { id: 199, province_id: 14, name: "Gerede" },
+    { id: 200, province_id: 14, name: "Göynük" },
+    { id: 201, province_id: 14, name: "Kıbrıscık" },
+    { id: 202, province_id: 14, name: "Mengen" },
+    { id: 203, province_id: 14, name: "Merkez" },
+    { id: 204, province_id: 14, name: "Mudurnu" },
+    { id: 205, province_id: 14, name: "Seben" },
+    { id: 206, province_id: 14, name: "Yeniçağa" },
+
+    // Burdur (15)
+    { id: 207, province_id: 15, name: "Ağlasun" },
+    { id: 208, province_id: 15, name: "Altınyayla" },
+    { id: 209, province_id: 15, name: "Bucak" },
+    { id: 210, province_id: 15, name: "Çavdır" },
+    { id: 211, province_id: 15, name: "Çeltikçi" },
+    { id: 212, province_id: 15, name: "Gölhisar" },
+    { id: 213, province_id: 15, name: "Karamanlı" },
+    { id: 214, province_id: 15, name: "Kemer" },
+    { id: 215, province_id: 15, name: "Merkez" },
+    { id: 216, province_id: 15, name: "Tefenni" },
+    { id: 217, province_id: 15, name: "Yeşilova" },
+
+    // Bursa (16)
+    { id: 218, province_id: 16, name: "Büyükorhan" },
+    { id: 219, province_id: 16, name: "Gemlik" },
+    { id: 220, province_id: 16, name: "Gürsu" },
+    { id: 221, province_id: 16, name: "Harmancık" },
+    { id: 222, province_id: 16, name: "İnegöl" },
+    { id: 223, province_id: 16, name: "İznik" },
+    { id: 224, province_id: 16, name: "Karacabey" },
+    { id: 225, province_id: 16, name: "Keles" },
+    { id: 226, province_id: 16, name: "Kestel" },
+    { id: 227, province_id: 16, name: "Mudanya" },
+    { id: 228, province_id: 16, name: "Mustafakemalpaşa" },
+    { id: 229, province_id: 16, name: "Nilüfer" },
+    { id: 230, province_id: 16, name: "Orhaneli" },
+    { id: 231, province_id: 16, name: "Orhangazi" },
+    { id: 232, province_id: 16, name: "Osmangazi" },
+    { id: 233, province_id: 16, name: "Yenişehir" },
+    { id: 234, province_id: 16, name: "Yıldırım" },
+
+    // Çanakkale (17)
+    { id: 235, province_id: 17, name: "Ayvacık" },
+    { id: 236, province_id: 17, name: "Bayramiç" },
+    { id: 237, province_id: 17, name: "Biga" },
+    { id: 238, province_id: 17, name: "Bozcaada" },
+    { id: 239, province_id: 17, name: "Çan" },
+    { id: 240, province_id: 17, name: "Eceabat" },
+    { id: 241, province_id: 17, name: "Ezine" },
+    { id: 242, province_id: 17, name: "Gelibolu" },
+    { id: 243, province_id: 17, name: "Gökçeada" },
+    { id: 244, province_id: 17, name: "Lapseki" },
+    { id: 245, province_id: 17, name: "Merkez" },
+    { id: 246, province_id: 17, name: "Yenice" },
+
+    // Çankırı (18)
+    { id: 247, province_id: 18, name: "Atkaracalar" },
+    { id: 248, province_id: 18, name: "Bayramören" },
+    { id: 249, province_id: 18, name: "Çerkeş" },
+    { id: 250, province_id: 18, name: "Eldivan" },
+    { id: 251, province_id: 18, name: "Ilgaz" },
+    { id: 252, province_id: 18, name: "Kızılırmak" },
+    { id: 253, province_id: 18, name: "Korgun" },
+    { id: 254, province_id: 18, name: "Kurşunlu" },
+    { id: 255, province_id: 18, name: "Merkez" },
+    { id: 256, province_id: 18, name: "Orta" },
+    { id: 257, province_id: 18, name: "Şabanözü" },
+    { id: 258, province_id: 18, name: "Yapraklı" },
+
+    // Çorum (19)
+    { id: 259, province_id: 19, name: "Alaca" },
+    { id: 260, province_id: 19, name: "Bayat" },
+    { id: 261, province_id: 19, name: "Boğazkale" },
+    { id: 262, province_id: 19, name: "Dodurga" },
+    { id: 263, province_id: 19, name: "İskilip" },
+    { id: 264, province_id: 19, name: "Kargı" },
+    { id: 265, province_id: 19, name: "Laçin" },
+    { id: 266, province_id: 19, name: "Mecitözü" },
+    { id: 267, province_id: 19, name: "Merkez" },
+    { id: 268, province_id: 19, name: "Oğuzlar" },
+    { id: 269, province_id: 19, name: "Ortaköy" },
+    { id: 270, province_id: 19, name: "Osmancık" },
+    { id: 271, province_id: 19, name: "Sungurlu" },
+    { id: 272, province_id: 19, name: "Uğurludağ" },
+
+    // Denizli (20)
+    { id: 273, province_id: 20, name: "Acıpayam" },
+    { id: 274, province_id: 20, name: "Babadağ" },
+    { id: 275, province_id: 20, name: "Baklan" },
+    { id: 276, province_id: 20, name: "Bekilli" },
+    { id: 277, province_id: 20, name: "Beyağaç" },
+    { id: 278, province_id: 20, name: "Bozkurt" },
+    { id: 279, province_id: 20, name: "Buldan" },
+    { id: 280, province_id: 20, name: "Çal" },
+    { id: 281, province_id: 20, name: "Çameli" },
+    { id: 282, province_id: 20, name: "Çardak" },
+    { id: 283, province_id: 20, name: "Çivril" },
+    { id: 284, province_id: 20, name: "Güney" },
+    { id: 285, province_id: 20, name: "Honaz" },
+    { id: 286, province_id: 20, name: "Kale" },
+    { id: 287, province_id: 20, name: "Merkezefendi" },
+    { id: 288, province_id: 20, name: "Pamukkale" },
+    { id: 289, province_id: 20, name: "Sarayköy" },
+    { id: 290, province_id: 20, name: "Serinhisar" },
+    { id: 291, province_id: 20, name: "Tavas" },
+
+    // Diyarbakır (21)
+    { id: 292, province_id: 21, name: "Bağlar" },
+    { id: 293, province_id: 21, name: "Bismil" },
+    { id: 294, province_id: 21, name: "Çermik" },
+    { id: 295, province_id: 21, name: "Çınar" },
+    { id: 296, province_id: 21, name: "Çüngüş" },
+    { id: 297, province_id: 21, name: "Dicle" },
+    { id: 298, province_id: 21, name: "Eğil" },
+    { id: 299, province_id: 21, name: "Ergani" },
+    { id: 300, province_id: 21, name: "Hani" },
+    { id: 301, province_id: 21, name: "Hazro" },
+    { id: 302, province_id: 21, name: "Kayapınar" },
+    { id: 303, province_id: 21, name: "Kocaköy" },
+    { id: 304, province_id: 21, name: "Kulp" },
+    { id: 305, province_id: 21, name: "Lice" },
+    { id: 306, province_id: 21, name: "Silvan" },
+    { id: 307, province_id: 21, name: "Sur" },
+    { id: 308, province_id: 21, name: "Yenişehir" },
+
+    // Düzce (81)
+    { id: 309, province_id: 81, name: "Akçakoca" },
+    { id: 310, province_id: 81, name: "Çilimli" },
+    { id: 311, province_id: 81, name: "Cumayeri" },
+    { id: 312, province_id: 81, name: "Gölyaka" },
+    { id: 313, province_id: 81, name: "Gümüşova" },
+    { id: 314, province_id: 81, name: "Kaynaşlı" },
+    { id: 315, province_id: 81, name: "Merkez" },
+    { id: 316, province_id: 81, name: "Yığılca" },
+
+    // Edirne (22)
+    { id: 317, province_id: 22, name: "Enez" },
+    { id: 318, province_id: 22, name: "Havsa" },
+    { id: 319, province_id: 22, name: "İpsala" },
+    { id: 320, province_id: 22, name: "Keşan" },
+    { id: 321, province_id: 22, name: "Lalapaşa" },
+    { id: 322, province_id: 22, name: "Meriç" },
+    { id: 323, province_id: 22, name: "Merkez" },
+    { id: 324, province_id: 22, name: "Süloğlu" },
+    { id: 325, province_id: 22, name: "Uzunköprü" },
+
+    // Elazığ (23)
+    { id: 326, province_id: 23, name: "Ağın" },
+    { id: 327, province_id: 23, name: "Alacakaya" },
+    { id: 328, province_id: 23, name: "Arıcak" },
+    { id: 329, province_id: 23, name: "Baskil" },
+    { id: 330, province_id: 23, name: "Karakoçan" },
+    { id: 331, province_id: 23, name: "Keban" },
+    { id: 332, province_id: 23, name: "Kovancılar" },
+    { id: 333, province_id: 23, name: "Maden" },
+    { id: 334, province_id: 23, name: "Merkez" },
+    { id: 335, province_id: 23, name: "Palu" },
+    { id: 336, province_id: 23, name: "Sivrice" },
+
+    // Erzincan (24)
+    { id: 337, province_id: 24, name: "Çayırlı" },
+    { id: 338, province_id: 24, name: "İliç" },
+    { id: 339, province_id: 24, name: "Kemah" },
+    { id: 340, province_id: 24, name: "Kemaliye" },
+    { id: 341, province_id: 24, name: "Merkez" },
+    { id: 342, province_id: 24, name: "Otlukbeli" },
+    { id: 343, province_id: 24, name: "Refahiye" },
+    { id: 344, province_id: 24, name: "Tercan" },
+    { id: 345, province_id: 24, name: "Üzümlü" },
+
+    // Erzurum (25)
+    { id: 346, province_id: 25, name: "Aşkale" },
+    { id: 347, province_id: 25, name: "Aziziye" },
+    { id: 348, province_id: 25, name: "Çat" },
+    { id: 349, province_id: 25, name: "Hınıs" },
+    { id: 350, province_id: 25, name: "Horasan" },
+    { id: 351, province_id: 25, name: "İspir" },
+    { id: 352, province_id: 25, name: "Karaçoban" },
+    { id: 353, province_id: 25, name: "Karayazı" },
+    { id: 354, province_id: 25, name: "Köprüköy" },
+    { id: 355, province_id: 25, name: "Narman" },
+    { id: 356, province_id: 25, name: "Oltu" },
+    { id: 357, province_id: 25, name: "Olur" },
+    { id: 358, province_id: 25, name: "Palandöken" },
+    { id: 359, province_id: 25, name: "Pasinler" },
+    { id: 360, province_id: 25, name: "Pazaryolu" },
+    { id: 361, province_id: 25, name: "Şenkaya" },
+    { id: 362, province_id: 25, name: "Tekman" },
+    { id: 363, province_id: 25, name: "Tortum" },
+    { id: 364, province_id: 25, name: "Uzundere" },
+    { id: 365, province_id: 25, name: "Yakutiye" },
+
+    // Eskişehir (26)
+    { id: 366, province_id: 26, name: "Alpu" },
+    { id: 367, province_id: 26, name: "Beylikova" },
+    { id: 368, province_id: 26, name: "Çifteler" },
+    { id: 369, province_id: 26, name: "Günyüzü" },
+    { id: 370, province_id: 26, name: "Han" },
+    { id: 371, province_id: 26, name: "İnönü" },
+    { id: 372, province_id: 26, name: "Mahmudiye" },
+    { id: 373, province_id: 26, name: "Mihalgazi" },
+    { id: 374, province_id: 26, name: "Mihalıççık" },
+    { id: 375, province_id: 26, name: "Odunpazarı" },
+    { id: 376, province_id: 26, name: "Sarıcakaya" },
+    { id: 377, province_id: 26, name: "Seyitgazi" },
+    { id: 378, province_id: 26, name: "Sivrihisar" },
+    { id: 379, province_id: 26, name: "Tepebaşı" },
+
+    // Gaziantep (27)
+    { id: 380, province_id: 27, name: "Araban" },
+    { id: 381, province_id: 27, name: "İslahiye" },
+    { id: 382, province_id: 27, name: "Karkamış" },
+    { id: 383, province_id: 27, name: "Nizip" },
+    { id: 384, province_id: 27, name: "Nurdağı" },
+    { id: 385, province_id: 27, name: "Oğuzeli" },
+    { id: 386, province_id: 27, name: "Şahinbey" },
+    { id: 387, province_id: 27, name: "Şehitkamil" },
+    { id: 388, province_id: 27, name: "Yavuzeli" },
+
+    // Giresun (28)
+    { id: 389, province_id: 28, name: "Alucra" },
+    { id: 390, province_id: 28, name: "Bulancak" },
+    { id: 391, province_id: 28, name: "Çamoluk" },
+    { id: 392, province_id: 28, name: "Çanakçı" },
+    { id: 393, province_id: 28, name: "Dereli" },
+    { id: 394, province_id: 28, name: "Doğankent" },
+    { id: 395, province_id: 28, name: "Espiye" },
+    { id: 396, province_id: 28, name: "Eynesil" },
+    { id: 397, province_id: 28, name: "Görele" },
+    { id: 398, province_id: 28, name: "Güce" },
+    { id: 399, province_id: 28, name: "Keşap" },
+    { id: 400, province_id: 28, name: "Merkez" },
+    { id: 401, province_id: 28, name: "Piraziz" },
+    { id: 402, province_id: 28, name: "Şebinkarahisar" },
+    { id: 403, province_id: 28, name: "Tirebolu" },
+    { id: 404, province_id: 28, name: "Yağlıdere" },
+
+    // Gümüşhane (29)
+    { id: 405, province_id: 29, name: "Kelkit" },
+    { id: 406, province_id: 29, name: "Köse" },
+    { id: 407, province_id: 29, name: "Kürtün" },
+    { id: 408, province_id: 29, name: "Merkez" },
+    { id: 409, province_id: 29, name: "Şiran" },
+    { id: 410, province_id: 29, name: "Torul" },
+
+    // Hakkari (30)
+    { id: 411, province_id: 30, name: "Çukurca" },
+    { id: 412, province_id: 30, name: "Derecik" },
+    { id: 413, province_id: 30, name: "Merkez" },
+    { id: 414, province_id: 30, name: "Şemdinli" },
+    { id: 415, province_id: 30, name: "Yüksekova" },
+
+    // Hatay (31)
+    { id: 416, province_id: 31, name: "Altınözü" },
+    { id: 417, province_id: 31, name: "Antakya" },
+    { id: 418, province_id: 31, name: "Arsuz" },
+    { id: 419, province_id: 31, name: "Belen" },
+    { id: 420, province_id: 31, name: "Defne" },
+    { id: 421, province_id: 31, name: "Dörtyol" },
+    { id: 422, province_id: 31, name: "Erzin" },
+    { id: 423, province_id: 31, name: "Hassa" },
+    { id: 424, province_id: 31, name: "İskenderun" },
+    { id: 425, province_id: 31, name: "Kırıkhan" },
+    { id: 426, province_id: 31, name: "Kumlu" },
+    { id: 427, province_id: 31, name: "Payas" },
+    { id: 428, province_id: 31, name: "Reyhanlı" },
+    { id: 429, province_id: 31, name: "Samandağ" },
+    { id: 430, province_id: 31, name: "Yayladağı" },
+
+    // Iğdır (76)
+    { id: 431, province_id: 76, name: "Aralık" },
+    { id: 432, province_id: 76, name: "Karakoyunlu" },
+    { id: 433, province_id: 76, name: "Merkez" },
+    { id: 434, province_id: 76, name: "Tuzluca" },
+
+    // Isparta (32)
+    { id: 435, province_id: 32, name: "Aksu" },
+    { id: 436, province_id: 32, name: "Atabey" },
+    { id: 437, province_id: 32, name: "Eğirdir" },
+    { id: 438, province_id: 32, name: "Gelendost" },
+    { id: 439, province_id: 32, name: "Gönen" },
+    { id: 440, province_id: 32, name: "Keçiborlu" },
+    { id: 441, province_id: 32, name: "Merkez" },
+    { id: 442, province_id: 32, name: "Senirkent" },
+    { id: 443, province_id: 32, name: "Sütçüler" },
+    { id: 444, province_id: 32, name: "Şarkikaraağaç" },
+    { id: 445, province_id: 32, name: "Uluborlu" },
+    { id: 446, province_id: 32, name: "Yalvaç" },
+    { id: 447, province_id: 32, name: "Yenişarbademli" },
+
+    // İstanbul (34)
+    { id: 448, province_id: 34, name: "Adalar" },
+    { id: 449, province_id: 34, name: "Arnavutköy" },
+    { id: 450, province_id: 34, name: "Ataşehir" },
+    { id: 451, province_id: 34, name: "Avcılar" },
+    { id: 452, province_id: 34, name: "Bağcılar" },
+    { id: 453, province_id: 34, name: "Bahçelievler" },
+    { id: 454, province_id: 34, name: "Bakırköy" },
+    { id: 455, province_id: 34, name: "Başakşehir" },
+    { id: 456, province_id: 34, name: "Bayrampaşa" },
+    { id: 457, province_id: 34, name: "Beşiktaş" },
+    { id: 458, province_id: 34, name: "Beykoz" },
+    { id: 459, province_id: 34, name: "Beylikdüzü" },
+    { id: 460, province_id: 34, name: "Beyoğlu" },
+    { id: 461, province_id: 34, name: "Büyükçekmece" },
+    { id: 462, province_id: 34, name: "Çatalca" },
+    { id: 463, province_id: 34, name: "Çekmeköy" },
+    { id: 464, province_id: 34, name: "Esenler" },
+    { id: 465, province_id: 34, name: "Esenyurt" },
+    { id: 466, province_id: 34, name: "Eyüpsultan" },
+    { id: 467, province_id: 34, name: "Fatih" },
+    { id: 468, province_id: 34, name: "Gaziosmanpaşa" },
+    { id: 469, province_id: 34, name: "Güngören" },
+    { id: 470, province_id: 34, name: "Kadıköy" },
+    { id: 471, province_id: 34, name: "Kağıthane" },
+    { id: 472, province_id: 34, name: "Kartal" },
+    { id: 473, province_id: 34, name: "Küçükçekmece" },
+    { id: 474, province_id: 34, name: "Maltepe" },
+    { id: 475, province_id: 34, name: "Pendik" },
+    { id: 476, province_id: 34, name: "Sancaktepe" },
+    { id: 477, province_id: 34, name: "Sarıyer" },
+    { id: 478, province_id: 34, name: "Silivri" },
+    { id: 479, province_id: 34, name: "Sultanbeyli" },
+    { id: 480, province_id: 34, name: "Sultangazi" },
+    { id: 481, province_id: 34, name: "Şile" },
+    { id: 482, province_id: 34, name: "Şişli" },
+    { id: 483, province_id: 34, name: "Tuzla" },
+    { id: 484, province_id: 34, name: "Ümraniye" },
+    { id: 485, province_id: 34, name: "Üsküdar" },
+    { id: 486, province_id: 34, name: "Zeytinburnu" },
+
+    // İzmir (35)
+    { id: 487, province_id: 35, name: "Aliağa" },
+    { id: 488, province_id: 35, name: "Balçova" },
+    { id: 489, province_id: 35, name: "Bayındır" },
+    { id: 490, province_id: 35, name: "Bayraklı" },
+    { id: 491, province_id: 35, name: "Bergama" },
+    { id: 492, province_id: 35, name: "Beydağ" },
+    { id: 493, province_id: 35, name: "Bornova" },
+    { id: 494, province_id: 35, name: "Buca" },
+    { id: 495, province_id: 35, name: "Çeşme" },
+    { id: 496, province_id: 35, name: "Çiğli" },
+    { id: 497, province_id: 35, name: "Dikili" },
+    { id: 498, province_id: 35, name: "Foça" },
+    { id: 499, province_id: 35, name: "Gaziemir" },
+    { id: 500, province_id: 35, name: "Güzelbahçe" },
+    { id: 501, province_id: 35, name: "Karabağlar" },
+    { id: 502, province_id: 35, name: "Karaburun" },
+    { id: 503, province_id: 35, name: "Karşıyaka" },
+    { id: 504, province_id: 35, name: "Kemalpaşa" },
+    { id: 505, province_id: 35, name: "Kınık" },
+    { id: 506, province_id: 35, name: "Kiraz" },
+    { id: 507, province_id: 35, name: "Konak" },
+    { id: 508, province_id: 35, name: "Menderes" },
+    { id: 509, province_id: 35, name: "Menemen" },
+    { id: 510, province_id: 35, name: "Narlıdere" },
+    { id: 511, province_id: 35, name: "Ödemiş" },
+    { id: 512, province_id: 35, name: "Seferihisar" },
+    { id: 513, province_id: 35, name: "Selçuk" },
+    { id: 514, province_id: 35, name: "Tire" },
+    { id: 515, province_id: 35, name: "Torbalı" },
+    { id: 516, province_id: 35, name: "Urla" },
+
+    // Kahramanmaraş (46)
+    { id: 517, province_id: 46, name: "Afşin" },
+    { id: 518, province_id: 46, name: "Andırın" },
+    { id: 519, province_id: 46, name: "Çağlayancerit" },
+    { id: 520, province_id: 46, name: "Dulkadiroğlu" },
+    { id: 521, province_id: 46, name: "Ekinözü" },
+    { id: 522, province_id: 46, name: "Elbistan" },
+    { id: 523, province_id: 46, name: "Göksun" },
+    { id: 524, province_id: 46, name: "Nurhak" },
+    { id: 525, province_id: 46, name: "Onikişubat" },
+    { id: 526, province_id: 46, name: "Pazarcık" },
+    { id: 527, province_id: 46, name: "Türkoğlu" },
+
+    // Karabük (78)
+    { id: 528, province_id: 78, name: "Eflani" },
+    { id: 529, province_id: 78, name: "Eskipazar" },
+    { id: 530, province_id: 78, name: "Merkez" },
+    { id: 531, province_id: 78, name: "Ovacık" },
+    { id: 532, province_id: 78, name: "Safranbolu" },
+    { id: 533, province_id: 78, name: "Yenice" },
+
+    // Karaman (70)
+    { id: 534, province_id: 70, name: "Ayrancı" },
+    { id: 535, province_id: 70, name: "Başyayla" },
+    { id: 536, province_id: 70, name: "Ermenek" },
+    { id: 537, province_id: 70, name: "Kazımkarabekir" },
+    { id: 538, province_id: 70, name: "Merkez" },
+    { id: 539, province_id: 70, name: "Sarıveliler" },
+
+    // Kars (36)
+    { id: 540, province_id: 36, name: "Akyaka" },
+    { id: 541, province_id: 36, name: "Arpaçay" },
+    { id: 542, province_id: 36, name: "Digor" },
+    { id: 543, province_id: 36, name: "Kağızman" },
+    { id: 544, province_id: 36, name: "Merkez" },
+    { id: 545, province_id: 36, name: "Sarıkamış" },
+    { id: 546, province_id: 36, name: "Selim" },
+    { id: 547, province_id: 36, name: "Susuz" },
+
+    // Kastamonu (37)
+    { id: 548, province_id: 37, name: "Abana" },
+    { id: 549, province_id: 37, name: "Ağlı" },
+    { id: 550, province_id: 37, name: "Araç" },
+    { id: 551, province_id: 37, name: "Azdavay" },
+    { id: 552, province_id: 37, name: "Bozkurt" },
+    { id: 553, province_id: 37, name: "Cide" },
+    { id: 554, province_id: 37, name: "Çatalzeytin" },
+    { id: 555, province_id: 37, name: "Daday" },
+    { id: 556, province_id: 37, name: "Devrekani" },
+    { id: 557, province_id: 37, name: "Doğanyurt" },
+    { id: 558, province_id: 37, name: "Hanönü" },
+    { id: 559, province_id: 37, name: "İhsangazi" },
+    { id: 560, province_id: 37, name: "İnebolu" },
+    { id: 561, province_id: 37, name: "Küre" },
+    { id: 562, province_id: 37, name: "Merkez" },
+    { id: 563, province_id: 37, name: "Pınarbaşı" },
+    { id: 564, province_id: 37, name: "Seydiler" },
+    { id: 565, province_id: 37, name: "Şenpazar" },
+    { id: 566, province_id: 37, name: "Taşköprü" },
+    { id: 567, province_id: 37, name: "Tosya" },
+
+    // Kayseri (38)
+    { id: 568, province_id: 38, name: "Akkışla" },
+    { id: 569, province_id: 38, name: "Bünyan" },
+    { id: 570, province_id: 38, name: "Develi" },
+    { id: 571, province_id: 38, name: "Felahiye" },
+    { id: 572, province_id: 38, name: "Hacılar" },
+    { id: 573, province_id: 38, name: "İncesu" },
+    { id: 574, province_id: 38, name: "Kocasinan" },
+    { id: 575, province_id: 38, name: "Melikgazi" },
+    { id: 576, province_id: 38, name: "Özvatan" },
+    { id: 577, province_id: 38, name: "Pınarbaşı" },
+    { id: 578, province_id: 38, name: "Sarıoğlan" },
+    { id: 579, province_id: 38, name: "Sarız" },
+    { id: 580, province_id: 38, name: "Talas" },
+    { id: 581, province_id: 38, name: "Tomarza" },
+    { id: 582, province_id: 38, name: "Yahyalı" },
+    { id: 583, province_id: 38, name: "Yeşilhisar" },
+
+    // Kırıkkale (71)
+    { id: 584, province_id: 71, name: "Bahşılı" },
+    { id: 585, province_id: 71, name: "Balışeyh" },
+    { id: 586, province_id: 71, name: "Çelebi" },
+    { id: 587, province_id: 71, name: "Delice" },
+    { id: 588, province_id: 71, name: "Karakeçili" },
+    { id: 589, province_id: 71, name: "Keskin" },
+    { id: 590, province_id: 71, name: "Merkez" },
+    { id: 591, province_id: 71, name: "Sulakyurt" },
+    { id: 592, province_id: 71, name: "Yahşihan" },
+
+    // Kırklareli (39)
+    { id: 593, province_id: 39, name: "Babaeski" },
+    { id: 594, province_id: 39, name: "Demirköy" },
+    { id: 595, province_id: 39, name: "Kofçaz" },
+    { id: 596, province_id: 39, name: "Lüleburgaz" },
+    { id: 597, province_id: 39, name: "Merkez" },
+    { id: 598, province_id: 39, name: "Pehlivanköy" },
+    { id: 599, province_id: 39, name: "Pınarhisar" },
+    { id: 600, province_id: 39, name: "Vize" },
+
+    // Kırşehir (40)
+    { id: 601, province_id: 40, name: "Akçakent" },
+    { id: 602, province_id: 40, name: "Akpınar" },
+    { id: 603, province_id: 40, name: "Boztepe" },
+    { id: 604, province_id: 40, name: "Çiçekdağı" },
+    { id: 605, province_id: 40, name: "Kaman" },
+    { id: 606, province_id: 40, name: "Merkez" },
+    { id: 607, province_id: 40, name: "Mucur" },
+
+    // Kilis (79)
+    { id: 608, province_id: 79, name: "Elbeyli" },
+    { id: 609, province_id: 79, name: "Merkez" },
+    { id: 610, province_id: 79, name: "Musabeyli" },
+    { id: 611, province_id: 79, name: "Polateli" },
+
+    // Kocaeli (41)
+    { id: 612, province_id: 41, name: "Başiskele" },
+    { id: 613, province_id: 41, name: "Çayırova" },
+    { id: 614, province_id: 41, name: "Darıca" },
+    { id: 615, province_id: 41, name: "Derince" },
+    { id: 616, province_id: 41, name: "Dilovası" },
+    { id: 617, province_id: 41, name: "Gebze" },
+    { id: 618, province_id: 41, name: "Gölcük" },
+    { id: 619, province_id: 41, name: "İzmit" },
+    { id: 620, province_id: 41, name: "Kandıra" },
+    { id: 621, province_id: 41, name: "Karamürsel" },
+    { id: 622, province_id: 41, name: "Kartepe" },
+    { id: 623, province_id: 41, name: "Körfez" },
+
+    // Konya (42)
+    { id: 624, province_id: 42, name: "Ahırlı" },
+    { id: 625, province_id: 42, name: "Akören" },
+    { id: 626, province_id: 42, name: "Akşehir" },
+    { id: 627, province_id: 42, name: "Altınekin" },
+    { id: 628, province_id: 42, name: "Beyşehir" },
+    { id: 629, province_id: 42, name: "Bozkır" },
+    { id: 630, province_id: 42, name: "Cihanbeyli" },
+    { id: 631, province_id: 42, name: "Çeltik" },
+    { id: 632, province_id: 42, name: "Çumra" },
+    { id: 633, province_id: 42, name: "Derbent" },
+    { id: 634, province_id: 42, name: "Derebucak" },
+    { id: 635, province_id: 42, name: "Doğanhisar" },
+    { id: 636, province_id: 42, name: "Emirgazi" },
+    { id: 637, province_id: 42, name: "Ereğli" },
+    { id: 638, province_id: 42, name: "Güneysınır" },
+    { id: 639, province_id: 42, name: "Hadim" },
+    { id: 640, province_id: 42, name: "Halkapınar" },
+    { id: 641, province_id: 42, name: "Hüyük" },
+    { id: 642, province_id: 42, name: "Ilgın" },
+    { id: 643, province_id: 42, name: "Kadınhanı" },
+    { id: 644, province_id: 42, name: "Karapınar" },
+    { id: 645, province_id: 42, name: "Karatay" },
+    { id: 646, province_id: 42, name: "Kulu" },
+    { id: 647, province_id: 42, name: "Meram" },
+    { id: 648, province_id: 42, name: "Sarayönü" },
+    { id: 649, province_id: 42, name: "Selçuklu" },
+    { id: 650, province_id: 42, name: "Seydişehir" },
+    { id: 651, province_id: 42, name: "Taşkent" },
+    { id: 652, province_id: 42, name: "Tuzlukçu" },
+    { id: 653, province_id: 42, name: "Yalıhüyük" },
+    { id: 654, province_id: 42, name: "Yunak" },
+
+    // Kütahya (43)
+    { id: 655, province_id: 43, name: "Altıntaş" },
+    { id: 656, province_id: 43, name: "Aslanapa" },
+    { id: 657, province_id: 43, name: "Çavdarhisar" },
+    { id: 658, province_id: 43, name: "Domaniç" },
+    { id: 659, province_id: 43, name: "Dumlupınar" },
+    { id: 660, province_id: 43, name: "Emet" },
+    { id: 661, province_id: 43, name: "Gediz" },
+    { id: 662, province_id: 43, name: "Hisarcık" },
+    { id: 663, province_id: 43, name: "Merkez" },
+    { id: 664, province_id: 43, name: "Pazarlar" },
+    { id: 665, province_id: 43, name: "Şaphane" },
+    { id: 666, province_id: 43, name: "Simav" },
+    { id: 667, province_id: 43, name: "Tavşanlı" },
+
+    // Malatya (44)
+    { id: 668, province_id: 44, name: "Akçadağ" },
+    { id: 669, province_id: 44, name: "Arapgir" },
+    { id: 670, province_id: 44, name: "Arguvan" },
+    { id: 671, province_id: 44, name: "Battalgazi" },
+    { id: 672, province_id: 44, name: "Darende" },
+    { id: 673, province_id: 44, name: "Doğanşehir" },
+    { id: 674, province_id: 44, name: "Doğanyol" },
+    { id: 675, province_id: 44, name: "Hekimhan" },
+    { id: 676, province_id: 44, name: "Kale" },
+    { id: 677, province_id: 44, name: "Kuluncak" },
+    { id: 678, province_id: 44, name: "Pütürge" },
+    { id: 679, province_id: 44, name: "Yazıhan" },
+    { id: 680, province_id: 44, name: "Yeşilyurt" },
+
+    // Manisa (45)
+    { id: 681, province_id: 45, name: "Ahmetli" },
+    { id: 682, province_id: 45, name: "Akhisar" },
+    { id: 683, province_id: 45, name: "Alaşehir" },
+    { id: 684, province_id: 45, name: "Demirci" },
+    { id: 685, province_id: 45, name: "Gölmarmara" },
+    { id: 686, province_id: 45, name: "Gördes" },
+    { id: 687, province_id: 45, name: "Kırkağaç" },
+    { id: 688, province_id: 45, name: "Köprübaşı" },
+    { id: 689, province_id: 45, name: "Kula" },
+    { id: 690, province_id: 45, name: "Salihli" },
+    { id: 691, province_id: 45, name: "Sarıgöl" },
+    { id: 692, province_id: 45, name: "Saruhanlı" },
+    { id: 693, province_id: 45, name: "Selendi" },
+    { id: 694, province_id: 45, name: "Soma" },
+    { id: 695, province_id: 45, name: "Şehzadeler" },
+    { id: 696, province_id: 45, name: "Turgutlu" },
+    { id: 697, province_id: 45, name: "Yunusemre" },
+
+    // Mardin (47)
+    { id: 698, province_id: 47, name: "Artuklu" },
+    { id: 699, province_id: 47, name: "Dargeçit" },
+    { id: 700, province_id: 47, name: "Derik" },
+    { id: 701, province_id: 47, name: "Kızıltepe" },
+    { id: 702, province_id: 47, name: "Mazıdağı" },
+    { id: 703, province_id: 47, name: "Midyat" },
+    { id: 704, province_id: 47, name: "Nusaybin" },
+    { id: 705, province_id: 47, name: "Ömerli" },
+    { id: 706, province_id: 47, name: "Savur" },
+    { id: 707, province_id: 47, name: "Yeşilli" },
+
+    // Mersin (33)
+    { id: 708, province_id: 33, name: "Akdeniz" },
+    { id: 709, province_id: 33, name: "Anamur" },
+    { id: 710, province_id: 33, name: "Aydıncık" },
+    { id: 711, province_id: 33, name: "Bozyazı" },
+    { id: 712, province_id: 33, name: "Çamlıyayla" },
+    { id: 713, province_id: 33, name: "Erdemli" },
+    { id: 714, province_id: 33, name: "Gülnar" },
+    { id: 715, province_id: 33, name: "Mezitli" },
+    { id: 716, province_id: 33, name: "Mut" },
+    { id: 717, province_id: 33, name: "Silifke" },
+    { id: 718, province_id: 33, name: "Tarsus" },
+    { id: 719, province_id: 33, name: "Toroslar" },
+    { id: 720, province_id: 33, name: "Yenişehir" },
+
+    // Muğla (48)
+    { id: 721, province_id: 48, name: "Bodrum" },
+    { id: 722, province_id: 48, name: "Dalaman" },
+    { id: 723, province_id: 48, name: "Datça" },
+    { id: 724, province_id: 48, name: "Fethiye" },
+    { id: 725, province_id: 48, name: "Kavaklıdere" },
+    { id: 726, province_id: 48, name: "Köyceğiz" },
+    { id: 727, province_id: 48, name: "Marmaris" },
+    { id: 728, province_id: 48, name: "Menteşe" },
+    { id: 729, province_id: 48, name: "Milas" },
+    { id: 730, province_id: 48, name: "Ortaca" },
+    { id: 731, province_id: 48, name: "Seydikemer" },
+    { id: 732, province_id: 48, name: "Ula" },
+    { id: 733, province_id: 48, name: "Yatağan" },
+
+    // Muş (49)
+    { id: 734, province_id: 49, name: "Bulanık" },
+    { id: 735, province_id: 49, name: "Hasköy" },
+    { id: 736, province_id: 49, name: "Korkut" },
+    { id: 737, province_id: 49, name: "Malazgirt" },
+    { id: 738, province_id: 49, name: "Merkez" },
+    { id: 739, province_id: 49, name: "Varto" },
+
+    // Nevşehir (50)
+    { id: 740, province_id: 50, name: "Acıgöl" },
+    { id: 741, province_id: 50, name: "Avanos" },
+    { id: 742, province_id: 50, name: "Derinkuyu" },
+    { id: 743, province_id: 50, name: "Gülşehir" },
+    { id: 744, province_id: 50, name: "Hacıbektaş" },
+    { id: 745, province_id: 50, name: "Kozaklı" },
+    { id: 746, province_id: 50, name: "Merkez" },
+    { id: 747, province_id: 50, name: "Ürgüp" },
+
+    // Niğde (51)
+    { id: 748, province_id: 51, name: "Altunhisar" },
+    { id: 749, province_id: 51, name: "Bor" },
+    { id: 750, province_id: 51, name: "Çamardı" },
+    { id: 751, province_id: 51, name: "Çiftlik" },
+    { id: 752, province_id: 51, name: "Merkez" },
+    { id: 753, province_id: 51, name: "Ulukışla" },
+
+    // Ordu (52)
+    { id: 754, province_id: 52, name: "Akkuş" },
+    { id: 755, province_id: 52, name: "Altınordu" },
+    { id: 756, province_id: 52, name: "Aybastı" },
+    { id: 757, province_id: 52, name: "Çamaş" },
+    { id: 758, province_id: 52, name: "Çatalpınar" },
+    { id: 759, province_id: 52, name: "Çaybaşı" },
+    { id: 760, province_id: 52, name: "Fatsa" },
+    { id: 761, province_id: 52, name: "Gölköy" },
+    { id: 762, province_id: 52, name: "Gülyalı" },
+    { id: 763, province_id: 52, name: "Gürgentepe" },
+    { id: 764, province_id: 52, name: "İkizce" },
+    { id: 765, province_id: 52, name: "Kabadüz" },
+    { id: 766, province_id: 52, name: "Kabataş" },
+    { id: 767, province_id: 52, name: "Korgan" },
+    { id: 768, province_id: 52, name: "Kumru" },
+    { id: 769, province_id: 52, name: "Mesudiye" },
+    { id: 770, province_id: 52, name: "Perşembe" },
+    { id: 771, province_id: 52, name: "Ulubey" },
+    { id: 772, province_id: 52, name: "Ünye" },
+
+    // Osmaniye (80)
+    { id: 773, province_id: 80, name: "Bahçe" },
+    { id: 774, province_id: 80, name: "Düziçi" },
+    { id: 775, province_id: 80, name: "Hasanbeyli" },
+    { id: 776, province_id: 80, name: "Kadirli" },
+    { id: 777, province_id: 80, name: "Merkez" },
+    { id: 778, province_id: 80, name: "Sumbas" },
+    { id: 779, province_id: 80, name: "Toprakkale" },
+
+    // Rize (53)
+    { id: 780, province_id: 53, name: "Ardeşen" },
+    { id: 781, province_id: 53, name: "Çamlıhemşin" },
+    { id: 782, province_id: 53, name: "Çayeli" },
+    { id: 783, province_id: 53, name: "Derepazarı" },
+    { id: 784, province_id: 53, name: "Fındıklı" },
+    { id: 785, province_id: 53, name: "Güneysu" },
+    { id: 786, province_id: 53, name: "Hemşin" },
+    { id: 787, province_id: 53, name: "İkizdere" },
+    { id: 788, province_id: 53, name: "İyidere" },
+    { id: 789, province_id: 53, name: "Kalkandere" },
+    { id: 790, province_id: 53, name: "Merkez" },
+    { id: 791, province_id: 53, name: "Pazar" },
+
+    // Sakarya (54)
+    { id: 792, province_id: 54, name: "Adapazarı" },
+    { id: 793, province_id: 54, name: "Akyazı" },
+    { id: 794, province_id: 54, name: "Arifiye" },
+    { id: 795, province_id: 54, name: "Erenler" },
+    { id: 796, province_id: 54, name: "Ferizli" },
+    { id: 797, province_id: 54, name: "Geyve" },
+    { id: 798, province_id: 54, name: "Hendek" },
+    { id: 799, province_id: 54, name: "Karapürçek" },
+    { id: 800, province_id: 54, name: "Karasu" },
+    { id: 801, province_id: 54, name: "Kaynarca" },
+    { id: 802, province_id: 54, name: "Kocaali" },
+    { id: 803, province_id: 54, name: "Pamukova" },
+    { id: 804, province_id: 54, name: "Sapanca" },
+    { id: 805, province_id: 54, name: "Serdivan" },
+    { id: 806, province_id: 54, name: "Söğütlü" },
+    { id: 807, province_id: 54, name: "Taraklı" },
+
+    // Samsun (55)
+    { id: 808, province_id: 55, name: "19 Mayıs" },
+    { id: 809, province_id: 55, name: "Alaçam" },
+    { id: 810, province_id: 55, name: "Asarcık" },
+    { id: 811, province_id: 55, name: "Atakum" },
+    { id: 812, province_id: 55, name: "Ayvacık" },
+    { id: 813, province_id: 55, name: "Bafra" },
+    { id: 814, province_id: 55, name: "Canik" },
+    { id: 815, province_id: 55, name: "Çarşamba" },
+    { id: 816, province_id: 55, name: "Havza" },
+    { id: 817, province_id: 55, name: "İlkadım" },
+    { id: 818, province_id: 55, name: "Kavak" },
+    { id: 819, province_id: 55, name: "Ladik" },
+    { id: 820, province_id: 55, name: "Salıpazarı" },
+    { id: 821, province_id: 55, name: "Tekkeköy" },
+    { id: 822, province_id: 55, name: "Terme" },
+    { id: 823, province_id: 55, name: "Vezirköprü" },
+    { id: 824, province_id: 55, name: "Yakakent" },
+
+    // Siirt (56)
+    { id: 825, province_id: 56, name: "Baykan" },
+    { id: 826, province_id: 56, name: "Eruh" },
+    { id: 827, province_id: 56, name: "Kurtalan" },
+    { id: 828, province_id: 56, name: "Merkez" },
+    { id: 829, province_id: 56, name: "Pervari" },
+    { id: 830, province_id: 56, name: "Şirvan" },
+    { id: 831, province_id: 56, name: "Tillo" },
+
+    // Sinop (57)
+    { id: 832, province_id: 57, name: "Ayancık" },
+    { id: 833, province_id: 57, name: "Boyabat" },
+    { id: 834, province_id: 57, name: "Dikmen" },
+    { id: 835, province_id: 57, name: "Durağan" },
+    { id: 836, province_id: 57, name: "Erfelek" },
+    { id: 837, province_id: 57, name: "Gerze" },
+    { id: 838, province_id: 57, name: "Merkez" },
+    { id: 839, province_id: 57, name: "Saraydüzü" },
+    { id: 840, province_id: 57, name: "Türkeli" },
+
+    // Sivas (58)
+    { id: 841, province_id: 58, name: "Akıncılar" },
+    { id: 842, province_id: 58, name: "Altınyayla" },
+    { id: 843, province_id: 58, name: "Divriği" },
+    { id: 844, province_id: 58, name: "Doğanşar" },
+    { id: 845, province_id: 58, name: "Gemerek" },
+    { id: 846, province_id: 58, name: "Gölova" },
+    { id: 847, province_id: 58, name: "Gürün" },
+    { id: 848, province_id: 58, name: "Hafik" },
+    { id: 849, province_id: 58, name: "İmranlı" },
+    { id: 850, province_id: 58, name: "Kangal" },
+    { id: 851, province_id: 58, name: "Koyulhisar" },
+    { id: 852, province_id: 58, name: "Merkez" },
+    { id: 853, province_id: 58, name: "Suşehri" },
+    { id: 854, province_id: 58, name: "Şarkışla" },
+    { id: 855, province_id: 58, name: "Ulaş" },
+    { id: 856, province_id: 58, name: "Yıldızeli" },
+    { id: 857, province_id: 58, name: "Zara" },
+
+    // Şanlıurfa (63)
+    { id: 858, province_id: 63, name: "Akçakale" },
+    { id: 859, province_id: 63, name: "Birecik" },
+    { id: 860, province_id: 63, name: "Bozova" },
+    { id: 861, province_id: 63, name: "Ceylanpınar" },
+    { id: 862, province_id: 63, name: "Eyyübiye" },
+    { id: 863, province_id: 63, name: "Halfeti" },
+    { id: 864, province_id: 63, name: "Haliliye" },
+    { id: 865, province_id: 63, name: "Harran" },
+    { id: 866, province_id: 63, name: "Hilvan" },
+    { id: 867, province_id: 63, name: "Karaköprü" },
+    { id: 868, province_id: 63, name: "Siverek" },
+    { id: 869, province_id: 63, name: "Suruç" },
+    { id: 870, province_id: 63, name: "Viranşehir" },
+
+    // Şırnak (73)
+    { id: 871, province_id: 73, name: "Beytüşşebap" },
+    { id: 872, province_id: 73, name: "Cizre" },
+    { id: 873, province_id: 73, name: "Güçlükonak" },
+    { id: 874, province_id: 73, name: "İdil" },
+    { id: 875, province_id: 73, name: "Merkez" },
+    { id: 876, province_id: 73, name: "Silopi" },
+    { id: 877, province_id: 73, name: "Uludere" },
+
+    // Tekirdağ (59)
+    { id: 878, province_id: 59, name: "Çerkezköy" },
+    { id: 879, province_id: 59, name: "Çorlu" },
+    { id: 880, province_id: 59, name: "Ergene" },
+    { id: 881, province_id: 59, name: "Hayrabolu" },
+    { id: 882, province_id: 59, name: "Kapaklı" },
+    { id: 883, province_id: 59, name: "Malkara" },
+    { id: 884, province_id: 59, name: "Marmaraereğlisi" },
+    { id: 885, province_id: 59, name: "Muratlı" },
+    { id: 886, province_id: 59, name: "Saray" },
+    { id: 887, province_id: 59, name: "Süleymanpaşa" },
+    { id: 888, province_id: 59, name: "Şarköy" },
+
+    // Tokat (60)
+    { id: 889, province_id: 60, name: "Almus" },
+    { id: 890, province_id: 60, name: "Artova" },
+    { id: 891, province_id: 60, name: "Başçiftlik" },
+    { id: 892, province_id: 60, name: "Erbaa" },
+    { id: 893, province_id: 60, name: "Merkez" },
+    { id: 894, province_id: 60, name: "Niksar" },
+    { id: 895, province_id: 60, name: "Pazar" },
+    { id: 896, province_id: 60, name: "Reşadiye" },
+    { id: 897, province_id: 60, name: "Sulusaray" },
+    { id: 898, province_id: 60, name: "Turhal" },
+    { id: 899, province_id: 60, name: "Yeşilyurt" },
+    { id: 900, province_id: 60, name: "Zile" },
+
+    // Trabzon (61)
+    { id: 901, province_id: 61, name: "Akçaabat" },
+    { id: 902, province_id: 61, name: "Araklı" },
+    { id: 903, province_id: 61, name: "Arsin" },
+    { id: 904, province_id: 61, name: "Beşikdüzü" },
+    { id: 905, province_id: 61, name: "Çarşıbaşı" },
+    { id: 906, province_id: 61, name: "Çaykara" },
+    { id: 907, province_id: 61, name: "Dernekpazarı" },
+    { id: 908, province_id: 61, name: "Düzköy" },
+    { id: 909, province_id: 61, name: "Hayrat" },
+    { id: 910, province_id: 61, name: "Köprübaşı" },
+    { id: 911, province_id: 61, name: "Maçka" },
+    { id: 912, province_id: 61, name: "Of" },
+    { id: 913, province_id: 61, name: "Ortahisar" },
+    { id: 914, province_id: 61, name: "Sürmene" },
+    { id: 915, province_id: 61, name: "Şalpazarı" },
+    { id: 916, province_id: 61, name: "Tonya" },
+    { id: 917, province_id: 61, name: "Vakfıkebir" },
+    { id: 918, province_id: 61, name: "Yomra" },
+
+    // Tunceli (62)
+    { id: 919, province_id: 62, name: "Çemişgezek" },
+    { id: 920, province_id: 62, name: "Hozat" },
+    { id: 921, province_id: 62, name: "Mazgirt" },
+    { id: 922, province_id: 62, name: "Merkez" },
+    { id: 923, province_id: 62, name: "Nazımiye" },
+    { id: 924, province_id: 62, name: "Ovacık" },
+    { id: 925, province_id: 62, name: "Pertek" },
+    { id: 926, province_id: 62, name: "Pülümür" },
+
+    // Uşak (64)
+    { id: 927, province_id: 64, name: "Banaz" },
+    { id: 928, province_id: 64, name: "Eşme" },
+    { id: 929, province_id: 64, name: "Karahallı" },
+    { id: 930, province_id: 64, name: "Merkez" },
+    { id: 931, province_id: 64, name: "Sivaslı" },
+    { id: 932, province_id: 64, name: "Ulubey" },
+
+    // Van (65)
+    { id: 933, province_id: 65, name: "Bahçesaray" },
+    { id: 934, province_id: 65, name: "Başkale" },
+    { id: 935, province_id: 65, name: "Çaldıran" },
+    { id: 936, province_id: 65, name: "Çatak" },
+    { id: 937, province_id: 65, name: "Edremit" },
+    { id: 938, province_id: 65, name: "Erciş" },
+    { id: 939, province_id: 65, name: "Gevaş" },
+    { id: 940, province_id: 65, name: "Gürpınar" },
+    { id: 941, province_id: 65, name: "İpekyolu" },
+    { id: 942, province_id: 65, name: "Muradiye" },
+    { id: 943, province_id: 65, name: "Özalp" },
+    { id: 944, province_id: 65, name: "Saray" },
+    { id: 945, province_id: 65, name: "Tuşba" },
+
+    // Yalova (77)
+    { id: 946, province_id: 77, name: "Altınova" },
+    { id: 947, province_id: 77, name: "Armutlu" },
+    { id: 948, province_id: 77, name: "Çınarcık" },
+    { id: 949, province_id: 77, name: "Çiftlikköy" },
+    { id: 950, province_id: 77, name: "Merkez" },
+    { id: 951, province_id: 77, name: "Termal" },
+
+    // Yozgat (66)
+    { id: 952, province_id: 66, name: "Akdağmadeni" },
+    { id: 953, province_id: 66, name: "Aydıncık" },
+    { id: 954, province_id: 66, name: "Boğazlıyan" },
+    { id: 955, province_id: 66, name: "Çandır" },
+    { id: 956, province_id: 66, name: "Çayıralan" },
+    { id: 957, province_id: 66, name: "Çekerek" },
+    { id: 958, province_id: 66, name: "Kadışehri" },
+    { id: 959, province_id: 66, name: "Merkez" },
+    { id: 960, province_id: 66, name: "Saraykent" },
+    { id: 961, province_id: 66, name: "Sarıkaya" },
+    { id: 962, province_id: 66, name: "Şefaatli" },
+    { id: 963, province_id: 66, name: "Sorgun" },
+    { id: 964, province_id: 66, name: "Yenifakılı" },
+    { id: 965, province_id: 66, name: "Yerköy" },
+
+    // Zonguldak (67)
+    { id: 966, province_id: 67, name: "Alaplı" },
+    { id: 967, province_id: 67, name: "Çaycuma" },
+    { id: 968, province_id: 67, name: "Devrek" },
+    { id: 969, province_id: 67, name: "Ereğli" },
+    { id: 970, province_id: 67, name: "Gökçebey" },
+    { id: 971, province_id: 67, name: "Kilimli" },
+    { id: 972, province_id: 67, name: "Kozlu" },
+    { id: 973, province_id: 67, name: "Merkez" }
   ]
 };
 
-export default turkiyeIlIlce; 
+// PostgreSQL migration için SQL
+const migrationSQL = `
+-- İl tablosunu oluştur
+CREATE TABLE provinces (
+    id INTEGER PRIMARY KEY,  -- Plaka numarası
+    name VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- İlçe tablosunu oluştur
+CREATE TABLE districts (
+    id SERIAL PRIMARY KEY,
+    province_id INTEGER NOT NULL REFERENCES provinces(id),
+    name VARCHAR(50) NOT NULL,
+    UNIQUE(province_id, name)
+);
+
+-- İlleri ekle
+INSERT INTO provinces (id, name) VALUES
+${turkiyeIlIlce.provinces.map(p => `(${p.id}, '${p.name}')`).join(',\n')};
+
+-- İlçeleri ekle
+INSERT INTO districts (id, province_id, name) VALUES
+${turkiyeIlIlce.districts.map(d => `(${d.id}, ${d.province_id}, '${d.name}')`).join(',\n')};
+`;
+
+export default turkiyeIlIlce;
+export { migrationSQL };

@@ -67,7 +67,7 @@ GET /api/locksmith/activities
 
 ### 5. Değerlendirmeler Endpoint'leri
 ```
-GET /api/locksmith/stats
+GET /api/locksmith/reviews/stats
 - İşlev: Toplam review istatistikleri (kaç adet 5 yıldız, yüzdesi, kaç adet 4 yıldız yüzdesi ...)
 - Response: Review yıldız dağılım istatistiği
 
