@@ -100,11 +100,11 @@ export default function SearchForm({ onSearch }) {
               <SelectValue placeholder="Hizmet Seçin" />
             </SelectTrigger>
             <SelectContent className="select-content">
-              <SelectItem value="acil-cilingir" className="select-item">Acil Çilingir</SelectItem>
-              <SelectItem value="7-24-cilingir" className="select-item">7/24 Çilingir</SelectItem>
-              <SelectItem value="kapi-acma" className="select-item">Kapı Açma</SelectItem>
-              <SelectItem value="oto-cilingir" className="select-item">Oto Çilingir</SelectItem>
-              <SelectItem value="kasa-cilingir" className="select-item">Kasa Çilingir</SelectItem>
+              <SelectItem value="69fe5a65-88ee-4e23-b3e8-b53370f5721a" className="select-item">Acil Çilingir</SelectItem>
+              <SelectItem value="a5570d34-ee52-4f69-8010-0dce311cbc7e" className="select-item">7/24 Çilingir</SelectItem>
+              <SelectItem value="915e4a47-b6b6-42c0-a3eb-424262b7b238" className="select-item">Kapı Açma</SelectItem>
+              <SelectItem value="a782c9d0-e2d6-48fd-b537-ad3d7482ef0e" className="select-item">Oto Çilingir</SelectItem>
+              <SelectItem value="7e18c529-faf1-4139-be87-92e2c3ed98aa" className="select-item">Kasa Çilingir</SelectItem>
             </SelectContent>
           </Select>
         </div>

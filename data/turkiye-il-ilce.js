@@ -1221,30 +1221,4 @@ const turkiyeIlIlce = {
   ]
 };
 
-// PostgreSQL migration için SQL
-const migrationSQL = `
--- İl tablosunu oluştur
-CREATE TABLE provinces (
-    id INTEGER PRIMARY KEY,  -- Plaka numarası
-    name VARCHAR(50) NOT NULL UNIQUE
-);
-
--- İlçe tablosunu oluştur
-CREATE TABLE districts (
-    id SERIAL PRIMARY KEY,
-    province_id INTEGER NOT NULL REFERENCES provinces(id),
-    name VARCHAR(50) NOT NULL,
-    UNIQUE(province_id, name)
-);
-
--- İlleri ekle
-INSERT INTO provinces (id, name) VALUES
-${turkiyeIlIlce.provinces.map(p => `(${p.id}, '${p.name}')`).join(',\n')};
-
--- İlçeleri ekle
-INSERT INTO districts (id, province_id, name) VALUES
-${turkiyeIlIlce.districts.map(d => `(${d.id}, ${d.province_id}, '${d.name}')`).join(',\n')};
-`;
-
 export default turkiyeIlIlce;
-export { migrationSQL };

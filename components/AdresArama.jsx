@@ -20,26 +20,29 @@ export default function AdresArama({ onPlaceSelect, placeholder, className }) {
     const searchTerm = inputValue.toLowerCase();
 
     // İlleri filtrele
-    Object.keys(turkiyeIlIlce).forEach(il => {
-      if (il.toLowerCase().includes(searchTerm)) {
+    turkiyeIlIlce.provinces.forEach(il => {
+      if (il.name.toLowerCase().includes(searchTerm)) {
         filteredSuggestions.push({
           type: "il",
-          name: il,
-          fullAddress: il
+          name: il.name,
+          fullAddress: il.name
         });
       }
+    });
 
-      // İlçeleri filtrele
-      turkiyeIlIlce[il].forEach(ilce => {
-        if (ilce.toLowerCase().includes(searchTerm)) {
+    // İlçeleri ayrı olarak filtrele
+    turkiyeIlIlce.districts.forEach(ilce => {
+      if (ilce.name.toLowerCase().includes(searchTerm)) {
+        const parentProvince = turkiyeIlIlce.provinces.find(p => p.id === ilce.province_id);
+        if (parentProvince) { // Parent il bulunduğundan emin ol
           filteredSuggestions.push({
             type: "ilce",
-            name: ilce,
-            parent: il,
-            fullAddress: `${ilce}, ${il}`
+            name: ilce.name,
+            parent: ilce.province_id,
+            fullAddress: `${ilce.name}, ${parentProvince.name}`
           });
         }
-      });
+      }
     });
 
     // En fazla 10 öneri göster
