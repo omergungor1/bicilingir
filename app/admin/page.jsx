@@ -308,7 +308,7 @@ function AdminPanelContent() {
 
                     <div className="border-t my-2"></div>
 
-                  <Link href="/auth/login">
+                  <Link href="/cilingir/auth/login">
                     <button 
                       onClick={() => {/* Güvenli çıkış işlemi */}}
                       className="flex items-center space-x-3 p-3 rounded-lg text-left text-red-600 hover:bg-red-50 transition-colors w-full"

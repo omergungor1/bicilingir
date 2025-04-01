@@ -3,47 +3,85 @@ import { getMe } from '../../../../actions';
 
 // Test verileri
 const testStats = {
+  all: {
+    see: 25400,
+    see_percent: 12.5,
+    call: 7890,
+    call_percent: 3.2,
+    visit: 2300,
+    visit_percent: -4.6,
+    review: 4,
+    review_percent: 9.8
+  },
   today: {
-    pageViews: 45,
-    searches: 12,
-    calls: 5,
-    avgRating: 4.8
+    see: 344,
+    see_percent: 12.5,
+    call: 212,
+    call_percent: 8.3,
+    visit: 123,
+    visit_percent: 5.6,
+    review: 45,
+    review_percent: 1.8,
   },
   yesterday: {
-    pageViews: 38,
-    searches: 9,
-    calls: 3,
-    avgRating: 4.7
+    see: 38,
+    see_percent: 11,
+    call: 9,
+    call_percent: 4.2,
+    visit: 3,
+    visit_percent: 4.6,
+    review: 4,
+    review_percent: 7.8
   },
   last7days: {
-    pageViews: 320,
-    searches: 87,
-    calls: 23,
-    avgRating: 4.7
+    see: 87,
+    see_percent: 6.5,
+    call: 23,
+    call_percent: 4.2,
+    visit: 4,
+    visit_percent: 4.6,
+    review: 4,
+    review_percent: 7.8
   },
   last30days: {
-    pageViews: 1250,
-    searches: 342,
-    calls: 95,
-    avgRating: 4.6
+    see: 342,
+    see_percent: 17.5,
+    call: 95,
+    call_percent: 2.2,
+    visit: 4,
+    visit_percent: -4.6,
+    review: 4,
+    review_percent: 3.8
   },
   thisMonth: {
-    pageViews: 980,
-    searches: 265,
-    calls: 78,
-    avgRating: 4.6
+    see: 980,
+    see_percent: 6.5,
+    call: 265,
+    call_percent: 3.2,
+    visit: 78,
+    visit_percent: -4.6,
+    review: 4,
+    review_percent: 9.8
   },
   thisYear: {
-    pageViews: 11540,
-    searches: 3200,
-    calls: 950,
-    avgRating: 4.5
+    see: 11540,
+    see_percent: 7.5,
+    call: 3200,
+    call_percent: 3.2,
+    visit: 950,
+    visit_percent: -4.6,
+    review: 4,
+    review_percent: 9.8
   },
   allTime: {
-    pageViews: 25400,
-    searches: 7890,
-    calls: 2300,
-    avgRating: 4.5
+    see: 25400,
+    see_percent: 12.5,
+    call: 7890,
+    call_percent: 3.2,
+    visit: 2300,
+    visit_percent: -4.6,
+    review: 4,
+    review_percent: 9.8
   }
 };
 
@@ -64,7 +102,7 @@ export async function GET(request) {
     const period = searchParams.get('period') || 'today';
     
     // Geçerli periyod kontrolü
-    const validPeriods = ['today', 'yesterday', 'last7days', 'last30days', 'thisMonth', 'thisYear', 'allTime'];
+    const validPeriods = ['today', 'yesterday', 'last7days', 'last30days', 'thisMonth', 'thisYear', 'allTime','all'];
     if (!validPeriods.includes(period)) {
       return NextResponse.json({ error: 'Geçersiz periyod' }, { status: 400 });
     }

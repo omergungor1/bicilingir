@@ -2,9 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import { useToast } from "../../../components/ToastContext";
+import { Button } from "../../../../components/ui/button";
+import { Input } from "../../../../components/ui/input";
+import { useToast } from "../../../../components/ToastContext";
 import Image from "next/image";
 
 export default function CilingirLogin() {
@@ -60,7 +60,7 @@ export default function CilingirLogin() {
           <h2 className="text-3xl font-extrabold text-gray-900">Çilingir Girişi</h2>
           <p className="mt-2 text-sm text-gray-600">
             Hesabınız yok mu?{" "}
-            <Link href="/auth/register" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href="/cilingir/auth/register" className="font-medium text-blue-600 hover:text-blue-500">
               Hemen kayıt olun
             </Link>
           </p>
@@ -118,7 +118,7 @@ export default function CilingirLogin() {
               </div>
 
               <div className="text-sm">
-                <Link href="/auth/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+                <Link href="/cilingir/auth/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
                   Şifremi unuttum
                 </Link>
               </div>

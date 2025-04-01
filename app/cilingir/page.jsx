@@ -34,12 +34,44 @@ function CilingirPanelContent() {
   const [reviews, setReviews] = useState([]);
   const [activeFilter, setActiveFilter] = useState("all");
   const [activeReviewFilter, setActiveReviewFilter] = useState("all");
-  const [activeDashboardFilter, setActiveDashboardFilter] = useState("all");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [keyBalance, setKeyBalance] = useState(1500); // Örnek roket bakiyesi
   const [maxCustomersPerHour, setMaxCustomersPerHour] = useState(2);
-  const [selectedCity, setSelectedCity] = useState("İstanbul");
-  const [selectedDistrict, setSelectedDistrict] = useState("Kadıköy");
+  const [selectedCity, setSelectedCity] = useState(1);
+  const [selectedDistrict, setSelectedDistrict] = useState(1);
+  
+  const [activeDashboardFilter, setActiveDashboardFilter] = useState("all");
+  const [dashboardStats, setDashboardStats] = useState({
+    see: 0,
+    see_percent: 0,
+    call: 0,
+    call_percent: 0,
+    visit: 0,
+    visit_percent: 0,
+    review: 0,
+    review_percent: 0,
+  });
+
+  const getLocksmithsDashboardStats = async (filter) => {
+    const response = await fetch(`/api/locksmith/dashboard/stats?period=${filter}`);
+    return response.json();
+  };
+
+  const handleDashboardFilterChange = async (filter) => {
+    setActiveDashboardFilter(filter);
+    const response = await getLocksmithsDashboardStats(filter);
+    setDashboardStats({
+      see: response.see,
+      see_percent: response.see_percent,
+      call: response.call,
+      call_percent: response.call_percent,
+      visit: response.visit,
+      visit_percent: response.visit_percent,
+      review: response.review,
+      review_percent: response.review_percent,
+    });
+  };
+
   const [dailyKeys, setDailyKeys] = useState({
     Pazartesi: {key: 50, isOpen: true},
     Salı: {key: 50, isOpen: true},
@@ -391,7 +423,7 @@ function CilingirPanelContent() {
 
                 <div className="border-t my-2"></div>
 
-                <Link href="/auth/login">
+                <Link href="/cilingir/auth/login">
                   <button 
                     onClick={() => {/* Güvenli çıkış işlemi */}}
                     className="flex items-center space-x-3 p-3 rounded-lg text-left text-red-600 hover:bg-red-50 transition-colors w-full"
@@ -419,27 +451,27 @@ function CilingirPanelContent() {
                 {/* Filter buttons -> Today, Yedterday, last 7 days, last 30 days, All time */}
                 <div className="flex justify-start gap-1 mb-4 w-full overflow-x-auto scrollbar-hide scrollbar-thumb-blue-500 scrollbar-track-gray-100">
                   <Button
-                  onClick={() => setActiveDashboardFilter("today")}
+                  onClick={() => handleDashboardFilterChange("today")}
                   variant="outline"
                   className={`${activeDashboardFilter === "today" ? "bg-blue-500 text-white" : "bg-white text-gray-800"}`}
                   >Bugün</Button>
                   <Button
-                  onClick={() => setActiveDashboardFilter("yesterday")}
+                  onClick={() => handleDashboardFilterChange("yesterday")}
                   variant="outline"
                   className={`${activeDashboardFilter === "yesterday" ? "bg-blue-500 text-white" : "bg-white text-gray-800"}`}
                   >Dün</Button>
                   <Button
-                  onClick={() => setActiveDashboardFilter("last7days")}
+                  onClick={() => handleDashboardFilterChange("last7days")}
                   variant="outline"
                   className={`${activeDashboardFilter === "last7days" ? "bg-blue-500 text-white" : "bg-white text-gray-800"}`}
                   >Son 7 Gün</Button>
                   <Button
-                  onClick={() => setActiveDashboardFilter("last30days")}
+                  onClick={() => handleDashboardFilterChange("last30days")}
                   variant="outline"
                   className={`${activeDashboardFilter === "last30days" ? "bg-blue-500 text-white" : "bg-white text-gray-800"}`}
                   >Son 30 Gün</Button>
                   <Button 
-                  onClick={() => setActiveDashboardFilter("all")}
+                  onClick={() => handleDashboardFilterChange("all")}
                   variant="outline"
                   className={`${activeDashboardFilter === "all" ? "bg-blue-500 text-white" : "bg-white text-gray-800"}`}
                   >Tümü</Button>
@@ -450,13 +482,13 @@ function CilingirPanelContent() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-gray-500 mb-1">Görüntülenme</p>
-                          <h3 className="text-3xl font-bold text-gray-800">345</h3>
-                          <p className="text-sm text-green-600 mt-2 flex items-center">
+                          <h3 className="text-3xl font-bold text-gray-800">{dashboardStats.see}</h3>
+                          {dashboardStats.see_percent !== 0 && <p className={`text-sm ${dashboardStats.see_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
                             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                             </svg>
-                            %12.5 artış
-                          </p>
+                            %{dashboardStats.see_percent} {dashboardStats.see_percent > 0 ? "artış" : "azalma"}
+                          </p>}
                         </div>
                         <div className="bg-blue-100 p-3 rounded-full">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -476,13 +508,13 @@ function CilingirPanelContent() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-gray-500 mb-1">Arama</p>
-                          <h3 className="text-3xl font-bold text-gray-800">213</h3>
-                          <p className="text-sm text-green-600 mt-2 flex items-center">
+                          <h3 className="text-3xl font-bold text-gray-800">{dashboardStats.call}</h3>
+                          {dashboardStats.call_percent !== 0 && <p className={`text-sm ${dashboardStats.call_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
                             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                             </svg>
-                            %8.3 artış
-                          </p>
+                            %{dashboardStats.call_percent} {dashboardStats.call_percent > 0 ? "artış" : "azalma"}
+                          </p>}
                         </div>
                         <div className="bg-purple-100 p-3 rounded-full">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -502,13 +534,13 @@ function CilingirPanelContent() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-gray-500 mb-1">Profil Ziyareti</p>
-                          <h3 className="text-3xl font-bold text-gray-800">123</h3>
-                          <p className="text-sm text-green-600 mt-2 flex items-center">
+                          <h3 className="text-3xl font-bold text-gray-800">{dashboardStats.visit}</h3>
+                          {dashboardStats.visit_percent !== 0 && <p className={`text-sm ${dashboardStats.visit_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
                             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                             </svg>
-                            %8.3 artış
-                          </p>
+                            %{dashboardStats.visit_percent} {dashboardStats.visit_percent > 0 ? "artış" : "azalma"}
+                          </p>}
                         </div>
                         <div className="bg-green-100 p-3 rounded-full">
                           <Footprints className="h-8 w-8 text-green-600" />
@@ -526,15 +558,15 @@ function CilingirPanelContent() {
                         <div>
                           <p className="text-sm text-gray-500 mb-1">Yorum</p>
                           <div className="flex items-center">
-                            <h3 className="text-3xl font-bold text-gray-800">123</h3>
+                            <h3 className="text-3xl font-bold text-gray-800">{dashboardStats.review}</h3>
                           </div>
-                            <p className="text-sm text-green-600 mt-2 flex items-center">
+                          {dashboardStats.review_percent !== 0 && <p className={`text-sm ${dashboardStats.review_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
                             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                             </svg>
-                            %1.2 artış
-                          </p>
-                        </div>
+                            %{dashboardStats.review_percent} {dashboardStats.review_percent > 0 ? "artış" : "azalma"}
+                          </p>}
+                        </div>  
                         <div className="bg-yellow-100 p-3 rounded-full">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
@@ -700,8 +732,8 @@ function CilingirPanelContent() {
                         onChange={(e) => setSelectedCity(e.target.value)}
                         value={selectedCity}
                       >
-                        {Object.keys(turkiyeIlIlce).map((il) => (
-                          <option key={il} value={il}>{il}</option>
+                        {turkiyeIlIlce.provinces.map((il) => (
+                          <option key={il.id} value={il.id}>{il.name}</option>
                         ))}
                       </select>
                     </div>
@@ -712,8 +744,8 @@ function CilingirPanelContent() {
                         onChange={(e) => setSelectedDistrict(e.target.value)}
                         value={selectedDistrict}
                       >
-                        {turkiyeIlIlce[selectedCity].map((ilce) => (
-                          <option key={ilce} value={ilce}>{ilce}</option>
+                        {turkiyeIlIlce.districts.filter(ilce => ilce.province_id === selectedCity).map((ilce) => (
+                          <option key={ilce.id} value={ilce.id}>{ilce.name}</option>
                         ))}
                       </select>
                     </div>

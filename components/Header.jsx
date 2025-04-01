@@ -20,7 +20,7 @@ export default function Header() {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  if (pathname === '/cilingir' || pathname === '/admin') {
+  if (pathname === '/cilingir' || pathname === '/admin' || pathname === '/cilingir/auth/register' || pathname === '/cilingir/auth/login' || pathname === '/cilingir/auth/forgot-password') {
     return null;
   }
 
@@ -79,8 +79,8 @@ export default function Header() {
             </li>
             <li>
               <Link 
-                href="/cilingirler" 
-                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/cilingirler' ? '  border-b-2 border-white' : ''}`}
+                href="/bilgi" 
+                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/bilgi' ? '  border-b-2 border-white' : ''}`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Çilingirler

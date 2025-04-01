@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle,CardFooter } from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import { SelectableCard } from "../../../components/ui/selectable-card";
-import  turkiyeIlIlce  from "../../../data/turkiye-il-ilce";
-import { formatPhoneNumber } from "../../../lib/utils";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle,CardFooter } from "../../../../components/ui/card";
+import { Button } from "../../../../components/ui/button";
+import { Input } from "../../../../components/ui/input";
+import { SelectableCard } from "../../../../components/ui/selectable-card";
+import  turkiyeIlIlce  from "../../../../data/turkiye-il-ilce";
+import { formatPhoneNumber } from "../../../../lib/utils";
 import Link from "next/link";
 
 export default function CilingirKayit() {
@@ -37,16 +37,6 @@ export default function CilingirKayit() {
     digerBelgeler: []
   });
 
-  // İlleri temsil eden örnek veri
-  
-  // Seçilen ile göre ilçeler (örnek veri)
-  const ilceler = {
-    "İstanbul": ["Kadıköy", "Beşiktaş", "Şişli", "Üsküdar", "Beyoğlu", "Ataşehir", "Maltepe", "Kartal", "Pendik", "Tuzla"],
-    "Ankara": ["Çankaya", "Keçiören", "Yenimahalle", "Mamak", "Etimesgut"],
-    "İzmir": ["Konak", "Karşıyaka", "Bornova", "Karabağlar", "Buca"],
-    "Bursa": ["Osmangazi", "Nilüfer", "Yıldırım", "Gemlik", "Mudanya"],
-    "Antalya": ["Muratpaşa", "Konyaaltı", "Kepez", "Alanya", "Manavgat"]
-  };
 
   // Çilingir hizmetleri örnek veri
   const hizmetListesi = [
@@ -724,7 +714,7 @@ export default function CilingirKayit() {
                 </p>
                 <div className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3 justify-center">
                   <Button variant="outline" type="button" onClick={() => window.location.href = "/"}>Ana Sayfaya Dön</Button>
-                  <Button type="button" onClick={() => window.location.href = "/auth/login"}>Panele Git</Button>
+                  <Button type="button" onClick={() => window.location.href = "/cilingir/auth/login"}>Panele Git</Button>
                 </div>
               </div>
             )}

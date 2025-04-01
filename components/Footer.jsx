@@ -7,7 +7,7 @@ export default function Footer() {
   const pathname = usePathname();
 
 
-  if (pathname === '/cilingir' || pathname === '/admin') {
+  if (pathname === '/cilingir' || pathname === '/admin' || pathname === '/cilingir/auth/register' || pathname === '/cilingir/auth/login' || pathname === '/cilingir/auth/forgot-password') {
     return null;
   }
 
@@ -24,8 +24,8 @@ export default function Footer() {
           <div>
             <h3 className="text-xl font-bold mb-4">Hizmetlerimiz</h3>
             <ul className="space-y-2 text-gray-300">
-              <li><Link href="/cilingirler" className="hover:text-white">Çilingir Bul</Link></li>
-              <li><Link href="/auth/register" className="hover:text-white">Çilingir Kayıt</Link></li>
+              <li><Link href="/" className="hover:text-white">Çilingir Bul</Link></li>
+              <li><Link href="/cilingir/auth/register" className="hover:text-white">Çilingir Kayıt</Link></li>
               <li><Link href="/hakkimizda" className="hover:text-white">Hakkımızda</Link></li>
             </ul>
           </div>
@@ -33,7 +33,7 @@ export default function Footer() {
             <h3 className="text-xl font-bold mb-4">Kurumsal</h3>
             <ul className="space-y-2 text-gray-300">
               <li><Link href="/hakkimizda" className="hover:text-white">Hakkımızda</Link></li>
-              <li><Link href="/cilingirler" className="hover:text-white">Çilingir Ol</Link></li>
+              <li><Link href="/bilgi" className="hover:text-white">Çilingir Ol</Link></li>
               <li><a href="#" className="hover:text-white">Gizlilik Politikası</a></li>
               <li><a href="#" className="hover:text-white">İletişim</a></li>
             </ul>

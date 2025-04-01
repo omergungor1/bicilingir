@@ -28,7 +28,7 @@ export async function middleware(req) {
   if (req.nextUrl.pathname.startsWith('/admin')) {
     // Oturum yoksa giriş sayfasına yönlendir
     // if (!session) {
-    //   const redirectUrl = new URL('/auth/login', req.url);
+    //   const redirectUrl = new URL('/cilingir/auth/login', req.url);
     //   redirectUrl.searchParams.set('redirectedFrom', req.nextUrl.pathname);
     //   return NextResponse.redirect(redirectUrl);
     // }
@@ -43,7 +43,7 @@ export async function middleware(req) {
   // Çilingir sayfalarına erişim kontrolü
   if (req.nextUrl.pathname.startsWith('/cilingir/profil')) {
     if (!session) {
-      const redirectUrl = new URL('/auth/login', req.url);
+      const redirectUrl = new URL('/cilingir/auth/login', req.url);
       redirectUrl.searchParams.set('redirectedFrom', req.nextUrl.pathname);
       return NextResponse.redirect(redirectUrl);
     }
