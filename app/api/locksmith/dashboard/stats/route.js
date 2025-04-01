@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getMe } from '../../../../actions';
+import { checkApiAuth } from '../../../utils';
 
 // Test verileri
 const testStats = {
@@ -90,11 +90,11 @@ const isTestMode = process.env.NEXT_PUBLIC_TEST_MODE === 'true';
 
 export async function GET(request) {
   try {
-    // Kimlik doğrulama kontrolü
-    const user = await getMe();
+    // Yetki kontrolü - sadece admin ve çilingirler erişebilir
+    const { error, supabase, user, userRole } = await checkApiAuth(request, ['admin', 'cilingir']);
     
-    if (!user) {
-      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
+    if (error) {
+      return error;
     }
     
     // URL'den period parametresini al
@@ -113,7 +113,7 @@ export async function GET(request) {
     }
     
     // Gerçek sistemde ilgili döneme ait istatistikleri getir
-    // Örnek implementasyon (gerçek kodda burada veritabanı sorgusu olacak)
+    // TODO: Burada çilingir ID'sini user.id'den alarak ilgili çilingirin istatistiklerini getir
     
     return NextResponse.json(testStats[period]);
   } catch (error) {

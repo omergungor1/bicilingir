@@ -1221,4 +1221,4 @@ const turkiyeIlIlce = {
   ]
 };
 
-export default turkiyeIlIlce;
+export default turkiyeIlIlce; 

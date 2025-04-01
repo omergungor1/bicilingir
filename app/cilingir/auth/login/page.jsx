@@ -1,21 +1,74 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+
+// Global error handling - NextJS error overlay'ini engellemek için
+const originalError = console.error;
+console.error = (...args) => {
+  // "E-posta veya şifre hatalı" gibi özel hataları engelleme
+  if (args.length > 0 && 
+      typeof args[0] === 'string' && 
+      (args[0].includes("E-posta veya şifre hatalı") || 
+       args[0].includes("Login hatası"))) {
+    console.log("Login hatası yakalandı (bilgi):", args[0]);
+    return;
+  }
+  
+  // Diğer hataları normal şekilde gösterme
+  originalError.apply(console, args);
+};
+
 import Link from "next/link";
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
 import { useToast } from "../../../../components/ToastContext";
 import Image from "next/image";
+import { ArrowLeft } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser, resetAuthError } from "../../../../redux/features/authSlice";
+import { useRouter } from "next/navigation";
 
 export default function CilingirLogin() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-  const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState("");
+  
+  // Redux hooks
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const { user, role, isAuthenticated, loading, error } = useSelector(state => state.auth);
   
   // Toast hook'unu kullan
   const { showToast } = useToast();
+
+  // Kullanıcı giriş yapmışsa, rolüne göre yönlendir
+  useEffect(() => {
+    console.log("useEffect: Auth durumu değişti", { isAuthenticated, role });
+    
+    if (isAuthenticated) {
+      if (role === 'admin') {
+        showToast("Admin olarak giriş yaptınız", "success");
+        // Redux state'den gelen authentication ile de yönlendirme yapılabilir
+        console.log("useEffect: Admin yönlendirmesi yapılıyor...");
+        window.location.href = '/admin';
+      } else if (role === 'cilingir') {
+        showToast("Çilingir olarak giriş yaptınız", "success");
+        // Redux state'den gelen authentication ile de yönlendirme yapılabilir
+        console.log("useEffect: Çilingir yönlendirmesi yapılıyor...");
+        window.location.href = '/cilingir';
+      }
+    }
+  }, [isAuthenticated, role, showToast]);
+
+  // Redux'tan gelen hataları yakala
+  useEffect(() => {
+    if (error) {
+      console.log("Redux'tan hata bilgisi:", error);
+      setFormError(error); // Redux'tan gelen hata direkt olarak kullanılabilir
+    }
+  }, [error, showToast]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -24,29 +77,45 @@ export default function CilingirLogin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setFormError("");
+    dispatch(resetAuthError());
     
-    try {
-      // API çağrısını simüle et
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Giriş başarılı olduğunda
-      if (formData.email && formData.password) {
-        showToast("Giriş başarılı! Yönlendiriliyorsunuz...", "success");
-        // Yönlendirme işlemi
-        setTimeout(() => {
-          window.location.href = "/cilingir";
-        }, 1000);
-      } else {
-        // Eksik bilgi varsa
-        showToast("Lütfen tüm alanları doldurun.", "warning");
-      }
-    } catch (error) {
-      // Hata durumu
-      showToast("Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.", "error");
-    } finally {
-      setLoading(false);
+    // Form doğrulama
+    if (!formData.email || !formData.password) {
+      setFormError("Lütfen e-posta ve şifrenizi girin");
+      return;
     }
+
+    console.log("Giriş denemesi başlatılıyor...");
+    
+    // Redux login action'ını çağır (unwrap kullanmıyoruz)
+    dispatch(loginUser({
+      email: formData.email,
+      password: formData.password
+    }))
+      .then((action) => {
+        // Fulfilled durumunda
+        if (action.meta.requestStatus === 'fulfilled') {
+          const result = action.payload;
+          console.log("Login başarılı, sonuç:", result);
+          
+          if (result && result.role) {
+            if (result.role === 'admin') {
+              showToast("Admin olarak giriş yaptınız", "success");
+              window.location.href = '/admin';
+            } else if (result.role === 'cilingir') {
+              showToast("Çilingir olarak giriş yaptınız", "success");
+              window.location.href = '/cilingir';
+            }
+          }
+        }
+      })
+      // Hata durumunu burada ele almıyoruz çünkü Redux state'i zaten güncelleniyor
+      // ve useEffect hook'u ile setFormError ve showToast çağrılıyor
+      .catch(() => {
+        // Burada hiçbir şey yapmıyoruz
+        // Bu blok sadece komut hata vermemesi için var
+      });
   };
 
   return (
@@ -67,6 +136,16 @@ export default function CilingirLogin() {
         </div>
         
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {formError && (
+            <div className="mb-4 rounded-md bg-red-50 p-4">
+              <div className="flex">
+                <div className="text-sm text-red-700">
+                  {formError}
+                </div>
+              </div>
+            </div>
+          )}
+          
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -143,6 +222,15 @@ export default function CilingirLogin() {
                 )}
               </Button>
             </div>
+            <div className="mt-6 grid grid-cols-1 gap-3">
+                <Link
+                  href="/"
+                  className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Ana Sayfaya Dön
+                </Link>
+              </div>
           </form>
           <div className="flex flex-col space-y-4">
         

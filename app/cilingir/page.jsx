@@ -21,6 +21,9 @@ import {
 } from "../../components/ui/dialog"
 import turkiyeIlIlce from "../../data/turkiye-il-ilce.js";
 import { getServices,getLocksmithsReviews } from "../actions";
+import { useSelector, useDispatch } from "react-redux";
+import { supabase } from "../../lib/supabase";
+
 
 function CilingirPanelContent() {
   const { showToast } = useToast();
@@ -70,6 +73,11 @@ function CilingirPanelContent() {
       review: response.review,
       review_percent: response.review_percent,
     });
+  };
+
+  const handleLogout = () => {
+    supabase.auth.signOut();
+    router.push('/cilingir/auth/login');
   };
 
   const [dailyKeys, setDailyKeys] = useState({
@@ -326,11 +334,7 @@ function CilingirPanelContent() {
           {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
-      
-      <div className="hidden md:flex items-center gap-2">
-        <Image src="/logo.png" alt="Bi Çilingir" width={40} height={40} />
-        <h1 className="text-xl md:text-2xl font-bold my-6">Bi Çilingir Yönetim Paneli</h1>
-      </div>
+
       <div className="grid grid-cols-12 gap-6">
         {/* Sidebar - Desktop */}
         <div className={`md:col-span-3 col-span-12 ${mobileMenuOpen ? 'block' : 'hidden md:block'}`}>
@@ -425,7 +429,7 @@ function CilingirPanelContent() {
 
                 <Link href="/cilingir/auth/login">
                   <button 
-                    onClick={() => {/* Güvenli çıkış işlemi */}}
+                    onClick={handleLogout}
                     className="flex items-center space-x-3 p-3 rounded-lg text-left text-red-600 hover:bg-red-50 transition-colors w-full"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -440,7 +444,7 @@ function CilingirPanelContent() {
         </div>
 
         {/* Main Content */}
-        <div className="col-span-12 md:col-span-9">
+        <div className="col-span-12 md:col-span-9 mt-4">
           {activeTab === "dashboard" && (
             <Card>
               <CardHeader>
@@ -1674,6 +1678,46 @@ function CilingirPanelContent() {
 }
 
 export default function CilingirPanel() {
+  const { isAuthenticated, role, loading } = useSelector(state => state.auth);
+  const router = useRouter();
+  
+  useEffect(() => {
+    // Oturum açılmamışsa veya yetkili rol değilse login sayfasına yönlendir
+    if (!loading && (!isAuthenticated || (role !== 'cilingir' && role !== 'admin'))) {
+      router.push('/cilingir/auth/login');
+    }
+  }, [isAuthenticated, role, loading, router]);
+  
+  // Yükleniyor veya yetki kontrolü
+  if (loading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Yükleniyor...</h2>
+          <p className="text-gray-500">Lütfen bekleyin, çilingir paneli hazırlanıyor.</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Yetki kontrolü
+  if (role !== 'cilingir' && role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Erişim Engellendi</h2>
+          <p className="text-gray-500">Bu sayfaya erişim yetkiniz bulunmamaktadır.</p>
+          <Button 
+            onClick={() => router.push('/cilingir/auth/login')}
+            className="mt-4"
+          >
+            Giriş Sayfasına Dön
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

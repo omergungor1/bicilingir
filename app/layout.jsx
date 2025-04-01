@@ -2,6 +2,7 @@ import "./globals.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ToastProvider from '../components/ToastContext'
+import { Providers } from './providers'
 
 export const metadata = {
   title: "Bi Çilingir - En yakın çilingiri bul",
@@ -15,11 +16,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="tr">
       <body className="font-sans">
-      <ToastProvider>
-        <Header />
-        {children}
-        <Footer />
-      </ToastProvider>
+          <Providers>
+            <ToastProvider>
+                <Header />
+                {children}
+                <Footer />
+            </ToastProvider>
+          </Providers>
       </body>
     </html>
   );

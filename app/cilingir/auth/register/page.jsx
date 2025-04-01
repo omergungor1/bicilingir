@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle,CardFooter } from "../../../../components/ui/card";
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
@@ -37,22 +37,17 @@ export default function CilingirKayit() {
     digerBelgeler: []
   });
 
+  const [hizmetListesi, setHizmetListesi] = useState([]);
 
-  // Çilingir hizmetleri örnek veri
-  const hizmetListesi = [
-    { id: 1, name: "Kapı Açma" },
-    { id: 2, name: "Çelik Kapı Açma" },
-    { id: 3, name: "Kilitli Kapı Açma" },
-    { id: 4, name: "Kasa Açma" },
-    { id: 5, name: "Çilingir Oto Anahtarı" },
-    { id: 6, name: "Anahtar Kopyalama" },
-    { id: 7, name: "Elektronik Kilit Kurulumu" },
-    { id: 8, name: "Kilit Değiştirme" },
-    { id: 9, name: "Multlock Kilit Sistemi" },
-    { id: 10, name: "Kale Kilit Sistemi" },
-    { id: 11, name: "Yale Kilit Sistemi" },
-    { id: 12, name: "Çelik Kasa Açma" }
-  ];
+  useEffect(() => {
+    // /api/public/services
+    const fetchHizmetler = async () => {
+      const response = await fetch("/api/public/services");
+      const data = await response.json();
+      setHizmetListesi(data.services);
+    };
+    fetchHizmetler();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -292,8 +287,8 @@ export default function CilingirKayit() {
                       required
                     >
                       <option value="">İl seçin</option>
-                      {Object.keys(turkiyeIlIlce).map((il) => (
-                        <option key={il} value={il}>{il}</option>
+                      {turkiyeIlIlce.provinces.map((il) => (
+                        <option key={il.id} value={il.id}>{il.name}</option>
                       ))}
                     </select>
                   </div>
@@ -308,8 +303,8 @@ export default function CilingirKayit() {
                       disabled={!formData.il}
                     >
                       <option value="">İlçe seçin</option>
-                      {turkiyeIlIlce[formData.il] && turkiyeIlIlce[formData.il].map((ilce) => (
-                        <option key={ilce} value={ilce}>{ilce}</option>
+                      {turkiyeIlIlce.districts.filter(ilce => ilce.province_id==formData.il).map((ilce) => (
+                        <option key={ilce.id} value={ilce.id}>{ilce.name}</option>
                       ))}
                     </select>
                   </div>
@@ -372,14 +367,14 @@ export default function CilingirKayit() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {turkiyeIlIlce[formData.il] && turkiyeIlIlce[formData.il].map((ilce) => (
+                    {turkiyeIlIlce.districts.filter(ilce => ilce.province_id==formData.il).map((ilce) => (
                       <SelectableCard
-                        key={ilce}
-                        selected={formData.hizmetBolgeleri.includes(ilce)}
-                        onClick={() => handleIlceChange(ilce)}
+                        key={ilce.id}
+                        selected={formData.hizmetBolgeleri.includes(ilce.id)}
+                        onClick={() => handleIlceChange(ilce.id)}
                         className="p-4"
                       >
-                        <span className="text-sm font-medium">{ilce}</span>
+                        <span className="text-sm font-medium">{ilce.name}</span>
                       </SelectableCard>
                     ))}
                   </div>

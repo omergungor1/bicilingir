@@ -1,58 +1,96 @@
-import { createServerClient } from '@supabase/ssr';
-import { NextResponse } from 'next/server';
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { NextResponse } from 'next/server'
 
 export async function middleware(req) {
+  // Önce yeni bir response objesi oluştur
   const res = NextResponse.next();
   
-  // Supabase istemcisi oluştur
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        get: (name) => req.cookies.get(name)?.value,
-        set: (name, value, options) => {
-          res.cookies.set({ name, value, ...options });
-        },
-        remove: (name, options) => {
-          res.cookies.set({ name, value: '', ...options });
-        },
-      },
+  try {
+    // Supabase istemcisi oluştur
+    const supabase = createMiddlewareClient({ req, res });
+    
+    // Auth durumunu kontrol et
+    const { data } = await supabase.auth.getSession();
+    const session = data?.session;
+    
+    const pathname = req.nextUrl.pathname;
+    
+    // Login sayfasına erişim kontrolü - session varsa yönlendir
+    if (session && (pathname === '/cilingir/auth/login' || pathname.startsWith('/cilingir/auth/login'))) {
+      // Kullanıcının rolünü veritabanından al
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .single();
+        
+      const userRole = roleData?.role;
+      
+      if (userRole === 'admin') {
+        return NextResponse.redirect(new URL('/admin', req.url));
+      } else if (userRole === 'cilingir') {
+        return NextResponse.redirect(new URL('/cilingir', req.url));
+      }
     }
-  );
-
-  // Auth durumunu kontrol et
-  const { data: { session } } = await supabase.auth.getSession();
-
-  // Admin panel sayfalarına erişim kontrolü
-  if (req.nextUrl.pathname.startsWith('/admin')) {
-    // Oturum yoksa giriş sayfasına yönlendir
-    // if (!session) {
-    //   const redirectUrl = new URL('/cilingir/auth/login', req.url);
-    //   redirectUrl.searchParams.set('redirectedFrom', req.nextUrl.pathname);
-    //   return NextResponse.redirect(redirectUrl);
-    // }
-
-    // Admin rolü kontrolü (gelecekte eklenebilir)
-    // const { data: { user } } = await supabase.auth.getUser();
-    // if (user?.role !== 'admin') {
-    //   return NextResponse.redirect(new URL('/', req.url));
-    // }
-  }
-
-  // Çilingir sayfalarına erişim kontrolü
-  if (req.nextUrl.pathname.startsWith('/cilingir/profil')) {
+    
+    // Korumalı sayfalara erişim kontrolü
     if (!session) {
-      const redirectUrl = new URL('/cilingir/auth/login', req.url);
-      redirectUrl.searchParams.set('redirectedFrom', req.nextUrl.pathname);
-      return NextResponse.redirect(redirectUrl);
+      // Admin sayfalarına erişim kontrolü
+      if (pathname.startsWith('/admin')) {
+        return NextResponse.redirect(new URL('/cilingir/auth/login', req.url));
+      }
+      
+      // Çilingir sayfalarına erişim kontrolü (login sayfası hariç)
+      if (pathname.startsWith('/cilingir') && !pathname.startsWith('/cilingir/auth')) {
+        return NextResponse.redirect(new URL('/cilingir/auth/login', req.url));
+      }
+    } 
+    else if (session) {
+      // Kullanıcının rolünü veritabanından al
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .single();
+        
+      const userRole = roleData?.role;
+      
+      // Admin sayfalarına erişim kontrolü
+      if (pathname.startsWith('/admin') && userRole !== 'admin') {
+        return NextResponse.redirect(new URL('/cilingir', req.url));
+      }
+      
+      // Çilingir sayfalarına erişim kontrolü (admin ve çilingir rolüne izin ver)
+      if (pathname.startsWith('/cilingir') && 
+          !pathname.startsWith('/cilingir/auth') && 
+          !(userRole === 'cilingir' || userRole === 'admin')) {
+        return NextResponse.redirect(new URL('/', req.url));
+      }
     }
+    
+    return res;
+  } catch (error) {
+    console.error("Middleware hatası:", error);
+    
+    // Hata durumunda güvenli yönlendirme
+    const pathname = req.nextUrl.pathname;
+    
+    if (pathname.startsWith('/admin')) {
+      return NextResponse.redirect(new URL('/cilingir/auth/login', req.url));
+    }
+    
+    if (pathname.startsWith('/cilingir') && !pathname.startsWith('/cilingir/auth')) {
+      return NextResponse.redirect(new URL('/cilingir/auth/login', req.url));
+    }
+    
+    return res;
   }
-
-  return res;
 }
 
-// Middleware'in çalışacağı path'ler
 export const config = {
-  matcher: ['/admin/:path*', '/cilingir/profil/:path*'],
-}; 
+  matcher: [
+    // Admin ve çilingir sayfaları için matcher
+    '/admin/:path*',
+    '/cilingir/:path*',
+  ],
+} 

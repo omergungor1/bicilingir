@@ -50,6 +50,8 @@ import { DatePickerWithRange } from "../../components/ui/date-range-picker";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../components/ui/dialog";
 import { useToast } from "../../components/ToastContext";
 import { Checkbox } from "../../components/ui/checkbox";
+import { useSelector } from "react-redux";
+import { supabase } from "../../lib/supabase";
 
 function AdminPanelContent() {
   const { showToast } = useToast();
@@ -200,6 +202,14 @@ function AdminPanelContent() {
     showToast("Paket başarıyla silindi!", "success");
   };
 
+  const handleLogout = () => {
+    // Supabase'de çıkış yap
+    supabase.auth.signOut();
+    
+    // Yönlendirme
+    router.push('/cilingir/auth/login');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Fixed Header */}
@@ -310,7 +320,7 @@ function AdminPanelContent() {
 
                   <Link href="/cilingir/auth/login">
                     <button 
-                      onClick={() => {/* Güvenli çıkış işlemi */}}
+                      onClick={handleLogout}
                       className="flex items-center space-x-3 p-3 rounded-lg text-left text-red-600 hover:bg-red-50 transition-colors w-full"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1880,6 +1890,46 @@ function AdminPanelContent() {
 }
 
 export default function AdminPanel() {
+  const { isAuthenticated, role, loading } = useSelector(state => state.auth);
+  const router = useRouter();
+  
+  useEffect(() => {
+    // Oturum açılmamışsa veya admin değilse login sayfasına yönlendir
+    if (!loading && (!isAuthenticated || role !== 'admin')) {
+      router.push('/cilingir/auth/login');
+    }
+  }, [isAuthenticated, role, loading, router]);
+  
+  // Yükleniyor veya yetki kontrolü
+  if (loading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Yükleniyor...</h2>
+          <p className="text-gray-500">Lütfen bekleyin, admin paneli hazırlanıyor.</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Admin değilse erişim engelle
+  if (role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Erişim Engellendi</h2>
+          <p className="text-gray-500">Bu sayfaya sadece yöneticiler erişebilir.</p>
+          <Button 
+            onClick={() => router.push('/cilingir/auth/login')}
+            className="mt-4"
+          >
+            Giriş Sayfasına Dön
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

@@ -1,0 +1,1 @@
+//çilingir ekleme yapılacak. -> Çilingir tablolarını ver öyle yapsın
