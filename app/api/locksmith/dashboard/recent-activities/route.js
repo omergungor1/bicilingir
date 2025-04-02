@@ -1,30 +1,69 @@
 import { NextResponse } from 'next/server';
-import { getMe } from '../../../../actions';
-import { testActivities } from '../../../../../lib/test-data';
 
-// Test modu kontrolü
-const isTestMode = process.env.NEXT_PUBLIC_TEST_MODE === 'true';
+// Test verileri
+const testActivities = [
+  {
+    id: 1,
+    locksmithId: 1,
+    type: 'visit',
+    date: '2025-03-23 10:00:00',
+    location: 'Beşiktaş',
+    serviceType: 'Acil Çilingir',
+    activityCount: 1,
+  },
+  {
+    id: 2,
+    locksmithId: 2,
+    type: 'call',
+    date: '2025-03-23 10:00:00',
+    location: 'Beşiktaş', 
+    serviceType: 'Oto Çilingir',
+    activityCount: 1,
+  },
+  {
+    id: 3,
+    locksmithId: 3, 
+    type: 'search',
+    date: '2025-03-23 10:00:00',
+    location: 'Kartal',
+    serviceType: 'Kasa Çilingir',
+    activityCount: 1,
+  },  
+  {
+    id: 4,
+    locksmithId: 4,
+    type: 'review',
+    date: '2025-03-23 10:00:00',
+    location: 'Avcılar',
+    serviceType: 'Kasa Çilingir',
+    activityCount: 1,
+  },
+  {
+    id: 5,
+    locksmithId: 5,
+    type: 'call',
+    date: '2025-03-23 10:00:00',
+    location: 'Kartal',
+    serviceType: 'Kasa Çilingir',
+    activityCount: 1,
+  },
+  {
+    id: 6,
+    locksmithId: 6,
+    type: 'search',
+    date: '2025-03-23 10:00:00',
+    location: 'Kartal',
+    serviceType: 'Oto Çilingir',
+    activityCount: 1,
+  }
+];
 
-export async function GET(request) {
+
+export async function GET() {
   try {
-    // Kimlik doğrulama kontrolü
-    const user = await getMe();
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
-    }
-    
-    if (isTestMode) {
-      // Test modunda son 5 aktiviteyi döndür
-      return NextResponse.json(testActivities.slice(0, 5));
-    }
-    
-    // Gerçek sistemde son 5 aktiviteyi getir
-    // Örnek implementasyon (gerçek kodda burada veritabanı sorgusu olacak)
-    
-    return NextResponse.json([]);
+    return NextResponse.json(testActivities);
   } catch (error) {
-    console.error('Son aktiviteler getirilirken bir hata oluştu:', error);
+    console.error("API hatası:", error);
     return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 });
   }
 } 

@@ -6,7 +6,9 @@ CREATE TABLE services (
     icon_url TEXT,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    minPrice int2,
+    maxPrice int2
 );
 
 -- İl (Province) Tablosu
@@ -183,23 +185,6 @@ CREATE TYPE user_activity_type_enum AS ENUM (
     'profile_visit'
 );
 
--- Çilingir Aktivite Türleri
-CREATE TYPE locksmith_activity_type_enum AS ENUM (
-    'account_created',
-    'account_activated',
-    'account_deactivated',
-    'account_deleted',
-    'package_purchase',
-    'profile_update',
-    'certificate_upload',
-    'document_upload',
-    'service_add',
-    'service_remove',
-    'working_hours_update',
-    'login',
-    'logout',
-    'password_reset'
-);
 
 -- Kullanıcı Aktivite Logları Tablosu
 CREATE TABLE user_activity_logs (
@@ -222,6 +207,24 @@ CREATE TABLE user_activity_logs (
     isFraudulent BOOLEAN DEFAULT FALSE,
     
     createdAt TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Çilingir Aktivite Türleri
+CREATE TYPE locksmith_activity_type_enum AS ENUM (
+    'account_created',
+    'account_activated',
+    'account_deactivated',
+    'account_deleted',
+    'package_purchase',
+    'profile_update',
+    'certificate_upload',
+    'document_upload',
+    'service_add',
+    'service_remove',
+    'working_hours_update',
+    'login',
+    'logout',
+    'password_reset'
 );
 
 -- Çilingir Aktivite Logları Tablosu

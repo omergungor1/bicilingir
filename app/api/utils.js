@@ -1,29 +1,64 @@
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
 /**
- * API route'lar için Supabase istemcisi oluştururken kullanılacak getter fonksiyonu.
- * Sadece header ve cookie'leri kopyalayarak işlem yapar.
+ * Supabase URL'inden proje referansını çıkarır
+ * @param {string} url - Supabase URL'i (ör: https://xxxx.supabase.co)
+ * @returns {string} Proje referansı
+ */
+function extractProjectRef(url) {
+  if (!url) return '';
+  // URL formatı genelde: https://xxxx.supabase.co veya https://xxxx.supabase.co/
+  try {
+    const hostname = new URL(url).hostname;
+    const parts = hostname.split('.');
+    return parts[0] || '';
+  } catch (e) {
+    console.error("Supabase URL parse hatası:", e);
+    // Basit bir alternatif, sadece güvenlik için
+    const match = url.match(/https:\/\/([^.]+)/);
+    return match ? match[1] : '';
+  }
+}
+
+/**
+ * API route'lar için basit Supabase istemcisi oluşturur
  * @param {Request} request - Next.js request nesnesi
- * @returns {Object} Supabase istemcisi
+ * @returns {Object} Supabase istemcisi ve response
  */
 export function createRouteClient(request) {
-  const requestHeaders = new Headers(request.headers);
+  let response = NextResponse.next();
   
-  return createServerClient(
+  // Supabase istemcisi oluştur
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         get(name) {
-          return requestHeaders.get('Cookie')
-            ?.split(';')
-            ?.find(c => c.trim().startsWith(`${name}=`))
-            ?.split('=')[1];
+          return request.cookies.get(name)?.value;
         },
+        set(name, value, options) {
+          response.cookies.set({
+            name,
+            value,
+            ...options
+          });
+        },
+        remove(name, options) {
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+            maxAge: 0
+          });
+        }
       },
     }
   );
+  
+  return { supabase, response };
 }
 
 /**
@@ -34,51 +69,45 @@ export function createRouteClient(request) {
  */
 export async function getUserRoleFromSession(supabase, session) {
   try {
-    // Cache mekanizması için session'daki metadata'yı kontrol et
-    // Supabase JWT token'ında rol bilgisi varsa direkt kullan
-    if (session.user?.user_metadata?.role) {
-      return session.user.user_metadata.role;
-    }
+    if (!session || !session.user) return null;
     
-    // Rol bilgisi token'da yoksa veritabanından al
+    // Veritabanından rol bilgisini al
     const { data: roleData, error: roleError } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', session.user.id)
       .single();
-      
-    if (roleError || !roleData) {
-      console.error("Rol bilgisi alınamadı:", roleError);
-      return null;
-    }
+    
+    if (roleError || !roleData) return null;
     
     return roleData.role;
   } catch (error) {
-    console.error("getUserRoleFromSession error:", error);
+    console.error("Rol bilgisi alınamadı:", error);
     return null;
   }
 }
 
 /**
- * API route'lar için yetki kontrolü yapar
+ * API route'lar için basit yetki kontrolü yapar
  * @param {Request} request - Next.js request nesnesi
  * @param {Array} allowedRoles - İzin verilen roller dizisi
- * @returns {Promise<{error: Object|null, user: Object|null, session: Object|null, supabase: Object|null, userRole: string|null}>}
+ * @returns {Promise<{error: Object|null, user: Object|null, userRole: string|null, supabase: Object}>}
  */
 export async function checkApiAuth(request, allowedRoles = ['admin', 'cilingir']) {
-  const supabase = createRouteClient(request);
+  const { supabase, response } = createRouteClient(request);
   
   try {
     // Oturum kontrolü
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data } = await supabase.auth.getSession();
+    const session = data?.session;
     
     if (!session || !session.user) {
       return {
-        error: NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 }),
+        error: NextResponse.json({ error: 'Oturum açmalısınız' }, { status: 401 }),
         user: null,
-        session: null,
-        supabase: null,
-        userRole: null
+        userRole: null,
+        supabase,
+        response
       };
     }
     
@@ -88,29 +117,28 @@ export async function checkApiAuth(request, allowedRoles = ['admin', 'cilingir']
     // Rol kontrolü
     if (!userRole || !allowedRoles.includes(userRole)) {
       return {
-        error: NextResponse.json({ error: 'Bu işlemi gerçekleştirme yetkiniz yok' }, { status: 403 }),
+        error: NextResponse.json({ error: 'Yetkiniz yok' }, { status: 403 }),
         user: session.user,
-        session,
+        userRole,
         supabase,
-        userRole
+        response
       };
     }
     
     return {
       error: null,
       user: session.user,
-      session,
+      userRole,
       supabase,
-      userRole
+      response
     };
   } catch (error) {
-    console.error("API yetki kontrolü hatası:", error);
     return {
       error: NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 }),
       user: null,
-      session: null,
-      supabase: null,
-      userRole: null
+      userRole: null,
+      supabase,
+      response
     };
   }
 } 

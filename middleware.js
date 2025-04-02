@@ -15,6 +15,64 @@ export async function middleware(req) {
     
     const pathname = req.nextUrl.pathname;
     
+    // API Yetkilendirme Kontrolü
+    if (pathname.startsWith('/api/locksmith/')) {
+      // Oturum kontrolü
+      if (!session) {
+        return NextResponse.json({ error: 'Oturum açmalısınız' }, { status: 401 });
+      }
+      
+      // Kullanıcı rolünü kontrol et
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .single();
+      
+      if (roleError || !roleData) {
+        return NextResponse.json({ error: 'Rol bilgisi alınamadı' }, { status: 500 });
+      }
+      
+      const userRole = roleData.role;
+      
+      // Locksmith API'leri sadece çilingir ve admin rollerine açık
+      if (userRole !== 'cilingir' && userRole !== 'admin') {
+        return NextResponse.json({ error: 'Bu API sadece çilingirler tarafından kullanılabilir' }, { status: 403 });
+      }
+      
+      // Yetki doğrulamasını geçti, API'ye erişim izni ver
+      return res;
+    }
+
+    // API Yetkilendirme Kontrolü
+    if (pathname.startsWith('/api/admin/')) {
+      // Oturum kontrolü
+      if (!session) {
+        return NextResponse.json({ error: 'Oturum açmalısınız' }, { status: 401 });
+      }
+      
+      // Kullanıcı rolünü kontrol et
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .single();
+      
+      if (roleError || !roleData) {
+        return NextResponse.json({ error: 'Rol bilgisi alınamadı' }, { status: 500 });
+      }
+      
+      const userRole = roleData.role;
+      
+      // Admin API'leri sadece admin rollerine açık
+      if (userRole !== 'admin') {
+        return NextResponse.json({ error: 'Bu API sadece adminler tarafından kullanılabilir' }, { status: 403 });
+      }
+      
+      // Yetki doğrulamasını geçti, API'ye erişim izni ver
+      return res;
+    }
+    
     // Login sayfasına erişim kontrolü - session varsa yönlendir
     if (session && (pathname === '/cilingir/auth/login' || pathname.startsWith('/cilingir/auth/login'))) {
       // Kullanıcının rolünü veritabanından al
@@ -72,6 +130,11 @@ export async function middleware(req) {
   } catch (error) {
     console.error("Middleware hatası:", error);
     
+    // API hata durumları için
+    if (req.nextUrl.pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 });
+    }
+    
     // Hata durumunda güvenli yönlendirme
     const pathname = req.nextUrl.pathname;
     
@@ -92,5 +155,8 @@ export const config = {
     // Admin ve çilingir sayfaları için matcher
     '/admin/:path*',
     '/cilingir/:path*',
+    // API route'ları için matcher
+    '/api/locksmith/:path*',
+    '/api/admin/:path*'
   ],
 } 

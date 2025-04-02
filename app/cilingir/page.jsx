@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Checkbox } from "../../components/ui/checkbox";
-import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X,Footprints, File, ExternalLinkIcon, Clock } from "lucide-react";
+import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X,Footprints, File, ExternalLinkIcon, Clock, Search } from "lucide-react";
 import { useToast } from "../../components/ToastContext";
 import Link from "next/link";
 import Image from "next/image";
@@ -35,6 +35,7 @@ function CilingirPanelContent() {
   const [activeTab, setActiveTab] = useState(tabParam || "dashboard");
   const [isCertificateDialogOpen, setIsCertificateDialogOpen] = useState(false);
   const [reviews, setReviews] = useState([]);
+  const [recentActivities, setRecentActivities] = useState([]);
   const [activeFilter, setActiveFilter] = useState("all");
   const [activeReviewFilter, setActiveReviewFilter] = useState("all");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -43,7 +44,7 @@ function CilingirPanelContent() {
   const [selectedCity, setSelectedCity] = useState(1);
   const [selectedDistrict, setSelectedDistrict] = useState(1);
   
-  const [activeDashboardFilter, setActiveDashboardFilter] = useState("all");
+  const [activeDashboardFilter, setActiveDashboardFilter] = useState("today");
   const [dashboardStats, setDashboardStats] = useState({
     see: 0,
     see_percent: 0,
@@ -55,24 +56,32 @@ function CilingirPanelContent() {
     review_percent: 0,
   });
 
-  const getLocksmithsDashboardStats = async (filter) => {
-    const response = await fetch(`/api/locksmith/dashboard/stats?period=${filter}`);
-    return response.json();
+  const handleLoadRecentActivities = async () => {
+    const response = await fetch('/api/locksmith/dashboard/recent-activities');
+    const data = await response.json();
+    setRecentActivities(data);
   };
+
+  useEffect(() => {
+    handleLoadRecentActivities();
+  }, []);
+
+
+  useEffect(() => {
+    console.log(recentActivities);
+  }, [recentActivities]);
 
   const handleDashboardFilterChange = async (filter) => {
     setActiveDashboardFilter(filter);
-    const response = await getLocksmithsDashboardStats(filter);
-    setDashboardStats({
-      see: response.see,
-      see_percent: response.see_percent,
-      call: response.call,
-      call_percent: response.call_percent,
-      visit: response.visit,
-      visit_percent: response.visit_percent,
-      review: response.review,
-      review_percent: response.review_percent,
-    });
+    try {
+      const response = await fetch(`/api/locksmith/dashboard/stats?period=${filter}`);
+      const data = await response.json();
+      setDashboardStats(data);
+
+    } catch (error) {
+      console.error("Dashboard verisi güncellenirken hata:", error);
+      showToast("İstatistikler alınırken bir hata oluştu", "error");
+    }
   };
 
   const handleLogout = () => {
@@ -125,17 +134,28 @@ function CilingirPanelContent() {
 
   useEffect(() => {
     const fetchServices = async () => {
-      const response = await getServices();
-      setServiceList(response.services);
+      //api/public/services
+      const response = await fetch('/api/public/services');
+      const data = await response.json();
+      setServiceList(data.services);
     };
     fetchServices();
 
     const fetchReviews = async () => {
-      const response = await getLocksmithsReviews(locksmithId);
-      setReviews(response.reviews);
-      console.log(response,'Locksmith ID:',locksmithId);
+      // const response = await getLocksmithsReviews();
+      // setReviews(response.reviews);
     };
     fetchReviews();
+    
+    // Dashboard istatistiklerini de yükle
+    const fetchDashboardStats = async () => {
+      try {
+        await handleDashboardFilterChange(activeDashboardFilter);
+      } catch (error) {
+        console.error("Dashboard istatistikleri yüklenirken hata:", error);
+      }
+    };
+    fetchDashboardStats();
   }, []);
 
   const [activeServices, setActiveServices] = useState([1,2,4]);
@@ -592,61 +612,30 @@ function CilingirPanelContent() {
                     Son İşlemler
                   </h4>
                   <div className="space-y-4">
-                    {[
-                      {
-                        title: "Bir Müşteri Profilinizi Ziyaret Etti",
-                        location: "Kadıköy - Profil Görüntüleme",
-                        date: "16 Mart 2024, 16:45",
-                        icon: "Footprints",
-                        color: "orange"
-                      },
-                      {
-                        title: "Bir Aramada Görüntülendiniz",
-                        location: "Gemlik - Oto Çilingir",
-                        date: "15 Mart 2024, 15:30",
-                        icon: "eye",
-                        color: "blue"
-                      },
-                      {
-                        title: "Yeni Değerlendirme Aldınız",
-                        location: "İstanbul - Kapı Açma",
-                        date: "14 Mart 2024, 13:45",
-                        icon: "star",
-                        color: "yellow"
-                      },
-                      {
-                        title: "Bir Arama Aldınız",
-                        location: "Beşiktaş - Kilit Değiştirme",
-                        date: "12 Mart 2024, 10:15",
-                        icon: "phone",
-                        color: "green"
-                      }
-                    ].map((item, index) => (
+                    {recentActivities.map((activity, index) => (
                       <Card key={index} className="hover:shadow-md transition-all border-l-4" 
                             style={{ borderLeftColor: 
-                              item.color === "blue" ? "#3b82f6" : 
-                              item.color === "yellow" ? "#f59e0b" : 
-                              item.color === "green" ? "#22c55e" :
-                              item.color === "orange" ? "#f97316":
-                              item.color === "indigo" ? "#6366f1" : "#3b82f6"
+                              activity.type === "search" ? "#3b82f6" : 
+                              activity.type === "review" ? "#f59e0b" : 
+                              activity.type === "call" ? "#22c55e" :
+                              activity.type === "visit" ? "#f97316" : "#3b82f6"
                             }}>
                         <CardContent className="p-4">
                           <div className="flex items-center">
                             <div className={`p-3 rounded-full mr-4 ${
-                              item.color === "blue" ? "bg-blue-100 text-blue-600" : 
-                              item.color === "yellow" ? "bg-yellow-100 text-yellow-600" : 
-                              item.color === "green" ? "bg-green-100 text-green-600" :
-                              item.color === "orange" ? "bg-orange-100 text-orange-600" :
-                              item.color === "indigo" ? "bg-indigo-100 text-indigo-600" :
+                              activity.type === "search" ? "bg-blue-100 text-blue-600" : 
+                              activity.type === "review" ? "bg-yellow-100 text-yellow-600" : 
+                              activity.type === "call" ? "bg-green-100 text-green-600" :
+                              activity.type === "visit" ? "bg-orange-100 text-orange-600" :
                               "bg-blue-100 text-blue-600"
                             }`}>
-                              {item.icon === "eye" ? (
-                                <Eye className="h-6 w-6" />
-                              ) : item.icon === "star" ? (
+                              {activity.type === "search" ? (
+                                <Search className="h-6 w-6" />
+                              ) : activity.type === "review" ? (
                                 <Star className="h-6 w-6" />
-                              ) : item.icon === "phone" ? (
+                              ) : activity.type === "call" ? (
                                 <PhoneCall className="h-6 w-6" />
-                              ) : item.icon === "Footprints" ? (
+                              ) : activity.type === "visit" ? (
                                 <Footprints className="h-6 w-6" />
                               ) : (
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -656,12 +645,12 @@ function CilingirPanelContent() {
                             </div>
                             <div className="flex-grow">
                               <div className="flex md:justify-between items-start md:items-center md:flex-row flex-col justify-between">
-                                <h5 className="font-medium text-gray-900">{item.title}</h5>
+                                <h5 className="font-medium text-gray-900">{activity.type === "search" ? "Adınız Aramada Listelendi" : activity.type === "review" ? "Bir Müşteri Yorumunuz Var" : activity.type === "call" ? "Bir Arama Alındı" : activity.type === "visit" ? "Profiliniz Ziyaret Edildi" : "Diğer"}</h5>
                                 <span className="text-sm text-gray-500 flex items-center md:mt-0 mt-2">
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                   </svg>
-                                  {item.date}
+                                  {activity.date}
                                 </span>
                               </div>
                               <div className="flex items-center justify-between mt-3">
@@ -670,7 +659,7 @@ function CilingirPanelContent() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                   </svg>
-                                  {item.location}
+                                  {activity.location} - {activity.serviceType}
                                 </div>
                               </div>
                             </div>
@@ -1114,57 +1103,80 @@ function CilingirPanelContent() {
             <Card>
               <CardHeader>
                 <CardTitle>Hizmetlerim</CardTitle>
-                <CardDescription>Sunduğunuz hizmetleri yönetin ve fiyatlandırın</CardDescription>
+                <CardDescription>Sunduğunuz hizmetleri yönetin ve varsayılan hizmet fiyatlandırmasını görebilirsiniz</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4 mb-6">
                   {serviceList.map((service, index) => (
-                    <Card key={index} className={`${!activeServices.includes(service.id) ? 'bg-gray-50' : ''}`}>
-                      <CardContent className="p-4">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-                          <div className="flex items-center mb-2 md:mb-0">
+                    <Card key={index} className={`mb-4 overflow-hidden transition-all duration-200 hover:shadow-md border ${activeServices.includes(service.id) ? 'border-blue-200 bg-blue-50' : 'border-gray-200 bg-gray-50'}`}>
+                      <CardContent className="p-0">
+                        <div className="flex flex-col">
+                          {/* Başlık ve Checkbox Kısmı */}
+                          <div className="flex items-center p-4 border-b border-gray-100">
                             <Checkbox 
                               id={`service-${service.id}`} 
                               checked={activeServices.includes(service.id)}
                               onCheckedChange={(checked) => handleServiceActiveChange(service.id, checked)}
-                              className="mr-3"
+                              className="mr-3 h-5 w-5"
                             />
                             <label 
                               htmlFor={`service-${service.id}`} 
-                              className={`font-medium ${!activeServices.includes(service.id) ? 'text-gray-500' : ''}`}
+                              className={`font-medium text-lg ${activeServices.includes(service.id) ? 'text-blue-700' : 'text-gray-500'}`}
                             >
                               {service.name}
                             </label>
+                            
+                            {!activeServices.includes(service.id) && (
+                              <span className="ml-auto text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-600">Aktif Değil</span>
+                            )}
+                            
+                            {activeServices.includes(service.id) && (
+                              <span className="ml-auto text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-600">Aktif</span>
+                            )}
                           </div>
-                          <div className="flex items-center space-x-2 pl-6 md:pl-0">
-                            <div className="flex items-center space-x-2">
-                              <span className={`text-sm ${!activeServices.includes(service.id) ? 'text-gray-400' : 'text-gray-600'}`}>₺</span>
-                              <Input 
-                                type="number" 
-                                value={service.price.min} 
-                                disabled={true}
-                                className={`w-24 ${!activeServices.includes(service.id) ? 'bg-gray-100 text-gray-400' : ''}`}
-                                placeholder="Min"
-                              />
-                              <span className={`text-sm ${!activeServices.includes(service.id) ? 'text-gray-400' : 'text-gray-600'}`}>-</span>
-                              <Input 
-                                type="number" 
-                                value={service.price.max} 
-                                disabled={true}
-                                className={`w-24 ${!activeServices.includes(service.id) ? 'bg-gray-100 text-gray-400' : ''}`}
-                                placeholder="Max"
-                              />
-                              <Info 
-                              onClick={()=>showToast('Varsayılan hizmet fiyat listesidir. Müşteriler bu fiyatı görecektir.', "info")}
-                              className="h-6 w-6 text-gray-400"/>
+                          
+                          {/* Fiyat Bilgileri */}
+                          <div className={`grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 ${activeServices.includes(service.id) ? 'opacity-100' : 'opacity-70'}`}>
+                            {/* Mesai Tarifesi */}
+                            <div className="flex flex-col p-3 rounded-lg bg-white shadow-sm">
+                              <div className="flex items-center mb-2">
+                                <Clock className="h-4 w-4 mr-2 text-blue-500" />
+                                <span className="text-sm font-medium text-gray-700">Mesai Saatleri</span>
+                              </div>
+                              <div className="text-center">
+                                <span className="text-xl font-bold text-gray-800">{service.minPriceMesai} - {service.maxPriceMesai} ₺</span>
+                              </div>
+                            </div>
+                            
+                            {/* Akşam Tarifesi */}
+                            <div className="flex flex-col p-3 rounded-lg bg-white shadow-sm">
+                              <div className="flex items-center mb-2">
+                                <Clock className="h-4 w-4 mr-2 text-orange-500" />
+                                <span className="text-sm font-medium text-gray-700">Akşam Saatleri</span>
+                              </div>
+                              <div className="text-center">
+                                <span className="text-xl font-bold text-gray-800">{service.minPriceAksam} - {service.maxPriceAksam} ₺</span>
+                              </div>
+                            </div>
+                            
+                            {/* Gece Tarifesi */}
+                            <div className="flex flex-col p-3 rounded-lg bg-white shadow-sm">
+                              <div className="flex items-center mb-2">
+                                <Clock className="h-4 w-4 mr-2 text-indigo-500" />
+                                <span className="text-sm font-medium text-gray-700">Gece Saatleri</span>
+                              </div>
+                              <div className="text-center">
+                                <span className="text-xl font-bold text-gray-800">{service.minPriceGece} - {service.maxPriceGece} ₺</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        {!activeServices.includes(service.id) && (
-                          <div className="pl-9 mt-2">
-                            <span className="text-xs text-gray-400 italic">Bu hizmeti vermiyorsunuz</span>
+                          
+                          {/* Bilgi Notu */}
+                          <div className="bg-gray-50 p-3 text-xs text-gray-500 flex items-center border-t border-gray-100">
+                            <Info className="h-4 w-4 mr-2 text-gray-400" />
+                            <span>Fiyatlandırma tarifesi tarafından belirlenen varsayılan değerlerdir ve değiştirilemez.</span>
                           </div>
-                        )}
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
