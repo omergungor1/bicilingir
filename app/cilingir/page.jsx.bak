@@ -23,7 +23,6 @@ import turkiyeIlIlce from "../../data/turkiye-il-ilce.js";
 import { useSelector, useDispatch } from "react-redux";
 import { supabase } from "../../lib/supabase";
 import { Textarea } from "../../components/ui/textarea";
-import { formatPhoneNumber } from "../../lib/utils";
 
 
 function CilingirPanelContent() {
@@ -54,8 +53,9 @@ function CilingirPanelContent() {
   const [selectedDistrict, setSelectedDistrict] = useState(1);
 
   const [locksmith, setLocksmith] = useState({
-    abouttext: "",
+    aboutText: "",
     avgrating:0,
+    businessImageUrls:[],
     businessname:"",
     certificates:[],
     customerlimitperhour:0,
@@ -1298,7 +1298,7 @@ function CilingirPanelContent() {
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="md:col-span-2">
+                    <div>
                       <label className="block text-sm mb-1">İşletme Adı</label>
                       <Input 
                         value={locksmith?.businessname || ""} 
@@ -1313,34 +1313,20 @@ function CilingirPanelContent() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm mb-1">Telefon</label>
-                      <Input 
-                        value={formatPhoneNumber(locksmith?.phonenumber) || ""} 
-                        onChange={(e) => handleLocksmithDataChange('phonenumber', formatPhoneNumber(e.target.value))} 
-                        placeholder="Örn: 05XX XXX XX XX"
-                        maxLength={14}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm mb-1">Whatsapp</label>
-                      <Input 
-                        value={formatPhoneNumber(locksmith?.whatsappnumber) || ""} 
-                        onChange={(e) => handleLocksmithDataChange('whatsappnumber', formatPhoneNumber(e.target.value))} 
-                        placeholder="Örn: 05XX XXX XX XX"
-                        maxLength={14}
-                      />
-                    </div>
-
-                    <div>
                       <label className="block text-sm mb-1">E-posta</label>
                       <Input 
                         value={locksmith?.email || ""} 
                         onChange={(e) => handleLocksmithDataChange('email', e.target.value)} 
                       />
                     </div>
-
-
-                    {/* İl - ilçe seçimi */}
+                    <div>
+                      <label className="block text-sm mb-1">Telefon</label>
+                      <Input 
+                        value={locksmith?.phonenumber || ""} 
+                        onChange={(e) => handleLocksmithDataChange('phonenumber', e.target.value)} 
+                      />
+                    </div>
+                    {/* İl - ilçe seçimi */  
                     <div className="md:col-span-1">
                       <label className="block text-sm mb-1">İl</label>
                       <select 
@@ -1368,20 +1354,6 @@ function CilingirPanelContent() {
                         ))}
                       </select>
                     </div>
-
-                    {/* Tam Adres */}
-                    <div className="md:col-span-2">
-                      <label className="block text-sm mb-1">Tam Adres</label>
-                      <textarea 
-                        className="w-full min-h-[100px] p-2 border rounded-md"
-                        value={locksmith?.fulladdress || ""}
-                        onChange={(e) => handleLocksmithDataChange('fulladdress', e.target.value)}
-                      ></textarea>
-                    </div>
-
-
-
-
                     {/*tagline*/}
                     <div className="md:col-span-2">
                       <label className="block text-sm mb-1">Kısa Tanıtım</label>
@@ -1394,11 +1366,13 @@ function CilingirPanelContent() {
                       <label className="block text-sm mb-1">Hakkında</label>
                       <textarea 
                         className="w-full min-h-[100px] p-2 border rounded-md"
-                        value={locksmith?.abouttext || ""}
+                        value={locksmith?.aboutText || ""}
                         onChange={(e) => handleLocksmithDataChange('abouttext', e.target.value)}
                       ></textarea>
                     </div>
                   </div>
+
+                  <div className="border-t border-gray-200 my-6" />
 
                   {/* Maksimum müşteri sayısı */}
                   <div>
@@ -1408,7 +1382,7 @@ function CilingirPanelContent() {
                       <Input 
                       className="w-24"
                       type="number" 
-                      value={locksmith?.customerlimitperhour>0 ? locksmith?.customerlimitperhour : 0}  
+                      defaultValue={locksmith?.customerlimitperhour || 0} 
                       onChange={(e) => handleLocksmithDataChange('customerlimitperhour', e.target.value)} 
                       placeholder="Örn: 10" />
                       <p className="text-sm text-gray-500">/saat</p>

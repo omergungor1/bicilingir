@@ -206,51 +206,28 @@ export async function GET(request) {
 
 export async function PUT(request) {
   try {
-    // Request headers'ını konsola yaz
+    // Request headers'ını ve cookie'yi detaylı inceleyelim
     const cookieHeader = request.headers.get('cookie');
-    console.log('Profile API (PUT) - Cookie Header:', cookieHeader);
     
-    // Cookie bilgisini manuel olarak işle
-    let session = null;
-    if (cookieHeader) {
-      try {
-        // Cookie içinden Supabase oturum bilgilerini bul
-        const supabaseCookieRegex = /sb-[a-zA-Z0-9]+-auth-token=([^;]+)/;
-        const match = cookieHeader.match(supabaseCookieRegex);
+    // Özellikle supabase auth token cookie'sini izole edelim
+    const supabaseCookieMatch = cookieHeader && cookieHeader.match(/sb-\w+-auth-token=([^;]+)/);
+    const supabaseCookieValue = supabaseCookieMatch ? supabaseCookieMatch[1] : null;
+    
+    
+    let parsedCookieValue = null;
+    try {
+      // Cookie URL-encoded olduğu için decode edilmeli
+      const decodedCookie = supabaseCookieValue ? decodeURIComponent(supabaseCookieValue) : null;
 
-        if (match && match[1]) {
-          console.log('Profile API (PUT) - Supabase cookie bulundu');
-          // Cookie değerini decode et
-          const cookieValue = decodeURIComponent(match[1]);
-          
-          try {
-            // JSON olarak parse et
-            const parsedCookie = JSON.parse(cookieValue);
-            console.log('Profile API (PUT) - Cookie parse edildi:', Object.keys(parsedCookie));
-            
-            // Session bilgisini oluştur
-            if (parsedCookie.access_token && parsedCookie.refresh_token) {
-              session = {
-                access_token: parsedCookie.access_token,
-                refresh_token: parsedCookie.refresh_token,
-                user: {
-                  id: parsedCookie.user.id
-                }
-              };
-              console.log('Profile API (PUT) - Session manuel olarak oluşturuldu');
-            }
-          } catch (parseError) {
-            console.error('Profile API (PUT) - Cookie JSON olarak parse edilemedi:', parseError);
-          }
-        } else {
-          console.log('Profile API (PUT) - Supabase cookie bulunamadı');
-        }
-      } catch (cookieError) {
-        console.error('Profile API (PUT) - Cookie işlenirken hata:', cookieError);
+      // JSON formatında mı kontrol et
+      if (decodedCookie && decodedCookie.startsWith('[') && decodedCookie.endsWith(']')) {
+        parsedCookieValue = JSON.parse(decodedCookie);
       }
+    } catch (e) {
+      console.error('Cookie parse hatası:', e);
     }
     
-    // Supabase istemcisini oluştur
+    // Özel bir supabase istemcisi oluşturalım
     let response = NextResponse.next();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -258,12 +235,16 @@ export async function PUT(request) {
       {
         cookies: {
           get(name) {
+            // Eğer supabase auth token isteniyorsa ve parse ettiğimiz değer varsa
+            if (name.includes('auth-token') && parsedCookieValue) {
+              return JSON.stringify(parsedCookieValue);
+            }
+            
+            // Diğer durumlar için normal cookie'yi al
             const cookie = request.cookies.get(name)?.value;
-            console.log(`Getting cookie in profile API (PUT): ${name} = ${cookie ? 'exists' : 'undefined'}`);
             return cookie;
           },
           set(name, value, options) {
-            console.log(`Setting cookie in profile API (PUT): ${name}`);
             response.cookies.set({
               name,
               value,
@@ -271,7 +252,6 @@ export async function PUT(request) {
             });
           },
           remove(name, options) {
-            console.log(`Removing cookie in profile API (PUT): ${name}`);
             response.cookies.set({
               name,
               value: '',
@@ -283,27 +263,175 @@ export async function PUT(request) {
       }
     );
     
-    // Oturum bilgisi manuel olarak oluşturulduysa onu kullan
-    if (!session) {
-      // Manuel oturum yoksa, Supabase ile kontrol et
-      console.log('Profile API (PUT) - Manuel session yok, Supabase ile deneyelim');
-      const { data: authData } = await supabase.auth.getSession();
-      console.log('Profile API (PUT) - Auth Data:', JSON.stringify(authData, null, 2));
-      session = authData?.session;
+    // Manuel olarak getSession() fonksiyonunu çağırmadan önce token'ları ayarlayalım
+    if (parsedCookieValue && Array.isArray(parsedCookieValue) && parsedCookieValue.length >= 2) {
+      const accessToken = parsedCookieValue[0];
+      const refreshToken = parsedCookieValue[1];
+      
+      
+      // Session'ı manuel olarak ayarla
+      const { data, error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken
+      });
+      
+      if (error) {
+        console.error('Manuel session ayarlama hatası:', error.message);
+      } else {
+        console.log('Manuel session başarıyla ayarlandı:', !!data.session);
+      }
     }
+    
+    // Şimdi session'ı al
+    const { data: authData } = await supabase.auth.getSession();
+    
+    const session = authData?.session;
     
     if (!session) {
       console.log('Profile API (PUT) - Oturum yok');
       return NextResponse.json({ error: 'Oturum açmalısınız' }, { status: 401 });
     }
     
-    // PUT işlemini buradan devam ettirin
-    // Gelen verileri alın ve profili güncelleyin
+    // Kullanıcı ID'sini al
+    const userId = session.user.id;
+    console.log('Profile API (PUT) - Kullanıcı ID:', userId);
+
+    // Kullanıcı rolünü kontrol et
+    const { data: roleData, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .single();
+    
+    if (roleError) {
+      console.log('Profile API (PUT) - Rol hatası:', roleError.message);
+      return NextResponse.json({ error: 'Rol bilgisi alınamadı' }, { status: 500 });
+    }
+    
+    if (!roleData) {
+      console.log('Profile API (PUT) - Rol bulunamadı');
+      return NextResponse.json({ error: 'Rol kaydınız bulunamadı' }, { status: 403 });
+    }
+    
+    const userRole = roleData.role;
+    console.log('Profile API (PUT) - Kullanıcı rolü:', userRole);
+    
+    if (userRole !== 'cilingir' && userRole !== 'admin') {
+      console.log('Profile API (PUT) - Yetkisiz erişim');
+      return NextResponse.json({ error: 'Bu API sadece çilingirler tarafından kullanılabilir' }, { status: 403 });
+    }
+
+    // Çilingir ID'sini al
+    const { data: locksmithData, error: locksmithError } = await supabase
+      .from('locksmiths')
+      .select('id')
+      .eq('authid', userId)
+      .single();
+      
+    if (locksmithError) {
+      console.error('Çilingir ID alınamadı:', locksmithError);
+      return NextResponse.json({ error: 'Çilingir bilgileriniz bulunamadı' }, { status: 404 });
+    }
+      
+    const locksmithId = locksmithData.id;
+
+    // Gelen verileri al
     const requestData = await request.json();
     console.log('Profile API (PUT) - Gelen veri:', JSON.stringify(requestData, null, 2));
-    
-    // İşlem tamamlandı mesajı döndür
-    return NextResponse.json({ message: 'Profil başarıyla güncellendi' }, { status: 200 });
+
+    // Hangi tablo için hangi alanların güncelleneceğini belirle
+    const locksmithFields = [
+      'businessname', 'fullname', 'tagline', 'email', 'phonenumber', 'whatsappnumber',
+      'customerlimitperhour', 'provinceid', 'districtid'
+    ];
+
+    const detailFields = [
+      'abouttext', 'taxnumber', 'fulladdress', 'websiteurl', 
+      'instagram_url', 'facebook_url', 'tiktok_url', 'youtube_url'
+    ];
+
+    // locksmiths tablosu için güncelleme verileri
+    const locksmithUpdateData = {};
+    locksmithFields.forEach(field => {
+      if (requestData[field] !== undefined) {
+        locksmithUpdateData[field] = requestData[field];
+      }
+    });
+
+    // locksmith_details tablosu için güncelleme verileri
+    const detailUpdateData = {};
+    detailFields.forEach(field => {
+      if (requestData[field] !== undefined) {
+        detailUpdateData[field] = requestData[field];
+      }
+    });
+
+    // Tabloları ayrı ayrı güncelle
+    let locksmithUpdateError = null;
+    let detailUpdateError = null;
+
+    // locksmiths tablosunu güncelle
+    if (Object.keys(locksmithUpdateData).length > 0) {
+      const { error } = await supabase
+        .from('locksmiths')
+        .update(locksmithUpdateData)
+        .eq('id', locksmithId);
+      
+      if (error) {
+        console.error('Çilingir bilgileri güncellenirken hata:', error);
+        locksmithUpdateError = error;
+      }
+    }
+
+    // locksmith_details tablosunu güncelle
+    if (Object.keys(detailUpdateData).length > 0) {
+      // Önce kaydın var olup olmadığını kontrol et
+      const { data, error: checkError } = await supabase
+        .from('locksmith_details')
+        .select('locksmithid')
+        .eq('locksmithid', locksmithId)
+        .single();
+      
+      let updateError = null;
+      
+      if (checkError && checkError.code === 'PGRST116') {
+        // Kayıt bulunamadı, insert yapalım
+        const { error } = await supabase
+          .from('locksmith_details')
+          .insert({ locksmithid: locksmithId, ...detailUpdateData });
+        
+        updateError = error;
+      } else {
+        // Kayıt bulundu, update yapalım
+        const { error } = await supabase
+          .from('locksmith_details')
+          .update(detailUpdateData)
+          .eq('locksmithid', locksmithId);
+        
+        updateError = error;
+      }
+      
+      if (updateError) {
+        console.error('Çilingir detayları güncellenirken hata:', updateError);
+        detailUpdateError = updateError;
+      }
+    }
+
+    // Hatalar varsa bildir
+    if (locksmithUpdateError || detailUpdateError) {
+      return NextResponse.json({ 
+        error: 'Profil güncellenirken bir hata oluştu',
+        locksmithError: locksmithUpdateError ? locksmithUpdateError.message : null,
+        detailError: detailUpdateError ? detailUpdateError.message : null
+      }, { status: 500 });
+    }
+
+    // Başarılı yanıt döndür
+    return NextResponse.json({ 
+      success: true,
+      message: 'Profil başarıyla güncellendi'
+    });
+
   } catch (error) {
     console.error('Çilingir profili güncellenirken bir hata oluştu:', error);
     return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 });
