@@ -30,16 +30,64 @@ function extractProjectRef(url) {
 export function createRouteClient(request) {
   let response = NextResponse.next();
   
+  // Cookie header'ı parse et ve debug için yazdır
+  const cookieHeader = request.headers.get('cookie');
+  console.log('Raw Cookie Header:', cookieHeader);
+  
+  // Cookie parselamayı manuel yap
+  const cookieMap = {};
+  if (cookieHeader) {
+    cookieHeader.split(';').forEach(cookie => {
+      const parts = cookie.split('=');
+      if (parts.length >= 2) {
+        const name = parts[0].trim();
+        const value = parts.slice(1).join('=').trim();
+        cookieMap[name] = value;
+      }
+    });
+  }
+
+  // Supabase URL'sini al ve proje referansını çıkar
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const projectRef = extractProjectRef(supabaseUrl);
+  console.log('Supabase Project Ref:', projectRef);
+  
+  // Olası Supabase cookie isimlerini kontrol et
+  // Supabase farklı formatlarda cookie isimleri kullanabilir:
+  // 1. sb-{projectRef}-auth-token
+  // 2. sb-access-token ve sb-refresh-token
+  // 3. supabase-auth-token
+  
+  const possibleCookieNames = [
+    'sb-access-token',
+    'sb-refresh-token',
+    `sb-${projectRef}-access-token`,
+    `sb-${projectRef}-refresh-token`,
+    'supabase-auth-token'
+  ];
+  
+  console.log('Cookie Durumu:');
+  possibleCookieNames.forEach(name => {
+    console.log(`${name}: ${cookieMap[name] ? 'VAR' : 'YOK'}`);
+  });
+  
   // Supabase istemcisi oluştur
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  console.log('Supabase URL:', supabaseUrl);
+  console.log('Supabase key başlangıcı:', supabaseKey?.substring(0, 5) + '...');
+  
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         get(name) {
-          return request.cookies.get(name)?.value;
+          const cookie = request.cookies.get(name)?.value;
+          console.log(`Getting cookie: ${name} = ${cookie ? 'exists' : 'undefined'}`);
+          return cookie;
         },
         set(name, value, options) {
+          console.log(`Setting cookie: ${name}`);
           response.cookies.set({
             name,
             value,
@@ -47,6 +95,7 @@ export function createRouteClient(request) {
           });
         },
         remove(name, options) {
+          console.log(`Removing cookie: ${name}`);
           response.cookies.set({
             name,
             value: '',
@@ -59,6 +108,32 @@ export function createRouteClient(request) {
   );
   
   return { supabase, response };
+}
+
+/**
+ * Session'dan kullanıcı rolünü alır
+ * @param {Object} supabase - Supabase istemcisi
+ * @param {Object} session - Kullanıcı session bilgisi
+ * @returns {Promise<String|null>} Çilingir id'si veya null
+ */
+export async function getLocksmithIdFromSession(supabase, session) {
+  try {
+    if (!session || !session.user) return null;
+    
+    // Veritabanından id al
+    const { data: idData, error: idError } = await supabase
+      .from('locksmiths')
+      .select('id')
+      .eq('authId', session.user.id)
+      .single();
+    
+    if (idError || !idData) return null;
+    
+    return idData.id;
+  } catch (error) {
+    console.error("Çilingir id alınamadı:", error); 
+    return null;
+  }
 }
 
 /**
@@ -96,12 +171,19 @@ export async function getUserRoleFromSession(supabase, session) {
 export async function checkApiAuth(request, allowedRoles = ['admin', 'cilingir']) {
   const { supabase, response } = createRouteClient(request);
   
+  // Request headers'daki cookie'leri kontrol et
+  const cookieHeader = request.headers.get('cookie');
+  console.log('Cookie Header:', cookieHeader);
+  
   try {
     // Oturum kontrolü
     const { data } = await supabase.auth.getSession();
+    console.log('Auth Session Data:', JSON.stringify(data, null, 2));
+
     const session = data?.session;
     
     if (!session || !session.user) {
+      console.log('Oturum bulunamadı veya geçersiz');
       return {
         error: NextResponse.json({ error: 'Oturum açmalısınız' }, { status: 401 }),
         user: null,
@@ -111,8 +193,12 @@ export async function checkApiAuth(request, allowedRoles = ['admin', 'cilingir']
       };
     }
     
+    console.log('Kullanıcı ID:', session.user.id);
+    console.log('Kullanıcı Email:', session.user.email);
+    
     // Kullanıcı rolünü kontrol et
     const userRole = await getUserRoleFromSession(supabase, session);
+    console.log('Kullanıcı Rolü:', userRole);
     
     // Rol kontrolü
     if (!userRole || !allowedRoles.includes(userRole)) {
@@ -133,6 +219,7 @@ export async function checkApiAuth(request, allowedRoles = ['admin', 'cilingir']
       response
     };
   } catch (error) {
+    console.error('checkApiAuth hatası:', error);
     return {
       error: NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 }),
       user: null,

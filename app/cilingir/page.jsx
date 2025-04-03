@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Checkbox } from "../../components/ui/checkbox";
-import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X,Footprints, File, ExternalLinkIcon, Clock, Search } from "lucide-react";
+import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X, Footprints, File, ExternalLinkIcon, Clock, Search, CheckCircle, AlertTriangle, AlertCircle, Bell, User, Trash2 } from "lucide-react";
 import { useToast } from "../../components/ToastContext";
 import Link from "next/link";
 import Image from "next/image";
@@ -20,9 +20,9 @@ import {
   DialogFooter,
 } from "../../components/ui/dialog"
 import turkiyeIlIlce from "../../data/turkiye-il-ilce.js";
-import { getServices,getLocksmithsReviews } from "../actions";
 import { useSelector, useDispatch } from "react-redux";
 import { supabase } from "../../lib/supabase";
+import { Textarea } from "../../components/ui/textarea";
 
 
 function CilingirPanelContent() {
@@ -30,7 +30,13 @@ function CilingirPanelContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tabParam = searchParams.get('tab');
-  const locksmithId = searchParams.get('locksmithId')||1;
+
+  // Anahtar paketleri için state
+  const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState(null);
+  const [purchaseNote, setPurchaseNote] = useState("");
+  const [isPurchasePending, setIsPurchasePending] = useState(false);
+  const [profileImageIndex, setProfileImageIndex] = useState(0);
 
   const [activeTab, setActiveTab] = useState(tabParam || "dashboard");
   const [isCertificateDialogOpen, setIsCertificateDialogOpen] = useState(false);
@@ -43,6 +49,41 @@ function CilingirPanelContent() {
   const [maxCustomersPerHour, setMaxCustomersPerHour] = useState(2);
   const [selectedCity, setSelectedCity] = useState(1);
   const [selectedDistrict, setSelectedDistrict] = useState(1);
+
+  const [locksmith, setLocksmith] = useState({
+    aboutText: "",
+    avgrating:0,
+    businessImageUrls:[],
+    businessname:"",
+    certificates:[],
+    customerlimitperhour:0,
+    districtid:0,
+    provinceid:0,
+    documents:[],
+    email:"",
+    whatsappnumber:"",
+    phonenumber:"",
+    fulladdress:"",
+    fullname:"",
+    isactive:"",
+    isemailverified:"",
+    isphoneverified:"",
+    isverified:"",
+    profileimageurl:"",
+    instagram_url:"",
+    facebook_url:"",
+    tiktok_url:"",
+    youtube_url:"",
+    status:"",
+    tagline:"",
+    taxnumber:"",
+    totalreviewcount:0,
+    averageRating:0,
+    websiteurl:"",
+  });
+  
+  const [dailyHours, setDailyHours] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   
   const [activeDashboardFilter, setActiveDashboardFilter] = useState("today");
   const [dashboardStats, setDashboardStats] = useState({
@@ -62,14 +103,6 @@ function CilingirPanelContent() {
     setRecentActivities(data);
   };
 
-  useEffect(() => {
-    handleLoadRecentActivities();
-  }, []);
-
-
-  useEffect(() => {
-    console.log(recentActivities);
-  }, [recentActivities]);
 
   const handleDashboardFilterChange = async (filter) => {
     setActiveDashboardFilter(filter);
@@ -110,78 +143,110 @@ function CilingirPanelContent() {
     
   ]);
 
-  const [dailyHours, setDailyHours] = useState({
-    Pazartesi: { start: "09:00", end: "18:00", is24Hours: false },
-    Salı: { start: "09:00", end: "18:00", is24Hours: false },
-    Çarşamba: { start: "09:00", end: "18:00", is24Hours: false },
-    Perşembe: { start: "09:00", end: "18:00", is24Hours: false },
-    Cuma: { start: "09:00", end: "18:00", is24Hours: false },
-    Cumartesi: { start: "09:00", end: "18:00", is24Hours: false },
-    Pazar: { start: "09:00", end: "18:00", is24Hours: false }
-  });
-
-  const [workDaysOpen, setWorkDaysOpen] = useState({
-    Pazartesi: true,
-    Salı: true,
-    Çarşamba: true,
-    Perşembe: true,
-    Cuma: true,
-    Cumartesi: true,
-    Pazar: true
-  });
 
   const [serviceList, setServiceList] = useState([]);
+  const fetchServices = async () => {
+    //api/public/services
+    const response = await fetch('/api/public/services');
+    const data = await response.json();
+    setServiceList(data.services);
+  };
+  const fetchReviews = async () => {
+    // const response = await getLocksmithsReviews();
+    // setReviews(response.reviews);
+  };
+  // Dashboard istatistiklerini de yükle
+  const fetchDashboardStats = async () => {
+    try {
+      const response = await fetch('/api/locksmith/dashboard/stats', {
+        credentials: 'include' // Çerezleri isteğe dahil et
+      });
+      const data = await response.json();
+      
+      if (data && data.stats) {
+        setDashboardStats(data.stats);
+      } else if (data && data.error) {
+        console.error('Dashboard stats hatası:', data.error);
+        showToast("İstatistikler yüklenirken bir hata oluştu", "error");
+      }
+    } catch (error) {
+      console.error('Dashboard stats alınırken bir hata oluştu:', error);
+      showToast("İstatistikler yüklenirken bir hata oluştu", "error");
+    }
+  };
+
+  const fetchDailyHours = async () => {
+    try {
+      // Supabase oturum bilgilerini burada kullanarak isteğimizi gönderelim
+      // Önce fetch'e headers ekleyerek Supabase Cookie bilgilerini göndermesini sağlayalım
+      const response = await fetch('/api/locksmith/profile/working-hours', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // Diğer header'lar otomatik eklenecek (credentials: 'include' sayesinde)
+        },
+        credentials: 'include', // Bu önemli, cookie'leri istek ile göndermeyi sağlar
+      });
+      
+      const data = await response.json();
+      
+      // Hata olduğunda bile bir veri dizisi gelecek şekilde API tasarlandı
+      // Data varsa ve bir array ise direkt kullan
+      if (data && Array.isArray(data)) {
+        setDailyHours(data);
+      } else if (data.error) {
+        showToast("Çalışma saatleri alınırken bir hata oluştu", "error");
+      }
+    } catch (error) {
+      showToast("Çalışma saatleri alınırken bir hata oluştu", "error");
+    }
+  };
+
+  const fetchLocksmith = async () => {
+    try {
+      const response = await fetch('/api/locksmith/profile', {
+        credentials: 'include' // Çerezleri isteğe dahil et
+      });
+      const data = await response.json();
+      console.log('Çilingir profili verileri:', data.locksmith);
+      if (data && !data.error) {
+        setLocksmith(data.locksmith);
+      } else if (data.error) {
+        console.error('Profil getirme hatası:', data.error);
+        showToast("Profil bilgileriniz yüklenirken bir hata oluştu", "error");
+      }
+    } catch (error) {
+      console.error('Çilingir profili alınırken bir hata oluştu:', error);
+      showToast("Profil bilgileriniz yüklenirken bir hata oluştu", "error");
+    }
+  };
+
+  const fetchNotifications = async () => {
+    const response = await fetch('/api/locksmith/notifications');
+    const data = await response.json();
+    setNotifications(data);
+  };
 
   useEffect(() => {
-    const fetchServices = async () => {
-      //api/public/services
-      const response = await fetch('/api/public/services');
-      const data = await response.json();
-      setServiceList(data.services);
-    };
     fetchServices();
-
-    const fetchReviews = async () => {
-      // const response = await getLocksmithsReviews();
-      // setReviews(response.reviews);
-    };
     fetchReviews();
-    
-    // Dashboard istatistiklerini de yükle
-    const fetchDashboardStats = async () => {
-      try {
-        await handleDashboardFilterChange(activeDashboardFilter);
-      } catch (error) {
-        console.error("Dashboard istatistikleri yüklenirken hata:", error);
-      }
-    };
     fetchDashboardStats();
+    handleLoadRecentActivities();
+    fetchDailyHours();
+    fetchLocksmith();
+    fetchNotifications();
   }, []);
 
   const [activeServices, setActiveServices] = useState([1,2,4]);
 
-  const [businessImages, setBusinessImages] = useState([
-    "/images/dukkan1.jpg",
-    "/images/dukkan2.jpg",
-    "/images/dukkan3.jpg",
-    "/images/dukkan4.jpg",
-  ]);
-
+  const [businessImages, setBusinessImages] = useState([]);
   const [mainImageIndex, setMainImageIndex] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [deleteImageId, setDeleteImageId] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const keyPackages = [
-    { id: 1, amount: 1000, price: 5000, description: "Başlangıç Paketi" },
-    { id: 2, amount: 3000, price: 12000, description: "Orta Paket" },
-    { id: 3, amount: 7000, price: 25000, description: "Pro Paket" },
-    { id: 4, amount: 15000, price: 50000, description: "VIP Paket" }
-  ];
+  const [keyPackages, setKeyPackages] = useState([]);
 
-  const [socialMedia, setSocialMedia] = useState({
-    instagram: "www.instagram.com/anahtarcilingir",
-    facebook: "www.facebook.com/anahtarcilingir",
-    youtube: "www.youtube.com/anahtarcilingir",
-    tiktok: "www.tiktok.com/anahtarcilingir",
-  });
 
   const [certificates, setCertificates] = useState([
     { name: "TSE Belgesi", url: "https://www.tse.gov.tr/images/belge/tse-belgesi.pdf" },
@@ -224,69 +289,127 @@ function CilingirPanelContent() {
     }
   };
 
-  const handleSocialMediaChange = (platform, value) => {
-    setSocialMedia(prev => ({
-      ...prev,
-      [platform]: value
-    }));
-  };
+  // Profil ve işletme resimlerini getir
+  const fetchBusinessImages = async () => {
+    try {
+      const response = await fetch("/api/locksmith/profile/image", {
+        credentials: "include",
+      });
 
-  const handleSocialMediaUpdate = () => {
-    // API çağrısı simülasyonu
-    showToast(`Sosyal medya hesaplarınız başarıyla güncellendi!`, "success");
-  };
+      if (!response.ok) {
+        console.error("İşletme resimleri alınırken bir hata oluştu");
+        return;
+      }
 
-  // İşletme resimleri için fonksiyonlar
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
-    
-    if (businessImages.length + files.length > 10) {
-      showToast("En fazla 10 resim yükleyebilirsiniz.", "error");
-      return;
+      const data = await response.json();
+      
+      // Veritabanından gelen resimleri state'e aktar
+      if (Array.isArray(data) && data.length > 0) {
+        // Ana görsel varsa onu bul
+        const mainImageIdx = data.findIndex(img => img.is_main);
+        const profileImageIdx = data.findIndex(img => img.is_profile);
+        setBusinessImages(data);
+        setMainImageIndex(mainImageIdx >= 0 ? mainImageIdx : 0);
+        setProfileImageIndex(profileImageIdx >= 0 ? profileImageIdx : 0);
+      } else {
+        // Eğer hiç resim yoksa varsayılan görseller
+        setBusinessImages([]);
+        setMainImageIndex(-1);
+      }
+    } catch (error) {
+      console.error("İşletme resimleri yüklenirken bir hata oluştu:", error);
     }
-    
-    const validFiles = files.filter(file => {
-      // 5MB kontrolü
-      if (file.size > 5 * 1024 * 1024) {
-        showToast(`${file.name} dosyası 5MB'dan büyük!`, "error");
-        return false;
-      }
-
-      // Resim kontrolü
-      if (!file.type.startsWith('image/')) {
-        showToast(`${file.name} bir resim dosyası değil!`, "error");
-        return false;
-      }
-      
-      return true;
-    });
-    
-    setBusinessImages(prev => [...prev, ...validFiles]);
-    showToast(`${validFiles.length} resim başarıyla yüklendi.`, "success");
   };
 
-  const handleRemoveImage = (index) => {
-    setBusinessImages(prev => {
-      const newImages = [...prev];
-      newImages.splice(index, 1);
-      
-      // Ana görsel kaldırıldıysa, ana görseli ilk resme ayarla
-      if (index === mainImageIndex) {
-        setMainImageIndex(newImages.length > 0 ? 0 : -1);
-      } else if (index < mainImageIndex) {
-        // Eğer kaldırılan görsel ana görselden önceyse, ana görsel indexini güncelle
-        setMainImageIndex(mainImageIndex - 1);
-      }
-      
-      return newImages;
-    });
-    showToast("Resim başarıyla kaldırıldı.", "success");
+  const handleRemoveImage = async (imageId) => {
+    // Modal açıp onay iste
+    setDeleteImageId(imageId);
+    setShowDeleteModal(true);
   };
 
-  const setMainImage = (index) => {
-    setMainImageIndex(index);
-    showToast("Ana görsel güncellendi.", "success");
+  const confirmDeleteImage = async () => {
+    if (!deleteImageId) return;
+    
+    try {
+      const response = await fetch(`/api/locksmith/profile/image?id=${deleteImageId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Resim silinirken bir hata oluştu');
+      }
+      
+      // Resimler değiştiği için yeniden yükle
+      await fetchBusinessImages();
+      showToast("Resim başarıyla kaldırıldı.", "success");
+    } catch (error) {
+      console.error('Resim silinirken bir hata oluştu:', error);
+      showToast("Resim silinirken bir hata oluştu.", "error");
+    } finally {
+      // Modal'ı kapat ve ID'yi temizle
+      setShowDeleteModal(false);
+      setDeleteImageId(null);
+    }
+  };
+
+  const cancelDeleteImage = () => {
+    setShowDeleteModal(false);
+    setDeleteImageId(null);
+  };
+
+  const setMainImage = async (imageId) => {
+    try {
+      const response = await fetch('/api/locksmith/profile/image', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: imageId,
+          isMain: true
+        }),
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Ana resim ayarlanırken bir hata oluştu');
+      }
+      
+      // Resimler değiştiği için yeniden yükle
+      await fetchBusinessImages();
+      showToast("Ana resim başarıyla güncellendi.", "success");
+    } catch (error) {
+      console.error('Ana resim ayarlanırken bir hata oluştu:', error);
+      showToast("Ana resim ayarlanırken bir hata oluştu.", "error");
+    }
+  };
+
+  const setProfileImage = async (imageId) => {
+    try {
+      const response = await fetch('/api/locksmith/profile/image', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: imageId,
+          isProfile: true
+        }),
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Profil resmi ayarlanırken bir hata oluştu');
+      }
+      
+      // Resimler değiştiği için yeniden yükle
+      await fetchBusinessImages();
+      showToast("Profil resmi başarıyla güncellendi.", "success");
+    } catch (error) {
+      console.error('Profil resmi ayarlanırken bir hata oluştu:', error);
+      showToast("Profil resmi ayarlanırken bir hata oluştu.", "error");
+    }
   };
 
   const handleDrop = (e) => {
@@ -296,7 +419,14 @@ function CilingirPanelContent() {
   };
 
   const handlePackagePurchase = (id) => {
-    showToast("Anahtar paketi satın almak için lütfen iletişime geçiniz.", "info");
+    // Seçilen paketi bul
+    const selectedPkg = keyPackages.find(pkg => pkg.id === id);
+    if (selectedPkg) {
+      setSelectedPackage(selectedPkg);
+      setIsPackageModalOpen(true);
+    } else {
+      showToast("Paket bulunamadı", "error");
+    }
   };
 
 
@@ -331,6 +461,311 @@ function CilingirPanelContent() {
         // Dosya zaten sunucuda ve bir URL
         window.open(cert.file, '_blank');
       }
+    }
+  };
+  
+  // Satın alma işlemini gerçekleştir
+  const handlePurchaseSubmit = async () => {
+    try {
+      setIsPurchasePending(true);
+      
+      // API isteği simülasyonu - gerçek uygulamada burası API çağrısı olacak
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // İstek başarılı oldu
+      showToast("Anahtar paketi satın alma isteğiniz yöneticiye iletildi", "success");
+      setIsPackageModalOpen(false);
+      setPurchaseNote("");
+      setSelectedPackage(null);
+      setIsPurchasePending(false);
+    } catch (error) {
+      console.error("Satın alma hatası:", error);
+      showToast("Satın alma işlemi sırasında bir hata oluştu", "error");
+      setIsPurchasePending(false);
+    }
+  };
+
+
+  // Çalışma saatleri güncelleme fonksiyonu
+  const handleWorkingHoursUpdate = async () => {
+    try {
+      const response = await fetch('/api/locksmith/profile/working-hours', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(
+          dailyHours.map(day => ({
+            ...day,
+            isworking: day.isworking || false,
+            opentime: day.opentime || day.start,
+            closetime: day.closetime || day.end
+          }))
+        )
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        showToast("Çalışma saatleri başarıyla güncellendi", "success");
+      } else {
+        showToast("Çalışma saatleri güncellenirken bir hata oluştu", "error");
+        console.error("Çalışma saatleri güncelleme hatası:", data);
+      }
+    } catch (error) {
+      showToast("Çalışma saatleri güncellenirken bir hata oluştu", "error");
+      console.error("Çalışma saatleri güncelleme hatası:", error);
+    }
+  };
+
+  // Çalışma gününün açık/kapalı durumunu değiştirme
+  const handleWorkDayToggle = (dayIndex, isOpen) => {    
+    // dailyHours dizisindeki ilgili günü güncelle
+    setDailyHours(prev => 
+      prev.map(day => {
+        if (day.dayofweek === dayIndex) {
+          return {
+            ...day,
+            isworking: isOpen
+          };
+        }
+        return day;
+      })
+    );
+  };
+
+  // Açılış/kapanış saatlerini güncelleme
+  const handleTimeChange = (dayIndex, field, value) => {
+    setDailyHours(prev => 
+      prev.map(day => {
+        if (day.dayofweek === dayIndex) {
+          return {
+            ...day,
+            [field === 'start' ? 'opentime' : 'closetime']: value
+          };
+        }
+        return day;
+      })
+    );
+  };
+
+  // 24 saat açık durumunu değiştirme
+  const handle24HourToggle = (dayIndex, is24h) => {
+    setDailyHours(prev => 
+      prev.map(day => {
+        if (day.dayofweek === dayIndex) {
+          return {
+            ...day,
+            is24hopen: is24h,
+            opentime: is24h ? "00:00" : "09:00",
+            closetime: is24h ? "00:00" : "18:00"
+          };
+        }
+        return day;
+      })
+    );
+  };
+
+  // İşletme verilerini güncelleyecek fonksiyon
+  const handleLocksmithDataChange = (field, value) => {
+    setLocksmith(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleUpdateLocksmithData = async () => {
+    try {
+      const response = await fetch('/api/locksmith/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(locksmith),
+        credentials: 'include'
+      });
+  
+      if (!response.ok) {
+        throw new Error('Profil bilgileri güncellenirken bir hata oluştu');
+      }
+  
+      showToast("Profil bilgileri başarıyla güncellendi", "success");
+    } catch (error) {
+      showToast("Profil bilgileri güncellenirken bir hata oluştu", "error");
+      console.error("Profil bilgileri güncellenirken bir hata oluştu:", error);
+    }
+  };
+
+  
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
+  const handlePasswordChange = (field, value) => {
+    setPasswordForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleDismissNotification = async (notificationId) => {
+    try {
+      // Bildirim listesini güncelle
+      const updatedNotifications = notifications.map(notification => 
+        notification.id === notificationId 
+          ? { ...notification, isdismissed: true } 
+          : notification
+      );
+      
+      // Önce UI'ı güncelle
+      setNotifications(updatedNotifications);
+      
+      // Sonra API'ye güncelleme isteği gönder
+      const response = await fetch('/api/locksmith/notifications', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: notificationId,
+          isdismissed: true
+        }),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        console.error('Bildirim güncellenirken bir hata oluştu');
+        // Hata durumunda eski listeye dön
+        fetchNotifications();
+      }
+    } catch (error) {
+      console.error('Bildirim kapatılırken bir hata oluştu:', error);
+      fetchNotifications();
+    }
+  };
+
+  const handleReadNotification = async (notificationId) => {
+    try {
+      // Bildirim listesini güncelle
+      const updatedNotifications = notifications.map(notification => 
+        notification.id === notificationId 
+          ? { ...notification, isread: true } 
+          : notification
+      );
+      
+      // Önce UI'ı güncelle
+      setNotifications(updatedNotifications);
+      
+      // Sonra API'ye güncelleme isteği gönder
+      const response = await fetch('/api/locksmith/notifications', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: notificationId,
+          isread: true
+        }),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        console.error('Bildirim güncellenirken bir hata oluştu');
+        // Hata durumunda eski listeye dön
+        fetchNotifications();
+      }
+    } catch (error) {
+      console.error('Bildirim okundu olarak işaretlenirken bir hata oluştu:', error);
+      fetchNotifications();
+    }
+  };
+
+  const fetchKeyPackages = async () => {
+    const response = await fetch('/api/locksmith/ads/packages');
+    const data = await response.json();
+    setKeyPackages(data.packages);
+  };
+
+  useEffect(() => {
+    Promise.all([
+      fetchLocksmith(),
+      fetchDailyHours(),
+      fetchDashboardStats(),
+      fetchReviews(),
+      fetchServices(),
+      fetchNotifications(),
+      fetchKeyPackages(),
+      fetchBusinessImages(),
+    ]);
+  }, []);
+
+  const handleImageUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    
+    if (businessImages.length + files.length > 10) {
+      showToast("En fazla 10 resim yükleyebilirsiniz.", "error");
+      return;
+    }
+    
+    const validFiles = files.filter(file => {
+      // 5MB kontrolü
+      if (file.size > 5 * 1024 * 1024) {
+        showToast(`${file.name} dosyası 5MB'dan büyük!`, "error");
+        return false;
+      }
+
+      // Resim kontrolü
+      if (!file.type.startsWith('image/')) {
+        showToast(`${file.name} bir resim dosyası değil!`, "error");
+        return false;
+      }
+      
+      return true;
+    });
+    
+    if (validFiles.length === 0) return;
+    
+    setIsUploading(true);
+    
+    try {
+      const uploadPromises = validFiles.map(async (file, index) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        // İlk resimse ve hiç resim yoksa ana resim yap
+        const isMain = businessImages.length === 0 && index === 0;
+        
+        formData.append('isMain', isMain);
+        formData.append('isProfile', false);
+        formData.append('displayOrder', businessImages.length + index);
+        
+        const response = await fetch('/api/locksmith/profile/image', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          throw new Error(`${file.name} yüklenirken bir hata oluştu`);
+        }
+        
+        return await response.json();
+      });
+      
+      await Promise.all(uploadPromises);
+      
+      // Resimler yüklendikten sonra tüm resimleri yeniden yükle
+      await fetchBusinessImages();
+      showToast(`${validFiles.length} resim başarıyla yüklendi.`, "success");
+    } catch (error) {
+      console.error('Resim yüklenirken bir hata oluştu:', error);
+      showToast("Resimler yüklenirken bir hata oluştu.", "error");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -472,6 +907,89 @@ function CilingirPanelContent() {
                 <CardDescription>Hesap genel bakış</CardDescription>
               </CardHeader>
               <CardContent>
+
+                {notifications.length > 0 && <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                  <Card className="col-span-3">
+                    <CardHeader className="pb-2">
+                      <CardTitle>Bildirimler</CardTitle>
+                      <CardDescription>Son bildirimlerinizi buradan takip edebilirsiniz</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+                        {notifications.filter(notification => !notification.isdismissed).length === 0 && (
+                          <div className="text-center py-8 text-gray-500">
+                            <Bell className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                            <p>Hiç bildiriminiz bulunmuyor</p>
+                          </div>
+                        )}
+                        
+                        {notifications
+                          .filter(notification => !notification.isdismissed)
+                          .map(notification => (
+                            <div 
+                              key={notification.id} 
+                              className={`flex items-start p-3 rounded-lg border ${notification.isread ? 'bg-gray-50' : 'bg-blue-50 border-blue-200'}`}
+                            >
+                              <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
+                                notification.type === 'success' ? 'bg-green-100' : 
+                                notification.type === 'warning' ? 'bg-amber-100' : 
+                                notification.type === 'error' ? 'bg-red-100' : 'bg-blue-100'
+                              }`}>
+                                {notification.type === 'success' && <CheckCircle className="h-5 w-5 text-green-500" />}
+                                {notification.type === 'warning' && <AlertTriangle className="h-5 w-5 text-amber-500" />}
+                                {notification.type === 'error' && <AlertCircle className="h-5 w-5 text-red-500" />}
+                                {notification.type === 'info' && <Info className="h-5 w-5 text-blue-500" />}
+                              </div>
+                              <div className="flex-grow">
+                                <div className="flex justify-between items-start">
+                                  <h4 className={`text-sm font-medium ${
+                                    notification.type === 'success' ? 'text-green-700' : 
+                                    notification.type === 'warning' ? 'text-amber-700' : 
+                                    notification.type === 'error' ? 'text-red-700' : 'text-blue-700'
+                                  }`}>
+                                    {notification.title}
+                                  </h4>
+                                  <button 
+                                    onClick={() => handleDismissNotification(notification.id)}
+                                    className="text-gray-400 hover:text-gray-600"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </div>
+                                <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
+                                <div className="flex justify-between items-center mt-2">
+                                  <span className="text-xs text-gray-400">
+                                    {new Date(notification.createdat).toLocaleString('tr-TR', {
+                                      day: '2-digit',
+                                      month: '2-digit',
+                                      year: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </span>
+                                  {!notification.isread && (
+                                    <button 
+                                      onClick={() => handleReadNotification(notification.id)}
+                                      className="text-xs text-blue-600 hover:text-blue-800"
+                                    >
+                                      Okundu olarak işaretle
+                                    </button>
+                                  )}
+                                  {notification.link && (
+                                    <Link href={notification.link} className="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                                      Detaylar
+                                    </Link>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>}
+
+
                 {/* Filter buttons -> Today, Yedterday, last 7 days, last 30 days, All time */}
                 <div className="flex justify-start gap-1 mb-4 w-full overflow-x-auto scrollbar-hide scrollbar-thumb-blue-500 scrollbar-track-gray-100">
                   <Button
@@ -692,38 +1210,61 @@ function CilingirPanelContent() {
               <CardContent>
                 <div className="space-y-6">
                   <div className="flex items-center space-x-4">
-                    <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
-                      <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    {businessImages.length > 0 && businessImages[profileImageIndex] ? (
+                      <div className="relative w-24 h-24 rounded-full overflow-hidden">
+                        <Image 
+                          src={businessImages[profileImageIndex].image_url} 
+                          alt="İşletme Profil Resmi" 
+                          className="object-cover"
+                          fill
+                          sizes="96px"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
+                        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                       </svg>
                     </div>
-                    <Button>Fotoğraf Yükle</Button>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm mb-1">İşletme Adı</label>
-                      <Input defaultValue="Anahtar Çilingir" />
+                      <Input 
+                        value={locksmith?.businessname || ""} 
+                        onChange={(e) => handleLocksmithDataChange('businessname', e.target.value)} 
+                      />
                     </div>
                     <div>
                       <label className="block text-sm mb-1">Ad Soyad</label>
-                      <Input defaultValue="Ahmet Yılmaz" />
+                      <Input 
+                        value={locksmith?.fullname || ""} 
+                        onChange={(e) => handleLocksmithDataChange('fullname', e.target.value)} 
+                      />
                     </div>
                     <div>
                       <label className="block text-sm mb-1">E-posta</label>
-                      <Input defaultValue="info@anahtarcilingir.com" />
+                      <Input 
+                        value={locksmith?.email || ""} 
+                        onChange={(e) => handleLocksmithDataChange('email', e.target.value)} 
+                      />
                     </div>
                     <div>
                       <label className="block text-sm mb-1">Telefon</label>
-                      <Input defaultValue="+90 555 123 4567" />
+                      <Input 
+                        value={locksmith?.phonenumber || ""} 
+                        onChange={(e) => handleLocksmithDataChange('phonenumber', e.target.value)} 
+                      />
                     </div>
                     {/* İl - ilçe seçimi */}  
                     <div className="md:col-span-1">
                       <label className="block text-sm mb-1">İl</label>
                       <select 
                         className="w-full p-2 border rounded-md" 
-                        onChange={(e) => setSelectedCity(e.target.value)}
-                        value={selectedCity}
+                        onChange={(e) => handleLocksmithDataChange('provinceid', e.target.value)}
+                        value={locksmith?.provinceid}
                       >
                         {turkiyeIlIlce.provinces.map((il) => (
                           <option key={il.id} value={il.id}>{il.name}</option>
@@ -734,25 +1275,128 @@ function CilingirPanelContent() {
                       <label className="block text-sm mb-1">İlçe</label>
                       <select 
                         className="w-full p-2 border rounded-md" 
-                        onChange={(e) => setSelectedDistrict(e.target.value)}
-                        value={selectedDistrict}
+                        onChange={(e) => handleLocksmithDataChange('districtid', e.target.value)}
+                        value={locksmith?.districtid}
                       >
-                        {turkiyeIlIlce.districts.filter(ilce => ilce.province_id === selectedCity).map((ilce) => (
+                        {turkiyeIlIlce.districts.filter(ilce => ilce.province_id === locksmith?.provinceid).map((ilce) => (
                           <option key={ilce.id} value={ilce.id}>{ilce.name}</option>
                         ))}
                       </select>
+                    </div>
+                    {/*tagline*/}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm mb-1">Kısa Tanıtım</label>
+                      <Input 
+                        value={locksmith?.tagline || ""} 
+                        onChange={(e) => handleLocksmithDataChange('tagline', e.target.value)} 
+                      />
                     </div>
                     <div className="md:col-span-2">
                       <label className="block text-sm mb-1">Hakkında</label>
                       <textarea 
                         className="w-full min-h-[100px] p-2 border rounded-md"
-                        defaultValue="10 yıllık tecrübemizle İstanbul'un her bölgesinde hizmet vermekteyiz. 7/24 acil çilingir hizmeti sunuyoruz."
+                        value={locksmith?.aboutText || ""}
+                        onChange={(e) => handleLocksmithDataChange('abouttext', e.target.value)}
                       ></textarea>
                     </div>
                   </div>
 
                   <div className="border-t border-gray-200 my-6" />
 
+                  {/* Maksimum müşteri sayısı */}
+                  <div>
+                    <h4 className="font-medium mb-4 mt-6">Bir saat içinde maksimum kaç müşteriye hizmet verebilirsiniz?</h4>
+                    <div className="flex items-center space-x-2">
+                      <p className="text-sm text-gray-500">Maksimum müşteri sayısı</p>
+                      <Input 
+                      className="w-24"
+                      type="number" 
+                      defaultValue={locksmith?.customerlimitperhour || 0} 
+                      onChange={(e) => handleLocksmithDataChange('customerlimitperhour', e.target.value)} 
+                      placeholder="Örn: 10" />
+                      <p className="text-sm text-gray-500">/saat</p>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-200 my-6" />
+                  
+                  {/* Çalışma Saatleri */}
+                  <div>
+                    <h4 className="font-medium mb-4 mt-6">Çalışma Saatleri</h4>
+                    <div className="space-y-4">
+                      { dailyHours.map((day) => (
+                        <div key={day.dayofweek} className="flex md:items-center items-start md:flex-row flex-col justify-between border p-3 rounded-md bg-gray-50">
+                          <div className="flex items-center space-x-3">
+                            <Checkbox 
+                              id={`workday-${day.dayofweek}`} 
+                              checked={day.isworking}
+                              onCheckedChange={(checked) => {
+                                handleWorkDayToggle(day.dayofweek, !!checked);
+                              }}
+                            />
+                            <label 
+                              htmlFor={`workday-${day.dayofweek}`} 
+                              className={`font-medium ${!day.isworking ? "text-gray-400" : ""}`}
+                            >
+                              {day.dayofweek==0 ? "Pazartesi" : day.dayofweek==1 ? "Salı" : day.dayofweek==2 ? "Çarşamba" : day.dayofweek==3 ? "Perşembe" : day.dayofweek==4 ? "Cuma" : day.dayofweek==5 ? "Cumartesi" : "Pazar"}
+                            </label>
+                          </div>
+                          <div className="flex items-center space-x-2 md:mt-0 mt-2">
+                            <div className="flex items-center space-x-2 mr-4">
+                              <Checkbox 
+                                id={`24hours-${day.dayofweek}`}
+                                checked={day.isworking && day.is24hopen}
+                                onCheckedChange={(checked) => {
+                                  handle24HourToggle(day.dayofweek, !!checked);
+                                }}
+                                disabled={!day.isworking}
+                              />
+                              <label 
+                                htmlFor={`24hours-${day.dayofweek}`}
+                                className={`text-sm ${!day.isworking ? "text-gray-400" : ""}`}
+                              >
+                                24 Saat
+                              </label>
+                            </div>
+                            <Input 
+                              type="time"
+                              value={day.opentime ? day.opentime.substring(0, 5) : "09:00"}
+                              onChange={(e) => {
+                                handleTimeChange(day.dayofweek, 'start', e.target.value);
+                              }}
+                              disabled={!day.isworking || day.is24hopen}
+                              className={`w-24 ${(!day.isworking || day.is24hopen) ? "bg-gray-100 text-gray-400" : ""}`}
+                            />
+                            <span className={!day.isworking ? "text-gray-400" : ""}>-</span>
+                            <Input 
+                              type="time"
+                              value={day.closetime ? day.closetime.substring(0, 5) : "18:00"}
+                              onChange={(e) => {
+                                handleTimeChange(day.dayofweek, 'end', e.target.value);
+                              }}
+                              disabled={!day.isworking || day.is24hopen}
+                              className={`w-24 ${(!day.isworking || day.is24hopen) ? "bg-gray-100 text-gray-400" : ""}`}
+                            />
+                            <span className={`ml-2 text-sm ${day.isworking ? "text-green-600" : "text-red-500"}`}>
+                              {day.isworking ? "Açık" : "Kapalı"}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="flex justify-end mt-4">
+                        <Button 
+                          onClick={handleWorkingHoursUpdate}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Çalışma Saatlerini Kaydet
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-200 my-6" />
+
+                  {/* Sertifikalar */}
                   <div className="mt-6">
                     <h4 className="font-medium mb-4">Sertifikalar</h4>
                     <div className="space-y-4">
@@ -783,6 +1427,7 @@ function CilingirPanelContent() {
                       </Dialog>
 
 
+                      {/* Mevcut Sertifikalar */}
                       {certificates.length > 0 ? (
                         <div className="mt-4">
                           <h5 className="font-medium mb-3">Mevcut Sertifikalar ({certificates.length}/5)</h5>
@@ -826,6 +1471,7 @@ function CilingirPanelContent() {
 
                   <div className="border-t border-gray-200 my-6" />
                   
+                  {/* İşletme Fotoğrafları */}
                   <div className="mt-6">
                     <h4 className="font-medium mb-4">İşletme Fotoğrafları</h4>
                     <div className="space-y-4">
@@ -843,22 +1489,31 @@ function CilingirPanelContent() {
                           e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
                         }}
                       >
-                        <label htmlFor="businessImages" className="cursor-pointer flex flex-col items-center justify-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <p className="text-gray-500 mb-1">Fotoğrafları buraya sürükleyin veya</p>
-                          <Button variant="outline" size="sm" className="mt-2">Dosya Seç</Button>
-                          <p className="text-sm text-gray-500 mt-2">En fazla 10 resim, her biri 5MB'dan küçük (JPEG, PNG)</p>
-                          <input 
-                            id="businessImages" 
-                            type="file" 
-                            multiple 
-                            accept="image/*" 
-                            className="hidden"
-                            onChange={handleImageUpload}
-                          />
-                        </label>
+                        {isUploading ? (
+                          <div className="flex flex-col items-center justify-center">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-2"></div>
+                            <p className="text-gray-500">Yükleniyor...</p>
+                          </div>
+                        ) : (
+                          <label htmlFor="businessImages" className="cursor-pointer flex flex-col items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <p className="text-gray-500 mb-1">Fotoğrafları buraya sürükleyin veya</p>
+                            <Button
+                            onClick={() => document.getElementById('businessImages').click()}
+                            variant="outline" size="sm" className="mt-2">Dosya Seç</Button>
+                            <p className="text-sm text-gray-500 mt-2">En fazla 10 resim, her biri 5MB'dan küçük (JPEG, PNG)</p>
+                            <input 
+                              id="businessImages" 
+                              type="file" 
+                              multiple 
+                              accept="image/*" 
+                              className="hidden"
+                              onChange={handleImageUpload}
+                            />
+                          </label>
+                        )}
                       </div>
                       
                       {/* Mevcut Fotoğraflar */}
@@ -867,30 +1522,41 @@ function CilingirPanelContent() {
                           <h5 className="font-medium mb-3">Mevcut Fotoğraflar ({businessImages.length}/10)</h5>
                           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                             {businessImages.map((image, index) => (
-                              <div key={index} className="relative group">
-                                <div className="aspect-square overflow-hidden rounded-lg border border-gray-200">
-                                  <img
-                                    src={typeof image === 'string' && image ? image : image instanceof File ? URL.createObjectURL(image) : null}
-                                    alt={`İşletme fotoğrafı ${index + 1}`}
-                                    className="w-full h-full object-cover"
+                              <div key={image.id} className="relative group">
+                                <div className={`relative h-24 w-full overflow-hidden rounded-md ${image.is_main ? 'ring-2 ring-blue-500' : ''}`}>
+                                  <Image 
+                                    src={image.image_url} 
+                                    alt={`İşletme resmi ${index + 1}`} 
+                                    className="object-cover"
+                                    fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                   />
                                 </div>
-                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button
-                                    onClick={() => setMainImage(index)}
-                                    className={`bg-white text-xs rounded-full px-2 py-1 text-gray-700 font-medium border ${mainImageIndex === index ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-gray-300'}`}
+                                <div className="absolute top-1 right-1 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                  {!image.is_main && (
+                                    <button 
+                                      onClick={() => setMainImage(image.id)}
+                                      className="p-1 bg-blue-500 rounded-full hover:bg-blue-600 transition-colors"
+                                      title="Ana resim yap"
+                                    >
+                                      <Star className="h-3 w-3 text-white" />
+                                    </button>
+                                  )}
+                                  <button 
+                                    onClick={() => setProfileImage(image.id)}
+                                    className={`p-1 ${image.is_profile ? 'bg-green-500' : 'bg-gray-500'} rounded-full hover:bg-green-600 transition-colors`}
+                                    title={image.is_profile ? "Profil resmi" : "Profil resmi yap"}
                                   >
-                                    {mainImageIndex === index ? 'Ana Görsel' : 'Ana Görsel Yap'}
+                                    <User className="h-3 w-3 text-white" />
+                                  </button>
+                                  <button 
+                                    onClick={() => handleRemoveImage(image.id)}
+                                    className="p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+                                    title="Sil"
+                                  >
+                                    <Trash2 className="h-3 w-3 text-white" />
                                   </button>
                                 </div>
-                                <button
-                                  onClick={() => handleRemoveImage(index)}
-                                  className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-md border border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
-                                </button>
                               </div>
                             ))}
                           </div>
@@ -905,115 +1571,11 @@ function CilingirPanelContent() {
                       }
                     </div>
                   </div>
-
-                  <div className="border-t border-gray-200 my-6" />
-
-                  <div>
-                    <h4 className="font-medium mb-4 mt-6">Bir saat içinde maksimum kaç müşteriye hizmet verebilirsiniz?</h4>
-                    <div className="flex items-center space-x-2">
-                      <p className="text-sm text-gray-500">Maksimum müşteri sayısı</p>
-                      <Input 
-                      className="w-24"
-                      type="number" 
-                      defaultValue={maxCustomersPerHour} 
-                      onChange={(e) => setMaxCustomersPerHour(e.target.value)} 
-                      placeholder="Örn: 10" />
-                      <p className="text-sm text-gray-500">/saat</p>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-gray-200 my-6" />
                   
-                  <div>
-                    <h4 className="font-medium mb-4 mt-6">Çalışma Saatleri</h4>
-                    <div className="space-y-4">
-                      {["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"].map((day) => (
-                        <div key={day} className="flex md:items-center items-start md:flex-row flex-col justify-between border p-3 rounded-md bg-gray-50">
-                          <div className="flex items-center space-x-3">
-                            <Checkbox 
-                              id={`workday-${day}`} 
-                              checked={workDaysOpen[day]}
-                              onCheckedChange={(checked) => {
-                                setWorkDaysOpen(prev => ({
-                                  ...prev,
-                                  [day]: !!checked
-                                }));
-                              }}
-                            />
-                            <label 
-                              htmlFor={`workday-${day}`} 
-                              className={`font-medium ${!workDaysOpen[day] ? "text-gray-400" : ""}`}
-                            >
-                              {day}
-                            </label>
-                          </div>
-                          <div className="flex items-center space-x-2 md:mt-0 mt-2">
-                            <div className="flex items-center space-x-2 mr-4">
-                              <Checkbox 
-                                id={`24hours-${day}`}
-                                checked={workDaysOpen[day] && dailyHours?.[day]?.is24Hours}
-                                onCheckedChange={(checked) => {
-                                  setDailyHours(prev => ({
-                                    ...prev,
-                                    [day]: {
-                                      ...prev?.[day],
-                                      is24Hours: checked,
-                                      start: checked ? "00:00" : "09:00",
-                                      end: checked ? "00:00" : "18:00"
-                                    }
-                                  }));
-                                }}
-                                disabled={!workDaysOpen[day]}
-                              />
-                              <label 
-                                htmlFor={`24hours-${day}`}
-                                className={`text-sm ${!workDaysOpen[day] ? "text-gray-400" : ""}`}
-                              >
-                                24 Saat
-                              </label>
-                            </div>
-                            <Input 
-                              type="time"
-                              value={dailyHours?.[day]?.start || "09:00"}
-                              onChange={(e) => {
-                                setDailyHours(prev => ({
-                                  ...prev,
-                                  [day]: {
-                                    ...prev?.[day],
-                                    start: e.target.value
-                                  }
-                                }));
-                              }}
-                              disabled={!workDaysOpen[day] || dailyHours?.[day]?.is24Hours}
-                              className={`w-24 ${(!workDaysOpen[day] || dailyHours?.[day]?.is24Hours) ? "bg-gray-100 text-gray-400" : ""}`}
-                            />
-                            <span className={!workDaysOpen[day] ? "text-gray-400" : ""}>-</span>
-                            <Input 
-                              type="time"
-                              value={dailyHours?.[day]?.end || "18:00"}
-                              onChange={(e) => {
-                                setDailyHours(prev => ({
-                                  ...prev,
-                                  [day]: {
-                                    ...prev?.[day],
-                                    end: e.target.value
-                                  }
-                                }));
-                              }}
-                              disabled={!workDaysOpen[day] || dailyHours?.[day]?.is24Hours}
-                              className={`w-24 ${(!workDaysOpen[day] || dailyHours?.[day]?.is24Hours) ? "bg-gray-100 text-gray-400" : ""}`}
-                            />
-                            <span className={`ml-2 text-sm ${workDaysOpen[day] ? "text-green-600" : "text-red-500"}`}>
-                              {workDaysOpen[day] ? "Açık" : "Kapalı"}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
 
                   <div className="border-t border-gray-200 my-6" />
 
+                  {/* Sosyal Medya Hesapları */}
                   <h4 className="font-medium mb-4 mt-6">Sosyal Medya Hesapları</h4>
                   <div className="space-y-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Instagram */}
@@ -1024,9 +1586,9 @@ function CilingirPanelContent() {
                       </div>
                       <div className="flex items-center space-x-4">
                         <Input 
-                          placeholder="Instagram kullanıcı adınız" 
-                          value={socialMedia.instagram}
-                          onChange={(e) => handleSocialMediaChange('instagram', e.target.value)}
+                          placeholder="Instagram profil linkiniz" 
+                          value={ locksmith?.instagram_url||""}
+                          onChange={(e) => handleLocksmithDataChange('instagram_url', e.target.value)}
                           className="flex-grow"
                         />
                       </div>
@@ -1042,9 +1604,9 @@ function CilingirPanelContent() {
                       </div>
                       <div className="flex items-center space-x-4">
                         <Input 
-                          placeholder="Facebook sayfa linkiniz" 
-                          value={socialMedia.facebook}
-                          onChange={(e) => handleSocialMediaChange('facebook', e.target.value)}
+                          placeholder="Facebook profil linkiniz" 
+                          value={ locksmith?.facebook_url||""}
+                          onChange={(e) => handleLocksmithDataChange('facebook_url', e.target.value)}
                           className="flex-grow"
                         />
                       </div>
@@ -1060,9 +1622,9 @@ function CilingirPanelContent() {
                       </div>
                       <div className="flex items-center space-x-4">
                         <Input 
-                          placeholder="YouTube kanal linkiniz" 
-                          value={socialMedia.youtube}
-                          onChange={(e) => handleSocialMediaChange('youtube', e.target.value)}
+                          placeholder="YouTube profil linkiniz" 
+                          value={ locksmith?.youtube_url||""}
+                          onChange={(e) => handleLocksmithDataChange('youtube_url', e.target.value)}
                           className="flex-grow"
                         />
                       </div>
@@ -1078,20 +1640,18 @@ function CilingirPanelContent() {
                       </div>
                       <div className="flex items-center space-x-4">
                         <Input 
-                          placeholder="TikTok kullanıcı adınız" 
-                          value={socialMedia.tiktok}
-                          onChange={(e) => handleSocialMediaChange('tiktok', e.target.value)}
+                          placeholder="TikTok profil linkiniz" 
+                          value={ locksmith?.tiktok_url||""}
+                          onChange={(e) => handleLocksmithDataChange('tiktok_url', e.target.value)}
                           className="flex-grow"
                         />
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="pt-4">
                     <Button
-                      onClick={() => {
-                        showToast("Profil bilgileri kaydedildi", "success");
-                      }}
+                      onClick={()=> handleUpdateLocksmithData()}
                     >Değişiklikleri Kaydet</Button>
                   </div>
                 </div>
@@ -1184,7 +1744,6 @@ function CilingirPanelContent() {
                 
                 <div className="flex justify-start">
                   <Button 
-                  onClick={()=>console.log(activeServices)}
                   className="bg-blue-600 hover:bg-blue-700 text-white">
                     Değişiklikleri Kaydet
                   </Button>
@@ -1210,7 +1769,7 @@ function CilingirPanelContent() {
                     <Button variant="outline" className={`${activeFilter === 'all' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => setActiveFilter('all')}>Tümü</Button>
                     <Button variant="outline" className={`${activeFilter === 'views' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => setActiveFilter('views')}>Görüntülenmeler</Button>
                     <Button variant="outline" className={`${activeFilter === 'calls' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => setActiveFilter('calls')}>Çağrılar</Button>
-                    <Button variant="outline" className={`${activeFilter === 'reviews' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => setActiveFilter('reviews')}>Değerlendirmeler</Button>
+                    <Button variant="outline" className={`${activeFilter === 'reviews' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => setActiveReviewFilter('reviews')}>Değerlendirmeler</Button>
                   </div>
                 </div>
                 
@@ -1424,7 +1983,13 @@ function CilingirPanelContent() {
                   </div>
                 </div>
                 
-                <div className="space-y-6">
+                <div className="space-y-6 h-42">
+                  { reviews.length === 0 && (
+                      <div className="text-center text-gray-500">
+                        <p>Henüz değerlendirme yapılmamış</p>
+                      </div>)
+                  }
+
                   {reviews.map((review) => (
                     <div key={review.id} className="border-b pb-6">
                       <div className="flex justify-between mb-2">
@@ -1490,20 +2055,37 @@ function CilingirPanelContent() {
                 {/* Anahtar Paketleri */}
                 <div className="mb-8">
                   <h3 className="text-xl font-bold text-gray-800 mb-4">Anahtar Paketleri</h3>
+                  <p className="text-sm text-gray-500 mb-4">Öne çıkartma anahtarları ile müşterilerinizin sizlere daha çok ulaşmasını sağlayabilirsiniz.</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {
+                      keyPackages.length === 0 && (
+                        <div className="text-center text-gray-500 h-full w-full flex items-center justify-center">
+                          <p>Anahtar paketleri yükleniyor...</p>
+                        </div>
+                      )
+                    }
                     {keyPackages.map((pkg) => (
-                      <div key={pkg.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <div key={pkg.id} className={`border flex flex-col justify-between rounded-lg p-4 hover:shadow-md transition-shadow relative ${pkg.isRecommended ? 'border-blue-500 border-2' : ''}`}>
+                        {pkg.isRecommended && (
+                          <div className="absolute -top-3 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
+                            Popüler Seçim
+                          </div>
+                        )}
                         <div className="text-center mb-4">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-blue-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                           </svg>
-                          <h4 className="font-bold text-lg">{pkg.amount} Anahtar</h4>
+                          <h4 className="font-bold text-lg">{pkg.keyAmount} Anahtar</h4>
+                          <p className="text-lg font-semibold text-gray-900">{pkg.name}</p>
+                          <p className="text-sm text-gray-600">{pkg.description}</p>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="font-bold text-lg">{pkg.price} ₺</span>
+                          <span className={`font-bold text-lg ${pkg.isRecommended ? 'text-blue-600' : ''}`}>{pkg.price} ₺</span>
                           <Button 
                           onClick={() => handlePackagePurchase(pkg.id)}
-                          variant="outline" size="sm">Satın Al</Button>
+                          variant={pkg.isRecommended ? "default" : "outline"} 
+                          className={pkg.isRecommended ? "bg-blue-600 hover:bg-blue-700" : ""}
+                          size="sm">Satın Al</Button>
                         </div>
                       </div>
                     ))}
@@ -1557,6 +2139,13 @@ function CilingirPanelContent() {
                       </div>
                     ))}
                   </div>
+
+
+                  <div className="mt-6">
+                    <Button className="bg-green-600 hover:bg-green-700 text-white">
+                      Değişiklikleri Kaydet
+                    </Button>
+                  </div>
                   
                 {/* Anahtar Kullanım Geçmişi */}
                 <div className="my-8">
@@ -1603,12 +2192,6 @@ function CilingirPanelContent() {
                     )}
                   </div>
                 </div>
-
-                  <div className="mt-6">
-                    <Button className="bg-green-600 hover:bg-green-700 text-white">
-                      Değişiklikleri Kaydet
-                    </Button>
-                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1627,57 +2210,49 @@ function CilingirPanelContent() {
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm mb-1">Mevcut Şifre</label>
-                        <Input type="password" />
+                        <Input 
+                          type="password"
+                          value={passwordForm.currentPassword}
+                          onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
+                        />
                       </div>
                       <div>
                         <label className="block text-sm mb-1">Yeni Şifre</label>
-                        <Input type="password" />
+                        <Input 
+                          type="password"
+                          value={passwordForm.newPassword}
+                          onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
+                        />
                       </div>
                       <div>
                         <label className="block text-sm mb-1">Yeni Şifre (Tekrar)</label>
-                        <Input type="password" />
+                        <Input 
+                          type="password"
+                          value={passwordForm.confirmPassword}
+                          onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
+                        />
                       </div>
-                      <Button>Şifreyi Güncelle</Button>
+                      <Button onClick={() => {
+                        if (passwordForm.newPassword === passwordForm.confirmPassword) {
+                          showToast("Şifre başarıyla güncellendi", "success");
+                        } else {
+                          showToast("Şifreler eşleşmiyor", "error");
+                        }
+                      }}>Şifreyi Güncelle</Button>
                     </div>
                   </div>
-                  
-                  <div className="border-t pt-6">
-                    <h4 className="font-medium mb-4">Bildirim Ayarları</h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="email-notifications" defaultChecked />
-                        <label htmlFor="email-notifications">E-posta bildirimleri</label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="sms-notifications" defaultChecked />
-                        <label htmlFor="sms-notifications">SMS bildirimleri</label>
-                      </div>
-                      <Button>Bildirimleri Güncelle</Button>
-                    </div>
-                  </div>
+                
                   
                   <div className="border-t pt-6">
                     <h4 className="font-medium mb-4">Hesap Durumu</h4>
                     <div className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox id="account-active" defaultChecked />
-                        <label htmlFor="account-active">Hesabım aktif</label>
-                      </div>
                       <p className="text-sm text-gray-500">
                         Hesabınızı devre dışı bırakırsanız, profiliniz ve hizmetleriniz platformda görünmeyecektir.
                       </p>
-                      <Button>Durumu Güncelle</Button>
+                      <Button
+                      variant="destructive"
+                      >Hesabımı Kapat</Button>
                     </div>
-                  </div>
-                  
-                  <div className="border-t pt-6">
-                    <h4 className="font-medium mb-4 text-red-600">Tehlikeli Bölge</h4>
-                    <p className="text-sm text-gray-500 mb-4">
-                      Hesabınızı silmek geri alınamaz bir işlemdir. Tüm verileriniz kalıcı olarak silinecektir.
-                    </p>
-                    <Button variant="outline" className="text-red-600 border-red-600 hover:bg-red-50">
-                      Hesabımı Sil
-                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -1685,6 +2260,99 @@ function CilingirPanelContent() {
           )}
         </div>
       </div>
+      
+      {/* Anahtar Paketi Satın Alma Modalı */}
+      <Dialog open={isPackageModalOpen} onOpenChange={setIsPackageModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Anahtar Paketi Satın Al</DialogTitle>
+            <DialogDescription>
+              Aşağıdaki bilgileri inceleyip satın alma talebinizi oluşturabilirsiniz.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedPackage && (
+            <div className="space-y-6">
+              <div className="bg-blue-50 p-4 rounded-lg flex items-center justify-between">
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-blue-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  </svg>
+                  <div>
+                    <h4 className="font-medium text-lg text-gray-900">{selectedPackage.keyAmount} Anahtar</h4>
+                    <p className="text-sm text-gray-600">Paket No: #{selectedPackage.id}</p>
+                  </div>
+                </div>
+                <span className="text-xl font-bold text-blue-700">{selectedPackage.price} ₺</span>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-2">Satın Alma Notu (İsteğe Bağlı)</label>
+                <Textarea 
+                  value={purchaseNote} 
+                  onChange={(e) => setPurchaseNote(e.target.value)}
+                  placeholder="Yöneticiye satın alma işlemi hakkında iletmek istediğiniz bir not yazabilirsiniz."
+                  className="w-full"
+                />
+              </div>
+              
+              <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded-lg flex items-start space-x-2">
+                <Info className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                <p>Satın alma işleminiz site yöneticisi tarafından onaylandıktan sonra anahtar bakiyenize eklenecektir. Size e-posta ile bilgilendirme yapılacaktır.</p>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsPackageModalOpen(false)}
+              disabled={isPurchasePending}
+            >
+              İptal
+            </Button>
+            <Button 
+              onClick={handlePurchaseSubmit}
+              disabled={isPurchasePending}
+              className="relative"
+            >
+              {isPurchasePending ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  İşleniyor...
+                </>
+              ) : (
+                'Satın Alma Talebi Oluştur'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Resmi Sil</h3>
+            <p className="text-gray-600 mb-6">Bu resmi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.</p>
+            <div className="flex justify-end space-x-3">
+              <Button 
+                variant="outline" 
+                onClick={cancelDeleteImage}
+              >
+                İptal
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={confirmDeleteImage}
+              >
+                Evet, Sil
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1692,7 +2360,7 @@ function CilingirPanelContent() {
 export default function CilingirPanel() {
   const { isAuthenticated, role, loading } = useSelector(state => state.auth);
   const router = useRouter();
-  
+
   useEffect(() => {
     // Oturum açılmamışsa veya yetkili rol değilse login sayfasına yönlendir
     if (!loading && (!isAuthenticated || (role !== 'cilingir' && role !== 'admin'))) {

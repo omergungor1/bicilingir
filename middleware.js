@@ -2,6 +2,9 @@ import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 
 export async function middleware(req) {
+  // Cookie header'ını kontrol et
+  const cookieHeader = req.headers.get('cookie');
+  
   // Önce yeni bir response objesi oluştur
   const res = NextResponse.next();
   
@@ -11,16 +14,19 @@ export async function middleware(req) {
     
     // Auth durumunu kontrol et
     const { data } = await supabase.auth.getSession();
-    const session = data?.session;
     
+    const session = data?.session;
     const pathname = req.nextUrl.pathname;
+    
     
     // API Yetkilendirme Kontrolü
     if (pathname.startsWith('/api/locksmith/')) {
+
       // Oturum kontrolü
       if (!session) {
         return NextResponse.json({ error: 'Oturum açmalısınız' }, { status: 401 });
       }
+      
       
       // Kullanıcı rolünü kontrol et
       const { data: roleData, error: roleError } = await supabase
@@ -29,21 +35,34 @@ export async function middleware(req) {
         .eq('user_id', session.user.id)
         .single();
       
-      if (roleError || !roleData) {
+      if (roleError) {
         return NextResponse.json({ error: 'Rol bilgisi alınamadı' }, { status: 500 });
       }
       
-      const userRole = roleData.role;
+      if (!roleData) {
+        return NextResponse.json({ error: 'Rol kaydınız bulunamadı' }, { status: 403 });
+      }
       
+      const userRole = roleData.role;
+
       // Locksmith API'leri sadece çilingir ve admin rollerine açık
       if (userRole !== 'cilingir' && userRole !== 'admin') {
         return NextResponse.json({ error: 'Bu API sadece çilingirler tarafından kullanılabilir' }, { status: 403 });
       }
       
       // Yetki doğrulamasını geçti, API'ye erişim izni ver
-      return res;
+      
+      // Cookie'leri yanıta ekle
+      const newResponse = NextResponse.next();
+      // Supabase cookie'lerini koru
+      const supabaseCookies = res.cookies.getAll();
+      for (const cookie of supabaseCookies) {
+        newResponse.cookies.set(cookie.name, cookie.value, cookie);
+      }
+      
+      return newResponse;
     }
-
+    
     // API Yetkilendirme Kontrolü
     if (pathname.startsWith('/api/admin/')) {
       // Oturum kontrolü

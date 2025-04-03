@@ -705,7 +705,7 @@ export default function CilingirKayit() {
                 </div>
                 <h2 className="text-2xl font-bold mb-4">Başvurunuz Alındı!</h2>
                 <p className="text-gray-600 mb-8">
-                  Başvurunuz inceleme için ekibimize iletilmiştir. En kısa sürede size dönüş yapacağız. Başvurunuzun durumunu panel üzerinden takip edebilirsiniz. Bunun için size mail ile gönderdiğimiz şifre ve mail adresiniz ile giriş yapabilirsiniz.
+                  Başvurunuz inceleme için ekibimize iletilmiştir. En kısa sürede size dönüş yapacağız. Başvurunuz onaylanınca mail ile bilgilendirileceksiniz. (Onay süresi genellikle 3-7 gün arasıdır.) Şifreniz mail ile gönderilecektir. Başvurunuz onaylandıktan sonra panel üzerinden giriş yapabilirsiniz.
                 </p>
                 <div className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-3 justify-center">
                   <Button variant="outline" type="button" onClick={() => window.location.href = "/"}>Ana Sayfaya Dön</Button>

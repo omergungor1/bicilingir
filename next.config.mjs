@@ -1,5 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'ocljqspluklgxppjctnj.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
+  },
   // Statik dosyaların yolunu düzeltelim
   poweredByHeader: false,
   reactStrictMode: true,
