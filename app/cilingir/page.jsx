@@ -894,9 +894,25 @@ function CilingirPanelContent() {
     }
   }, [locksmith?.provinceid]);
 
+  // Yeni state ekleyelim: seçilen paket için
+  const [selectedKeyPackage, setSelectedKeyPackage] = useState(null);
+
+  useEffect(() => {
+    if (keyPackages.length > 0) {
+      // Varsayılan olarak "isRecommended" olanı seç
+      const recommendedPackage = keyPackages.find(pkg => pkg.isRecommended);
+      setSelectedKeyPackage(recommendedPackage || keyPackages[0]);
+    }
+  }, [keyPackages]);
+
+  // Anahtar paketi seçme fonksiyonu
+  const handleSelectPackage = (pkg) => {
+    setSelectedKeyPackage(pkg);
+  };
+
   return (
     <div className="container mx-auto pb-10 px-2">
-      <div className="md:hidden sticky top-2 flex justify-between items-center mb-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg">
+      <div className="md:hidden sticky top-2 flex justify-between items-center mb-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg z-10">
         <div className="flex items-center space-x-2">
           <Image src="/logo.png" alt="Bi Çilingir" width={40} height={40} />
           <div>
@@ -2213,42 +2229,87 @@ function CilingirPanelContent() {
                 <div className="mb-8">
                   <h3 className="text-xl font-bold text-gray-800 mb-4">Anahtar Paketleri</h3>
                   <p className="text-sm text-gray-500 mb-4">Öne çıkartma anahtarları ile müşterilerinizin sizlere daha çok ulaşmasını sağlayabilirsiniz.</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {
-                      keyPackages.length === 0 && (
-                        <div className="text-center text-gray-500 h-full w-full flex items-center justify-center">
-                          <p>Anahtar paketleri yükleniyor...</p>
-                        </div>
-                      )
-                    }
-                    {keyPackages.map((pkg) => (
-                      <div key={pkg.id} className={`border flex flex-col justify-between rounded-lg p-4 hover:shadow-md transition-shadow relative ${pkg.isRecommended ? 'border-blue-500 border-2' : ''}`}>
-                        {pkg.isRecommended && (
-                          <div className="absolute -top-3 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
-                            Popüler Seçim
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Sol taraf - Paket kartları */}
+                    <div className="md:col-span-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {
+                          keyPackages.length === 0 && (
+                            <div className="text-center text-gray-500 h-full w-full flex items-center justify-center col-span-full py-10 border rounded-lg">
+                              <p>Anahtar paketleri yükleniyor...</p>
+                            </div>
+                          )
+                        }
+                        {keyPackages.map((pkg) => (
+                          <div 
+                            key={pkg.id} 
+                            onClick={() => handleSelectPackage(pkg)}
+                            className={`border rounded-lg p-4 hover:shadow-md transition-all duration-200 relative cursor-pointer
+                              ${selectedKeyPackage?.id === pkg.id 
+                                ? 'border-blue-500 border-2 bg-blue-50 transform scale-[1.02]' 
+                                : 'border-gray-200 hover:border-blue-200'}
+                              ${pkg.isRecommended ? 'ring-2 ring-blue-400 ring-opacity-50' : ''}
+                            `}
+                          >
+                            {pkg.isRecommended && (
+                              <div className="absolute -top-3 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
+                                Popüler Seçim
+                              </div>
+                            )}
+                            <div className="text-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mx-auto text-blue-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                              </svg>
+                              <h4 className="font-bold text-lg">{pkg.keyAmount} Anahtar</h4>
+                              <p className="text-md font-semibold text-gray-900">{pkg.name}</p>
+                              
+                              <div className="mt-2 flex justify-center">
+                                <div className="px-4 py-1 bg-white rounded-full border border-gray-200 shadow-sm">
+                                  <span className={`font-bold text-lg ${pkg.isRecommended ? 'text-blue-600' : 'text-gray-800'}`}>
+                                    {pkg.price} ₺
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        )}
-                        <div className="text-center mb-4">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-blue-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                          </svg>
-                          <h4 className="font-bold text-lg">{pkg.keyAmount} Anahtar</h4>
-                          <p className="text-lg font-semibold text-gray-900">{pkg.name}</p>
-                          <p className="text-sm text-gray-600">{pkg.description}</p>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <div className="flex flex-col items-start">
-                            <span className={`font-bold text-lg ${pkg.isRecommended ? 'text-blue-600' : ''}`}>{pkg.price} ₺</span>
-                            <p className="text-sm text-gray-600">{(pkg.price / pkg.keyAmount).toFixed(1)} ₺/Anahtar</p>
-                          </div>
-                          <Button 
-                          onClick={() => handlePackagePurchase(pkg.id)}
-                          variant={pkg.isRecommended ? "default" : "outline"} 
-                          className={pkg.isRecommended ? "bg-blue-600 hover:bg-blue-700" : ""}
-                          size="sm">Satın Al</Button>
-                        </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
+
+                    {/* Sağ taraf - Seçili paket detayları */}
+                    <div className="md:col-span-1">
+                      {selectedKeyPackage && (
+                        <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm h-full flex flex-col">
+                          <div className="mb-4 pb-4 border-b border-gray-100">
+                            <h4 className="font-bold text-xl text-gray-800 mb-1">{selectedKeyPackage.name}</h4>
+                            <div className="flex items-center text-blue-600 font-bold text-lg mb-2">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                              </svg>
+                              {selectedKeyPackage.keyAmount} Anahtar
+                            </div>
+                            <p className="text-sm text-gray-600 mb-2">{selectedKeyPackage.description || "Bu paket ile profilinizi üst sıralarda göstererek daha fazla müşteriye ulaşabilirsiniz."}</p>
+                            <div className="flex items-center text-sm text-gray-500">
+                              <span className="mr-2">Birim Fiyat:</span>
+                              <span className="font-semibold">{(selectedKeyPackage.price / selectedKeyPackage.keyAmount).toFixed(1)} ₺/Anahtar</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between mb-4">
+                            <span className="text-gray-700 font-semibold">Toplam Tutar:</span>
+                            <span className="text-xl font-bold text-blue-600">{selectedKeyPackage.price} ₺</span>
+                          </div>
+                          
+                          <Button 
+                            onClick={() => handlePackagePurchase(selectedKeyPackage.id)}
+                            className="mt-auto w-full bg-blue-600 hover:bg-blue-700 text-white"
+                            size="lg">
+                            Satın Al
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
