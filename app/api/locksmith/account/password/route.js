@@ -1,52 +1,63 @@
 import { NextResponse } from 'next/server';
-import { getMe } from '../../../../actions';
-
-// Test modu kontrolü
-const isTestMode = process.env.NEXT_PUBLIC_TEST_MODE === 'true';
+import { checkAuth } from '../../../utils';
 
 export async function PUT(request) {
   try {
-    // Kimlik doğrulama kontrolü
-    const user = await getMe();
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
-    }
-    
-    // Gönderilen verileri al
-    const data = await request.json();
-    
-    // Veri doğrulama
-    if (!data.currentPassword || !data.newPassword) {
+    const { supabase } = await checkAuth(request);
+
+    const { oldPassword, newPassword } = await request.json();
+
+    // Eksik parametreleri kontrol et
+    if (!oldPassword || !newPassword) {
       return NextResponse.json({ 
         error: 'Mevcut şifre ve yeni şifre gereklidir' 
       }, { status: 400 });
     }
+
+    // Önce kullanıcı bilgilerini al
+    const { data: { user } } = await supabase.auth.getUser();
     
-    // Yeni şifre güvenlik kontrolü
-    if (data.newPassword.length < 8) {
+    if (!user) {
       return NextResponse.json({ 
-        error: 'Yeni şifre en az 8 karakter uzunluğunda olmalıdır' 
+        error: 'Kullanıcı bulunamadı' 
+      }, { status: 401 });
+    }
+    
+    // Mevcut şifre ile giriş yapmayı dene
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: oldPassword
+    });
+    
+    // Mevcut şifre hatalıysa
+    if (signInError) {
+      return NextResponse.json({ 
+        error: 'Mevcut şifre doğru değil',
+        details: signInError.message
       }, { status: 400 });
     }
     
-    if (isTestMode) {
-      // Test modunda başarılı yanıt döndür
+    // Şifreyi güncelle
+    const { data, error: updateError } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+    
+    if (updateError) {
       return NextResponse.json({ 
-        message: 'Şifre başarıyla güncellendi',
-        updatedAt: new Date().toISOString()
-      });
+        error: 'Şifre güncellenirken bir hata oluştu',
+        details: updateError.message
+      }, { status: 500 });
     }
     
-    // Gerçek sistemde şifreyi güncelle
-    // Örnek implementasyon (gerçek kodda burada şifre güncelleme işlemi olacak)
-    
-    return NextResponse.json({ 
-      message: 'Şifre başarıyla güncellendi',
-      updatedAt: new Date().toISOString()
+    return NextResponse.json({
+      success: true,
+      message: "Şifreniz başarıyla güncellendi",
     });
   } catch (error) {
-    console.error('Şifre güncellenirken bir hata oluştu:', error);
-    return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 });
+    console.error('Şifre güncelleme hatası:', error);
+    return NextResponse.json({ 
+      error: 'Şifre güncellenirken bir hata oluştu',
+      details: error.message 
+    }, { status: 500 });
   }
 } 

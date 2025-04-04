@@ -1,11 +1,7 @@
 Locksmith yönetim paneli için API endpoint önerileri:
 Şimdilik sadece test datası ile çalışacağız. Bu yüzden supabase entegrasyonunu sonra yapacağız. 
-Test modda olduğumuzu isTestMode ile kontrol edelim.
+Test modu yok!
 
---
-// lib/utils.js buna benzer bir yapı oluşturabilirsin.
-export const isTestMode = process.env.NEXT_PUBLIC_TEST_MODE === 'true'
---
 
 ### 1. Dashboard Endpoint'leri
 ```

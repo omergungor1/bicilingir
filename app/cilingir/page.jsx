@@ -42,7 +42,10 @@ function CilingirPanelContent() {
   const [profileImageIndex, setProfileImageIndex] = useState(0);
   const [isUpdatingServices, setIsUpdatingServices] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [isWorkingHoursUpdating, setIsWorkingHoursUpdating] = useState(false);
+  const [isSavingDailyKeys, setIsSavingDailyKeys] = useState(false);
 
+  
   const [activeTab, setActiveTab] = useState(tabParam || "dashboard");
   const [isCertificateDialogOpen, setIsCertificateDialogOpen] = useState(false);
   const [reviews, setReviews] = useState([]);
@@ -123,15 +126,38 @@ function CilingirPanelContent() {
     router.push('/cilingir/auth/login');
   };
 
-  const [dailyKeys, setDailyKeys] = useState({
-    Pazartesi: {key: 50, isOpen: true},
-    Salı: {key: 50, isOpen: true},
-    Çarşamba: {key: 50, isOpen: true},
-    Perşembe: {key: 50, isOpen: true},
-    Cuma: {key: 50, isOpen: true},
-    Cumartesi: {key: 100, isOpen: true},
-    Pazar: {key: 100, isOpen: true},
-  });
+  const [dailyKeys, setDailyKeys] = useState([]);
+
+
+
+  const fetchDailyKeys = async () => {
+    try {
+      const response = await fetch('/api/locksmith/ads/usage-preferences', {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        showToast("Günlük anahtar tercihleri alınırken bir hata oluştu", "error");
+        return;
+      }
+      
+      const result = await response.json();
+      
+      if (!result.success || !result.data) {
+        showToast("Günlük anahtar tercihleri alınırken bir hata oluştu", "error");
+        return;
+      }
+      
+      // State'i güncelle
+      setDailyKeys(result.data);
+      
+    } catch (error) {
+      console.error("Günlük anahtar tercihleri alınırken bir hata oluştu:", error);
+      showToast("Günlük anahtar tercihleri alınırken bir hata oluştu", "error");
+    }
+  };
+
+
   const [keyUsageHistory, setKeyUsageHistory] = useState([
     { id: 1, keyUsage: 5, activite: "Aramada listelendin", date: "2025-03-23 10:00:00"},
     { id: 2, keyUsage: 30, activite: "Bir arama aldınız", date: "2025-03-23 10:00:00" },
@@ -308,6 +334,7 @@ function CilingirPanelContent() {
       fetchProvinces(),
       fetchDistricts(),
       fetchBusinessImages(),
+      fetchDailyKeys(),
     ]);
   }, []);
 
@@ -351,11 +378,15 @@ function CilingirPanelContent() {
     router.push(`?${params.toString()}`);
   };
 
-  const handleDailyKeyChange = (day, value) => {
+  const handleDailyKeyChange = (index, keyAmount, isActive) => {
     setDailyKeys(prev => ({
       ...prev,
-      [day]: { ...prev[day], key: parseInt(value) || 0 }
+      [index]: { ...prev[index], keyamount: parseInt(keyAmount) || 0, isactive: isActive }
     }));
+    // setDailyKeys(prev => ({
+    //   ...prev,
+    //   [index]: { ...prev[index], keyamount: parseInt(e.target.value) }
+    // }));
   };
 
   const handleServiceActiveChange = async (serviceId, isActive) => {
@@ -569,7 +600,20 @@ function CilingirPanelContent() {
       setIsPurchasePending(true);
       
       // API isteği simülasyonu - gerçek uygulamada burası API çağrısı olacak
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await fetch('/api/locksmith/ads/buy-package', {
+        method: 'POST',
+        body: JSON.stringify({
+          packageId: selectedPackage.id,
+          purchaseNote: purchaseNote,
+        }),
+        credentials: 'include',
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Anahtar paketi satın alma hatası');
+      }
       
       // İstek başarılı oldu
       showToast("Anahtar paketi satın alma isteğiniz yöneticiye iletildi", "success");
@@ -587,6 +631,7 @@ function CilingirPanelContent() {
 
   // Çalışma saatleri güncelleme fonksiyonu
   const handleWorkingHoursUpdate = async () => {
+    setIsWorkingHoursUpdating(true);
     try {
       const response = await fetch('/api/locksmith/profile/working-hours', {
         method: 'PUT',
@@ -615,6 +660,8 @@ function CilingirPanelContent() {
     } catch (error) {
       showToast("Çalışma saatleri güncellenirken bir hata oluştu", "error");
       console.error("Çalışma saatleri güncelleme hatası:", error);
+    } finally {
+      setIsWorkingHoursUpdating(false);
     }
   };
 
@@ -908,6 +955,94 @@ function CilingirPanelContent() {
   // Anahtar paketi seçme fonksiyonu
   const handleSelectPackage = (pkg) => {
     setSelectedKeyPackage(pkg);
+  };
+
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
+  // Şifre güncelleme fonksiyonu
+  const handleUpdatePassword = async () => {
+    // Şifre kontrolü
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      showToast("Şifreler eşleşmiyor", "error");
+      return;
+    }
+
+    if (!passwordForm.currentPassword || !passwordForm.newPassword) {
+      showToast("Mevcut şifre ve yeni şifre gereklidir", "error");
+      return;
+    }
+
+    // Minimum şifre uzunluğu kontrolü
+    if (passwordForm.newPassword.length < 6) {
+      showToast("Yeni şifre en az 6 karakter uzunluğunda olmalıdır", "error");
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+
+    try {
+      const response = await fetch('/api/locksmith/account/password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          oldPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        }),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Şifre güncellenirken bir hata oluştu');
+      }
+
+      // Formu temizle
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+
+      showToast("Şifreniz başarıyla güncellendi", "success");
+    } catch (error) {
+      console.error("Şifre güncelleme hatası:", error);
+      showToast(error.message || "Şifre güncellenirken bir hata oluştu", "error");
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
+  // Günlük anahtar tercihlerini kaydetme fonksiyonu
+  const handleSaveDailyKeys = async () => {
+    setIsSavingDailyKeys(true);
+    try {
+      // Günleri ve API tarafından beklenen biçimi eşleştir
+      
+      const response = await fetch('/api/locksmith/ads/usage-preferences', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({dailyKeys}),
+        credentials: 'include'
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        showToast("Günlük anahtar tercihleri başarıyla kaydedildi", "success");
+      } else {
+        showToast(result.error || "Günlük anahtar tercihleri kaydedilirken bir hata oluştu", "error");
+      }
+    } catch (error) {
+      console.error("Günlük anahtar tercihleri kaydedilirken bir hata oluştu:", error);
+      showToast("Günlük anahtar tercihleri kaydedilirken bir hata oluştu", "error");
+    } finally {
+      setIsSavingDailyKeys(false);
+    }
   };
 
   return (
@@ -1556,6 +1691,7 @@ function CilingirPanelContent() {
                       <div className="flex justify-end mt-4">
                         <Button 
                           onClick={handleWorkingHoursUpdate}
+                          disabled={isWorkingHoursUpdating}
                           className="bg-blue-600 hover:bg-blue-700 text-white"
                         >
                           Çalışma Saatlerini Kaydet
@@ -2316,45 +2452,40 @@ function CilingirPanelContent() {
                 {/* Günlük Anahtar Kullanım Tercihleri */}
                 <div>
                   <h3 className="text-xl font-bold text-gray-800 mb-4">Günlük Anahtar Kullanım Tercihleriniz</h3>
-                  <p className="text-sm text-gray-500 mb-4 flex items-center"><Info className="w-4 h-4 mr-2"/> Tahmini Aylık Anahtar Kullanımı: {Object.values(dailyKeys).reduce((sum, day) => sum + (4*day.key || 0), 0)} Anahtar</p>
+                  <p className="text-sm text-gray-500 mb-4 flex items-center"><Info className="w-4 h-4 mr-2"/> Tahmini Aylık Anahtar Kullanımı: {dailyKeys.reduce((sum, day) => sum + (4*day.keyamount || 0), 0)} Anahtar</p>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {Object.entries(dailyKeys).map(([day, _]) => (
-                      <div key={day} className="border rounded-lg p-4 bg-gray-10">
-                        <label className="block text-md font-bold text-gray-700 mb-2">{day}</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[...Array(7)].map((_, index) => (
+                      <div key={index} className="border rounded-lg p-4 bg-gray-10">
+                        <label className="block text-md font-bold text-gray-700 mb-2">{dailyKeys[index]?.dayname}</label>
                         <div className="flex items-center space-x-2">
                           <Checkbox 
-                            id={`adday-${day}`} 
-                            checked={dailyKeys[day].isOpen}
-                            onCheckedChange={(checked) => {
-                              setDailyKeys(prev => ({
-                                ...prev,
-                                [day]: { ...prev[day], isOpen: !!checked }
-                              }));
-                            }}
+                            id={`adday-${dailyKeys[index]?.dayofweek}`} 
+                            checked={dailyKeys[index]?.isactive}
+                            onCheckedChange={(checked) => handleDailyKeyChange(index, dailyKeys[index]?.keyamount, checked)}
                           />
                           <label 
-                            htmlFor={`adday-${day}`} 
-                            className={`font-medium ${!dailyKeys[day].isOpen ? "text-gray-400" : ""}`}
+                            htmlFor={`adday-${dailyKeys[index]?.dayofweek}`} 
+                            className={`font-medium ${!dailyKeys[index]?.isactive ? "text-gray-400" : ""}`}
                           >
                             Reklam Açık
                           </label>
                         </div>
                         <div className="flex items-center space-x-2 md:mt-2 mt-2">
-                          <label className={`font-medium ${!dailyKeys[day].isOpen ? "text-gray-400" : ""}`}>
+                          <label className={`font-medium ${!dailyKeys[index]?.isactive ? "text-gray-400" : ""}`}>
                             Günlük Anahtar:
                           </label>
                           <Input 
                             type="number"
                             min="1"
                             max="100"
-                            value={dailyKeys[day].key || 10}
-                            onChange={(e) => handleDailyKeyChange(day, parseInt(e.target.value))}
-                            disabled={!dailyKeys[day].isOpen}
-                            className={`w-20 ${!dailyKeys[day].isOpen ? "bg-gray-100 text-gray-400" : ""}`}
+                            value={dailyKeys[index]?.keyamount || 10}
+                            onChange={(e) => handleDailyKeyChange(index, e.target.value, dailyKeys[index]?.isactive)}
+                            disabled={!dailyKeys[index]?.isactive}
+                            className={`w-20 ${!dailyKeys[index]?.isactive ? "bg-gray-100 text-gray-400" : ""}`}
                           />
-                          <span className={`ml-2 text-sm ${dailyKeys[day].isOpen ? "text-green-600" : "text-red-500"}`}>
-                            {dailyKeys[day].isOpen ? "Reklam Açık" : "Reklam Kapalı"}
+                          <span className={`ml-2 text-sm ${dailyKeys[index]?.isactive ? "text-green-600" : "text-red-500"}`}>
+                            {dailyKeys[index]?.isactive ? "Reklam Açık" : "Reklam Kapalı"}
                           </span>
                         </div>
                       </div>
@@ -2363,7 +2494,11 @@ function CilingirPanelContent() {
 
 
                   <div className="mt-6">
-                    <Button className="bg-green-600 hover:bg-green-700 text-white">
+                    <Button 
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                      disabled={isSavingDailyKeys}
+                      onClick={handleSaveDailyKeys}
+                    >
                       Değişiklikleri Kaydet
                     </Button>
                   </div>
@@ -2453,13 +2588,22 @@ function CilingirPanelContent() {
                           onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
                         />
                       </div>
-                      <Button onClick={() => {
-                        if (passwordForm.newPassword === passwordForm.confirmPassword) {
-                          showToast("Şifre başarıyla güncellendi", "success");
-                        } else {
-                          showToast("Şifreler eşleşmiyor", "error");
-                        }
-                      }}>Şifreyi Güncelle</Button>
+                      <Button 
+                        onClick={handleUpdatePassword}
+                        disabled={isUpdatingPassword}
+                      >
+                        {isUpdatingPassword ? (
+                          <div className="flex items-center">
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            İşleniyor...
+                          </div>
+                        ) : (
+                          'Şifreyi Güncelle'
+                        )}
+                      </Button>
                     </div>
                   </div>
                 
@@ -2588,7 +2732,8 @@ export default function CilingirPanel() {
       router.push('/cilingir/auth/login');
     }
   }, [isAuthenticated, role, loading, router]);
-  
+
+
   // Yükleniyor veya yetki kontrolü
   if (loading || !isAuthenticated) {
     return (

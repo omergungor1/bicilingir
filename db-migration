@@ -26,20 +26,6 @@ CREATE TABLE districts (
     UNIQUE(province_id, name)
 );
 
--- Çilingir Paketleri Tablosu
-CREATE TABLE key_packages (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name TEXT NOT NULL,
-    description TEXT,
-    key_amount INTEGER NOT NULL,
-    price NUMERIC(10,2) NOT NULL,
-    is_unlimited BOOLEAN DEFAULT FALSE,
-    startDate DATE,
-    endDate DATE,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
 -- Çilingirler Tablosu
 CREATE TABLE locksmiths (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -124,6 +110,20 @@ CREATE TABLE service_areas (
     PRIMARY KEY (locksmithId, provinceId, districtId, timePeriod)
 );
 
+-- Çilingir Paketleri Tablosu
+CREATE TABLE key_packages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    description TEXT,
+    key_amount INTEGER NOT NULL,
+    price NUMERIC(10,2) NOT NULL,
+    is_unlimited BOOLEAN DEFAULT FALSE,
+    startDate DATE,
+    endDate DATE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Çilingir Key Bakiyesi Tablosu
 CREATE TABLE key_balance (
     locksmithId UUID PRIMARY KEY REFERENCES locksmiths(id),
@@ -176,7 +176,20 @@ CREATE TABLE key_transactions (
     paidAmount NUMERIC(10,2),
     balanceBefore INTEGER NOT NULL,
     balanceAfter INTEGER NOT NULL,
-    createdAt TIMESTAMPTZ DEFAULT NOW()
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (
+        status IN ('pending', 'approved', 'rejected', 'completed', 'cancelled') --approved -> onayladım, completed -> ödeme yapıldı ve bakiye yüklendi
+    ),
+    requestNote TEXT,
+    adminNote TEXT,
+    reviewedBy UUID REFERENCES auth.users(id),
+    reviewedAt TIMESTAMPTZ,
+    paymentMethod TEXT CHECK (
+        paymentMethod IN ('nakit', 'eft', 'havale', 'kredi_kartı', 'manuel')
+    ),
+    paymentReference TEXT,
+    paymentMethodDetails TEXT,
+    createdAt TIMESTAMPTZ DEFAULT NOW(),
+    updatedAt TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- İncelemeler Tablosu

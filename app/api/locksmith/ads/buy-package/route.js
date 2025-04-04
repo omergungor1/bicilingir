@@ -1,65 +1,68 @@
 import { NextResponse } from 'next/server';
-import { getMe } from '../../../../actions';
+import { checkAuth } from '../../../utils';
 
-// Test modu kontrolü
-const isTestMode = process.env.NEXT_PUBLIC_TEST_MODE === 'true';
+export async function POST(request) {
+  const { locksmithId, supabase } = await checkAuth(request);
 
-export async function PUT(request) {
-  try {
-    // Kimlik doğrulama kontrolü
-    const user = await getMe();
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
-    }
-    
-    // Gönderilen verileri al
-    const data = await request.json();
-    
-    // Paket ID kontrolü
-    if (!data.packageId || typeof data.packageId !== 'number') {
-      return NextResponse.json({ 
-        error: 'Geçerli bir paket ID\'si gereklidir' 
-      }, { status: 400 });
-    }
-    
-    if (isTestMode) {
-      // Test modunda başarılı yanıt döndür
-      return NextResponse.json({ 
-        message: 'Paket satın alma talebi başarıyla oluşturuldu',
-        order: {
-          id: Math.floor(Math.random() * 1000),
-          packageId: data.packageId,
-          status: 'pending',
-          createdAt: new Date().toISOString(),
-          paymentDetails: {
-            amount: 499,
-            currency: 'TRY',
-            paymentUrl: 'https://payment-gateway.test/order/123'
-          }
-        }
-      });
-    }
-    
-    // Gerçek sistemde paket satın alma işlemini başlat
-    // Örnek implementasyon (gerçek kodda burada ödeme sistemi entegrasyonu olacak)
-    
-    return NextResponse.json({ 
-      message: 'Paket satın alma talebi başarıyla oluşturuldu',
-      order: {
-        id: Math.floor(Math.random() * 1000),
-        packageId: data.packageId,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-        paymentDetails: {
-          amount: 0,
-          currency: 'TRY',
-          paymentUrl: ''
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Paket satın alma işlemi sırasında bir hata oluştu:', error);
-    return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 });
+  const { packageId, purchaseNote } = await request.json();
+
+  if (!packageId) {
+    return NextResponse.json({
+      error: 'Paket seçilmemiş!',
+    }, { status: 400 });
   }
-} 
+
+
+  const { data: keybalance, error: keybalanceError } = await supabase
+    .from('key_balance')
+    .select('totalkeybalance')
+    .eq('locksmithid', locksmithId)
+    .single();
+
+
+    if (keybalanceError) {
+      return NextResponse.json({
+        error: 'Locksmith bulunamadı',
+      }, { status: 404 });
+    }
+    
+    const { data: packageData, error: packageError } = await supabase
+    .from('key_packages')
+    .select('keyAmount, price')
+    .eq('id', packageId)
+    .single();
+    
+  if (packageError) {
+    return NextResponse.json({
+      error: 'Paket bulunamadı',
+    }, { status: 404 });
+  }
+
+  const data = {
+    locksmithid: locksmithId,
+    packageid: packageId,
+    keyamount: packageData.keyAmount,
+    transactiontype: 'purchase',
+    paidamount: packageData.price,
+    balancebefore: keybalance.totalkeybalance,
+    balanceafter: keybalance.totalkeybalance,
+    status: 'pending',
+    requestnote: purchaseNote,
+    createdat: new Date(),
+  }
+
+  const { data: keyTransaction, error: keyTransactionError } = await supabase
+    .from('key_transactions')
+    .insert(data)
+    .select();
+
+  if (keyTransactionError) {
+    return NextResponse.json({
+      error: 'Paket satın alınamadı',
+    }, { status: 400 });
+  }
+
+  return NextResponse.json({
+    message: 'Paket satın alındı',
+  }, { status: 200 });  
+}

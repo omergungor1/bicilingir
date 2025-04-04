@@ -1,59 +1,139 @@
 import { NextResponse } from 'next/server';
-import { getMe } from '../../../../actions';
+import { checkAuth } from '../../../utils';
 
-// Test modu kontrolü
-const isTestMode = process.env.NEXT_PUBLIC_TEST_MODE === 'true';
-
-export async function PUT(request) {
+export async function GET(request) {
   try {
-    // Kimlik doğrulama kontrolü
-    const user = await getMe();
+    const { locksmithId, supabase } = await checkAuth(request);
+
+    // Veritabanından mevcut günlük anahtar tercihlerini çek
+    const { data, error } = await supabase
+      .from('daily_key_preferences')
+      .select('*')
+      .eq('locksmithid', locksmithId);
+
+    if (error) {
+      console.error('Günlük anahtar tercihlerini çekerken hata:', error);
+      return NextResponse.json({
+        error: error.message,
+      }, { status: 500 });
+    } 
+
+    // Türkçe gün isimleri
+    const dayNames = [
+      'Pazartesi', // 0
+      'Salı', // 1
+      'Çarşamba', // 2
+      'Perşembe', // 3
+      'Cuma', // 4
+      'Cumartesi', // 5
+      'Pazar' // 6
+    ];
+
+    // Tüm günleri içeren tam bir veri kümesi oluştur
+    const completeData = {};
     
-    if (!user) {
-      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
+    // Varsayılan değerlerle başlangıç ​​verisi oluştur
+    for (let i = 0; i < 7; i++) {
+      completeData[i] = {
+        dayofweek: i,
+        dayname: dayNames[i],
+        keyamount: 0,
+        isactive: false,
+        locksmithid: locksmithId
+      };
     }
+
     
-    // Gönderilen verileri al
-    const data = await request.json();
-    
-    // Veri doğrulama
-    if (typeof data.isEnabled !== 'boolean') {
-      return NextResponse.json({ 
-        error: 'isEnabled alanı boolean olmalıdır' 
-      }, { status: 400 });
-    }
-    
-    if (typeof data.dailyKeyLimit !== 'number' || data.dailyKeyLimit < 0) {
-      return NextResponse.json({ 
-        error: 'dailyKeyLimit alanı pozitif bir sayı olmalıdır' 
-      }, { status: 400 });
-    }
-    
-    if (isTestMode) {
-      // Test modunda başarılı yanıt döndür
-      return NextResponse.json({ 
-        message: 'Kullanım tercihleri başarıyla güncellendi',
-        preferences: {
-          isEnabled: data.isEnabled,
-          dailyKeyLimit: data.dailyKeyLimit,
-          updatedAt: new Date().toISOString()
-        }
+    // Veritabanından gelen verileri ekle
+    if (data && data.length > 0) {
+      data.forEach(item => {
+        completeData[item.dayofweek] = {
+          ...completeData[item.dayofweek],
+          keyamount: item.keyamount || 0,
+          isactive: item.isActive !== undefined ? item.isActive : false
+        };
       });
     }
     
-    // Gerçek sistemde kullanım tercihlerini güncelle
-    // Örnek implementasyon (gerçek kodda burada veritabanı sorgusu olacak)
-    
-    return NextResponse.json({ 
-      message: 'Kullanım tercihleri başarıyla güncellendi',
-      preferences: {
-        isEnabled: data.isEnabled,
-        dailyKeyLimit: data.dailyKeyLimit,
-        updatedAt: new Date().toISOString()
-      }
+    // Veriyi günlere göre sıralı diziye dönüştür
+    const resultArray = Object.values(completeData);
+
+    return NextResponse.json({
+      success: true,
+      data: resultArray,
     });
   } catch (error) {
-    console.error('Kullanım tercihleri güncellenirken bir hata oluştu:', error);
-    return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 });
+    console.error('Günlük anahtar tercihleri API hatası:', error);
+    return NextResponse.json({
+      error: 'Sunucu hatası',
+      details: error.message
+    }, { status: 500 });
+  }
+}
+
+export async function PUT(request) {
+  try {
+    const { locksmithId, supabase } = await checkAuth(request);
+    const {dailyKeys} = await request.json();
+
+    //Object bekleniyor
+    if (typeof dailyKeys !== 'object') {
+      return NextResponse.json({
+        error: 'Geçersiz veri formatı. Nesne bekleniyor.',
+      }, { status: 400 });
+    }
+
+    
+    // Önce bu çilingire ait tüm kayıtları sil
+    const { error: deleteError } = await supabase
+      .from('daily_key_preferences')
+      .delete()
+      .eq('locksmithid', locksmithId);
+      
+    if (deleteError) {
+      console.error('Mevcut tercihler silinirken hata:', deleteError);
+      return NextResponse.json({
+        error: 'Tercihler güncellenirken bir hata oluştu',
+        details: deleteError.message
+      }, { status: 500 });
+    }
+
+    if (Object.keys(dailyKeys).length === 0 || Object.keys(dailyKeys).length !== 7) {
+      return NextResponse.json({
+        error: 'Geçersiz veri formatı. 7 gün tercihi gerekiyor.',
+      }, { status: 400 });
+    }
+
+
+    // Yeni kayıtları ekle
+    const dataToInsert = Object.values(dailyKeys).map(pref => ({
+      locksmithid: locksmithId,
+      dayofweek: pref.dayofweek,
+      keyamount: pref.keyamount || 0,
+      isActive: pref.isactive || false
+    }));
+    
+    const { error: insertError } = await supabase
+      .from('daily_key_preferences')
+      .insert(dataToInsert);
+      
+    if (insertError) {
+      console.error('Yeni tercihler eklenirken hata:', insertError);
+      return NextResponse.json({
+        error: 'Tercihler güncellenirken bir hata oluştu',
+        details: insertError.message
+      }, { status: 500 });
+    }
+    
+    return NextResponse.json({
+      success: true,
+      message: "Günlük anahtar tercihleri başarıyla güncellendi",
+    });
+  } catch (error) {
+    console.error('Günlük anahtar tercihleri güncelleme hatası:', error);
+    return NextResponse.json({
+      error: 'Sunucu hatası',
+      details: error.message
+    }, { status: 500 });
   }
 } 
