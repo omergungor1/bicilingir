@@ -40,6 +40,8 @@ function CilingirPanelContent() {
   const [purchaseNote, setPurchaseNote] = useState("");
   const [isPurchasePending, setIsPurchasePending] = useState(false);
   const [profileImageIndex, setProfileImageIndex] = useState(0);
+  const [isUpdatingServices, setIsUpdatingServices] = useState(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 
   const [activeTab, setActiveTab] = useState(tabParam || "dashboard");
   const [isCertificateDialogOpen, setIsCertificateDialogOpen] = useState(false);
@@ -49,9 +51,6 @@ function CilingirPanelContent() {
   const [activeReviewFilter, setActiveReviewFilter] = useState("all");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [keyBalance, setKeyBalance] = useState(1500); // Örnek roket bakiyesi
-  const [maxCustomersPerHour, setMaxCustomersPerHour] = useState(2);
-  const [selectedCity, setSelectedCity] = useState(1);
-  const [selectedDistrict, setSelectedDistrict] = useState(1);
 
   const [locksmith, setLocksmith] = useState({
     abouttext: "",
@@ -99,7 +98,7 @@ function CilingirPanelContent() {
     review_percent: 0,
   });
 
-  const handleLoadRecentActivities = async () => {
+  const fetchRecentActivities = async () => {
     const response = await fetch('/api/locksmith/dashboard/recent-activities');
     const data = await response.json();
     setRecentActivities(data);
@@ -147,12 +146,37 @@ function CilingirPanelContent() {
 
 
   const [serviceList, setServiceList] = useState([]);
+
+
+
   const fetchServices = async () => {
-    //api/public/services
-    const response = await fetch('/api/public/services');
-    const data = await response.json();
-    setServiceList(data.services);
+    try {
+      const response = await fetch('/api/locksmith/profile/active-services', {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        console.error('Aktif hizmetler getirilirken bir hata oluştu:', response.statusText);
+        showToast("Hizmet listesi yüklenirken bir hata oluştu", "error");
+        return;
+      }
+      
+      const data = await response.json();
+      
+      if (data.error) {
+        console.error('Aktif hizmet hatası:', data.error);
+        showToast("Hizmet listesi yüklenirken bir hata oluştu", "error");
+        return;
+      }
+    
+      setServiceList(data.services || []);
+
+    } catch (error) {
+      console.error('Aktif hizmetler getirilirken bir hata oluştu:', error);
+      showToast("Hizmet listesi yüklenirken bir hata oluştu", "error");
+    }
   };
+
   const fetchReviews = async () => {
     // const response = await getLocksmithsReviews();
     // setReviews(response.reviews);
@@ -210,7 +234,6 @@ function CilingirPanelContent() {
         credentials: 'include' // Çerezleri isteğe dahil et
       });
       const data = await response.json();
-      console.log('Çilingir profili verileri:', data.locksmith);
       if (data && !data.error) {
         setLocksmith(data.locksmith);
       } else if (data.error) {
@@ -257,20 +280,41 @@ function CilingirPanelContent() {
     }
   };
 
+  // useEffect(() => {
+  //   fetchLocksmith();
+  //   fetchDailyHours();
+  //   fetchRecentActivities();
+  //   fetchDashboardStats();
+  //   fetchReviews();
+  //   fetchNotifications();
+  //   fetchKeyPackages();
+  //   fetchProvinces();
+  //   fetchDistricts();
+  //   fetchServices();
+  //   fetchBusinessImages();
+  // }, []);
+
+
   useEffect(() => {
-    fetchServices();
-    fetchReviews();
-    fetchDashboardStats();
-    handleLoadRecentActivities();
-    fetchDailyHours();
-    fetchLocksmith();
-    fetchNotifications();
-    fetchProvinces(); // Sadece il listesini getir
-    // İlçeler profil yüklendikten sonra otomatik getirilecek
-    fetchKeyPackages();
+    Promise.all([
+      fetchLocksmith(),
+      fetchDailyHours(),
+      fetchRecentActivities(),
+      fetchDashboardStats(),
+      fetchReviews(),
+      fetchNotifications(),
+      fetchKeyPackages(),
+      fetchServices(),
+      fetchProvinces(),
+      fetchDistricts(),
+      fetchBusinessImages(),
+    ]);
   }, []);
 
-  const [activeServices, setActiveServices] = useState([1,2,4]);
+  const [activeServices, setActiveServices] = useState([]);
+
+
+
 
   const [businessImages, setBusinessImages] = useState([]);
   const [mainImageIndex, setMainImageIndex] = useState(0);
@@ -314,13 +358,35 @@ function CilingirPanelContent() {
     }));
   };
 
-  const handleServiceActiveChange = (id, checked) => {
-    if (checked) {
-      setActiveServices(prevServices => [...prevServices, id]);
-    } else {
-      setActiveServices(prevServices => prevServices.filter(s => s !== id));
-    }
+  const handleServiceActiveChange = async (serviceId, isActive) => {
+    //fetch burada değil, buton ile yapılacak.
+    //Sadece state güncellenecek.
+    setServiceList(prev => prev.map(service => 
+      service.id === serviceId ? { ...service, isLocksmithActive: isActive } : service
+    ));
   };
+
+  const handleUpdateServices = async () => {
+    setIsUpdatingServices(true);
+    const serviceIds = serviceList.map(service => ({
+      serviceid: service.id,
+      isactive: service.isLocksmithActive
+    }));
+      //supabase ile güncelle
+      const response = await fetch(`/api/locksmith/profile/active-services`, {
+        method: 'PUT',
+        credentials: 'include',
+        body: JSON.stringify({serviceIds})
+      });
+
+      if (!response.ok) {
+        console.error('Hizmet güncellenirken bir hata oluştu');
+      } else {
+        showToast('Hizmetler başarıyla güncellendi', 'success');
+      }
+      setIsUpdatingServices(false);
+  };
+
 
   // Profil ve işletme resimlerini getir
   const fetchBusinessImages = async () => {
@@ -609,6 +675,7 @@ function CilingirPanelContent() {
   };
 
   const handleUpdateLocksmithData = async () => {
+    setIsUpdatingProfile(true);
     try {
       const response = await fetch('/api/locksmith/profile', {
         method: 'PUT',
@@ -629,6 +696,8 @@ function CilingirPanelContent() {
     } catch (error) {
       showToast("Profil bilgileri güncellenirken bir hata oluştu", "error");
       console.error("Profil bilgileri güncellenirken bir hata oluştu:", error);
+    } finally {
+      setIsUpdatingProfile(false);
     }
   };
 
@@ -724,18 +793,6 @@ function CilingirPanelContent() {
     setKeyPackages(data.packages);
   };
 
-  useEffect(() => {
-    Promise.all([
-      fetchLocksmith(),
-      fetchDailyHours(),
-      fetchDashboardStats(),
-      fetchReviews(),
-      fetchServices(),
-      fetchNotifications(),
-      fetchKeyPackages(),
-      fetchBusinessImages(),
-    ]);
-  }, []);
 
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
@@ -1749,6 +1806,7 @@ function CilingirPanelContent() {
                   <div className="pt-4">
                     <Button
                       onClick={()=> handleUpdateLocksmithData()}
+                      disabled={isUpdatingProfile}
                     >Değişiklikleri Kaydet</Button>
                   </div>
                 </div>
@@ -1765,35 +1823,35 @@ function CilingirPanelContent() {
               <CardContent>
                 <div className="space-y-4 mb-6">
                   {serviceList.map((service, index) => (
-                    <Card key={index} className={`mb-4 overflow-hidden transition-all duration-200 hover:shadow-md border ${activeServices.includes(service.id) ? 'border-blue-200 bg-blue-50' : 'border-gray-200 bg-gray-50'}`}>
+                    <Card key={index} className={`mb-4 overflow-hidden transition-all duration-200 hover:shadow-md border ${service.isLocksmithActive ? 'border-blue-200 bg-blue-50' : 'border-gray-200 bg-gray-50'}`}>
                       <CardContent className="p-0">
                         <div className="flex flex-col">
                           {/* Başlık ve Checkbox Kısmı */}
                           <div className="flex items-center p-4 border-b border-gray-100">
                             <Checkbox 
                               id={`service-${service.id}`} 
-                              checked={activeServices.includes(service.id)}
+                              checked={service.isLocksmithActive}
                               onCheckedChange={(checked) => handleServiceActiveChange(service.id, checked)}
                               className="mr-3 h-5 w-5"
                             />
                             <label 
                               htmlFor={`service-${service.id}`} 
-                              className={`font-medium text-lg ${activeServices.includes(service.id) ? 'text-blue-700' : 'text-gray-500'}`}
+                              className={`font-medium text-lg ${service.isLocksmithActive ? 'text-blue-700' : 'text-gray-500'}`}
                             >
                               {service.name}
                             </label>
                             
-                            {!activeServices.includes(service.id) && (
+                            {!service.isLocksmithActive && (
                               <span className="ml-auto text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-600">Aktif Değil</span>
                             )}
                             
-                            {activeServices.includes(service.id) && (
+                            {service.isLocksmithActive && (
                               <span className="ml-auto text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-600">Aktif</span>
                             )}
                           </div>
                           
                           {/* Fiyat Bilgileri */}
-                          <div className={`grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 ${activeServices.includes(service.id) ? 'opacity-100' : 'opacity-70'}`}>
+                          <div className={`grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 ${service.isLocksmithActive ? 'opacity-100' : 'opacity-70'}`}>
                             {/* Mesai Tarifesi */}
                             <div className="flex flex-col p-3 rounded-lg bg-white shadow-sm">
                               <div className="flex items-center mb-2">
@@ -1841,7 +1899,9 @@ function CilingirPanelContent() {
                 
                 <div className="flex justify-start">
                   <Button 
-                  className="bg-blue-600 hover:bg-blue-700 text-white">
+                    onClick={()=> handleUpdateServices()}
+                    disabled={isUpdatingServices}
+                    className="bg-blue-600 hover:bg-blue-700 text-white">
                     Değişiklikleri Kaydet
                   </Button>
                 </div>
@@ -2177,7 +2237,10 @@ function CilingirPanelContent() {
                           <p className="text-sm text-gray-600">{pkg.description}</p>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className={`font-bold text-lg ${pkg.isRecommended ? 'text-blue-600' : ''}`}>{pkg.price} ₺</span>
+                          <div className="flex flex-col items-start">
+                            <span className={`font-bold text-lg ${pkg.isRecommended ? 'text-blue-600' : ''}`}>{pkg.price} ₺</span>
+                            <p className="text-sm text-gray-600">{(pkg.price / pkg.keyAmount).toFixed(1)} ₺/Anahtar</p>
+                          </div>
                           <Button 
                           onClick={() => handlePackagePurchase(pkg.id)}
                           variant={pkg.isRecommended ? "default" : "outline"} 
