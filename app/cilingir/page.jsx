@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Checkbox } from "../../components/ui/checkbox";
-import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X, Footprints, File, ExternalLinkIcon, Clock, Search, CheckCircle, AlertTriangle, AlertCircle, Bell, User, Trash2 } from "lucide-react";
+import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X, Footprints, File, ExternalLinkIcon, Clock, Search, CheckCircle, AlertTriangle, AlertCircle, Bell, User, Trash2, MessageCircle, Globe } from "lucide-react";
 import { useToast } from "../../components/ToastContext";
 import Link from "next/link";
 import Image from "next/image";
@@ -25,7 +25,6 @@ import { supabase } from "../../lib/supabase";
 import { Textarea } from "../../components/ui/textarea";
 import { formatPhoneNumber } from "../../lib/utils";
 
-
 function CilingirPanelContent() {
   const { showToast } = useToast();
   const searchParams = useSearchParams();
@@ -44,16 +43,29 @@ function CilingirPanelContent() {
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isWorkingHoursUpdating, setIsWorkingHoursUpdating] = useState(false);
   const [isSavingDailyKeys, setIsSavingDailyKeys] = useState(false);
+  const [isKeyUsageNextPageLoading, setIsKeyUsageNextPageLoading] = useState(false);
+  const [isKeyUsagePreviousPageLoading, setIsKeyUsagePreviousPageLoading] = useState(false);
+  const [isToggleStatusAccountLoading, setIsToggleStatusAccountLoading] = useState(false);
+  const [isToggleStatusAccountModalOpen, setIsToggleStatusAccountModalOpen] = useState(false);
+  const [isActivitiesLoading, setIsActivitiesLoading] = useState(false);
+  const [isActivitiesNextPageLoading, setIsActivitiesNextPageLoading] = useState(false);
+  const [isActivitiesPreviousPageLoading, setIsActivitiesPreviousPageLoading] = useState(false);
+  const [totalPagesActivities, setTotalPagesActivities] = useState(1);
+  const [currentPageActivities, setCurrentPageActivities] = useState(1);
+
 
   
   const [activeTab, setActiveTab] = useState(tabParam || "dashboard");
   const [isCertificateDialogOpen, setIsCertificateDialogOpen] = useState(false);
   const [reviews, setReviews] = useState([]);
-  const [recentActivities, setRecentActivities] = useState([]);
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [activityList, setActivityList] = useState([]);
   const [activeReviewFilter, setActiveReviewFilter] = useState("all");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [keyBalance, setKeyBalance] = useState(1500); // Örnek roket bakiyesi
+  const [keyBalance, setKeyBalance] = useState({
+    totalkeybalance:0,
+    lastupdated:""
+  });
+  const [estimatedendday, setEstimatedendday] = useState(0);
 
   const [locksmith, setLocksmith] = useState({
     abouttext: "",
@@ -83,7 +95,7 @@ function CilingirPanelContent() {
     taxnumber:"",
     totalreviewcount:0,
     averageRating:0,
-    websiteurl:"",
+    websiteurl:""
   });
   
   const [dailyHours, setDailyHours] = useState([]);
@@ -101,24 +113,40 @@ function CilingirPanelContent() {
     review_percent: 0,
   });
 
-  const fetchRecentActivities = async () => {
-    const response = await fetch('/api/locksmith/dashboard/recent-activities');
-    const data = await response.json();
-    setRecentActivities(data);
+  const fetchActivities = async () => {
+    handleDashboardFilterChange('today',1);
   };
 
 
-  const handleDashboardFilterChange = async (filter) => {
+  const handleDashboardFilterChange = async (filter,page=1) => {
     setActiveDashboardFilter(filter);
     try {
-      const response = await fetch(`/api/locksmith/dashboard/stats?period=${filter}`);
+      setIsActivitiesLoading(true);
+      const response = await fetch(`/api/locksmith/dashboard/activity?period=${filter}&page=${page}`,
+        {
+          credentials: 'include',
+        }
+      );
       const data = await response.json();
-      setDashboardStats(data);
+      console.log(data,'data');
+      setDashboardStats(data.stats);
+      setActivityList(data.list);
+      setCurrentPageActivities(data.currentPage);
+
+      setTotalPagesActivities(data.totalPages);
+      setCurrentPageActivities(data.currentPage);
+
+      console.log(data,'data.list');
 
     } catch (error) {
       console.error("Dashboard verisi güncellenirken hata:", error);
       showToast("İstatistikler alınırken bir hata oluştu", "error");
+    } finally {      
+      setIsActivitiesLoading(false);
+      setIsActivitiesNextPageLoading(false);
+      setIsActivitiesPreviousPageLoading(false);
     }
+
   };
 
   const handleLogout = () => {
@@ -127,8 +155,6 @@ function CilingirPanelContent() {
   };
 
   const [dailyKeys, setDailyKeys] = useState([]);
-
-
 
   const fetchDailyKeys = async () => {
     try {
@@ -157,20 +183,109 @@ function CilingirPanelContent() {
     }
   };
 
+  const handleToggleStatusAccount = async () => {
+    setIsToggleStatusAccountLoading(true);
+    const response = await fetch('/api/locksmith/account/status', {
+      method: 'PUT',
+      credentials: 'include',
+    });
 
-  const [keyUsageHistory, setKeyUsageHistory] = useState([
-    { id: 1, keyUsage: 5, activite: "Aramada listelendin", date: "2025-03-23 10:00:00"},
-    { id: 2, keyUsage: 30, activite: "Bir arama aldınız", date: "2025-03-23 10:00:00" },
-    { id: 3, keyUsage: 5, activite: "Aramada listelendin", date: "2025-03-23 10:00:00" },
-    { id: 4, keyUsage: 5, activite: "Aramada listelendin", date: "2025-03-23 10:00:00" },
-    { id: 5, keyUsage: 30, activite: "Bir arama aldınız", date: "2025-03-23 10:00:00" },
-    { id: 6, keyUsage: 30, activite: "Bir arama aldınız", date: "2025-03-23 10:00:00" },
-    { id: 7, keyUsage: 5, activite: "Aramada listelendin", date: "2025-03-23 10:00:00" },
-    { id: 8, keyUsage: 5, activite: "Aramada listelendin", date: "2025-03-23 10:00:00" },
+    const data = await response.json();
     
-  ]);
+    if(data.success){
+      showToast("Hesabınız başarıyla güncellendi", "success");
+      setLocksmith(prev => ({
+        ...prev,
+        isactive: !prev.isactive
+      }));
+    }else{
+      showToast("Hesabınız güncellenirken bir hata oluştu", "error");
+    }
+    setIsToggleStatusAccountModalOpen(false)
+    setIsToggleStatusAccountLoading(false);
+  };
 
 
+  useEffect(() => {
+    estimateEndDate();
+  }, [keyBalance,dailyKeys]);
+
+
+  const estimateEndDate = () => {
+
+    if (keyBalance.totalkeybalance==0 || dailyKeys.length == 0) {
+      return;
+    }
+
+    const today = new Date(); // Bugünün tarihi
+    const todayDayOfWeek = today.getDay(); // 0: Pazar, 1: Pazartesi, ..., 6: Cumartesi
+    
+    const sortedSchedule = [...dailyKeys].sort((a, b) => a.dayofweek - b.dayofweek);
+    
+    let remainingKeys = keyBalance.totalkeybalance;
+    let daysPassed = 0;
+    let currentDayIndex = todayDayOfWeek;
+  
+    // Kaç gün yeterli olduğunu hesapla
+    while (remainingKeys > 0) {
+      const currentDay = sortedSchedule.find(d => d.dayofweek === currentDayIndex);
+      const dailyUsage = currentDay && currentDay.isactive ? currentDay.keyamount : 0;
+      remainingKeys -= dailyUsage;
+      daysPassed++;
+  
+      // Haftayı döngüye al
+      currentDayIndex = (currentDayIndex + 1) % 7;
+    }
+  
+    // Bugünden itibaren gün sayısını ekleyerek biter tarihi hesapla
+    const endDate = new Date(today);
+    endDate.setDate(today.getDate() + daysPassed);
+
+    setEstimatedendday(endDate.toLocaleDateString()); // Formatlı olarak döndür
+  };
+
+
+  const [keyUsageHistory, setKeyUsageHistory] = useState([]);
+  const [currentPageKeyUsageHistory, setCurrentPageKeyUsageHistory] = useState(1); // Sayfa numarası
+  const [totalKeyUsageHistory, setTotalKeyUsageHistory] = useState(0); // Toplam kayıt sayısı
+  const [totalPagesKeyUsageHistory, setTotalPagesKeyUsageHistory] = useState(0); // Toplam sayfa sayısı
+
+  const fetchKeyUsageHistory = async (page=1) => {
+    if(currentPageKeyUsageHistory > page){
+      setIsKeyUsagePreviousPageLoading(true);
+    }else{
+      setIsKeyUsageNextPageLoading(true);
+    }
+    
+    const response = await fetch(`/api/locksmith/ads/usage?page=${page}`, {
+      credentials: 'include'
+    });
+
+    const data = await response.json();
+    setKeyUsageHistory(data.data);
+    setTotalKeyUsageHistory(data.total);
+    setTotalPagesKeyUsageHistory(data.totalPages);
+    setCurrentPageKeyUsageHistory(data.currentPage);
+
+    setIsKeyUsagePreviousPageLoading(false);
+    setIsKeyUsageNextPageLoading(false);
+  };
+
+  const handleChangePageKeyUsageHistory = (page) => {
+    setCurrentPageKeyUsageHistory(page);
+    fetchKeyUsageHistory(page);
+  };
+
+
+  const fetchKeyBalance = async () => {
+    const response = await fetch('/api/locksmith/ads/balance', {
+      credentials: 'include'
+    });
+    const data = await response.json();
+    setKeyBalance(data.data);
+  };
+
+  
   const [serviceList, setServiceList] = useState([]);
 
 
@@ -323,9 +438,10 @@ function CilingirPanelContent() {
 
   useEffect(() => {
     Promise.all([
+      fetchKeyBalance(),
       fetchLocksmith(),
       fetchDailyHours(),
-      fetchRecentActivities(),
+      fetchActivities(),
       fetchDashboardStats(),
       fetchReviews(),
       fetchNotifications(),
@@ -335,11 +451,9 @@ function CilingirPanelContent() {
       fetchDistricts(),
       fetchBusinessImages(),
       fetchDailyKeys(),
+      fetchKeyUsageHistory(),
     ]);
   }, []);
-
-  const [activeServices, setActiveServices] = useState([]);
-
 
 
 
@@ -378,15 +492,14 @@ function CilingirPanelContent() {
     router.push(`?${params.toString()}`);
   };
 
-  const handleDailyKeyChange = (index, keyAmount, isActive) => {
-    setDailyKeys(prev => ({
-      ...prev,
-      [index]: { ...prev[index], keyamount: parseInt(keyAmount) || 0, isactive: isActive }
-    }));
-    // setDailyKeys(prev => ({
-    //   ...prev,
-    //   [index]: { ...prev[index], keyamount: parseInt(e.target.value) }
-    // }));
+  const handleDailyKeyChange = (index, keyAmount, ischecked) => {
+    const updatedKeys = [...dailyKeys];
+    updatedKeys[index] = {
+      ...updatedKeys[index],
+      keyamount: parseInt(keyAmount) || 0,
+      isactive: ischecked
+    };
+    setDailyKeys(updatedKeys);
   };
 
   const handleServiceActiveChange = async (serviceId, isActive) => {
@@ -1017,16 +1130,17 @@ function CilingirPanelContent() {
 
   // Günlük anahtar tercihlerini kaydetme fonksiyonu
   const handleSaveDailyKeys = async () => {
-    setIsSavingDailyKeys(true);
     try {
-      // Günleri ve API tarafından beklenen biçimi eşleştir
+      setIsSavingDailyKeys(true);
       
       const response = await fetch('/api/locksmith/ads/usage-preferences', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({dailyKeys}),
+        body: JSON.stringify({
+          dailyKeys: dailyKeys
+        }),
         credentials: 'include'
       });
       
@@ -1073,13 +1187,23 @@ function CilingirPanelContent() {
             <CardContent className="p-0">
               <div className="p-4 border-b">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
+                  <div className="relative w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
+                  {businessImages.length > 0 && businessImages[profileImageIndex] ? (
+                      <Image 
+                        src={businessImages[profileImageIndex].image_url} 
+                        alt="İşletme Profil Resmi" 
+                        className="object-cover"
+                        fill
+                        sizes="40px"
+                      />
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    )}
                   </div>
                   <div>
-                    <h3 className="font-medium">Beyoğlu Çilingir</h3>
+                    <h3 className="font-medium">{locksmith?.businessname || "Çilingir Paneli"}</h3>
                     <p className="text-sm text-gray-500">Çilingir Paneli</p>
                   </div>
                 </div>
@@ -1113,16 +1237,6 @@ function CilingirPanelContent() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                   <span>Hizmetlerim</span>
-                </button>
-                
-                <button 
-                  onClick={() => handleTabChange("jobs")}
-                  className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "jobs" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                  <span>Aktivite Geçmişi</span>
                 </button>
                 
                 <button 
@@ -1264,213 +1378,295 @@ function CilingirPanelContent() {
                     </CardContent>
                   </Card>
                 </div>}
-
-
-                {/* Filter buttons -> Today, Yedterday, last 7 days, last 30 days, All time */}
-                <div className="flex justify-start gap-1 mb-4 w-full overflow-x-auto scrollbar-hide scrollbar-thumb-blue-500 scrollbar-track-gray-100">
-                  <Button
-                  onClick={() => handleDashboardFilterChange("today")}
-                  variant="outline"
-                  className={`${activeDashboardFilter === "today" ? "bg-blue-500 text-white" : "bg-white text-gray-800"}`}
-                  >Bugün</Button>
-                  <Button
-                  onClick={() => handleDashboardFilterChange("yesterday")}
-                  variant="outline"
-                  className={`${activeDashboardFilter === "yesterday" ? "bg-blue-500 text-white" : "bg-white text-gray-800"}`}
-                  >Dün</Button>
-                  <Button
-                  onClick={() => handleDashboardFilterChange("last7days")}
-                  variant="outline"
-                  className={`${activeDashboardFilter === "last7days" ? "bg-blue-500 text-white" : "bg-white text-gray-800"}`}
-                  >Son 7 Gün</Button>
-                  <Button
-                  onClick={() => handleDashboardFilterChange("last30days")}
-                  variant="outline"
-                  className={`${activeDashboardFilter === "last30days" ? "bg-blue-500 text-white" : "bg-white text-gray-800"}`}
-                  >Son 30 Gün</Button>
-                  <Button 
-                  onClick={() => handleDashboardFilterChange("all")}
-                  variant="outline"
-                  className={`${activeDashboardFilter === "all" ? "bg-blue-500 text-white" : "bg-white text-gray-800"}`}
-                  >Tümü</Button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                  <Card className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-500 mb-1">Görüntülenme</p>
-                          <h3 className="text-3xl font-bold text-gray-800">{dashboardStats.see}</h3>
-                          {dashboardStats.see_percent !== 0 && <p className={`text-sm ${dashboardStats.see_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                            </svg>
-                            %{dashboardStats.see_percent} {dashboardStats.see_percent > 0 ? "artış" : "azalma"}
-                          </p>}
-                        </div>
-                        <div className="bg-blue-100 p-3 rounded-full">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        </div>
-                      </div>
-                      <div className="mt-4 h-1 w-full bg-gray-100 rounded">
-                        <div className="h-1 bg-blue-500 rounded" style={{ width: '70%' }}></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-500 mb-1">Arama</p>
-                          <h3 className="text-3xl font-bold text-gray-800">{dashboardStats.call}</h3>
-                          {dashboardStats.call_percent !== 0 && <p className={`text-sm ${dashboardStats.call_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                            </svg>
-                            %{dashboardStats.call_percent} {dashboardStats.call_percent > 0 ? "artış" : "azalma"}
-                          </p>}
-                        </div>
-                        <div className="bg-purple-100 p-3 rounded-full">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                          </svg>
-                        </div>
-                      </div>
-                      <div className="mt-4 h-1 w-full bg-gray-100 rounded">
-                        <div className="h-1 bg-purple-500 rounded" style={{ width: '60%' }}></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Toplam Profil Ziyareti */}
-                  <Card className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-500 mb-1">Profil Ziyareti</p>
-                          <h3 className="text-3xl font-bold text-gray-800">{dashboardStats.visit}</h3>
-                          {dashboardStats.visit_percent !== 0 && <p className={`text-sm ${dashboardStats.visit_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                            </svg>
-                            %{dashboardStats.visit_percent} {dashboardStats.visit_percent > 0 ? "artış" : "azalma"}
-                          </p>}
-                        </div>
-                        <div className="bg-green-100 p-3 rounded-full">
-                          <Footprints className="h-8 w-8 text-green-600" />
-                        </div>
-                      </div>
-                      <div className="mt-4 h-1 w-full bg-gray-100 rounded">
-                        <div className="h-1 bg-green-500 rounded" style={{ width: '80%' }}></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-500 mb-1">Yorum</p>
-                          <div className="flex items-center">
-                            <h3 className="text-3xl font-bold text-gray-800">{dashboardStats.review}</h3>
-                          </div>
-                          {dashboardStats.review_percent !== 0 && <p className={`text-sm ${dashboardStats.review_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                            </svg>
-                            %{dashboardStats.review_percent} {dashboardStats.review_percent > 0 ? "artış" : "azalma"}
-                          </p>}
-                        </div>  
-                        <div className="bg-yellow-100 p-3 rounded-full">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                          </svg>
-                        </div>
-                      </div>
-                      <div className="mt-4 h-1 w-full bg-gray-100 rounded">
-                        <div className="h-1 bg-yellow-500 rounded" style={{ width: '95%' }}></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
                 
                 <div className="mb-8">
                   <h4 className="font-medium mb-4 flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Son İşlemler
+                    Platform Aktiviteleri
                   </h4>
                   <div className="space-y-4">
-                    {recentActivities.map((activity, index) => (
-                      <Card key={index} className="hover:shadow-md transition-all border-l-4" 
-                            style={{ borderLeftColor: 
-                              activity.type === "search" ? "#3b82f6" : 
-                              activity.type === "review" ? "#f59e0b" : 
-                              activity.type === "call" ? "#22c55e" :
-                              activity.type === "visit" ? "#f97316" : "#3b82f6"
-                            }}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center">
-                            <div className={`p-3 rounded-full mr-4 ${
-                              activity.type === "search" ? "bg-blue-100 text-blue-600" : 
-                              activity.type === "review" ? "bg-yellow-100 text-yellow-600" : 
-                              activity.type === "call" ? "bg-green-100 text-green-600" :
-                              activity.type === "visit" ? "bg-orange-100 text-orange-600" :
-                              "bg-blue-100 text-blue-600"
-                            }`}>
-                              {activity.type === "search" ? (
-                                <Search className="h-6 w-6" />
-                              ) : activity.type === "review" ? (
-                                <Star className="h-6 w-6" />
-                              ) : activity.type === "call" ? (
-                                <PhoneCall className="h-6 w-6" />
-                              ) : activity.type === "visit" ? (
-                                <Footprints className="h-6 w-6" />
-                              ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    <div className="flex justify-between items-center mb-6">
+                      <div className="flex space-x-2 w-full overflow-x-auto scrollbar-hide scrollbar-thumb-blue-500 scrollbar-track-gray-100">
+                        <Button variant="outline" className={`${activeDashboardFilter === 'today' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => handleDashboardFilterChange('today')}>Bugün</Button>
+                        <Button variant="outline" className={`${activeDashboardFilter === 'yesterday' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => handleDashboardFilterChange('yesterday')}>Dün</Button>
+                        <Button variant="outline" className={`${activeDashboardFilter === 'last7days' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => handleDashboardFilterChange('last7days')}>Son 7 Gün</Button>
+                        <Button variant="outline" className={`${activeDashboardFilter === 'last30days' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => handleDashboardFilterChange('last30days')}>Son 30 Gün</Button>
+                        <Button variant="outline" className={`${activeDashboardFilter === 'all' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => handleDashboardFilterChange('all')}>Tümü</Button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                      <Card className="hover:shadow-lg transition-shadow">
+                        <CardContent className="p-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm text-gray-500 mb-1">Görüntülenme</p>
+                              <h3 className="text-3xl font-bold text-gray-800">{dashboardStats?.see}</h3>
+                              {dashboardStats?.see_percent != 0 && <p className={`text-sm ${dashboardStats?.see_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
+                                {dashboardStats?.see_percent > 0 ? (
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                                 </svg>
-                              )}
+                                ) : (
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
+                                  </svg>  
+                                )}
+                                %{Math.abs(dashboardStats?.see_percent)} {dashboardStats?.see_percent > 0 ? "artış" : "azalma"}
+                              </p>}
                             </div>
-                            <div className="flex-grow">
-                              <div className="flex md:justify-between items-start md:items-center md:flex-row flex-col justify-between">
-                                <h5 className="font-medium text-gray-900">{activity.type === "search" ? "Adınız Aramada Listelendi" : activity.type === "review" ? "Bir Müşteri Yorumunuz Var" : activity.type === "call" ? "Bir Arama Alındı" : activity.type === "visit" ? "Profiliniz Ziyaret Edildi" : "Diğer"}</h5>
-                                <span className="text-sm text-gray-500 flex items-center md:mt-0 mt-2">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                  </svg>
-                                  {activity.date}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between mt-3">
-                                <div className="flex items-center text-sm text-gray-600">
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  </svg>
-                                  {activity.location} - {activity.serviceType}
-                                </div>
-                              </div>
+                            <div className="bg-blue-100 p-3 rounded-full">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
                             </div>
+                          </div>
+                          <div className="mt-4 h-1 w-full bg-gray-100 rounded">
+                            <div className="h-1 bg-blue-500 rounded" style={{ width: '70%' }}></div>
                           </div>
                         </CardContent>
                       </Card>
-                    ))}
-                  </div>
-                  <div className="mt-4 text-center">
-                    <Button 
-                    onClick={() => {
-                      setActiveTab("jobs")
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    variant="outline" className="text-blue-600 border-blue-600 hover:bg-blue-50">
-                      Tüm İşlemleri Görüntüle
-                    </Button>
+
+                      <Card className="hover:shadow-lg transition-shadow">
+                        <CardContent className="p-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm text-gray-500 mb-1">Arama</p>
+                              <h3 className="text-3xl font-bold text-gray-800">{dashboardStats?.call}</h3>
+                              {dashboardStats?.call_percent != 0 && <p className={`text-sm ${dashboardStats?.call_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
+                                {dashboardStats?.call_percent > 0 ? (
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                  </svg>
+                                ) : (
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
+                                  </svg>
+                                )}
+                                %{Math.abs(dashboardStats?.call_percent)} {dashboardStats?.call_percent > 0 ? "artış" : "azalma"}
+                              </p>}
+                            </div>
+                            <div className="bg-purple-100 p-3 rounded-full">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                              </svg>
+                            </div>
+                          </div>
+                          <div className="mt-4 h-1 w-full bg-gray-100 rounded">
+                            <div className="h-1 bg-purple-500 rounded" style={{ width: '60%' }}></div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Toplam Profil Ziyareti */}
+                      <Card className="hover:shadow-lg transition-shadow">
+                        <CardContent className="p-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm text-gray-500 mb-1">Profil Ziyareti</p>
+                              <h3 className="text-3xl font-bold text-gray-800">{dashboardStats?.visit}</h3>
+                              {dashboardStats?.visit_percent != 0 && <p className={`text-sm ${dashboardStats?.visit_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
+                                {dashboardStats?.visit_percent > 0 ? (
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                </svg>
+                                ) : (
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
+                                  </svg>
+                                )}
+                                %{Math.abs(dashboardStats?.visit_percent)} {dashboardStats?.visit_percent > 0 ? "artış" : "azalma"}
+                              </p>}
+                            </div>
+                            <div className="bg-green-100 p-3 rounded-full">
+                              <Footprints className="h-8 w-8 text-green-600" />
+                            </div>
+                          </div>
+                          <div className="mt-4 h-1 w-full bg-gray-100 rounded">
+                            <div className="h-1 bg-green-500 rounded" style={{ width: '80%' }}></div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="hover:shadow-lg transition-shadow">
+                        <CardContent className="p-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm text-gray-500 mb-1">Yorum</p>
+                              <div className="flex items-center">
+                                <h3 className="text-3xl font-bold text-gray-800">{dashboardStats?.review}</h3>
+                              </div>
+                              {dashboardStats?.review_percent !== 0 && <p className={`text-sm ${dashboardStats?.review_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
+                                {dashboardStats?.review_percent > 0 ? (
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                </svg>
+                              ) : (
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
+                                </svg>
+                                )}
+                                %{Math.abs(dashboardStats?.review_percent)} {dashboardStats?.review_percent > 0 ? "artış" : "azalma"}
+                              </p>}
+                            </div>  
+                            <div className="bg-yellow-100 p-3 rounded-full">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                              </svg>
+                            </div>
+                          </div>
+                          <div className="mt-4 h-1 w-full bg-gray-100 rounded">
+                            <div className="h-1 bg-yellow-500 rounded" style={{ width: '95%' }}></div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="hover:shadow-lg transition-shadow">
+                        <CardContent className="p-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm text-gray-500 mb-1">Whatsapp</p>
+                              <div className="flex items-center">
+                                <h3 className="text-3xl font-bold text-gray-800">{dashboardStats?.whatsapp}</h3>
+                              </div>
+                              {dashboardStats?.whatsapp_percent != 0 && <p className={`text-sm ${dashboardStats?.whatsapp_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
+                                {dashboardStats?.whatsapp_percent > 0 ? (
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                </svg>
+                              ) : (
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
+                                </svg>
+                                )}
+                                %{Math.abs(dashboardStats?.whatsapp_percent)} {dashboardStats?.whatsapp_percent > 0 ? "artış" : "azalma"}
+                              </p>}
+                            </div>  
+                            <div className="bg-yellow-100 p-3 rounded-full">
+                              <MessageCircle className="h-8 w-8 text-yellow-600" />
+                            </div>
+                          </div>
+                          <div className="mt-4 h-1 w-full bg-gray-100 rounded">
+                            <div className="h-1 bg-yellow-500 rounded" style={{ width: '95%' }}></div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                    
+                    {activityList.length > 0 && <div className="space-y-4">
+                      {activityList.map((activity, index) => (
+                        /**
+                         * {
+    "id": "4ae6d443-7874-45f3-8af6-675569321493",
+    "userid": "cf55bc6b-d93a-490b-b3eb-7253bb83c530",
+    "sessionid": "b835c1d9-2413-4157-8c12-d371f89e43bd",
+    "searchprovinceid": 7,
+    "searchdistrictid": 8,
+    "searchserviceid": "915e4a47-b6b6-42c0-a3eb-424262b7b238",
+    "activitytype": "call_request",
+    "locksmithid": "18967e09-838f-4088-b192-ee27a23fc5d7",
+    "issuspicious": false,
+    "isrepeated": false,
+    "activitycount": 0,
+    "isfraudulent": false,
+    "createdat": "2025-04-01T12:11:06.151071+00:00"
+}
+                         */
+                        console.log(activity,'activity'),
+                        <Card key={index} className="hover:shadow-md transition-all border-l-4" 
+                              style={{ borderLeftColor: activity.activitytype === "locksmith_list_view" ? "#3b82f6" : activity.activitytype === "locksmith_detail_view" ? "#f59e0b" : activity.activitytype === "call_request" ? "#f97316" : activity.activitytype === "review_submit" ? "#22c55e" : activity.activitytype === "whatsapp_message" ? "#33DEDE" : activity.activitytype === "website_visit" ? "#33DEDE" : "#22c55e" }}>
+                          <CardContent className="p-4">
+                            <div className="flex items-start">
+                              <div className={`p-3 rounded-full mr-4 flex-shrink-0 ${
+                                activity.activitytype === "locksmith_list_view" ? "bg-blue-100 text-blue-600" : 
+                                activity.activitytype === "locksmith_detail_view" ? "bg-yellow-100 text-yellow-600" : 
+                                activity.activitytype === "call_request" ? "bg-orange-100 text-orange-600" : 
+                                activity.activitytype === "review_submit" ? "bg-green-100 text-green-600" : 
+                                activity.activitytype === "whatsapp_message" ? "bg-purple-100 text-purple-600" : 
+                                activity.activitytype === "website_visit" ? "bg-purple-100 text-purple-600" : 
+                                "bg-green-100 text-green-600"
+                              }`}>
+                                {
+                                  activity.activitytype === "locksmith_list_view" ? <Eye className="h-8 w-8 text-blue-600" /> : 
+                                  activity.activitytype === "locksmith_detail_view" ? <Footprints className="h-8 w-8 text-blue-600" /> : 
+                                  activity.activitytype === "call_request" ? <PhoneCall className="h-8 w-8 text-blue-600" /> : 
+                                  activity.activitytype === "review_submit" ? <Star className="h-8 w-8 text-blue-600" /> : 
+                                  activity.activitytype === "whatsapp_message" ? <MessageCircle className="h-8 w-8 text-blue-600" /> : 
+                                  activity.activitytype === "website_visit" ? <Globe className="h-8 w-8 text-blue-600" /> : 
+                                  <PhoneCall className="h-8 w-8 text-blue-600" />
+                                }
+                              </div>
+                              <div className="flex-grow">
+                                <div className="flex md:flex-row flex-col justify-between items-start">
+                                  <div>
+                                    <h5 className="font-medium text-gray-900">{
+                                      activity.activitytype === "review_submit" ? "Yorum Aldınız" : 
+                                      activity.activitytype === "call_request" ? "Arama Aldınız" : 
+                                      activity.activitytype === "locksmith_list_view" ? "Aramada Listelendiniz" : 
+                                      activity.activitytype === "locksmith_detail_view" ? "Profiliniz Görüntülendi" : 
+                                      activity.activitytype === "whatsapp_message" ? "Whatsapp Mesajı Aldınız" : 
+                                      activity.activitytype === "website_visit" ? "Web siteniz ziyaret edildi" : "Bilinmeyen"
+                                      }</h5>
+                                    {
+                                      activity.activitytype === "review_submit" ? (
+                                        <p className="text-sm text-gray-600 mt-1">5 üzerinden {activity.reviews.rating} yıldız aldınız:  "{activity.reviews.comment}"</p>
+                                      ) : activity.activitytype === "call_request" ? (
+                                        <p className="text-sm text-gray-600 mt-1">{activity.services.name} hizmeti için arama aldınız</p>
+                                      ) : activity.activitytype === "locksmith_list_view" ? (
+                                        <p className="text-sm text-gray-600 mt-1">{activity.services.name} hizmeti aramasında profiliniz görüntülendi</p>
+                                      ) : activity.activitytype === "locksmith_detail_view" ? (
+                                        <p className="text-sm text-gray-600 mt-1">Bir müşteri profilinizi ziyaret etti</p>
+                                      ) : activity.activitytype === "whatsapp_message" ? (
+                                        <p className="text-sm text-gray-600 mt-1">{activity.services.name} hizmeti için whatsapp mesajı aldınız</p>
+                                      ) : activity.activitytype === "website_visit" ? (
+                                        <p className="text-sm text-gray-600 mt-1">Bir müşteri web sitenizi ziyaret etti</p>
+                                      ) : (
+                                        <p className="text-sm text-gray-600 mt-1">Bilinmeyen bir aktivite</p>
+                                      )
+                                    }
+                                  </div>
+                                  <span className="text-sm text-gray-500 flex items-center md:mt-0 mt-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    {new Date(activity.createdat).toLocaleString()}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between mt-3">
+                                  <div className="flex items-center text-sm text-gray-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    {activity.districts.name} - {activity.services.name}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>}
+                  
+                    {activityList.length > 0 && <div className="flex justify-between items-center mt-6">
+                      <p className="text-sm text-gray-500">10 aktivite gösteriliyor</p>
+                      <div className="flex items-center">
+                        <span className="mr-4 text-sm">Sayfa {currentPageActivities} / {totalPagesActivities}</span>
+                        <div className="flex space-x-2">
+                          <Button 
+                          disabled={(currentPageActivities == 1) || isActivitiesPreviousPageLoading || isActivitiesLoading || (totalPagesActivities == 1)}
+                          variant="outline" size="sm" onClick={() => {
+                            handleDashboardFilterChange(activeDashboardFilter,Number(currentPageActivities)-1)
+                          }}>{isActivitiesPreviousPageLoading ? 'Yükleniyor...' : 'Önceki'}</Button>
+                          <Button 
+                          disabled={(currentPageActivities == totalPagesActivities) || isActivitiesNextPageLoading || isActivitiesLoading || (totalPagesActivities == 1)}
+                          variant="outline" size="sm" onClick={() => { handleDashboardFilterChange(activeDashboardFilter,Number(currentPageActivities)+1);}}>{isActivitiesNextPageLoading ? 'Yükleniyor...' : 'Sonraki'}</Button>
+                        </div>
+                      </div>
+                    </div>}
                   </div>
                 </div>
               </CardContent>
@@ -2061,175 +2257,6 @@ function CilingirPanelContent() {
             </Card>
           )}
 
-          {activeTab === "jobs" && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                  Platform Aktivitelerim
-                </CardTitle>
-                <CardDescription>Görüntülenmeler, çağrılar ve değerlendirmelerinizi görüntüleyin</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center mb-6">
-                  <div className="flex space-x-2 w-full overflow-x-auto scrollbar-hide ">
-                    <Button variant="outline" className={`${activeFilter === 'all' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => setActiveFilter('all')}>Tümü</Button>
-                    <Button variant="outline" className={`${activeFilter === 'views' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => setActiveFilter('views')}>Görüntülenmeler</Button>
-                    <Button variant="outline" className={`${activeFilter === 'calls' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => setActiveFilter('calls')}>Çağrılar</Button>
-                    <Button variant="outline" className={`${activeFilter === 'reviews' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => setActiveReviewFilter('reviews')}>Değerlendirmeler</Button>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  {[
-                    {
-                      type: 'view',
-                      title: 'Bir Aramada Görüntülendiniz',
-                      description: 'Oto Çilingir hizmeti aramasında profiliniz görüntülendi',
-                      location: 'Gemlik',
-                      service: 'Oto Çilingir',
-                      date: '15 Mart 2024, 15:30',
-                      icon: <Eye className="h-6 w-6" />,
-                      color: 'blue'
-                    },
-                    {
-                      type: 'visit',
-                      title: 'Profiliniz Ziyaret Edildi',
-                      description: 'Oto Çilingir hizmeti aramasında profiliniz ziyaret edildi',
-                      location: 'Osmangazi',
-                      service: 'Oto Çilingir',
-                      date: '15 Mart 2024, 15:30',
-                      icon: <Footprints className="h-6 w-6" />,
-                      color: 'orange'
-                    },
-                    {
-                      type: 'call',
-                      title: 'Bir Arama Aldınız',
-                      description: 'Müşteri, Kilit Değiştirme hizmeti için sizi aradı',
-                      location: 'Beşiktaş',
-                      service: 'Kilit Değiştirme',
-                      date: '15 Mart 2024, 14:20',
-                      icon: <PhoneCall className="h-6 w-6" />,
-                      color: 'green'
-                    },
-                    {
-                      type: 'review',
-                      title: 'Bir Değerlendirme Aldınız',
-                      description: '5 üzerinden 5 yıldız aldınız: "Zamanında geldi, çok profesyonel"',
-                      location: 'Kadıköy',
-                      service: 'Kapı Açma',
-                      date: '14 Mart 2024, 11:45',
-                      icon: <Star className="h-6 w-6" />,
-                      color: 'yellow'
-                    },
-                    {
-                      type: 'view',
-                      title: 'Bir Aramada Görüntülendiniz',
-                      description: 'Kapı Açma hizmeti aramasında profiliniz görüntülendi',
-                      location: 'Üsküdar',
-                      service: 'Kapı Açma',
-                      date: '13 Mart 2024, 18:10',
-                      icon: <Eye className="h-6 w-6" />,
-                      color: 'blue'
-                    },
-                    {
-                      type: 'call',
-                      title: 'Bir Arama Aldınız',
-                      description: 'Müşteri, Anahtar Kopyalama hizmeti için sizi aradı',
-                      location: 'Şişli',
-                      service: 'Anahtar Kopyalama',
-                      date: '13 Mart 2024, 15:35',
-                      icon: <PhoneCall className="h-6 w-6" />,
-                      color: 'green'
-                    },
-                    {
-                      type: 'review',
-                      title: 'Bir Değerlendirme Aldınız',
-                      description: '5 üzerinden 4 yıldız aldınız: "İyi hizmet, teşekkürler"',
-                      location: 'Beylikdüzü',
-                      service: 'Çelik Kapı Açma',
-                      date: '12 Mart 2024, 20:15',
-                      icon: <Star className="h-6 w-6" />,
-                      color: 'yellow'
-                    },
-                    {
-                      type: 'view',
-                      title: 'Bir Aramada Görüntülendiniz',
-                      description: 'Kasa Açma hizmeti aramasında profiliniz görüntülendi',
-                      location: 'Bakırköy',
-                      service: 'Kasa Açma',
-                      date: '11 Mart 2024, 14:40',
-                      icon: <Eye className="h-6 w-6" />,
-                      color: 'blue'
-                    },
-                    {
-                      type: 'call',
-                      title: 'Bir Arama Aldınız',
-                      description: 'Müşteri, Kapı Açma hizmeti için sizi aradı',
-                      location: 'Mecidiyeköy',
-                      service: 'Kapı Açma',
-                      date: '10 Mart 2024, 09:25',
-                      icon: <PhoneCall className="h-6 w-6" />,
-                      color: 'green'
-                    }
-                  ].map((activity, index) => (
-                    <Card key={index} className="hover:shadow-md transition-all border-l-4" 
-                          style={{ borderLeftColor: activity.color === "blue" ? "#3b82f6" : activity.color === "yellow" ? "#f59e0b" : activity.color === "orange" ? "#f97316" : "#22c55e" }}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start">
-                          <div className={`p-3 rounded-full mr-4 flex-shrink-0 ${
-                            activity.color === "blue" ? "bg-blue-100 text-blue-600" : 
-                            activity.color === "yellow" ? "bg-yellow-100 text-yellow-600" : 
-                            activity.color === "orange" ? "bg-orange-100 text-orange-600" : 
-                            "bg-green-100 text-green-600"
-                          }`}>
-                            {activity.icon}
-                          </div>
-                          <div className="flex-grow">
-                            <div className="flex md:flex-row flex-col justify-between items-start">
-                              <div>
-                                <h5 className="font-medium text-gray-900">{activity.title}</h5>
-                                <p className="text-sm text-gray-600 mt-1">{activity.description}</p>
-                              </div>
-                              <span className="text-sm text-gray-500 flex items-center md:mt-0 mt-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                {activity.date}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between mt-3">
-                              <div className="flex items-center text-sm text-gray-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                {activity.location} - {activity.service}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-                
-                <div className="flex justify-between items-center mt-6">
-                  <p className="text-sm text-gray-500">10 aktivite gösteriliyor</p>
-                  <div className="flex items-center">
-                    <span className="mr-4 text-sm">Sayfa 1 / 15</span>
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="sm">Önceki</Button>
-                      <Button variant="outline" size="sm">Sonraki</Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           {activeTab === "reviews" && (
             <Card>
               <CardHeader>
@@ -2352,11 +2379,11 @@ function CilingirPanelContent() {
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                       </svg>
-                      <span className="text-3xl font-bold text-blue-600"> {keyBalance} Anahtar</span>
+                      <span className="text-3xl font-bold text-blue-600"> {keyBalance.totalkeybalance} Anahtar</span>
                     </div>
                     <div className="flex items-center ml-2 mt-2 text-gray-600">
                       <Info className="w-4 h-4 mr-2"/>
-                      <p className="text-sm">Tahmini anahtar bitiş tarihi: 10.04.2025</p> 
+                      <p className="text-sm">Son güncelleme: {new Date(keyBalance.lastupdated).toLocaleDateString('tr-TR')} - Tahmini anahtar bitiş tarihi: {estimatedendday}</p> 
                     </div>
                   </div>
                 </div>
@@ -2403,7 +2430,7 @@ function CilingirPanelContent() {
                               <div className="mt-2 flex justify-center">
                                 <div className="px-4 py-1 bg-white rounded-full border border-gray-200 shadow-sm">
                                   <span className={`font-bold text-lg ${pkg.isRecommended ? 'text-blue-600' : 'text-gray-800'}`}>
-                                    {pkg.price} ₺
+                                    {new Intl.NumberFormat('tr-TR').format(pkg.price)} ₺
                                   </span>
                                 </div>
                               </div>
@@ -2434,7 +2461,7 @@ function CilingirPanelContent() {
                           
                           <div className="flex items-center justify-between mb-4">
                             <span className="text-gray-700 font-semibold">Toplam Tutar:</span>
-                            <span className="text-xl font-bold text-blue-600">{selectedKeyPackage.price} ₺</span>
+                            <span className="text-xl font-bold text-blue-600">{new Intl.NumberFormat('tr-TR').format(selectedKeyPackage.price)} ₺</span>
                           </div>
                           
                           <Button 
@@ -2451,55 +2478,142 @@ function CilingirPanelContent() {
 
                 {/* Günlük Anahtar Kullanım Tercihleri */}
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">Günlük Anahtar Kullanım Tercihleriniz</h3>
-                  <p className="text-sm text-gray-500 mb-4 flex items-center"><Info className="w-4 h-4 mr-2"/> Tahmini Aylık Anahtar Kullanımı: {dailyKeys.reduce((sum, day) => sum + (4*day.keyamount || 0), 0)} Anahtar</p>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {[...Array(7)].map((_, index) => (
-                      <div key={index} className="border rounded-lg p-4 bg-gray-10">
-                        <label className="block text-md font-bold text-gray-700 mb-2">{dailyKeys[index]?.dayname}</label>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`adday-${dailyKeys[index]?.dayofweek}`} 
-                            checked={dailyKeys[index]?.isactive}
-                            onCheckedChange={(checked) => handleDailyKeyChange(index, dailyKeys[index]?.keyamount, checked)}
-                          />
-                          <label 
-                            htmlFor={`adday-${dailyKeys[index]?.dayofweek}`} 
-                            className={`font-medium ${!dailyKeys[index]?.isactive ? "text-gray-400" : ""}`}
-                          >
-                            Reklam Açık
-                          </label>
+                  <div className="flex items-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                    <h3 className="text-xl font-bold text-gray-800">Günlük Anahtar Kullanım Tercihleriniz</h3>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100 shadow-sm mb-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
                         </div>
-                        <div className="flex items-center space-x-2 md:mt-2 mt-2">
-                          <label className={`font-medium ${!dailyKeys[index]?.isactive ? "text-gray-400" : ""}`}>
-                            Günlük Anahtar:
-                          </label>
-                          <Input 
-                            type="number"
-                            min="1"
-                            max="100"
-                            value={dailyKeys[index]?.keyamount || 10}
-                            onChange={(e) => handleDailyKeyChange(index, e.target.value, dailyKeys[index]?.isactive)}
-                            disabled={!dailyKeys[index]?.isactive}
-                            className={`w-20 ${!dailyKeys[index]?.isactive ? "bg-gray-100 text-gray-400" : ""}`}
-                          />
-                          <span className={`ml-2 text-sm ${dailyKeys[index]?.isactive ? "text-green-600" : "text-red-500"}`}>
-                            {dailyKeys[index]?.isactive ? "Reklam Açık" : "Reklam Kapalı"}
-                          </span>
+                        <div>
+                          <h4 className="font-semibold text-gray-800">Anahtar Kullanım Bilgisi</h4>
+                          <p className="text-sm text-gray-600">Anahtarlar müşterilere görünürlüğünüzü artırır</p>
+                          <div className="flex items-center text-gray-600">
+                            <Info className="w-4 h-4 mr-2"/>
+                            <p className="text-sm">Tahmini anahtar bitiş tarihi: {estimatedendday}</p> 
+                          </div>
                         </div>
                       </div>
-                    ))}
+                      <div className="flex items-center bg-white px-4 py-2 rounded-lg border border-blue-200">
+                        <span className="text-lg font-bold text-blue-600 mr-3">{dailyKeys.reduce((sum, day) => sum + (day.isactive? 4*day.keyamount || 0 : 0), 0)}</span>
+                        <span className="text-sm text-gray-600">Tahmini Aylık<br/>Anahtar Kullanımı</span>
+                      </div>
+                    </div>
                   </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {Array.from({ length: 7 }).map((_, index) => {
+                      // Her indeks için güvenli değer almak için kontrol yapalım
+                      const dayData = dailyKeys[index] || { dayname: '', keyamount: 0, isactive: false };
+                      
+                      return (
+                        <div key={index} className={`relative overflow-hidden rounded-lg border ${dayData.isactive ? 'border-green-200 bg-gradient-to-b from-green-50 to-white' : 'border-gray-200 bg-gray-50'} p-5 transition-all duration-300 shadow-sm hover:shadow`}>
+                          
+                          {/* Gün ismi başlığı */}
+                          <div className="flex items-center justify-between mb-4">
+                            <h4 className="font-bold text-gray-800">{dayData.dayname || `${index==0?'Pazartesi':index==1?'Salı':index==2?'Çarşamba':index==3?'Perşembe':index==4?'Cuma':index==5?'Cumartesi':index==6?'Pazar':''}`}</h4>
+                            <div className={`px-2 py-1 text-xs font-medium rounded-full ${dayData.isactive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                              {dayData.isactive ? 'Aktif' : 'Kapalı'}
+                            </div>
+                          </div>
 
-                  <div className="mt-6">
+                          {/* Anahtar göstergesi */}
+                          <div className="mb-4 flex items-center">
+                            <div className="mr-3">
+                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-8 w-8 ${dayData.isactive ? 'text-blue-500' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <div className="text-2xl font-bold mb-1 text-gray-900">{dayData.isactive? dayData.keyamount || 0 : 0}</div>
+                              <div className="text-xs text-gray-500">Günlük Anahtar</div>
+                              {dayData.isactive && dayData.keyamount > 0 && (
+                                <div className="text-xs text-blue-600 mt-1 font-medium">
+                                  ~ {Math.floor(dayData.keyamount / 30)} müşteri/gün
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                        {/* Kaydırma çubuğu */}
+                        <div className="mb-4">
+                          <input
+                            type="range"
+                            min="0"
+                            max="200"
+                            step="5"
+                            value={dayData.isactive? dayData.keyamount || 0 : 0}
+                            onChange={(e) => handleDailyKeyChange(index, parseInt(e.target.value), dailyKeys[index]?.isactive)}
+                            disabled={!dailyKeys[index]?.isactive}
+                            className={`w-full h-2 rounded-lg appearance-none cursor-pointer ${dailyKeys[index]?.isactive ? 'bg-blue-200' : 'bg-gray-200'}`}
+                          />
+                          <div className="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>&nbsp;0&nbsp;&nbsp;</span>
+                            <span>&nbsp;&nbsp;50</span>
+                            <span>&nbsp;100</span>
+                            <span>&nbsp;150</span>
+                            <span>200</span>
+                          </div>
+                        </div>
+
+                        {/* Aktif/Pasif düğme */}
+                        <div className="flex items-center justify-between relative z-10">
+                          <span className="text-sm text-gray-600">Reklam Durumu</span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="sr-only peer"
+                              checked={dailyKeys[index]?.isactive ?? false}
+                              onChange={(e) => handleDailyKeyChange(index, dailyKeys[index]?.keyamount, e.target.checked )}
+                            />
+                            <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer ${dailyKeys[index]?.isactive ? 'after:translate-x-full after:border-white bg-green-600' : 'after:border-gray-300'} after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all border`}></div>
+                          </label>
+                        </div>
+
+                        {/* Arka plan dekoru */}
+                        {dailyKeys[index]?.isactive && (
+                          <div className="absolute -right-4 -bottom-4 opacity-10 z-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-24 w-24 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  </div>
+
+                  <div className="mt-8 flex justify-between items-center">
+                    <p className="text-sm text-gray-500 italic">Değişikliklerinizi kaydetmeyi unutmayın.</p>
                     <Button 
-                      className="bg-green-600 hover:bg-green-700 text-white"
+                      className="bg-green-600 hover:bg-green-700 text-white rounded-full px-6"
                       disabled={isSavingDailyKeys}
                       onClick={handleSaveDailyKeys}
                     >
-                      Değişiklikleri Kaydet
+                      {isSavingDailyKeys ? (
+                        <div className="flex items-center">
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Kaydediliyor...
+                        </div>
+                      ) : (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Değişiklikleri Kaydet
+                        </>
+                      )}
                     </Button>
                   </div>
                   
@@ -2529,21 +2643,60 @@ function CilingirPanelContent() {
                               </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-900 truncate">{activity.activite}</p>
-                              <p className="text-sm text-gray-500">{activity.date}</p>
+                              <p className="font-medium text-gray-900 truncate">{activity.usagetype=='call' ? 'Bir arama aldınız' : activity.usagetype=='listing' ? 'Listelendiniz' : activity.usagetype=='similar-locksmiths' ? 'Benzer çilngir alanında listelendiniz' : activity.usagetype=='visit' ? 'Profiliniz ziyaret edildi' : activity.usagetype=='whatsapp' ? 'Whatsapptan bir mesaj aldınız' : 'Diğer'}</p>
+                              <p className="text-sm text-gray-500">{new Date(activity.createdat).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
                             </div>
                             <div className="inline-flex items-center text-base font-semibold text-blue-600">
-                              {activity.keyUsage} Anahtar
+                              {activity.keyamount} Anahtar
                             </div>
                           </li>
                         ))}
                       </ul>
                     )}
                     {keyUsageHistory.length > 0 && (
-                      <div className="px-4 py-3 bg-gray-50 text-right rounded-b-lg">
-                        <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                          Tüm Geçmişi Görüntüle
-                        </button>
+                      <div className="px-4 py-3 bg-gray-50 flex items-center justify-between rounded-b-lg">
+                        <div className="text-sm text-gray-500">
+                          Toplam: {totalKeyUsageHistory} kayıt
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {/* Önceki Sayfa */}
+                          <button 
+                            onClick={() => handleChangePageKeyUsageHistory(currentPageKeyUsageHistory - 1)}
+                            disabled={currentPageKeyUsageHistory === 1 || isKeyUsagePreviousPageLoading}
+                            className={`p-2 rounded-md border ${currentPageKeyUsageHistory === 1 ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-blue-600 border-blue-200 hover:bg-blue-50'}`}
+                          >
+                            {isKeyUsagePreviousPageLoading ? 
+                            <svg className="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            :
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /> 
+                            </svg>
+                            }
+                          </button>
+                          <div className="text-sm font-medium text-gray-700">
+                            Sayfa {currentPageKeyUsageHistory} / {totalPagesKeyUsageHistory}
+                          </div>
+                          {/* Sonraki Sayfa */}
+                          <button 
+                            onClick={() => handleChangePageKeyUsageHistory(currentPageKeyUsageHistory + 1)}
+                            disabled={currentPageKeyUsageHistory === totalPagesKeyUsageHistory || isKeyUsageNextPageLoading}
+                            className={`p-2 rounded-md border ${currentPageKeyUsageHistory === totalPagesKeyUsageHistory ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-blue-600 border-blue-200 hover:bg-blue-50'}`}
+                          >
+                            {isKeyUsageNextPageLoading ? 
+                            <svg className="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            :
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          }
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -2609,15 +2762,42 @@ function CilingirPanelContent() {
                 
                   
                   <div className="border-t pt-6">
-                    <h4 className="font-medium mb-4">Hesap Durumu</h4>
-                    <div className="space-y-4">
+                    <h4 className="font-medium mb-4">Hesap Durumu {locksmith?.isactive==true ? 'Aktif' : 'Pasif'}</h4>
+                    {locksmith?.status=='approved' && 
+                      <div className="space-y-4">
                       <p className="text-sm text-gray-500">
-                        Hesabınızı devre dışı bırakırsanız, profiliniz ve hizmetleriniz platformda görünmeyecektir.
+                        {locksmith?.isactive==true ? 'Hesabınızı devre dışı bırakırsanız, profiliniz ve hizmetleriniz platformda görünmeyecektir.' : 'Hesabınızı aktifleştirirseniz, profiliniz ve hizmetleriniz platformda görünür hale gelecektir.'}
                       </p>
-                      <Button
-                      variant="destructive"
-                      >Hesabımı Kapat</Button>
-                    </div>
+                      {
+                        locksmith?.isactive==true ? (
+                          <Button
+                          variant="destructive"
+                          disabled={isToggleStatusAccountLoading}
+                          onClick={()=>setIsToggleStatusAccountModalOpen(true)}
+                          >Hesabımı Pasif Yap</Button>
+                        ) : (
+                          <Button
+                          variant="outline"
+                          disabled={isToggleStatusAccountLoading}
+                          onClick={()=>setIsToggleStatusAccountModalOpen(true)}
+                          >Hesabımı Aktifleştir</Button>
+                        )
+                      }
+                    </div>}
+                    {locksmith?.status=='pending' && 
+                      <div className="space-y-4">
+                        <p className="text-sm text-gray-500">
+                          Hesabınızın onay aşamasındadır.
+                        </p>
+                      </div>
+                    }
+                    {locksmith?.status=='rejected' && 
+                      <div className="space-y-4">
+                        <p className="text-sm text-gray-500">
+                          Hesabınız reddedildi. Lütfen yöneticiyle iletişime geçiniz.
+                        </p>
+                      </div>
+                    }
                   </div>
                 </div>
               </CardContent>
@@ -2717,6 +2897,30 @@ function CilingirPanelContent() {
             </div>
           </div>
         </div>
+      )}
+
+      {isToggleStatusAccountModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Hesap Durumu {locksmith?.isactive==true ? 'Aktif' : 'Pasif'}</h3>
+          <p className="text-gray-600 mb-6">{locksmith?.isactive==true ? 'Hesabınızı devre dışı bırakırsanız, profiliniz ve hizmetleriniz platformda görünmeyecektir.' : 'Hesabınızı aktifleştirirseniz, profiliniz ve hizmetleriniz platformda görünür hale gelecektir.'}</p>
+          <div className="flex justify-end space-x-3">
+            <Button 
+              variant="outline" 
+              onClick={()=>setIsToggleStatusAccountModalOpen(false)}
+            >
+              İptal
+            </Button>
+            <Button 
+            variant={locksmith?.isactive==true ? 'destructive' : 'default'} 
+            onClick={handleToggleStatusAccount}
+            disabled={isToggleStatusAccountLoading}
+          >
+            {isToggleStatusAccountLoading ? 'İşleniyor...' : locksmith?.isactive==true ? 'Hesabımı Pasif Yap' : 'Hesabımı Aktifleştir'}
+          </Button>
+          </div>
+        </div>
+      </div>
       )}
     </div>
   );

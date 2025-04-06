@@ -159,7 +159,6 @@ CREATE TABLE key_usage_logs (
     keyAmount INTEGER NOT NULL,
     usageTypeId UUID REFERENCES key_usage_types(id),
     description TEXT,
-    usageTimestamp TIMESTAMPTZ DEFAULT NOW(),
     additionalDetails JSONB,
     createdAt TIMESTAMPTZ DEFAULT NOW()
 );
@@ -226,6 +225,14 @@ CREATE TABLE notifications (
     updatedAt TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    userIp INET,              
+    userAgent TEXT,          
+    createdAt TIMESTAMPTZ DEFAULT NOW(),   
+    updatedAt TIMESTAMPTZ DEFAULT NOW()    
+);
+
 
 -- Kullanıcı Aktivite Türleri
 CREATE TYPE user_activity_type_enum AS ENUM (
@@ -234,32 +241,32 @@ CREATE TYPE user_activity_type_enum AS ENUM (
     'locksmith_detail_view',
     'call_request',
     'review_submit',
-    'profile_visit'
+    'profile_visit',
+    'whatsapp_call',
+    'website_visit',
 );
 
 
 -- Kullanıcı Aktivite Logları Tablosu
 CREATE TABLE user_activity_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    userIp INET,
-    userAgent TEXT,
-    sessionId UUID,
-    
+    userId UUID REFERENCES users(id) ON DELETE CASCADE, 
+
     searchProvinceId INTEGER REFERENCES provinces(id),
     searchDistrictId INTEGER REFERENCES districts(id),
     searchServiceId UUID REFERENCES services(id),
     
-    activityType user_activity_type_enum NOT NULL,
+    activityType user_activity_type_enum NOT NULL,  
     locksmithId UUID REFERENCES locksmiths(id),
     
     isSuspicious BOOLEAN DEFAULT FALSE,
     isRepeated BOOLEAN DEFAULT FALSE,
     activityCount INTEGER DEFAULT 0,
-    lastActivityTime TIMESTAMPTZ,
     isFraudulent BOOLEAN DEFAULT FALSE,
     
-    createdAt TIMESTAMPTZ DEFAULT NOW()
+    createdAt TIMESTAMPTZ DEFAULT NOW() 
 );
+
 
 -- Çilingir Aktivite Türleri
 CREATE TYPE locksmith_activity_type_enum AS ENUM (
