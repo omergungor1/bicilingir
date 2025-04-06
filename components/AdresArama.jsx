@@ -19,31 +19,43 @@ export default function AdresArama({ onPlaceSelect, placeholder, className }) {
     const filteredSuggestions = [];
     const searchTerm = inputValue.toLowerCase();
 
-    // İlleri filtrele
-    turkiyeIlIlce.provinces.forEach(il => {
-      if (il.name.toLowerCase().includes(searchTerm)) {
-        filteredSuggestions.push({
-          type: "il",
-          name: il.name,
-          fullAddress: il.name
-        });
-      }
-    });
-
-    // İlçeleri ayrı olarak filtrele
-    turkiyeIlIlce.districts.forEach(ilce => {
-      if (ilce.name.toLowerCase().includes(searchTerm)) {
-        const parentProvince = turkiyeIlIlce.provinces.find(p => p.id === ilce.province_id);
-        if (parentProvince) { // Parent il bulunduğundan emin ol
+    // İl adına göre ilçeleri filtrele
+    const matchingProvinces = turkiyeIlIlce.provinces.filter(il => 
+      il.name.toLowerCase().includes(searchTerm)
+    );
+    
+    if (matchingProvinces.length > 0) {
+      // Eşleşen illerin ilçelerini listele
+      matchingProvinces.forEach(province => {
+        const districtsByProvince = turkiyeIlIlce.districts.filter(ilce => 
+          ilce.province_id === province.id
+        );
+        
+        districtsByProvince.forEach(ilce => {
           filteredSuggestions.push({
             type: "ilce",
             name: ilce.name,
             parent: ilce.province_id,
-            fullAddress: `${ilce.name}, ${parentProvince.name}`
+            fullAddress: `${ilce.name}, ${province.name}`
           });
+        });
+      });
+    } else {
+      // İlçe adına göre filtrele
+      turkiyeIlIlce.districts.forEach(ilce => {
+        if (ilce.name.toLowerCase().includes(searchTerm)) {
+          const parentProvince = turkiyeIlIlce.provinces.find(p => p.id === ilce.province_id);
+          if (parentProvince) {
+            filteredSuggestions.push({
+              type: "ilce",
+              name: ilce.name,
+              parent: ilce.province_id,
+              fullAddress: `${ilce.name}, ${parentProvince.name}`
+            });
+          }
         }
-      }
-    });
+      });
+    }
 
     // En fazla 10 öneri göster
     setSuggestions(filteredSuggestions.slice(0, 10));
