@@ -342,8 +342,6 @@ export async function checkAuth(request) {
           
           if (error) {
           console.error('Manuel session ayarlama hatası:', error.message);
-          } else {
-          console.log('Manuel session başarıyla ayarlandı:', !!data.session);
           }
       }
       
@@ -356,26 +354,26 @@ export async function checkAuth(request) {
       const userId = session.user.id;
       
   
-      // Kullanıcı rolünü kontrol et
-      const { data: roleData, error: roleError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', userId)
-          .single();
+      // // Kullanıcı rolünü kontrol et
+      // const { data: roleData, error: roleError } = await supabase
+      //     .from('user_roles')
+      //     .select('role')
+      //     .eq('user_id', userId)
+      //     .single();
       
-      if (roleError) {
-          return NextResponse.json({ error: 'Rol bilgisi alınamadı' }, { status: 500 });
-      }
+      // if (roleError) {
+      //     return NextResponse.json({ error: 'Rol bilgisi alınamadı' }, { status: 500 });
+      // }
       
-      if (!roleData) {
-          return NextResponse.json({ error: 'Rol kaydınız bulunamadı' }, { status: 403 });
-      }
+      // if (!roleData) {
+      //     return NextResponse.json({ error: 'Rol kaydınız bulunamadı' }, { status: 403 });
+      // }
       
-      const userRole = roleData.role;
+      // const userRole = roleData.role;
       
-      if (userRole !== 'cilingir' && userRole !== 'admin') {
-          return NextResponse.json({ error: 'Bu API sadece çilingirler tarafından kullanılabilir' }, { status: 403 });
-      }
+      // if (userRole !== 'cilingir' && userRole !== 'admin') {
+      //     return NextResponse.json({ error: 'Bu API sadece çilingirler tarafından kullanılabilir' }, { status: 403 });
+      // }
   
       // Çilingir ID'sini al
       const { data: locksmithData, error: locksmithError } = await supabase
@@ -389,7 +387,7 @@ export async function checkAuth(request) {
           return NextResponse.json({ error: 'Çilingir bilgileriniz bulunamadı' }, { status: 404 });
       }
           
-      const locksmithId = locksmithData.id;
+      const locksmithId = locksmithData?.id||null;
   
       return { locksmithId, supabase };
   } catch (error) {

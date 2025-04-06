@@ -62,6 +62,9 @@ export async function GET(request) {
 
     const total = totalRecords.length;
 
+    //Stats için tüm aktiviteleri çekiyor. Verim için sadece countlarını alınmalı.
+    //Yüzde hesaplaması eksik.
+    //DAHA SONRA GÜNCELLENECEK
 
     const formattedStats = {
       see: 0,
@@ -74,6 +77,8 @@ export async function GET(request) {
       review_percent: 0,
       whatsapp: 0,
       whatsapp_percent: 0,
+      website_visit: 0,
+      website_visit_percent: 0,
     };
 
     totalRecords.map(item => {
@@ -81,7 +86,7 @@ export async function GET(request) {
             formattedStats.see++;
         }
         if(item.activitytype == 'locksmith_detail_view'){
-            formattedStats.see++;
+            formattedStats.visit++;
         }
         if(item.activitytype == 'call_request'){
             formattedStats.call++;
@@ -93,7 +98,7 @@ export async function GET(request) {
             formattedStats.whatsapp++;
         }
         if(item.activitytype == 'website_visit'){
-            formattedStats.visit++;
+            formattedStats.website_visit++;
         }
     });
 

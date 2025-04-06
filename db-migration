@@ -195,6 +195,7 @@ CREATE TABLE key_transactions (
 CREATE TABLE reviews (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     locksmithId UUID NOT NULL REFERENCES locksmiths(id),
+    userId UUID NOT NULL REFERENCES users(id),
     userName TEXT,
     rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
     comment TEXT,
@@ -242,7 +243,7 @@ CREATE TYPE user_activity_type_enum AS ENUM (
     'call_request',
     'review_submit',
     'profile_visit',
-    'whatsapp_call',
+    'whatsapp_message',
     'website_visit',
 );
 
@@ -263,6 +264,7 @@ CREATE TABLE user_activity_logs (
     isRepeated BOOLEAN DEFAULT FALSE,
     activityCount INTEGER DEFAULT 0,
     isFraudulent BOOLEAN DEFAULT FALSE,
+    reviewid UUID REFERENCES reviews(id),
     
     createdAt TIMESTAMPTZ DEFAULT NOW() 
 );
