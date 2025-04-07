@@ -1,23 +1,32 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import AdresArama from "./AdresArama";
-import { useRouter } from "next/navigation";
 import { useToast } from "./ToastContext";
 
 export default function SearchForm({ onSearch }) {
-  const router = useRouter();
   const [selectedPlace, setSelectedPlace] = useState(null);
-  const [selectedService, setSelectedService] = useState("");
+  const [selectedService, setSelectedService] = useState(null);
   const [warnLocation, setWarnLocation] = useState(false);
   const [warnService, setWarnService] = useState(false);
+  const [serviceList, setServiceList] = useState([]);
   const { showToast } = useToast();
+
+  const getServices = async () => {
+    const response = await fetch('/api/public/services');
+    const data = await response.json();
+    setServiceList(data.services);
+  };
+
+  useEffect(() => {
+    getServices();
+  }, []);
 
   const handlePlaceSelect = (place) => {
     setSelectedPlace(place);
-    console.log("Seçilen adres:", place.formatted_address);
+    console.log("Seçilen adres:", place);
     setWarnLocation(false);
   };
 
@@ -27,52 +36,16 @@ export default function SearchForm({ onSearch }) {
     setWarnService(false);
   };
 
-  const handleSearch = () => {
-    // Form kontrolü
-    if (selectedPlace === null && selectedService === "") {
-      showToast("Lütfen hem konum hem de hizmet seçiniz", "error", 3000);
-      return;
-    } else if (selectedPlace === null) {
-      showToast("Lütfen bir konum (il veya ilçe) seçiniz", "error", 3000);
-      return;
-    } else if (selectedService === "") {
-      showToast("Lütfen bir hizmet türü seçiniz", "error", 3000);
-      return;
-    }
-    // Eğer ana sayfada değilsek, ana sayfaya yönlendir
-    const isHomePage = window.location.pathname === "/" || window.location.pathname === "";
-    
-    if (!isHomePage) {
-      // URL'ye parametre ekleyerek ana sayfaya yönlendir
-      const params = new URLSearchParams();
-      if (selectedPlace) {
-        params.append("location", selectedPlace.formatted_address);
-      }
-      if (selectedService) {
-        params.append("service", selectedService);
-      }
-      
-      const searchParams = params.toString() ? `?${params.toString()}` : "";
-      router.push(`/${searchParams}`);
-    } else {
-      // Ana sayfadaysak, doğrudan arama fonksiyonunu çağır
-      if (onSearch) onSearch();
-    }
-  };
 
-  const handleButtonClick = () => {
-    if (selectedPlace === null && selectedService === "") {
-      setWarnLocation(true);
-      setWarnService(true);
-      showToast("Lütfen ilçenizi seçiniz", "warning", 3000);
-    } else if (selectedPlace === null) {
+  const handleSearch = () => {
+    if (selectedPlace === null) {
       setWarnLocation(true);
       showToast("Lütfen ilçenizi seçiniz", "warning", 3000);
-    } else if (selectedService === "") {
+    } else if (selectedService === null) {
       setWarnService(true);
       showToast("Lütfen bir hizmet türü seçiniz", "warning", 3000);
     } else {
-      handleSearch();
+      if (onSearch) onSearch();
     }
   };
 
@@ -100,17 +73,15 @@ export default function SearchForm({ onSearch }) {
               <SelectValue placeholder="Hizmet Seçin" />
             </SelectTrigger>
             <SelectContent className="select-content">
-              <SelectItem value="69fe5a65-88ee-4e23-b3e8-b53370f5721a" className="select-item">Acil Çilingir</SelectItem>
-              <SelectItem value="a5570d34-ee52-4f69-8010-0dce311cbc7e" className="select-item">7/24 Çilingir</SelectItem>
-              <SelectItem value="915e4a47-b6b6-42c0-a3eb-424262b7b238" className="select-item">Kapı Açma</SelectItem>
-              <SelectItem value="a782c9d0-e2d6-48fd-b537-ad3d7482ef0e" className="select-item">Oto Çilingir</SelectItem>
-              <SelectItem value="7e18c529-faf1-4139-be87-92e2c3ed98aa" className="select-item">Kasa Çilingir</SelectItem>
+              {serviceList.map((service) => (
+                <SelectItem key={service.id} value={service.id} className="select-item">{service.name}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
         
         <Button 
-          onClick={handleButtonClick}
+          onClick={handleSearch}
           className={`bg-blue-600 h-10 md:h-14 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg mt-2 md:mt-0 w-full md:w-auto ${!(selectedPlace && selectedService) ? 'opacity-90 cursor-pointer' : ''}`}
         >
           Çilingir Bul

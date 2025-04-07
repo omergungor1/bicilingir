@@ -101,6 +101,13 @@ CREATE TABLE locksmith_services (
     PRIMARY KEY (locksmithId, serviceId)
 );
 
+-- Çilingir İlçe Servis İlişkileri Tablosu
+CREATE TABLE locksmith_district_services (
+    locksmithId UUID REFERENCES locksmiths(id) ON DELETE CASCADE,
+    districtId INTEGER REFERENCES districts(id) ON DELETE CASCADE,
+    PRIMARY KEY (locksmithId, districtId)
+);
+
 -- Hizmet Alanları Tablosu
 CREATE TABLE service_areas (
     locksmithId UUID REFERENCES locksmiths(id) ON DELETE CASCADE,

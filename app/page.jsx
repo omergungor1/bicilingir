@@ -120,7 +120,6 @@ export default function Home() {
     }, 100);
 
     try {
-      
       const { locksmiths: fetchedLocksmiths, error } = await getLocksmiths();
       
       if (error) {
@@ -134,12 +133,10 @@ export default function Home() {
       console.error("Çilingirler getirilirken hata:", err);
       setError("Veri yüklenirken bir hata oluştu");
       showToast("Beklenmeyen bir hata oluştu", "error", 3000);
-    }
-    
-    setTimeout(async () => {
+    } finally {
       setIsLoading(false);
       setShowResults(true);
-    }, 1000); 
+    }
   };
 
   // SearchParamsHandler bileşeni
@@ -188,6 +185,7 @@ export default function Home() {
     // Toast bildirimini göster
     showToast("Değerlendirmeniz için teşekkür ederiz!", "success", 3000);
   };
+
 
   return (
     <main className="flex min-h-screen flex-col items-center">

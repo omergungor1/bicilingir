@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Checkbox } from "../../components/ui/checkbox";
-import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X, Footprints, File, ExternalLinkIcon, Clock, Search, CheckCircle, AlertTriangle, AlertCircle, Bell, User, Trash2, MessageCircle, Globe } from "lucide-react";
+import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X, Footprints, File, ExternalLinkIcon, Clock, Search, CheckCircle, AlertTriangle, AlertCircle, Bell, User, Trash2, MessageCircle, Globe, MapPin } from "lucide-react";
 import { useToast } from "../../components/ToastContext";
 import Link from "next/link";
 import Image from "next/image";
@@ -45,6 +45,11 @@ function CilingirPanelContent() {
   const [isPurchasePending, setIsPurchasePending] = useState(false);
   const [profileImageIndex, setProfileImageIndex] = useState(0);
   const [isUpdatingServices, setIsUpdatingServices] = useState(false);
+
+  const [isUpdatingDistricts, setIsUpdatingDistricts] = useState(false);
+  const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
+  const [serviceDistricts, setServiceDistricts] = useState([]);
+
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isWorkingHoursUpdating, setIsWorkingHoursUpdating] = useState(false);
   const [isSavingDailyKeys, setIsSavingDailyKeys] = useState(false);
@@ -58,7 +63,7 @@ function CilingirPanelContent() {
   const [totalPagesActivities, setTotalPagesActivities] = useState(1);
   const [currentPageActivities, setCurrentPageActivities] = useState(1);
 
-
+  const [provinceChanged, setProvinceChanged] = useState(false);
   
   const [activeTab, setActiveTab] = useState(tabParam || "dashboard");
   const [isCertificateDialogOpen, setIsCertificateDialogOpen] = useState(false);
@@ -484,6 +489,7 @@ function CilingirPanelContent() {
       fetchBusinessImages(),
       fetchDailyKeys(),
       fetchKeyUsageHistory(),
+      fetchServiceDistricts(),
     ]);
   }, []);
 
@@ -563,6 +569,48 @@ function CilingirPanelContent() {
       setIsUpdatingServices(false);
   };
 
+  const fetchServiceDistricts = async () => {
+    const response = await fetch('/api/locksmith/districts', {
+      credentials: 'include'
+    });
+    const data = await response.json();
+    setServiceDistricts(data.districts);
+  };
+
+
+  const handleDistrictActiveChange = async (districtId, type, isActive) => {
+    setServiceDistricts(prev => prev.map(district => 
+      district.id === districtId 
+        ? { 
+            ...district, 
+            [type === 'day' ? 'isDayActive' : 'isNightActive']: isActive 
+          } 
+        : district
+    ));
+  };
+
+  const handleUpdateDistricts = async () => {
+    setIsUpdatingDistricts(true);
+    const districtIds = serviceDistricts.map(district => ({
+      districtid: district.id,
+      isdayactive: district.isDayActive || false,
+      isnightactive: district.isNightActive || false
+    }));
+    
+    //supabase ile güncelle
+    const response = await fetch(`/api/locksmith/districts`, {
+      method: 'PUT',
+      credentials: 'include',
+      body: JSON.stringify({districtIds})
+    });
+
+    if (!response.ok) {
+      console.error('İlçe güncellenirken bir hata oluştu');
+    } else {
+      showToast('İlçeler başarıyla güncellendi', 'success');
+    }
+    setIsUpdatingDistricts(false);
+  };
 
   // Profil ve işletme resimlerini getir
   const fetchBusinessImages = async () => {
@@ -885,6 +933,9 @@ function CilingirPanelContent() {
       }
 
       showToast("Profil bilgileri başarıyla güncellendi", "success");
+      if(provinceChanged){
+        fetchServiceDistricts();
+      }
     } catch (error) {
       showToast("Profil bilgileri güncellenirken bir hata oluştu", "error");
       console.error("Profil bilgileri güncellenirken bir hata oluştu:", error);
@@ -1385,6 +1436,14 @@ function CilingirPanelContent() {
                   </button>
                   
                   <button 
+                    onClick={() => handleTabChange("location")}
+                    className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "location" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
+                  >
+                    <MapPin className="h-5 w-5"/>
+                    <span>Hizmet Alanlarım</span>
+                  </button>
+                  
+                  <button 
                     onClick={() => handleTabChange("reviews")}
                     className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "reviews" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                   >
@@ -1851,7 +1910,10 @@ function CilingirPanelContent() {
                         <label className="block text-sm mb-1">İl</label>
                         <select 
                           className="w-full p-2 border rounded-md" 
-                          onChange={(e) => handleProvinceChange(e.target.value)}
+                          onChange={(e) => {
+                            handleProvinceChange(e.target.value)
+                            setProvinceChanged(true)
+                          }}
                           value={locksmith?.provinceid || ""}
                         >
                           <option value="">İl Seçiniz</option>
@@ -2355,6 +2417,86 @@ function CilingirPanelContent() {
                       disabled={isUpdatingServices}
                       className="bg-blue-600 hover:bg-blue-700 text-white">
                       Değişiklikleri Kaydet
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+
+            {activeTab === "location" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Hizmet Alanlarım</CardTitle>
+                  <CardDescription>Hizmet alanlarınızı yönetin</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4 mb-6">
+                    {serviceDistricts.map((district, index) => (
+                      <Card key={index} className="mb-4 overflow-hidden transition-all duration-200 hover:shadow-md border border-gray-200 bg-white">
+                        <CardContent className="p-0">
+                          <div className="flex flex-col">
+                            {/* Başlık Kısmı */}
+                            <div className="flex items-center p-4 border-b border-gray-100 bg-gray-50">
+                              <label 
+                                className="font-medium text-lg text-gray-700"
+                              >
+                                {district.name}
+                              </label>
+                              
+                              {(!district.isDayActive && !district.isNightActive) && (
+                                <span className="ml-auto text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-600">Aktif Değil</span>
+                              )}
+                              
+                              {(district.isDayActive || district.isNightActive) && (
+                                <span className="ml-auto text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-600">Aktif</span>
+                              )}
+                            </div>
+                            
+                            {/* Gündüz ve Gece Seçenekleri */}
+                            <div className="flex flex-col sm:flex-row">
+                              <div className="flex items-center p-4 flex-1 border-b sm:border-b-0 sm:border-r border-gray-100 cursor-pointer" onClick={() => handleDistrictActiveChange(district.id, 'day', !district.isDayActive)}>
+                                <div className="flex items-center">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                                  </svg>
+                                  <label className="text-md font-medium mr-3 cursor-pointer">Gündüz</label>
+                                </div>
+                                <Checkbox 
+                                  id={`district-day-${district.id}`} 
+                                  checked={district.isDayActive || false}
+                                  onCheckedChange={(checked) => handleDistrictActiveChange(district.id, 'day', checked)}
+                                  className="ml-auto h-5 w-5"
+                                />
+                              </div>
+                              
+                              <div className="flex items-center p-4 flex-1 cursor-pointer" onClick={() => handleDistrictActiveChange(district.id, 'night', !district.isNightActive)}>
+                                <div className="flex items-center">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-600 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                                  </svg>
+                                  <label htmlFor={`district-night-${district.id}`} className="text-md font-medium mr-3 cursor-pointer">Gece</label>
+                                </div>
+                                <Checkbox 
+                                  id={`district-night-${district.id}`} 
+                                  checked={district.isNightActive || false}
+                                  onCheckedChange={(checked) => handleDistrictActiveChange(district.id, 'night', checked)}
+                                  className="ml-auto h-5 w-5"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  
+                  <div className="flex justify-start">
+                    <Button 
+                      onClick={()=> handleUpdateDistricts()}
+                      disabled={isUpdatingDistricts}
+                      className="bg-blue-600 hover:bg-blue-700 text-white">
+                      Hizmet Alanlarını Güncelle
                     </Button>
                   </div>
                 </CardContent>
