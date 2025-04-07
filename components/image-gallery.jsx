@@ -2,10 +2,12 @@
 
 import React, { useState } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import Image from "next/image";
 
 export const ImageGallery = ({ images, locksmithName }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [imgError, setImgError] = useState({});
 
   const openGallery = (index) => {
     setCurrentIndex(index);
@@ -28,6 +30,13 @@ export const ImageGallery = ({ images, locksmithName }) => {
     setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
   };
 
+  const handleImageError = (index) => {
+    setImgError(prev => ({
+      ...prev,
+      [index]: true
+    }));
+  };
+
   // Klavye kısayolları için event listener
   React.useEffect(() => {
     const handleKeyDown = (e) => {
@@ -42,6 +51,17 @@ export const ImageGallery = ({ images, locksmithName }) => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen]);
 
+  // Boş resim verilmişse
+  if (!images || images.length === 0) {
+    return <div className="text-gray-500">Galeri resimleri bulunamadı</div>;
+  }
+
+  // Kullanılabilir resim sayısını kontrol et
+  const validImages = images.filter((img, idx) => !imgError[idx]);
+  if (validImages.length === 0) {
+    return <div className="text-gray-500">Resimleri yüklerken bir sorun oluştu</div>;
+  }
+
   return (
     <>
       <div className="grid grid-cols-2 gap-2">
@@ -51,11 +71,20 @@ export const ImageGallery = ({ images, locksmithName }) => {
             className="aspect-square relative overflow-hidden rounded-lg cursor-pointer"
             onClick={() => openGallery(index)}
           >
-            <img
-              src={image}
-              alt={`${locksmithName} - Resim ${index + 1}`}
-              className="object-cover w-full h-full hover:scale-110 transition-transform duration-300"
-            />
+            {!imgError[index] ? (
+              <Image
+                src={image.image_url}
+                alt={`${locksmithName} - Resim ${index + 1}`}
+                width={300}
+                height={300}
+                className="object-cover w-full h-full hover:scale-110 transition-transform duration-300"
+                onError={() => handleImageError(index)}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                Resim Yüklenemedi
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -81,10 +110,12 @@ export const ImageGallery = ({ images, locksmithName }) => {
           </button>
           
           <div className="max-w-4xl max-h-[80vh] relative">
+            {/* Tam ekran modda normal img kullanıyoruz çünkü boyut sınırlamaları ve remote URL'ler için daha esneklik sağlıyor */}
             <img
-              src={images[currentIndex]}
+              src={images[currentIndex].image_url}
               alt={`${locksmithName} - Resim ${currentIndex + 1}`}
               className="max-w-full max-h-[80vh] object-contain"
+              onError={() => handleImageError(currentIndex)}
             />
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 rounded-full px-3 py-1 text-white text-sm">
               {currentIndex + 1} / {images.length}

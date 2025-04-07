@@ -18,27 +18,42 @@ export async function GET(request, { params }) {
 
     // 1. Çilingiri slug'a göre bul
     const { data: locksmith, error: locksmithError } = await supabase
-      .from('locksmiths')
-      .select(`
-        id,
-        authid,
-        businessname,
-        fullname,
-        phonenumber,
-        email,
-        provinceid,
-        districtid,
-        tagline,
-        avgrating,
-        totalreviewcount,
-        profileimageurl,
-        isverified,
-        isactive,
-        slug
-      `)
-      .eq('slug', slug)
-      .eq('isactive', true)
-      .single();
+    .from('locksmiths')
+    .select(`
+      id,
+      authid,
+      businessname,
+      fullname,
+      phonenumber,
+      email,
+      provinceid,
+      districtid,
+      tagline,
+      avgrating,
+      totalreviewcount,
+      isverified,
+      isactive,
+      slug,
+      locksmith_images (
+        image_url,
+        is_main,
+        is_profile
+      ),
+      locksmith_working_hours (
+        dayofweek,
+        is24hopen,
+        isworking,
+        opentime,
+        closetime
+      )
+    `)
+    .eq('slug', slug)
+    .eq('isactive', true)
+    .single();
+
+    //çilingir çalışma günlerini listele -> dayofweek'e göre sırala
+    const sortedWorkingHours = locksmith.locksmith_working_hours.sort((a, b) => a.dayofweek - b.dayofweek); 
+    locksmith.locksmith_working_hours = sortedWorkingHours;
 
     if (locksmithError) {
       console.error('Çilingir bulunamadı:', locksmithError);
@@ -57,16 +72,15 @@ export async function GET(request, { params }) {
       .from('locksmith_services')
       .select(`
         serviceid,
-        isactive,
         services (
           id,
           name,
-          minpricemesai,
-          maxpricemesai,
-          minpriceaksam,
-          maxpriceaksam,
-          minpricegece,
-          maxpricegece
+          minPriceMesai,
+          maxPriceMesai,
+          minPriceAksam,
+          maxPriceAksam,
+          minPriceGece,
+          maxPriceGece
         )
       `)
       .eq('locksmithid', locksmith.id)
@@ -86,13 +100,30 @@ export async function GET(request, { params }) {
       .single();
 
     // 5. Yorumları getir
-    const { data: reviews, error: reviewsError } = await supabase
-      .from('reviews')
-      .select('*')
-      .eq('locksmithid', locksmith.id)
-      .eq('status', 'approved')
-      .order('createdat', { ascending: false })
-      .limit(5);
+    // const { data: reviews, error: reviewsError } = await supabase
+    //   .from('reviews')
+    //   .select('*')
+    //   .eq('locksmithid', locksmith.id)
+    //   .eq('status', 'approved')
+    //   .order('createdat', { ascending: false })
+    //   .limit(3);
+
+    const reviewPromises = [5, 4, 3, 2, 1].map(rating =>
+        supabase
+          .from('reviews')
+          .select('*')
+          .eq('locksmithid', locksmith.id)
+          .eq('status', 'approved')
+          .eq('rating', rating)
+          .order('createdat', { ascending: false })
+          .limit(3)
+      );
+      
+      const reviewResults = await Promise.all(reviewPromises);
+      
+      // Sonuçları birleştir:
+      const reviews = reviewResults.flatMap(r => r.data || []);
+
 
     // 6. Benzer çilingirleri getir (aynı ilçede bulunan diğer çilingirler)
     const { data: similarLocksmiths, error: similarError } = await supabase
@@ -117,6 +148,7 @@ export async function GET(request, { params }) {
       .neq('id', locksmith.id)
       .limit(3);
 
+
     // Çilingir bilgilerini birleştir
     const locksmithData = {
       ...locksmith,
@@ -128,16 +160,16 @@ export async function GET(request, { params }) {
         name: service.services.name,
         prices: {
           mesai: {
-            min: service.services.minpricemesai,
-            max: service.services.maxpricemesai
+            min: service.services.minPriceMesai,
+            max: service.services.maxPriceMesai
           },
           aksam: {
-            min: service.services.minpriceaksam,
-            max: service.services.maxpriceaksam
+            min: service.services.minPriceAksam,
+            max: service.services.maxPriceAksam
           },
           gece: {
-            min: service.services.minpricegece,
-            max: service.services.maxpricegece
+            min: service.services.minPriceGece,
+            max: service.services.maxPriceGece
           }
         }
       })) : [],
@@ -154,14 +186,14 @@ export async function GET(request, { params }) {
         slug: item.slug
       })) : []
     };
-
+    
     return NextResponse.json({ 
       success: true,
       locksmith: locksmithData
     });
     
   } catch (error) {
-    console.error('Çilingir detayları getirilirken hata:', error);
+    console.error('Çilingir locksmithServices getirilirken hata:', error);
     return NextResponse.json({ error: "Sunucu hatası" }, { status: 500 });
   }
 } 

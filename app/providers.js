@@ -1,15 +1,15 @@
 'use client'
 
-import { Provider } from 'react-redux'
-import store from '../redux/store'
 import { useEffect } from 'react'
-import { checkAuthState } from '../redux/features/authSlice'
+import { Provider } from 'react-redux'
+import { store } from '../redux/store'
+import { initUserSession } from '../redux/features/userSlice'
 
-export function Providers({ children }) {
-  // Uygulama başladığında oturum durumunu kontrol et
+export default function Providers({ children }) {
   useEffect(() => {
-    store.dispatch(checkAuthState())
-  }, [])
+    // Kullanıcı oturumunu başlat
+    store.dispatch(initUserSession());
+  }, []);
 
   return (
     <Provider store={store}>

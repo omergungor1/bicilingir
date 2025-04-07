@@ -22,109 +22,51 @@ function extractProjectRef(url) {
 }
 
 /**
- * API route'lar için basit Supabase istemcisi oluşturur
- * @param {Request} request - Next.js request nesnesi
- * @returns {Object} Supabase istemcisi ve response
+ * API route içinde Supabase istemcisi oluşturur
+ * @param {Request} request - Next.js route istek nesnesi
+ * @returns {Object} Supabase istemci nesnesi
  */
 export function createRouteClient(request) {
-  let response = NextResponse.next();
-  
-  // Cookie header'ı parse et ve debug için yazdır
-  const cookieHeader = request.headers.get('cookie');
-  console.log('Raw Cookie Header:', cookieHeader);
-  
-  // Her zaman daha detaylı debug bilgisi için
-  console.log('Request method:', request.method);
-  console.log('Request URL:', request.url);
-  
-  // Supabase URL'sini al ve proje referansını çıkar
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const projectRef = extractProjectRef(supabaseUrl);
-  console.log('Supabase Project Ref:', projectRef);
-  
-  // Supabase token cookie adını oluştur
-  const authTokenCookieName = `sb-${projectRef}-auth-token`;
-  
-  // Cookie parselamayı manuel yap - daha güvenilir yöntem
-  let authTokenValue = null;
-  
-  if (cookieHeader) {
-    const cookies = cookieHeader.split(';').map(c => c.trim());
-    for (const cookie of cookies) {
-      if (cookie.startsWith(`${authTokenCookieName}=`)) {
-        authTokenValue = cookie.substring(authTokenCookieName.length + 1);
-        break;
-      }
-    }
-  }
-  
-  console.log(`${authTokenCookieName} cookie bulundu:`, !!authTokenValue);
-  
-  if (authTokenValue) {
-    try {
-      // Cookie URL-encoded olduğu için decode et
-      const decodedValue = decodeURIComponent(authTokenValue);
-      console.log('Cookie decode edildi, token formatı kontrol ediliyor...');
-      
-      // Token formatını kontrol et ([accessToken, refreshToken] dizisi olmalı)
-      if (decodedValue.startsWith('[') && decodedValue.endsWith(']')) {
-        // Daha güvenilir şekilde parse et
-        const tokenArray = JSON.parse(decodedValue);
-        console.log('Token dizisi başarıyla parse edildi:', 
-          tokenArray.length >= 2 ? 'Geçerli format' : 'Geçersiz format');
-      } else {
-        console.log('Token formatı dizi formatında değil');
-      }
-    } catch (e) {
-      console.error('Cookie decode/parse hatası:', e.message);
-    }
-  }
-  
-  // Supabase istemcisi oluştur
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  console.log('Supabase URL:', supabaseUrl);
-  console.log('Supabase key başlangıcı:', supabaseKey?.substring(0, 5) + '...');
-  
   const supabase = createServerClient(
-    supabaseUrl,
-    supabaseKey,
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
-        get(name) {
-          console.log(`Cookie isteniyor: ${name}`);
+        get: (name) => {
+          const headers = new Headers(request.headers);
+          const cookie = headers.get('cookie');
+          if (!cookie) return undefined;
           
-          // Supabase auth token cookie'sini manuel kontrol et
-          if (name === authTokenCookieName && authTokenValue) {
-            console.log('Auth token cookie sağlanıyor');
-            return authTokenValue;
+          const match = cookie.match(new RegExp(`(^|;\\s*)${name}=([^;]*)`));
+          return match ? decodeURIComponent(match[2]) : undefined;
+        },
+        getAll: () => {
+          const cookieHeader = request.headers.get('cookie');
+          if (!cookieHeader) return [];
+          
+          const cookies = {};
+          const parts = cookieHeader.split(';');
+          
+          for (const part of parts) {
+            const [key, ...valueArr] = part.trim().split('=');
+            if (key) {
+              const value = valueArr.join('=');
+              cookies[key] = decodeURIComponent(value);
+            }
           }
           
-          // Diğer cookie'ler için normal yöntemi kullan
-          const cookie = request.cookies.get(name)?.value;
-          return cookie;
+          return Object.entries(cookies).map(([name, value]) => ({ 
+            name, 
+            value 
+          }));
         },
-        set(name, value, options) {
-          console.log(`Cookie ayarlanıyor: ${name}`);
-          response.cookies.set({
-            name,
-            value,
-            ...options
-          });
-        },
-        remove(name, options) {
-          console.log(`Cookie siliniyor: ${name}`);
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-            maxAge: 0
-          });
-        }
+        set: () => {}, // Boş fonksiyon - response döndürmüyoruz
+        remove: () => {}, // Boş fonksiyon - response döndürmüyoruz
       },
     }
   );
   
-  return { supabase, response };
+  return { supabase };
 }
 
 /**
@@ -395,4 +337,174 @@ export async function checkAuth(request) {
     return NextResponse.json({ error: 'Çilingir bilgileriniz bulunamadı' }, { status: 404 });
   }
   }
+  
+/**
+ * Veritabanında kullanıcı oluşturur veya günceller
+ * @param {Object} supabase - Supabase istemcisi
+ * @param {string} userId - Kullanıcı ID (varsa)
+ * @param {string} sessionId - Oturum ID
+ * @param {string} userIp - Kullanıcı IP adresi
+ * @param {string} userAgent - Kullanıcı tarayıcı bilgisi
+ * @returns {Promise<{userId: string, isNewUser: boolean}>} Kullanıcı bilgisi
+ */
+export async function createOrUpdateUser(supabase, userId, sessionId, userIp, userAgent) {
+  try {
+    let newUserId = userId;
+    let isNewUser = false;
+    
+    // Eğer mevcut bir userId varsa, kullanıcıyı güncelle
+    if (userId) {
+      const updateData = {
+        userip: userIp,
+        updatedat: new Date().toISOString()
+      };
+      
+      if (userAgent) {
+        updateData.useragent = userAgent;
+      }
+      
+      const { data, error } = await supabase
+        .from('users')
+        .update(updateData)
+        .eq('id', userId)
+        .select();
+        
+      if (error) {
+        // Eğer kullanıcı bulunamazsa, yeni kullanıcı oluşturacağız
+        if (error.code === 'PGRST116') {
+          newUserId = null;
+        } else {
+          throw error;
+        }
+      }
+    }
+    
+    // Eğer userId yoksa veya bulunamadıysa, yeni bir kullanıcı oluştur
+    if (!newUserId) {
+      const { v4: uuidv4 } = await import('uuid');
+      
+      const insertData = {
+        id: uuidv4(),
+        // sessionid: sessionId,
+        userip: userIp,
+        createdat: new Date().toISOString(),
+        updatedat: new Date().toISOString()
+      };
+      
+      if (userAgent) {
+        insertData.useragent = userAgent;
+      }
+      
+      const { data, error } = await supabase
+        .from('users')
+        .insert(insertData)
+        .select();
+        
+      if (error) {
+        throw error;
+      }
+      
+      if (data && data.length > 0) {
+        newUserId = data[0].id;
+        isNewUser = true;
+      }
+    }
+    
+    return { userId: newUserId, isNewUser };
+  } catch (error) {
+    console.error('Kullanıcı oluşturma/güncelleme hatası:', error);
+    throw error;
+  }
+}
+
+/**
+ * Kullanıcı aktivitesini kaydeder
+ * @param {Object} supabase - Supabase istemcisi
+ * @param {string} userId - Kullanıcı ID
+ * @param {string} sessionId - Oturum ID
+ * @param {string} action - Aktivite tipi (enum: search, locksmith_list_view, locksmith_detail_view, call_request, review_submit, profile_visit, whatsapp_message, website_visit)
+ * @param {string} details - Aktivite detayları
+ * @param {string} entityId - İlgili varlık ID'si
+ * @param {string} entityType - İlgili varlık tipi
+ * @param {Object} additionalData - Ek veri (searchProvinceId, searchDistrictId, searchServiceId, locksmithId, reviewid)
+ * @returns {Promise<string>} Aktivite ID'si
+ */
+export async function logUserActivity(supabase, userId, sessionId, action, details, entityId, entityType, additionalData = {}) {
+  try {
+    const { v4: uuidv4 } = await import('uuid');
+    
+    // Aktivite tipini kontrol et ve dönüştür
+    const activityTypeMap = {
+      'arama-yapildi': 'search',
+      'sayfa-goruntuleme': 'locksmith_list_view',
+      'cilingir-detay-goruntuleme': 'locksmith_detail_view',
+      'cilingir-arama': 'call_request',
+      'degerlendirme-gonderme': 'review_submit',
+      'profil-ziyaret': 'profile_visit',
+      'whatsapp-mesaj': 'whatsapp_message',
+      'site-ziyaret': 'website_visit',
+      'site-giris': 'website_visit'
+    };
+    
+    // Aktivite tipini dönüştür veya varsayılan değeri kullan
+    const activityType = activityTypeMap[action] || 'website_visit';
+    
+    const insertData = {
+      // id: uuidv4(),
+      userid: userId,
+      activitytype: activityType,
+      createdat: new Date().toISOString()
+    };
+    
+    // SessionId varsa ve UUID formatındaysa ekle
+    if (sessionId) {
+      try {
+        // UUID formatını kontrol et (basit kontrol)
+        const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        if (uuidPattern.test(sessionId)) {
+          insertData.sessionid = sessionId;
+        } else {
+          // Geçerli bir UUID değilse, yeni bir UUID oluştur
+          insertData.sessionid = uuidv4();
+          // Metadata yoksa JSONB alan ekleyip düzenleyebiliriz
+          console.log('SessionId UUID formatında değil, yeni UUID oluşturuluyor');
+        }
+      } catch (e) {
+        console.error('SessionId işleme hatası:', e);
+      }
+    }
+
+    
+    // Ek veri alanlarını ekle
+    if (additionalData.searchProvinceId) insertData.searchprovinceid = additionalData.searchProvinceId;
+    if (additionalData.searchDistrictId) insertData.searchdistrictid = additionalData.searchDistrictId;
+    if (additionalData.searchServiceId) insertData.searchserviceid = additionalData.searchServiceId;
+    if (additionalData.locksmithId || entityType === 'locksmith') insertData.locksmithid = additionalData.locksmithId || entityId;
+    if (additionalData.reviewId) insertData.reviewid = additionalData.reviewId;
+    
+    console.log('Aktivite eklenecek:', insertData);
+    
+    const { data, error } = await supabase
+      .from('user_activity_logs')
+      .insert(insertData)
+      .select();
+
+      console.log('Aktivite eklendi:', data,error);
+      
+    if (error) {
+      console.error('Aktivite ekleme SQL hatası:', error);
+      throw error;
+    }
+    
+    let activityId = null;
+    if (data && data.length > 0) {
+      activityId = data[0].id;
+    }
+    
+    return activityId;
+  } catch (error) {
+    console.error('Aktivite kaydetme hatası:', error);
+    throw error;
+  }
+}
   

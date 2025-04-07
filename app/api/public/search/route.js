@@ -4,9 +4,13 @@ import { createRouteClient } from '../../utils';
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const serviceId = searchParams.get('serviceid');
-    const districtId = searchParams.get('districtid');
-    const provinceId = searchParams.get('provinceid');
+
+    
+    
+    const serviceId = searchParams.get('serviceId');
+    const districtId = searchParams.get('districtId');
+    const provinceId = searchParams.get('provinceId');
+    
 
     if (!serviceId) {
       return NextResponse.json({ error: "Bir hizmet seçmelisiniz" }, { status: 400 });
@@ -62,7 +66,6 @@ export async function GET(request) {
       .eq('locksmiths.isactive', true);
 
 
-    console.log('serviceLocksmiths****:', serviceLocksmiths);
     if (serviceError) {
       console.error("Servis sorgulamasında hata:", serviceError);
       return NextResponse.json({ error: "Çilingirler aranırken bir hata oluştu" }, { status: 500 });
@@ -203,7 +206,6 @@ export async function GET(request) {
         positionGroup = 8; // Anahtar bakiyesi yok ve ilde hizmet veriyor
       }
 
-      console.log('locksmith', locksmith);
 
       /**
        * - Mesai Saatleri & Ücretlendirme

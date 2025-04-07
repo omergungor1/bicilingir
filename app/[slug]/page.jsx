@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { useParams } from "next/navigation";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { getSimilarLocksmiths } from "../actions";
@@ -25,6 +27,7 @@ const styles = {
     justifyContent: 'center',
     color: '#ffffff',
     fontWeight: 'bold',
+    overflow: 'hidden',
   },
   smallCompanyLogo: {
     width: '40px',
@@ -85,14 +88,22 @@ const LoadingSpinner = () => (
 );
 
 export default function LocksmithDetail({ params }) {
-  // Next.js 14'te params bir Promise, React.use() ile unwrap ediyoruz
-  const resolvedParams = React.use(params);
-  const slug = resolvedParams.slug;
+  // Next.js 14'te iki yoldan slug alabiliriz: 
+  // 1. React.use ile params'ı unwrap ederek (server component uyumlu)
+  // 2. useParams hook'u ile (client component uyumlu)
+  
+  // Önce useParams ile deneyelim, olmazsa params'ı kullanacağız
+  const routeParams = useParams();
+  // Slug'ı routeParams'dan veya normal params'dan al
+  const slug = routeParams.slug || (params ? React.use(params).slug : null);
   
   const [locksmith, setLocksmith] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+  const [selectedRating, setSelectedRating] = useState(null);
+  const [filteredReviews, setFilteredReviews] = useState([]);
+  const [visibleReviews, setVisibleReviews] = useState(3); // İlk başta kaç yorum gösterileceği
+
   useEffect(() => {
     const fetchLocksmithDetails = async () => {
       try {
@@ -106,7 +117,8 @@ export default function LocksmithDetail({ params }) {
         
         if (data.success && data.locksmith) {
           setLocksmith(data.locksmith);
-          console.log(data.locksmith);
+          setFilteredReviews(data.locksmith.reviews || []);
+          console.log("Çilingir verileri:", data.locksmith);
         } else {
           throw new Error('Çilingir bilgileri bulunamadı');
         }
@@ -123,6 +135,35 @@ export default function LocksmithDetail({ params }) {
     }
   }, [slug]);
   
+  // Yıldız ratingine göre yorumları filtrele
+  useEffect(() => {
+    if (!locksmith || !locksmith.reviews) return;
+    
+    // Yeni bir filtre seçildiğinde görünen yorum sayısını sıfırla
+    setVisibleReviews(3);
+    
+    if (selectedRating === null) {
+      // Eğer hiçbir yıldız seçilmemişse tüm yorumları göster
+      setFilteredReviews(locksmith.reviews);
+    } else {
+      // Seçilen yıldıza göre yorumları filtrele
+      const filtered = locksmith.reviews.filter(review => 
+        Math.floor(review.rating) === selectedRating
+      );
+      setFilteredReviews(filtered);
+    }
+  }, [selectedRating, locksmith]);
+
+  // Tüm yorumları göster
+  const showAllReviews = () => {
+    setSelectedRating(null);
+  };
+  
+  // Daha fazla yorum yükle
+  const loadMoreReviews = () => {
+    setVisibleReviews(prev => prev + 3); // Her seferinde 3 yorum daha ekle
+  };
+
   // Hata durumunda
   if (error) {
     return (
@@ -174,7 +215,15 @@ export default function LocksmithDetail({ params }) {
             <div className="w-full lg:w-2/3 p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-200">
               <div className="mb-6">
                 <div style={styles.companyLogo} className="mb-3">
-                  <span>{locksmith.businessname?.substring(0, 2) || "ÇL"}</span>
+                  {locksmith.locksmith_images && locksmith.locksmith_images.find(image => image.is_profile)?.image_url ? (
+                    <img 
+                      src={locksmith.locksmith_images.find(image => image.is_profile)?.image_url} 
+                      alt="İşletme Profil Resmi"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span>{locksmith.businessname?.substring(0, 2) || "ÇL"}</span>
+                  )}
                 </div>
                 <div className="text-gray-500 mb-1">{locksmith.province}, {locksmith.district}</div>
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">{locksmith.businessname || locksmith.fullname}</h1>
@@ -182,6 +231,12 @@ export default function LocksmithDetail({ params }) {
                 <div className="flex items-center mb-4">
                   <StarRating rating={locksmith.avgrating || 0} />
                   <span className="ml-2 text-gray-500">({locksmith.totalreviewcount || 0} yorum)</span>
+                </div>
+                
+                <div className="flex items-center mb-4">
+                  <p className="text-gray-600 mb-4">
+                    {locksmith.tagline || "Bu çilingir henüz açıklama eklememiş."}
+                  </p>
                 </div>
                 
                 <div className="flex flex-wrap gap-2 mb-4">
@@ -194,7 +249,7 @@ export default function LocksmithDetail({ params }) {
               <div className="border-t border-gray-200 pt-6 mb-6">
                 <h2 className="text-xl font-bold text-gray-800 mb-4">Hakkında</h2>
                 <p className="text-gray-600 mb-4">
-                  {locksmith.description || locksmith.tagline || "Bu çilingir henüz açıklama eklememiş."}
+                  {locksmith.abouttext || "Bu çilingir henüz açıklama eklememiş."}
                 </p>
               </div>
 
@@ -202,7 +257,7 @@ export default function LocksmithDetail({ params }) {
                 <h2 className="text-xl font-bold text-gray-800 mb-4">Hizmetler</h2>
                 <ul className="list-disc pl-5 text-gray-600 space-y-2">
                   {locksmith.services?.map((service, index) => (
-                    <li key={index}>{service.name} - {service.prices.mesai.min}₺ - {service.prices.mesai.max}₺</li>
+                    <li key={index}>{service.name}</li>
                   ))}
                 </ul>
               </div>
@@ -227,7 +282,8 @@ export default function LocksmithDetail({ params }) {
                     {[5, 4, 3, 2, 1].map((star) => (
                       <button 
                         key={star}
-                        className="flex items-center space-x-1 bg-white border border-gray-200 hover:bg-blue-50 hover:border-blue-200 rounded-lg px-3 py-1.5 transition-colors"
+                        onClick={() => setSelectedRating(star)}
+                        className={`flex items-center space-x-1 border hover:bg-blue-50 hover:border-blue-200 rounded-lg px-3 py-1.5 transition-colors ${selectedRating === star ? 'bg-blue-50 border-blue-200' : ' bg-white border-gray-200'}`}
                       >
                         <span className="font-medium">{star}</span>
                         <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
@@ -235,24 +291,48 @@ export default function LocksmithDetail({ params }) {
                         </svg>
                       </button>
                     ))}
-                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium px-3 py-1.5">
+                    <button 
+                      onClick={showAllReviews}
+                      className={`text-blue-600 hover:text-blue-800 text-sm font-medium px-3 py-1.5 ${selectedRating == null ? 'font-bold underline' : ''}`}
+                    >
                       Tümü
                     </button>
                   </div>
                   
                   <div className="space-y-4">
-                    {locksmith.reviews.map((review, index) => (
-                      <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="font-semibold">{review.username || "Müşteri"}</span>
-                          <div className="flex items-center">
-                            <StarRating rating={review.rating || 5} />
-                            <span className="ml-2 text-gray-500 text-sm">{new Date(review.createdat).toLocaleDateString()}</span>
+                    {filteredReviews.length > 0 ? (
+                      <>
+                        {/* Sayfalandırılmış yorumları göster */}
+                        {filteredReviews.slice(0, visibleReviews).map((review, index) => (
+                          <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="font-semibold">{review.username || "Müşteri"}</span>
+                              <div className="flex items-center">
+                                <StarRating rating={review.rating || 5} />
+                                <span className="ml-2 text-gray-500 text-sm">{new Date(review.createdat).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                            <p className="text-gray-600">{review.comment || "Yorum yok"}</p>
                           </div>
-                        </div>
-                        <p className="text-gray-600">{review.comment || "Yorum yok"}</p>
+                        ))}
+                        
+                        {/* Daha fazla yorum var mı? */}
+                        {visibleReviews < filteredReviews.length && (
+                          <div className="text-center mt-4">
+                            <button 
+                              onClick={loadMoreReviews}
+                              className="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                            >
+                              Daha Fazla Yorum Yükle ({filteredReviews.length - visibleReviews} yorum daha)
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center py-4 text-gray-500">
+                        Bu filtreye uygun yorum bulunamadı
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               )}
@@ -332,27 +412,42 @@ export default function LocksmithDetail({ params }) {
               </Button>
 
               {/* Çalışma Saatleri */}
-              {locksmith.workinghours && (
+              {locksmith.locksmith_working_hours && locksmith.locksmith_working_hours.length > 0 && (
                 <div className="bg-gray-50 rounded-lg p-6 mb-6">
                   <h3 className="text-lg font-bold text-gray-800 mb-4">Çalışma Saatleri</h3>
                   <div className="space-y-2">
-                    {Object.entries(locksmith.workinghours).map(([day, hours]) => (
-                      <div key={day} className="flex justify-between items-center">
-                        <span className="text-gray-600">{day}</span>
-                        {hours.is24Hours ? <span className="text-green-600">24 Saat Açık</span> : <span className={`text-sm font-medium ${hours.isOpen ? 'text-green-600' : 'text-red-500'}`}>
-                          {hours.isOpen ? `${hours.open} - ${hours.close}` : 'Kapalı'}
-                        </span>}
-                      </div>
-                    ))}
+                    {locksmith.locksmith_working_hours
+                      .sort((a, b) => a.dayofweek - b.dayofweek)
+                      .map((hours) => {
+                        // Zamanı saat:dakika formatına dönüştür
+                        let openTime = hours.opentime ? hours.opentime.substring(0, 5) : "";
+                        let closeTime = hours.closetime ? hours.closetime.substring(0, 5) : "";
+                        
+                        return (
+                          <div key={hours.dayofweek} className="flex justify-between items-center">
+                            <span className="text-gray-600">{hours.dayofweek==0 ? "Pazartesi" : hours.dayofweek==1 ? "Salı" : hours.dayofweek==2 ? "Çarşamba" : hours.dayofweek==3 ? "Perşembe" : hours.dayofweek==4 ? "Cuma" : hours.dayofweek==5 ? "Cumartesi" : "Pazar"}</span>
+                            {hours.is24hopen ? (
+                              <span className="text-green-600">24 Saat Açık</span>
+                            ) : (
+                              <span className={`text-sm font-medium ${hours.isworking ? 'text-green-600' : 'text-red-500'}`}>
+                                {hours.isworking ? `${openTime} - ${closeTime}` : 'Kapalı'}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
                   </div>
                 </div>
               )}
 
               {/* Resim Galerisi */}
-              {locksmith.images && locksmith.images.length > 0 && (
+              {locksmith.locksmith_images && locksmith.locksmith_images.length > 0 && (
                 <div className="bg-gray-50 rounded-lg p-6 mb-6">
                   <h3 className="text-lg font-bold text-gray-800 mb-4">Galeri</h3>
-                  <ImageGallery images={locksmith.images} locksmithName={locksmith.name} />
+                  <ImageGallery 
+                    images={locksmith.locksmith_images.filter(img => img.image_url)} 
+                    locksmithName={locksmith.businessname || locksmith.fullname} 
+                  />
                 </div>
               )}
 

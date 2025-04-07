@@ -12,6 +12,9 @@ import { useToast } from "../components/ToastContext";
 import { getLocksmiths } from "./actions";
 import { ChevronRight } from "lucide-react";
 import { testServices } from "../lib/test-data";
+import { useDispatch, useSelector } from 'react-redux'
+import { logUserActivity } from '../redux/features/userSlice'
+import Image from 'next/image';
 
 const styles = {
   accentButton: {
@@ -51,8 +54,8 @@ const styles = {
   }
 };
 
-// Yıldız puanı gösterme fonksiyonu
-const StarRating = ({ rating }) => {
+// Yıldız puanı gösterme fonksiyonu - Çakışmayı önlemek için ismi değiştiriliyor
+const RatingStars = ({ rating }) => {
   return (
     <div style={styles.starRating}>
       {[...Array(5)].map((_, i) => (
@@ -65,21 +68,11 @@ const StarRating = ({ rating }) => {
   );
 };
 
-// Loading Spinner Komponenti
-const LoadingSpinner = () => (
-  <div className="w-full flex flex-col items-center justify-center py-12">
-    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600 mb-4"></div>
-    <p className="text-lg font-medium text-gray-700">En yakın çilingirler bulunuyor...</p>
-  </div>
-);
-
 // SearchParamsWrapper bileşeni
 function SearchParamsWrapper({ children }) {
   const searchParams = useSearchParams();
   return children(searchParams);
 }
-
-
 
 export default function Home() {
   const [showResults, setShowResults] = useState(false);
@@ -105,7 +98,6 @@ export default function Home() {
     phone: "",
   });
 
-
   const [locksmiths, setLocksmiths] = useState([]);
   const [error, setError] = useState(null);
   
@@ -115,67 +107,64 @@ export default function Home() {
   // Toast context hook
   const { showToast } = useToast();
   
+  const dispatch = useDispatch()
 
-  const handleSearch = async () => {  
-    setIsLoading(true);
-    setShowResults(true);
+  // Sayfa yüklendiğinde sayfa görüntüleme aktivitesi kaydet
+  useEffect(() => {
+    dispatch(logUserActivity({
+      action: 'sayfa-goruntuleme',
+      details: 'anasayfa',
+      entityType: 'page',
+      entityId: 'home'
+    }))
+  }, [dispatch])
 
-
-    // Sonuç kısmına kaydırma işlemi için düzeltme
-    setTimeout(() => {
-      const resultsSection = document.getElementById('results-section');
-      if (resultsSection) {
-        // Mobil uyumlu, daha güvenilir kaydırma yöntemi
-        window.scrollTo({
-          top: resultsSection.offsetTop - 20,
-          behavior: 'smooth'
-        });
-      }
-    }, 100);
-
+  const handleSearch = async () => {
     try {
-      //serviceid ve districtid search url sine ekleyelim
-      const response = await fetch('/api/public/search?serviceid=' + selectedValues.serviceId + '&districtid=' + selectedValues.districtId + '&provinceid=' + selectedValues.provinceId);
-      const data = await response.json();
-      console.log(data, 'data***');
-
-      if (data.locksmiths) {
-        setLocksmiths(data.locksmiths);
-      } else {
-        showToast("Çilingirler yüklenirken bir hata oluştu", "error", 3000);
-        setError(data.message);
+      // Redux aktivite izlemesi
+      if (!selectedValues.provinceId || !selectedValues.districtId || !selectedValues.serviceId) {
+        setError('Lütfen il, ilçe ve servis seçiniz');
+        return;
       }
-
-      // setLocksmiths(data.locksmiths);
-    } catch (error) {
-      console.error('Hata:', error);
-      showToast("Çilingirler yüklenirken bir hata oluştu", "error", 3000);
-      setError(error);
-    } finally {
-      setIsLoading(false);
+      
+      setError(null);
       setShowResults(true);
+      setIsLoading(true);
+      setLocksmiths([]);
+      setSelectedLocksmith(null);
+      
+      const searchParams = new URLSearchParams({
+        provinceId: selectedValues.provinceId,
+        districtId: selectedValues.districtId,
+        serviceId: selectedValues.serviceId,
+      });
+      
+      // Kullanıcı arama aktivitesi kaydı
+      dispatch(logUserActivity({
+        action: 'arama-yapildi',
+        additionalData: {
+          searchProvinceId: selectedValues.provinceId,
+          searchDistrictId: selectedValues.districtId,
+          searchServiceId: selectedValues.serviceId
+        }
+      }));
+      
+      const response = await fetch(`/api/public/search?${searchParams.toString()}`);
+      const data = await response.json();
+      
+      if (data && data.locksmiths && data.locksmiths.length > 0) {
+        setLocksmiths(data.locksmiths);
+        console.log('locksmiths****:', data.locksmiths);
+      } else {
+        setError('Bu bölgede çilingir bulunamadı');
+      }
+    } catch (error) {
+      console.error('Arama hatası:', error);
+      setError('Arama sırasında bir hata oluştu');
+    } finally {
+      console.log('finally****:');
+      setIsLoading(false);
     }
-
-    // try {
-    //   const { locksmiths: fetchedLocksmiths, error } = await getLocksmiths();
-      
-    //   if (error) {
-    //     setError(error);
-    //     showToast("Çilingirler yüklenirken bir hata oluştu", "error", 3000);
-    //     return;
-    //   }
-      
-    //   setLocksmiths(fetchedLocksmiths);
-    // } catch (err) {
-    //   console.error("Çilingirler getirilirken hata:", err);
-    //   setError("Veri yüklenirken bir hata oluştu");
-    //   showToast("Beklenmeyen bir hata oluştu", "error", 3000);
-    // } finally {
-    //   setIsLoading(false);
-    //   setShowResults(true);
-    // }
-
-    //apiye bağlayalım
   };
 
   // SearchParamsHandler bileşeni
@@ -192,6 +181,14 @@ export default function Home() {
 
   const handleCallLocksmith = (locksmith) => {
     setSelectedLocksmith(locksmith);
+
+    // Çilingir arama aktivitesini kaydet
+    dispatch(logUserActivity({
+      action: 'cilingir-arama',
+      details: `${locksmith.name}, ${locksmith.phone}`,
+      entityType: 'locksmith',
+      entityId: locksmith.id
+    }))
 
     // Telefon numarasını çağırma işlemi
     const phoneNumber = locksmith.phone;
@@ -225,9 +222,26 @@ export default function Home() {
     showToast("Değerlendirmeniz için teşekkür ederiz!", "success", 3000);
   };
 
-  // Detaylara tıklama işlemi
-  const handleViewDetails = (locksmithId, slug) => {
-    // Sadece tıklanan çilingirin loading state'ini true yap
+  const LoadingSpinner = () => (
+    <div className="w-full flex flex-col items-center justify-center py-12">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+      <p className="text-lg font-medium text-gray-700">Çilingir bilgileri yükleniyor...</p>
+    </div>
+  );
+
+  // Çilingir detay butonuna tıklama - aktivite kaydı ekle
+  const handleViewDetails = (locksmithId, locksmithSlug) => {
+    // Aktivite kaydı yap
+    dispatch(logUserActivity({
+      action: 'cilingir-detay-goruntuleme',
+      entityId: locksmithId,
+      entityType: 'locksmith',
+      additionalData: {
+        locksmithId: locksmithId
+      }
+    }));
+    
+    // Çilingir detayını göster
     setLoadingLocksmithIds(prev => ({
       ...prev,
       [locksmithId]: true
@@ -369,7 +383,7 @@ export default function Home() {
                                 <p className="text-gray-600">{locksmith.city} - {locksmith.district}</p>
                               </div>
                               <div className="flex flex-col md:flex-row md:items-center mt-1">
-                                <StarRating rating={locksmith.rating} />
+                                <RatingStars rating={locksmith.rating.toFixed(1)} />
                                 <span className="md:ml-2 text-sm text-gray-500">({locksmith.reviewCount} değerlendirme)</span>
                               </div>
                             </div>

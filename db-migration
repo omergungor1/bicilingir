@@ -232,6 +232,9 @@ CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     userIp INET,              
     userAgent TEXT,          
+    islocksmith BOOLEAN DEFAULT false,
+    isSuspicious BOOLEAN DEFAULT false,
+    isFraudulent BOOLEAN DEFAULT false,
     createdAt TIMESTAMPTZ DEFAULT NOW(),   
     updatedAt TIMESTAMPTZ DEFAULT NOW()    
 );
@@ -261,12 +264,8 @@ CREATE TABLE user_activity_logs (
     
     activityType user_activity_type_enum NOT NULL,  
     locksmithId UUID REFERENCES locksmiths(id),
-    
-    isSuspicious BOOLEAN DEFAULT FALSE,
-    isRepeated BOOLEAN DEFAULT FALSE,
-    activityCount INTEGER DEFAULT 0,
-    isFraudulent BOOLEAN DEFAULT FALSE,
     reviewid UUID REFERENCES reviews(id),
+    sessionId UUID,
     
     createdAt TIMESTAMPTZ DEFAULT NOW() 
 );
