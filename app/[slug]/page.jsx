@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { getSimilarLocksmiths } from "../actions";
@@ -88,6 +89,10 @@ const LoadingSpinner = () => (
 );
 
 export default function LocksmithDetail({ params }) {
+  // Redux state'ini al
+  const dispatch = useDispatch();
+  const { hasSearched } = useSelector(state => state.search);
+  
   // Next.js 14'te iki yoldan slug alabiliriz: 
   // 1. React.use ile params'ı unwrap ederek (server component uyumlu)
   // 2. useParams hook'u ile (client component uyumlu)
@@ -118,7 +123,6 @@ export default function LocksmithDetail({ params }) {
         if (data.success && data.locksmith) {
           setLocksmith(data.locksmith);
           setFilteredReviews(data.locksmith.reviews || []);
-          console.log("Çilingir verileri:", data.locksmith);
         } else {
           throw new Error('Çilingir bilgileri bulunamadı');
         }
@@ -199,11 +203,15 @@ export default function LocksmithDetail({ params }) {
     <main className="flex min-h-screen flex-col items-center">
       {/* Geri Butonu */}
       <div className="container mx-auto px-4 py-4">
-        <Link href="/" className="flex items-center text-blue-600 hover:text-blue-800 transition-colors">
+        <Link 
+          href="/" 
+          className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+          prefetch={true}
+        >
           <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
           </svg>
-          <span>Geri Dön</span>
+          <span>{hasSearched ? "Aramaya Dön" : "Ana Sayfaya Dön"}</span>
         </Link>
       </div>
 

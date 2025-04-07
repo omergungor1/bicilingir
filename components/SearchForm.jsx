@@ -24,7 +24,6 @@ export default function SearchForm({ onSearch, selectedValues, setSelectedValues
 
   const handlePlaceSelect = (place) => {
     setSelectedValues({
-      ...selectedValues, 
       districtId: place.id,
       provinceId: place.province_id
     });
@@ -32,7 +31,7 @@ export default function SearchForm({ onSearch, selectedValues, setSelectedValues
   };
 
   const handleServiceSelect = (value) => {
-    setSelectedValues({...selectedValues, serviceId: value});
+    setSelectedValues({ serviceId: value });
     setWarnService(false);
   };
 
@@ -48,28 +47,40 @@ export default function SearchForm({ onSearch, selectedValues, setSelectedValues
     }
   };
 
-  return (
-    <div className="mt-8">
-      <div className="flex flex-col md:flex-row gap-2 justify-center items-center w-full">
-        <div className={`relative w-full md:w-1/3 ${warnLocation ? 'border-red-500 border-2 rounded-lg' : ''}`}>
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
-            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            </svg>
-          </div>
+  // Seçili servis adını bul
+  const getSelectedServiceName = () => {
+    if (!selectedValues.serviceId) return null;
+    const service = serviceList.find(s => s.id === selectedValues.serviceId);
+    return service ? service.name : null;
+  };
 
+  return (
+    <div className="w-full">
+      <div className="flex flex-col md:flex-row items-center gap-4 mt-8 flex items-center justify-center">
+        <div className={`w-full md:w-2/5 relative ${warnLocation ? 'border-red-500 border-2 rounded-lg' : ''}`}>
+          <svg className="absolute z-10 left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+          
           <AdresArama 
             onPlaceSelect={handlePlaceSelect}
             placeholder="Lütfen ilçenizi seçiniz"
             className={`pl-10 h-10 md:h-14 py-3 bg-white text-gray-800 border-0 rounded-lg focus:ring-2 focus:ring-blue-500 w-full`}
+            defaultValue={selectedValues}
           />
         </div>
         
         <div className={`w-full md:w-1/4 mt-2 md:mt-0 ${warnService ? 'border-red-500 border-2 rounded-lg' : ''}`}>
-          <Select onValueChange={handleServiceSelect}>
+          <Select 
+            onValueChange={handleServiceSelect} 
+            defaultValue={selectedValues.serviceId}
+            value={selectedValues.serviceId}
+          >
             <SelectTrigger className={`h-10 md:h-14 bg-white text-gray-800 border-0 rounded-lg focus:ring-2 focus:ring-blue-500`}>
-              <SelectValue placeholder="Hizmet Seçin" />
+              <SelectValue placeholder="Hizmet Seçin">
+                {getSelectedServiceName() || "Hizmet Seçin"}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent className="select-content">
               {serviceList.map((service) => (

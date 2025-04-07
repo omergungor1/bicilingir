@@ -14,8 +14,6 @@ export async function GET(request, { params }) {
     // Supabase istemcisi oluştur
     const { supabase } = createRouteClient(request);
 
-    console.log('Slug ile çilingir aranıyor:', slug);
-
     // 1. Çilingiri slug'a göre bul
     const { data: locksmith, error: locksmithError } = await supabase
     .from('locksmiths')

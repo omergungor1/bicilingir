@@ -482,14 +482,11 @@ export async function logUserActivity(supabase, userId, sessionId, action, detai
     if (additionalData.locksmithId || entityType === 'locksmith') insertData.locksmithid = additionalData.locksmithId || entityId;
     if (additionalData.reviewId) insertData.reviewid = additionalData.reviewId;
     
-    console.log('Aktivite eklenecek:', insertData);
     
     const { data, error } = await supabase
       .from('user_activity_logs')
       .insert(insertData)
       .select();
-
-      console.log('Aktivite eklendi:', data,error);
       
     if (error) {
       console.error('Aktivite ekleme SQL hatası:', error);

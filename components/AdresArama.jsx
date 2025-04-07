@@ -3,11 +3,23 @@
 import React, { useState, useEffect, useRef } from "react";
 import turkiyeIlIlce from "../data/turkiye-il-ilce";
 
-export default function AdresArama({ onPlaceSelect, placeholder, className }) {
+export default function AdresArama({ onPlaceSelect, placeholder, className, defaultValue }) {
   const [inputValue, setInputValue] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const wrapperRef = useRef(null);
+
+  // defaultValue verildiyse, sayfa yüklendiğinde göster
+  useEffect(() => {
+    if (defaultValue && defaultValue.districtId && defaultValue.provinceId) {
+      const district = turkiyeIlIlce.districts.find(d => d.id === defaultValue.districtId);
+      const province = turkiyeIlIlce.provinces.find(p => p.id === defaultValue.provinceId);
+      
+      if (district && province) {
+        setInputValue(`${district.name}, ${province.name}`);
+      }
+    }
+  }, [defaultValue]);
 
   // Kullanıcı girişine göre önerileri filtrele
   useEffect(() => {

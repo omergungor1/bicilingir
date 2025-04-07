@@ -6,8 +6,6 @@ export async function POST(request) {
     const { supabase } = createRouteClient(request);
     const { sessionId, userId, userIp, userAgent } = await request.json();
     
-    console.log('Kullanıcı izleme bilgileri:', { sessionId, userIp, userAgent });
-    
     // Önce users tablosunun yapısını kontrol et
     const { data: tableInfo, error: tableError } = await supabase
       .from('users')

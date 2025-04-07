@@ -14,6 +14,7 @@ import { ChevronRight } from "lucide-react";
 import { testServices } from "../lib/test-data";
 import { useDispatch, useSelector } from 'react-redux'
 import { logUserActivity } from '../redux/features/userSlice'
+import { searchLocksmiths, setSelectedValues as setReduxSelectedValues } from '../redux/features/searchSlice';
 import Image from 'next/image';
 
 const styles = {
@@ -75,39 +76,56 @@ function SearchParamsWrapper({ children }) {
 }
 
 export default function Home() {
-  const [showResults, setShowResults] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  // Redux state ve dispatch
+  const dispatch = useDispatch();
+  const { 
+    selectedValues: reduxSelectedValues, 
+    locksmiths: reduxLocksmiths, 
+    isLoading: reduxIsLoading, 
+    error: reduxError,
+    showResults: reduxShowResults,
+    hasSearched: reduxHasSearched
+  } = useSelector(state => state.search);
+  
+  // Lokal state - Redux tarafından yönetilecek alanlar için artık iskeleti tutuyoruz
   const [showFilters, setShowFilters] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedLocksmith, setSelectedLocksmith] = useState(null);
   const [hoverRating, setHoverRating] = useState(0);
 
+  // Form değerleri için local state - Redux store ile senkronize çalışacak
   const [selectedValues, setSelectedValues] = useState({
-    serviceId: null,
-    districtId: null,
-    provinceId: null
+    serviceId: reduxSelectedValues.serviceId,
+    districtId: reduxSelectedValues.districtId,
+    provinceId: reduxSelectedValues.provinceId
   });
 
+  // Redux store değişince local state'i güncelle
   useEffect(() => {
-    console.log('serviceId ve districtId değişti:  ServiceId: ',selectedValues.serviceId, 'DistrictId: ', selectedValues.districtId, 'ProvinceId: ', selectedValues.provinceId);
-  }, [selectedValues]);
-
+    setSelectedValues({
+      serviceId: reduxSelectedValues.serviceId,
+      districtId: reduxSelectedValues.districtId,
+      provinceId: reduxSelectedValues.provinceId
+    });
+  }, [reduxSelectedValues]);
+  
   const [customerFeedback, setCustomerFeedback] = useState({
     rating: 0,
     comment: "",
     phone: "",
   });
-
-  const [locksmiths, setLocksmiths] = useState([]);
-  const [error, setError] = useState(null);
+  
+  // Local state yerine Redux state kullan
+  const locksmiths = reduxLocksmiths;
+  const isLoading = reduxIsLoading;
+  const error = reduxError;
+  const showResults = reduxShowResults;
   
   // Tek bir loading state yerine, her çilingir ID'si için ayrı loading state tutacağız
   const [loadingLocksmithIds, setLoadingLocksmithIds] = useState({});
   
   // Toast context hook
   const { showToast } = useToast();
-  
-  const dispatch = useDispatch()
 
   // Sayfa yüklendiğinde sayfa görüntüleme aktivitesi kaydet
   useEffect(() => {
@@ -117,29 +135,45 @@ export default function Home() {
       entityType: 'page',
       entityId: 'home'
     }))
-  }, [dispatch])
+  }, [dispatch]);
+
+  // Local değişikliği Redux'a aktar
+  const handleLocalSelectedValuesChange = (newValues) => {
+    // Önce Redux'a bildir
+    dispatch(setReduxSelectedValues({
+      ...selectedValues,
+      ...newValues
+    }));
+    
+    // Sonra local state'i güncelle
+    setSelectedValues(prev => ({
+      ...prev,
+      ...newValues
+    }));
+  };
 
   const handleSearch = async () => {
     try {
-      // Redux aktivite izlemesi
+      // Redux üzerinden arama yap
       if (!selectedValues.provinceId || !selectedValues.districtId || !selectedValues.serviceId) {
-        setError('Lütfen il, ilçe ve servis seçiniz');
+        showToast('Lütfen il, ilçe ve servis seçiniz', 'error');
         return;
       }
       
-      setError(null);
-      setShowResults(true);
-      setIsLoading(true);
-      setLocksmiths([]);
-      setSelectedLocksmith(null);
-      
-      const searchParams = new URLSearchParams({
+      // Redux arama işlemi
+      const resultAction = await dispatch(searchLocksmiths({
         provinceId: selectedValues.provinceId,
         districtId: selectedValues.districtId,
-        serviceId: selectedValues.serviceId,
-      });
+        serviceId: selectedValues.serviceId
+      }));
       
-      // Kullanıcı arama aktivitesi kaydı
+      // Hata kontrolü
+      if (searchLocksmiths.rejected.match(resultAction)) {
+        showToast(resultAction.payload || 'Arama sırasında bir hata oluştu', 'error');
+        return;
+      }
+      
+      // Kullanıcı arama aktivitesi kaydı - Redux aktivitesi
       dispatch(logUserActivity({
         action: 'arama-yapildi',
         additionalData: {
@@ -149,21 +183,20 @@ export default function Home() {
         }
       }));
       
-      const response = await fetch(`/api/public/search?${searchParams.toString()}`);
-      const data = await response.json();
+      // Sonuç kısmına kaydırma
+      setTimeout(() => {
+        const resultsSection = document.getElementById('results-section');
+        if (resultsSection) {
+          window.scrollTo({
+            top: resultsSection.offsetTop - 20,
+            behavior: 'smooth'
+          });
+        }
+      }, 100);
       
-      if (data && data.locksmiths && data.locksmiths.length > 0) {
-        setLocksmiths(data.locksmiths);
-        console.log('locksmiths****:', data.locksmiths);
-      } else {
-        setError('Bu bölgede çilingir bulunamadı');
-      }
     } catch (error) {
       console.error('Arama hatası:', error);
-      setError('Arama sırasında bir hata oluştu');
-    } finally {
-      console.log('finally****:');
-      setIsLoading(false);
+      showToast('Beklenmeyen bir hata oluştu', 'error');
     }
   };
 
@@ -268,7 +301,11 @@ export default function Home() {
         <div className="w-full max-w-4xl mx-auto">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="w-full">
-              <SearchForm onSearch={handleSearch} selectedValues={selectedValues} setSelectedValues={setSelectedValues} />
+              <SearchForm 
+                onSearch={handleSearch} 
+                selectedValues={selectedValues} 
+                setSelectedValues={handleLocalSelectedValuesChange} 
+              />
             </div>
           </div>
         </div>
