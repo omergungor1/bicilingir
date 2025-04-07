@@ -6,9 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import AdresArama from "./AdresArama";
 import { useToast } from "./ToastContext";
 
-export default function SearchForm({ onSearch }) {
-  const [selectedPlace, setSelectedPlace] = useState(null);
-  const [selectedService, setSelectedService] = useState(null);
+export default function SearchForm({ onSearch, selectedValues, setSelectedValues }) {
   const [warnLocation, setWarnLocation] = useState(false);
   const [warnService, setWarnService] = useState(false);
   const [serviceList, setServiceList] = useState([]);
@@ -25,23 +23,24 @@ export default function SearchForm({ onSearch }) {
   }, []);
 
   const handlePlaceSelect = (place) => {
-    setSelectedPlace(place);
-    console.log("Seçilen adres:", place);
+    setSelectedValues({
+      ...selectedValues, 
+      districtId: place.id,
+      provinceId: place.province_id
+    });
     setWarnLocation(false);
   };
 
   const handleServiceSelect = (value) => {
-    setSelectedService(value);
-    console.log("Seçilen hizmet:", value);
+    setSelectedValues({...selectedValues, serviceId: value});
     setWarnService(false);
   };
 
-
   const handleSearch = () => {
-    if (selectedPlace === null) {
+    if (selectedValues.districtId === null) {
       setWarnLocation(true);
       showToast("Lütfen ilçenizi seçiniz", "warning", 3000);
-    } else if (selectedService === null) {
+    } else if (selectedValues.serviceId === null) {
       setWarnService(true);
       showToast("Lütfen bir hizmet türü seçiniz", "warning", 3000);
     } else {
@@ -82,7 +81,7 @@ export default function SearchForm({ onSearch }) {
         
         <Button 
           onClick={handleSearch}
-          className={`bg-blue-600 h-10 md:h-14 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg mt-2 md:mt-0 w-full md:w-auto ${!(selectedPlace && selectedService) ? 'opacity-90 cursor-pointer' : ''}`}
+          className={`bg-blue-600 h-10 md:h-14 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg mt-2 md:mt-0 w-full md:w-auto ${!(selectedValues.districtId && selectedValues.serviceId) ? 'opacity-90 cursor-pointer' : ''}`}
         >
           Çilingir Bul
         </Button>

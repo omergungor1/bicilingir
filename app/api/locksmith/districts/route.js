@@ -9,7 +9,7 @@ export async function GET(request) {
     
     // Çilingirin aktif ilçelerini getir
     const { data: activeDistrictRecords, error: activeDistrictsError } = await supabase
-      .from('locksmith_district_services')
+      .from('locksmith_districts')
       .select('districtid, isdayactive, isnightactive')
       .eq('locksmithid', locksmithId);
     
@@ -49,6 +49,7 @@ export async function GET(request) {
       // Geriye dönük uyumluluk için
       district.isLocksmithActive = activeRecord ? (activeRecord.isdayactive || activeRecord.isnightactive) : false;
     });
+
     
     return NextResponse.json({
       districts: districts
@@ -72,7 +73,7 @@ export async function PUT(request) {
 
     //mevcut kayıtları sil
     const { data: deleteData, error: deleteError } = await supabase
-      .from('locksmith_district_services')
+      .from('locksmith_districts')
       .delete()
       .eq('locksmithid', locksmithId);
 
@@ -87,6 +88,7 @@ export async function PUT(request) {
     const insertData = activeDistricts.map(district => {
       return {
         locksmithid: locksmithId,
+        provinceid: district.provinceid,
         districtid: district.districtid,
         isdayactive: district.isdayactive || false,
         isnightactive: district.isnightactive || false
@@ -98,7 +100,7 @@ export async function PUT(request) {
     }
 
     const { data: updateData, error: updateError } = await supabase
-    .from('locksmith_district_services')
+    .from('locksmith_districts')
     .insert(insertData, { returning: 'minimal' });
   
     if (updateError) {

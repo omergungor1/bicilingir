@@ -1,11 +1,14 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import { getLocksmithById, getSimilarLocksmiths } from "../../actions";
-import { testServices } from "../../../lib/test-data";
-import { EmergencyCallButton } from "../../../components/emergency-button";
-import { ImageGallery } from "../../../components/image-gallery";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { getSimilarLocksmiths } from "../actions";
+import { testServices } from "../../lib/test-data";
+import { EmergencyCallButton } from "../../components/emergency-button";
+import { ImageGallery } from "../../components/image-gallery";
+import { Loader2 } from "lucide-react";
 
 const styles = {
   header: {
@@ -73,23 +76,77 @@ const StarRating = ({ rating }) => {
   );
 };
 
-// Server Component 
-export default async function LocksmithDetail({ params }) {
-  // Next.js'te params await edilmelidir
-  const resolvedParams = await params;
-  const id = resolvedParams.id;
+// Loading Spinner Component
+const LoadingSpinner = () => (
+  <div className="w-full flex flex-col items-center justify-center py-12">
+    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+    <p className="text-lg font-medium text-gray-700">Çilingir bilgileri yükleniyor...</p>
+  </div>
+);
+
+export default function LocksmithDetail({ params }) {
+  // Next.js 14'te params bir Promise, React.use() ile unwrap ediyoruz
+  const resolvedParams = React.use(params);
+  const slug = resolvedParams.slug;
   
-  // ID'ye göre çilingir verisini getir
-  const { locksmith, error } = await getLocksmithById(id);
-  const { similarLocksmiths, error: similarError } = await getSimilarLocksmiths(id);
+  const [locksmith, setLocksmith] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
-  // Hata durumunda yedek veri kullan
+  useEffect(() => {
+    const fetchLocksmithDetails = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/public/locksmith/${slug}`);
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Çilingir detayları yüklenirken bir hata oluştu');
+        }
+        
+        if (data.success && data.locksmith) {
+          setLocksmith(data.locksmith);
+          console.log(data.locksmith);
+        } else {
+          throw new Error('Çilingir bilgileri bulunamadı');
+        }
+      } catch (err) {
+        console.error('Çilingir detayları getirilirken hata:', err);
+        setError(err.message || 'Bir hata oluştu');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (slug) {
+      fetchLocksmithDetails();
+    }
+  }, [slug]);
+  
+  // Hata durumunda
   if (error) {
-    console.error('Çilingir verileri getirilirken hata oluştu:', error);
     return (
       <div className="flex min-h-screen flex-col items-center justify-center">
         <h1 className="text-2xl font-bold mb-4">Bir hata oluştu</h1>
-        <p className="mb-4">Çilingir bilgileri getirilirken bir sorun oluştu.</p>
+        <p className="mb-4">{error}</p>
+        <Link href="/" className="text-blue-600 hover:text-blue-800">
+          Ana Sayfaya Dön
+        </Link>
+      </div>
+    );
+  }
+  
+  // Yükleme durumunda
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+  
+  // Çilingir bulunamadıysa
+  if (!locksmith) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center">
+        <h1 className="text-2xl font-bold mb-4">Çilingir Bulunamadı</h1>
+        <p className="mb-4">Aradığınız çilingir bulunamadı veya artık aktif değil.</p>
         <Link href="/" className="text-blue-600 hover:text-blue-800">
           Ana Sayfaya Dön
         </Link>
@@ -117,19 +174,19 @@ export default async function LocksmithDetail({ params }) {
             <div className="w-full lg:w-2/3 p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-200">
               <div className="mb-6">
                 <div style={styles.companyLogo} className="mb-3">
-                  <span>{locksmith.name.substring(0, 2)}</span>
+                  <span>{locksmith.businessname?.substring(0, 2) || "ÇL"}</span>
                 </div>
-                <div className="text-gray-500 mb-1">{locksmith.location}</div>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">{locksmith.name}</h1>
+                <div className="text-gray-500 mb-1">{locksmith.province}, {locksmith.district}</div>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">{locksmith.businessname || locksmith.fullname}</h1>
                 
                 <div className="flex items-center mb-4">
-                  <StarRating rating={locksmith.rating} />
-                  <span className="ml-2 text-gray-500">({locksmith.reviewCount} yorum)</span>
+                  <StarRating rating={locksmith.avgrating || 0} />
+                  <span className="ml-2 text-gray-500">({locksmith.totalreviewcount || 0} yorum)</span>
                 </div>
                 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {locksmith.serviceIds.map((serviceId, index) => (
-                    <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded hover:bg-blue-200 cursor-pointer">{testServices.find(service => service.id === serviceId)?.name}</span>
+                  {locksmith.services?.map((service, index) => (
+                    <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded hover:bg-blue-200 cursor-pointer">{service.name}</span>
                   ))}
                 </div>
               </div>
@@ -137,27 +194,29 @@ export default async function LocksmithDetail({ params }) {
               <div className="border-t border-gray-200 pt-6 mb-6">
                 <h2 className="text-xl font-bold text-gray-800 mb-4">Hakkında</h2>
                 <p className="text-gray-600 mb-4">
-                  {locksmith.detailedDescription || locksmith.description}
+                  {locksmith.description || locksmith.tagline || "Bu çilingir henüz açıklama eklememiş."}
                 </p>
               </div>
 
               <div className="border-t border-gray-200 pt-6 mb-6">
                 <h2 className="text-xl font-bold text-gray-800 mb-4">Hizmetler</h2>
                 <ul className="list-disc pl-5 text-gray-600 space-y-2">
-                  {locksmith.serviceIds.map((serviceId, index) => (
-                    <li key={index}>{testServices.find(service => service.id === serviceId)?.name}</li>
+                  {locksmith.services?.map((service, index) => (
+                    <li key={index}>{service.name} - {service.prices.mesai.min}₺ - {service.prices.mesai.max}₺</li>
                   ))}
                 </ul>
               </div>
 
-              <div className="pt-6 mb-6">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Sertifikalar ve Belgeler</h2>
-                <ul className="list-disc pl-5 text-gray-600 space-y-2">
-                  {locksmith.certificates && locksmith.certificates.map((certificate, index) => (
-                    <li key={index}>{typeof certificate === 'object' ? certificate.name : certificate}</li>
-                  ))}
-                </ul>
-              </div>
+              {locksmith.certificates && (
+                <div className="pt-6 mb-6">
+                  <h2 className="text-xl font-bold text-gray-800 mb-4">Sertifikalar ve Belgeler</h2>
+                  <ul className="list-disc pl-5 text-gray-600 space-y-2">
+                    {locksmith.certificates.map((certificate, index) => (
+                      <li key={index}>{typeof certificate === 'object' ? certificate.name : certificate}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {locksmith.reviews && locksmith.reviews.length > 0 && (
                 <div className="border-t border-gray-200 pt-6 mb-6">
@@ -185,13 +244,13 @@ export default async function LocksmithDetail({ params }) {
                     {locksmith.reviews.map((review, index) => (
                       <div key={index} className="bg-gray-50 p-4 rounded-lg">
                         <div className="flex justify-between items-center mb-2">
-                          <span className="font-semibold">{review.user}</span>
+                          <span className="font-semibold">{review.username || "Müşteri"}</span>
                           <div className="flex items-center">
-                            <StarRating rating={review.rating} />
-                            <span className="ml-2 text-gray-500 text-sm">{review.date}</span>
+                            <StarRating rating={review.rating || 5} />
+                            <span className="ml-2 text-gray-500 text-sm">{new Date(review.createdat).toLocaleDateString()}</span>
                           </div>
                         </div>
-                        <p className="text-gray-600">{review.comment}</p>
+                        <p className="text-gray-600">{review.comment || "Yorum yok"}</p>
                       </div>
                     ))}
                   </div>
@@ -220,68 +279,64 @@ export default async function LocksmithDetail({ params }) {
                 </div>
               </div>
 
-              {/* Benzer Çilingirler - Gelecekte Implementasyonu Yapılabilir */}
-              <div className="border-t border-gray-200 pt-6">
-                <h2 className="text-xl font-bold text-gray-800 mb-6">Benzer Çilingirler</h2>
-                <div className="space-y-4">
-                  {similarLocksmiths.map((item) => (
-                    <div key={item.id} style={styles.jobCard} className="hover:transform hover:translate-y-[-2px] hover:shadow-lg">
-                      <div className="flex flex-col md:flex-row md:items-center">
-                        <div className="mb-4 md:mb-0 md:mr-4">
-                          <div style={styles.smallCompanyLogo}>
-                            <span>{item.name.substring(0, 2)}</span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex-grow">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="text-lg font-bold text-gray-800 mb-1">{item.name}</h3>
-                              <p className="text-gray-600 mb-2">{item.location}</p>
-                            </div>
-                            <div className="flex items-center">
-                              <StarRating rating={item.rating} />
-                              <span className="ml-2 text-gray-500">({item.reviewCount})</span>
+              {/* Benzer Çilingirler */}
+              {locksmith.similarLocksmiths && locksmith.similarLocksmiths.length > 0 && (
+                <div className="border-t border-gray-200 pt-6">
+                  <h2 className="text-xl font-bold text-gray-800 mb-6">Benzer Çilingirler</h2>
+                  <div className="space-y-4">
+                    {locksmith.similarLocksmiths.map((item) => (
+                      <div key={item.id} style={styles.jobCard} className="hover:transform hover:translate-y-[-2px] hover:shadow-lg">
+                        <div className="flex flex-col md:flex-row md:items-center">
+                          <div className="mb-4 md:mb-0 md:mr-4">
+                            <div style={styles.smallCompanyLogo}>
+                              <span>{item.name.substring(0, 2)}</span>
                             </div>
                           </div>
-                          <div className="flex flex-wrap gap-2 mb-2">
-                            {item.serviceIds.slice(0, 2).map((serviceId, index) => (
-                              <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{testServices.find(service => service.id === serviceId)?.name}</span>
-                            ))}
-                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{testServices.find(service => service.id === item.serviceIds[0])?.price.max}₺ - {testServices.find(service => service.id === item.serviceIds[0])?.price.min}₺</span>
+                          
+                          <div className="flex-grow">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="text-lg font-bold text-gray-800 mb-1">{item.name}</h3>
+                                <p className="text-gray-600 mb-2">{item.province}, {item.district}</p>
+                              </div>
+                              <div className="flex items-center">
+                                <StarRating rating={item.rating} />
+                                <span className="ml-2 text-gray-500">({item.reviewCount})</span>
+                              </div>
+                            </div>
+                            <p className="text-gray-500 text-sm mb-3 line-clamp-2">
+                              {item.description}
+                            </p>
                           </div>
-                          <p className="text-gray-500 text-sm mb-3 line-clamp-2">
-                            {item.description}
-                          </p>
-                        </div>
-                        
-                        <div className="mt-4 md:mt-0 md:ml-4">
-                          <Link href={`/jobs/${item.id}`} className="text-blue-600 hover:text-blue-800 flex items-center">
-                            Detaylar
-                            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                          </Link>
+                          
+                          <div className="mt-4 md:mt-0 md:ml-4">
+                            <Link href={`/${item.slug}`} className="text-blue-600 hover:text-blue-800 flex items-center">
+                              Detaylar
+                              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                              </svg>
+                            </Link>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Sağ Bölüm - İletişim ve Özet */}
             <div className="w-full lg:w-1/3 p-6 lg:p-8">
               <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 mb-6">
-                Hemen Ara: {locksmith.phone.mobile || "0532 XXX XX XX"}
+                Hemen Ara: {locksmith.phonenumber || "İletişim bilgisi yok"}
               </Button>
 
               {/* Çalışma Saatleri */}
-              {locksmith.workingHours && (
+              {locksmith.workinghours && (
                 <div className="bg-gray-50 rounded-lg p-6 mb-6">
                   <h3 className="text-lg font-bold text-gray-800 mb-4">Çalışma Saatleri</h3>
                   <div className="space-y-2">
-                    {Object.entries(locksmith.workingHours).map(([day, hours]) => (
+                    {Object.entries(locksmith.workinghours).map(([day, hours]) => (
                       <div key={day} className="flex justify-between items-center">
                         <span className="text-gray-600">{day}</span>
                         {hours.is24Hours ? <span className="text-green-600">24 Saat Açık</span> : <span className={`text-sm font-medium ${hours.isOpen ? 'text-green-600' : 'text-red-500'}`}>
@@ -303,7 +358,7 @@ export default async function LocksmithDetail({ params }) {
 
               <div className="bg-gray-50 rounded-lg p-6 mb-6">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">Adres</h3>
-                <p className="text-gray-700 mb-4">{`${locksmith.fullAddress} ${locksmith.district}/${locksmith.city}` || `${locksmith.city} ${locksmith.district} bölgesinde hizmet vermektedir.`}</p>
+                <p className="text-gray-700 mb-4">{locksmith.address || `${locksmith.province} ${locksmith.district} bölgesinde hizmet vermektedir.`}</p>
                 <div className="bg-gray-200 h-48 rounded-lg flex items-center justify-center text-gray-500">
                   Harita Görünümü
                 </div>

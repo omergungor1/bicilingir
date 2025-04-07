@@ -47,7 +47,7 @@ function CilingirPanelContent() {
   const [isUpdatingServices, setIsUpdatingServices] = useState(false);
 
   const [isUpdatingDistricts, setIsUpdatingDistricts] = useState(false);
-  const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [serviceDistricts, setServiceDistricts] = useState([]);
 
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
@@ -531,8 +531,6 @@ function CilingirPanelContent() {
   };
 
   const handleDailyKeyChange = (index, keyAmount, ischecked) => {
-    console.log(dailyKeys,'dailyKeys');
-    
     // Direkt olarak state güncellemesi yap, herhangi bir kontrol olmadan
     setDailyKeys(prev => prev.map((item, i) => 
       i === index ? { ...item, keyamount: parseInt(keyAmount) || 0, isactive: ischecked } : item
@@ -570,29 +568,34 @@ function CilingirPanelContent() {
   };
 
   const fetchServiceDistricts = async () => {
+    setIsLoadingLocation(true);
     const response = await fetch('/api/locksmith/districts', {
       credentials: 'include'
     });
     const data = await response.json();
     setServiceDistricts(data.districts);
+    setIsLoadingLocation(false);
   };
 
 
   const handleDistrictActiveChange = async (districtId, type, isActive) => {
     setServiceDistricts(prev => prev.map(district => 
-      district.id === districtId 
-        ? { 
-            ...district, 
-            [type === 'day' ? 'isDayActive' : 'isNightActive']: isActive 
-          } 
+      district.id === districtId
+        ? isActive
+          ? { ...district, isDayActive: true, isNightActive: true }
+          : { 
+              ...district, 
+              [type === 'day' ? 'isDayActive' : 'isNightActive']: false 
+            }
         : district
-    ));
+    ));    
   };
 
   const handleUpdateDistricts = async () => {
     setIsUpdatingDistricts(true);
     const districtIds = serviceDistricts.map(district => ({
       districtid: district.id,
+      provinceid: district.province_id,
       isdayactive: district.isDayActive || false,
       isnightactive: district.isNightActive || false
     }));
@@ -2432,10 +2435,17 @@ function CilingirPanelContent() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4 mb-6">
-                    {serviceDistricts.map((district, index) => (
-                      <Card key={index} className="mb-4 overflow-hidden transition-all duration-200 hover:shadow-md border border-gray-200 bg-white">
-                        <CardContent className="p-0">
-                          <div className="flex flex-col">
+                    {isLoadingLocation ? (
+                      <div className="flex justify-center items-center h-48">
+                        <div className="flex justify-center items-center p-12">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                        </div>
+                      </div>
+                    ) : (
+                      serviceDistricts.map((district, index) => (
+                        <Card key={index} className="mb-4 overflow-hidden transition-all duration-200 hover:shadow-md border border-gray-200 bg-white">
+                          <CardContent className="p-0">
+                            <div className="flex flex-col">
                             {/* Başlık Kısmı */}
                             <div className="flex items-center p-4 border-b border-gray-100 bg-gray-50">
                               <label 
@@ -2448,8 +2458,16 @@ function CilingirPanelContent() {
                                 <span className="ml-auto text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-600">Aktif Değil</span>
                               )}
                               
-                              {(district.isDayActive || district.isNightActive) && (
-                                <span className="ml-auto text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-600">Aktif</span>
+                              {(district.isDayActive && district.isNightActive) && (
+                                <span className="ml-auto text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-600">24 Saat Aktif</span>
+                              )}
+
+                              {(district.isDayActive && !district.isNightActive) && (
+                                <span className="ml-auto text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-600">Gündüz Aktif</span>
+                              )}
+
+                              {(!district.isDayActive && district.isNightActive) && (
+                                <span className="ml-auto text-xs px-2 py-1 rounded-full bg-indigo-100 text-indigo-600">Gece Aktif</span>
                               )}
                             </div>
                             
@@ -2488,17 +2506,18 @@ function CilingirPanelContent() {
                           </div>
                         </CardContent>
                       </Card>
-                    ))}
+
+                    )))}
                   </div>
                   
-                  <div className="flex justify-start">
+                  {!isLoadingLocation && <div className="flex justify-start">
                     <Button 
                       onClick={()=> handleUpdateDistricts()}
                       disabled={isUpdatingDistricts}
                       className="bg-blue-600 hover:bg-blue-700 text-white">
                       Hizmet Alanlarını Güncelle
                     </Button>
-                  </div>
+                  </div>}
                 </CardContent>
               </Card>
             )}
@@ -2821,7 +2840,6 @@ function CilingirPanelContent() {
                                 className="sr-only peer"
                                 checked={dailyKeys[index]?.isactive ?? false}
                                 onChange={(e) => {
-                                  console.log(e.target.checked,'e.target.checked');
                                   handleDailyKeyChange(index, dailyKeys[index]?.keyamount, e.target.checked );
                                 }}
                               />

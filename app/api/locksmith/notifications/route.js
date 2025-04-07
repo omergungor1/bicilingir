@@ -90,8 +90,6 @@ export async function GET(request) {
       
       if (error) {
         console.error('Manuel session ayarlama hatası:', error.message);
-      } else {
-        console.log('Manuel session başarıyla ayarlandı:', !!data.session);
       }
     }
     

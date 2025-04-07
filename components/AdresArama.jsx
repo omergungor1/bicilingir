@@ -35,7 +35,7 @@ export default function AdresArama({ onPlaceSelect, placeholder, className }) {
           filteredSuggestions.push({
             type: "ilce",
             name: ilce.name,
-            parent: ilce.province_id,
+            province_id: ilce.province_id,
             fullAddress: `${ilce.name}, ${province.name}`
           });
         });
@@ -49,7 +49,7 @@ export default function AdresArama({ onPlaceSelect, placeholder, className }) {
             filteredSuggestions.push({
               type: "ilce",
               name: ilce.name,
-              parent: ilce.province_id,
+              province_id: ilce.province_id,
               fullAddress: `${ilce.name}, ${parentProvince.name}`
             });
           }
@@ -78,6 +78,14 @@ export default function AdresArama({ onPlaceSelect, placeholder, className }) {
   // Öneri seçildiğinde
   const handleSuggestionClick = (suggestion) => {
     setInputValue(suggestion.fullAddress);
+
+    const parentProvince = turkiyeIlIlce.provinces.find(p => p.id === suggestion.province_id);
+    
+    // İlçenin ID'sini doğrudan suggestion'dan alacağız
+    const districtId = turkiyeIlIlce.districts.find(
+      d => d.name === suggestion.name && d.province_id === suggestion.province_id
+    )?.id;
+
     setShowSuggestions(false);
     
     if (onPlaceSelect) {
@@ -85,7 +93,9 @@ export default function AdresArama({ onPlaceSelect, placeholder, className }) {
         formatted_address: suggestion.fullAddress,
         name: suggestion.name,
         type: suggestion.type,
-        parent: suggestion.parent
+        id: districtId, // İlçe ID'si
+        province_id: suggestion.province_id, // İl ID'si
+        province_name: parentProvince?.name || ''
       });
     }
   };

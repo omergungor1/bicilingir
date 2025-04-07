@@ -102,20 +102,15 @@ CREATE TABLE locksmith_services (
 );
 
 -- Çilingir İlçe Servis İlişkileri Tablosu
-CREATE TABLE locksmith_district_services (
+CREATE TABLE locksmith_districts (
     locksmithId UUID REFERENCES locksmiths(id) ON DELETE CASCADE,
+    provinceId INTEGER REFERENCES provinces(id) ON DELETE CASCADE,
     districtId INTEGER REFERENCES districts(id) ON DELETE CASCADE,
+    isDayActive BOOLEAN DEFAULT TRUE,
+    isNightActive BOOLEAN DEFAULT TRUE,
     PRIMARY KEY (locksmithId, districtId)
 );
 
--- Hizmet Alanları Tablosu
-CREATE TABLE service_areas (
-    locksmithId UUID REFERENCES locksmiths(id) ON DELETE CASCADE,
-    provinceId INTEGER REFERENCES provinces(id),
-    districtId INTEGER REFERENCES districts(id),
-    timePeriod VARCHAR(10) CHECK (timePeriod IN ('day', 'night')),
-    PRIMARY KEY (locksmithId, provinceId, districtId, timePeriod)
-);
 
 -- Çilingir Paketleri Tablosu
 CREATE TABLE key_packages (

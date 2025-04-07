@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "../components/ui/button";
@@ -88,6 +89,15 @@ export default function Home() {
   const [selectedLocksmith, setSelectedLocksmith] = useState(null);
   const [hoverRating, setHoverRating] = useState(0);
 
+  const [selectedValues, setSelectedValues] = useState({
+    serviceId: null,
+    districtId: null,
+    provinceId: null
+  });
+
+  useEffect(() => {
+    console.log('serviceId ve districtId değişti:  ServiceId: ',selectedValues.serviceId, 'DistrictId: ', selectedValues.districtId, 'ProvinceId: ', selectedValues.provinceId);
+  }, [selectedValues]);
 
   const [customerFeedback, setCustomerFeedback] = useState({
     rating: 0,
@@ -99,13 +109,17 @@ export default function Home() {
   const [locksmiths, setLocksmiths] = useState([]);
   const [error, setError] = useState(null);
   
+  // Tek bir loading state yerine, her çilingir ID'si için ayrı loading state tutacağız
+  const [loadingLocksmithIds, setLoadingLocksmithIds] = useState({});
+  
   // Toast context hook
   const { showToast } = useToast();
   
 
-  const handleSearch = async () => {
+  const handleSearch = async () => {  
     setIsLoading(true);
     setShowResults(true);
+
 
     // Sonuç kısmına kaydırma işlemi için düzeltme
     setTimeout(() => {
@@ -120,23 +134,48 @@ export default function Home() {
     }, 100);
 
     try {
-      const { locksmiths: fetchedLocksmiths, error } = await getLocksmiths();
-      
-      if (error) {
-        setError(error);
+      //serviceid ve districtid search url sine ekleyelim
+      const response = await fetch('/api/public/search?serviceid=' + selectedValues.serviceId + '&districtid=' + selectedValues.districtId + '&provinceid=' + selectedValues.provinceId);
+      const data = await response.json();
+      console.log(data, 'data***');
+
+      if (data.locksmiths) {
+        setLocksmiths(data.locksmiths);
+      } else {
         showToast("Çilingirler yüklenirken bir hata oluştu", "error", 3000);
-        return;
+        setError(data.message);
       }
-      
-      setLocksmiths(fetchedLocksmiths);
-    } catch (err) {
-      console.error("Çilingirler getirilirken hata:", err);
-      setError("Veri yüklenirken bir hata oluştu");
-      showToast("Beklenmeyen bir hata oluştu", "error", 3000);
+
+      // setLocksmiths(data.locksmiths);
+    } catch (error) {
+      console.error('Hata:', error);
+      showToast("Çilingirler yüklenirken bir hata oluştu", "error", 3000);
+      setError(error);
     } finally {
       setIsLoading(false);
       setShowResults(true);
     }
+
+    // try {
+    //   const { locksmiths: fetchedLocksmiths, error } = await getLocksmiths();
+      
+    //   if (error) {
+    //     setError(error);
+    //     showToast("Çilingirler yüklenirken bir hata oluştu", "error", 3000);
+    //     return;
+    //   }
+      
+    //   setLocksmiths(fetchedLocksmiths);
+    // } catch (err) {
+    //   console.error("Çilingirler getirilirken hata:", err);
+    //   setError("Veri yüklenirken bir hata oluştu");
+    //   showToast("Beklenmeyen bir hata oluştu", "error", 3000);
+    // } finally {
+    //   setIsLoading(false);
+    //   setShowResults(true);
+    // }
+
+    //apiye bağlayalım
   };
 
   // SearchParamsHandler bileşeni
@@ -186,6 +225,17 @@ export default function Home() {
     showToast("Değerlendirmeniz için teşekkür ederiz!", "success", 3000);
   };
 
+  // Detaylara tıklama işlemi
+  const handleViewDetails = (locksmithId, slug) => {
+    // Sadece tıklanan çilingirin loading state'ini true yap
+    setLoadingLocksmithIds(prev => ({
+      ...prev,
+      [locksmithId]: true
+    }));
+    
+    // Router ile yönlendirmeye gerek yok, Link componenti zaten bunu yapıyor
+    // Burada sadece loading state'i güncelliyoruz
+  };
 
   return (
     <main className="flex min-h-screen flex-col items-center">
@@ -204,7 +254,7 @@ export default function Home() {
         <div className="w-full max-w-4xl mx-auto">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="w-full">
-              <SearchForm onSearch={handleSearch} />
+              <SearchForm onSearch={handleSearch} selectedValues={selectedValues} setSelectedValues={setSelectedValues} />
             </div>
           </div>
         </div>
@@ -215,7 +265,7 @@ export default function Home() {
         <div className="w-full max-w-6xl mx-auto px-4 my-12" id="results-section">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl md:text-2xl font-bold text-gray-800">En Yakın Çilingirler</h2>
-            <button 
+            {/* <button 
               onClick={() => setShowFilters(!showFilters)}
               className="text-blue-600 flex items-center gap-1"
             >
@@ -223,7 +273,7 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
               </svg>
               {showFilters ? "Gizle" : "Filtrele"}
-            </button>
+            </button> */}
           </div>
           
           {/* Yüklenirken spinner göster */}
@@ -328,10 +378,10 @@ export default function Home() {
                           <p className="text-gray-700 mb-4">{locksmith.description}</p>
                           
                           <div className="flex flex-wrap gap-2">
-                            {locksmith.serviceIds.map((serviceId, index) => (
-                              <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{testServices.find(service => service.id === serviceId)?.name}</span>
+                            {locksmith.serviceNames.map((serviceName, index) => (
+                              <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{serviceName}</span>
                             ))}
-                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{testServices.find(service => service.id === locksmith.serviceIds[0])?.price.max}₺ - {testServices.find(service => service.id === locksmith.serviceIds[0])?.price.min}₺</span>
+                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{locksmith.price.min}₺ - {locksmith.price.max}₺</span>
                           </div>
                         </div>
                         
@@ -348,10 +398,21 @@ export default function Home() {
                                 </svg>
                               )}
                             </Button>
-                            <Link href={`/jobs/${locksmith.id}`} passHref>
-                              <Button variant="outline" className="w-full">
-                                Detaylar
-                                <ChevronRight className="w-4 h-4" />
+                            <Link href={`/${locksmith.slug}`} passHref>
+                              <Button 
+                                variant="outline" 
+                                className="w-full"
+                                disabled={loadingLocksmithIds[locksmith.id]}
+                                onClick={() => handleViewDetails(locksmith.id, locksmith.slug)}
+                              >
+                                {loadingLocksmithIds[locksmith.id] ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <>
+                                    Detaylar
+                                    <ChevronRight className="w-4 h-4" />
+                                  </>
+                                )}
                               </Button>
                             </Link>
                           </div>

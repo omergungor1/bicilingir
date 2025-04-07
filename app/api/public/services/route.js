@@ -5,7 +5,6 @@ export async function GET() {
   try {
     // Gerçek sistemde tüm servisler ve çilingirin aktif servisleri
     // Örnek implementasyon (gerçek kodda burada veritabanı sorgusu olacak)
-    console.log('services listing....');
     const { data: services, error } = await supabase
       .from('services')
       .select('id,name')
