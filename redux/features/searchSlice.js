@@ -1,11 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { logUserActivity } from './userSlice';
 
 // Çilingir arama için async thunk
 export const searchLocksmiths = createAsyncThunk(
   'search/searchLocksmiths',
-  async (searchParams, { rejectWithValue }) => {
+  async (searchParams, { rejectWithValue, dispatch, getState }) => {
     try {
-      const { provinceId, districtId, serviceId } = searchParams;
+      const { provinceId, districtId, serviceId, shouldLog = true } = searchParams;
       
       if (!provinceId || !districtId || !serviceId) {
         return rejectWithValue('Lütfen il, ilçe ve servis seçiniz');
@@ -24,8 +25,45 @@ export const searchLocksmiths = createAsyncThunk(
         return rejectWithValue(data.error || 'Arama sırasında bir hata oluştu');
       }
       
+      // Çilingir listesi görüntüleme için her bir çilingir için ayrı log kaydı oluştur
+      const locksmiths = data.locksmiths || [];
+      
+      // Sadece aktif aramalar için log oluştur (shouldLog true ise)
+      if (shouldLog) {
+        // Kullanıcı oturumu başlatılmış mı kontrol et
+        const { user } = getState();
+        if (user.isInitialized && user.userId && user.sessionId) {
+          try {
+            // Her bir çilingir için ayrı ayrı görüntüleme logu oluştur
+            locksmiths.forEach(locksmith => {
+              dispatch(logUserActivity({
+                action: 'sayfa-goruntuleme',
+                details: `${locksmith.name}`,
+                entityType: 'locksmith',
+                entityId: locksmith.id,
+                additionalData: {
+                  locksmithId: locksmith.id,
+                  searchProvinceId: provinceId,
+                  searchDistrictId: districtId,
+                  searchServiceId: serviceId,
+                  userAgent: navigator.userAgent || ''
+                }
+              }));
+            });
+            
+            console.log(`${locksmiths.length} çilingir için görüntüleme logu oluşturuldu`);
+          } catch (error) {
+            console.error('Çilingir görüntüleme logları oluşturulurken hata:', error);
+          }
+        } else {
+          console.warn('Kullanıcı oturumu başlatılmamış, görüntüleme logları oluşturulamadı');
+        }
+      } else {
+        console.log('Bu arama için log oluşturulmadı (sayfa geçişi)');
+      }
+      
       return {
-        locksmiths: data.locksmiths || [],
+        locksmiths,
         searchParams: {
           provinceId,
           districtId,

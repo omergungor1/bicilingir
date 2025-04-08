@@ -91,24 +91,8 @@ export async function POST(request) {
       }, { status: 500 });
     }
     
-    // Kullanıcı aktivitesi kaydet
-    const { error: activityError } = await supabase
-      .from('user_activity_logs')
-      .insert([{
-        id: uuidv4(),
-        userid: userId,
-        locksmithid: locksmithId,
-        reviewid: reviewId,
-        activitytype: 'review_submit',
-        createdat: new Date().toISOString(),
-        sessionid: userId // Basitleştirmek için userId'yi session olarak kullan
-      }]);
-    
-    if (activityError) {
-      console.error('Aktivite kaydetme hatası:', activityError);
-      // Aktivite kaydı başarısız olsa bile, değerlendirme kaydedildiği için başarılı sonuç dön
-    }
-    
+    // NOT: Kullanıcı aktivitesi kaydı artık frontend'den Redux ile yapılıyor
+    // Bu nedenle buradaki aktivite kaydı kaldırıldı, böylece çift kayıt önlendi
     
     return NextResponse.json({
       success: true,

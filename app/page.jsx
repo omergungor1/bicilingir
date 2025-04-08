@@ -16,6 +16,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { logUserActivity } from '../redux/features/userSlice'
 import { searchLocksmiths, setSelectedValues as setReduxSelectedValues } from '../redux/features/searchSlice';
 import Image from 'next/image';
+import { useRouter } from "next/navigation";
+import { RatingModal } from "../components/RatingModal";
 
 const styles = {
   accentButton: {
@@ -126,19 +128,6 @@ export default function Home() {
   // Toast context hook
   const { showToast } = useToast();
 
-  // Sayfa yüklendiğinde sayfa görüntüleme aktivitesi kaydet
-  useEffect(() => {
-    dispatch(logUserActivity({
-      action: 'sayfa-goruntuleme',
-      details: 'anasayfa',
-      entityType: 'page',
-      entityId: 'home',
-      additionalData: {
-        userAgent: navigator.userAgent
-      }
-    }))
-  }, [dispatch]);
-
   // Local değişikliği Redux'a aktar
   const handleLocalSelectedValuesChange = (newValues) => {
     // Önce Redux'a bildir
@@ -178,11 +167,11 @@ export default function Home() {
       // Kullanıcı arama aktivitesi kaydı - Redux aktivitesi
       dispatch(logUserActivity({
         action: 'arama-yapildi',
+        details: `${selectedValues.provinceId}, ${selectedValues.districtId}, ${selectedValues.serviceId}`,
         additionalData: {
-          searchProvinceId: selectedValues.provinceId,
-          searchDistrictId: selectedValues.districtId,
-          searchServiceId: selectedValues.serviceId,
           userAgent: navigator.userAgent
+          // searchProvinceId, searchDistrictId ve searchServiceId
+          // değerleri otomatik olarak Redux store'dan eklenecek
         }
       }));
       
@@ -207,8 +196,29 @@ export default function Home() {
   const SearchParamsHandler = ({ searchParams }) => {
     useEffect(() => {
       // URL'de parametre varsa (başka sayfadan yönlendirildiyse)
-      if (searchParams.has('location') || searchParams.has('service')) {
-        handleSearch();
+      if (searchParams.has('location') || searchParams.has('service') || searchParams.has('fromDetail')) {
+        // URL'de fromDetail parametresi varsa, bu geri dönüş aramasıdır
+        const isFromDetailPage = searchParams.has('fromDetail');
+        
+        // Redux store'dan mevcut seçili değerleri al
+        const currentProvinceId = reduxSelectedValues.provinceId;
+        const currentDistrictId = reduxSelectedValues.districtId;
+        const currentServiceId = reduxSelectedValues.serviceId;
+        
+        // Eğer değerler zaten seçiliyse ve detay sayfasından geliyorsa,
+        // sadece arama sonuçlarını göster ama loglama yapma
+        if (isFromDetailPage && currentProvinceId && currentDistrictId && currentServiceId) {
+          console.log('Detay sayfasından dönüş algılandı, loglama yapılmayacak');
+          dispatch(searchLocksmiths({
+            provinceId: currentProvinceId,
+            districtId: currentDistrictId,
+            serviceId: currentServiceId,
+            shouldLog: false // Detay sayfasından geliyorsa loglama yapma
+          }));
+        } else if (searchParams.has('location') || searchParams.has('service')) {
+          // Normal arama
+          handleSearch();
+        }
       }
     }, [searchParams]);
 
@@ -225,9 +235,12 @@ export default function Home() {
       entityType: 'locksmith',
       entityId: locksmith.id,
       additionalData: {
-        userAgent: navigator.userAgent
+        locksmithId: locksmith.id,
+        userAgent: navigator.userAgent || ''
+        // searchProvinceId, searchDistrictId ve searchServiceId
+        // Redux store'dan otomatik olarak eklenecek
       }
-    }))
+    }));
 
     // Telefon numarasını çağırma işlemi
     if (locksmith.phone) {
@@ -238,24 +251,22 @@ export default function Home() {
     
     setTimeout(() => {
       setShowRatingModal(true);
-    }, 1000);
+    }, 1500);
   };
 
-  const handleRatingSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!selectedLocksmith) {
-      showToast("Bir hata oluştu, lütfen tekrar deneyin", "error", 3000);
-      return;
-    }
-
-    // Form validasyonu
-    if (customerFeedback.rating === 0) {
-      showToast("Lütfen bir değerlendirme puanı seçin", "warning", 3000);
-      return;
-    }
-
+  const handleRatingSubmit = async ({ rating, comment }) => {
     try {
+      if (!selectedLocksmith) {
+        showToast("Bir hata oluştu, lütfen tekrar deneyin", "error", 3000);
+        return;
+      }
+
+      // Form validasyonu
+      if (rating === 0) {
+        showToast("Lütfen bir değerlendirme puanı seçin", "warning", 3000);
+        return;
+      }
+
       // Değerlendirmeyi apiye gönder
       const response = await fetch('/api/public/reviews/submit', {
         method: 'POST',
@@ -264,8 +275,8 @@ export default function Home() {
         },
         body: JSON.stringify({
           locksmithId: selectedLocksmith.id,
-          rating: customerFeedback.rating,
-          comment: customerFeedback.comment || "",
+          rating: rating,
+          comment: comment || "",
         }),
       });
 
@@ -278,21 +289,17 @@ export default function Home() {
       // Aktivite kaydını Redux ile yap
       dispatch(logUserActivity({
         action: 'degerlendirme-gonderme',
-        details: `${selectedLocksmith.name} için ${customerFeedback.rating} yıldız değerlendirme`,
+        details: `${selectedLocksmith.name} için ${rating} yıldız değerlendirme`,
         entityId: selectedLocksmith.id,
         entityType: 'locksmith',
         additionalData: {
           locksmithId: selectedLocksmith.id,
           reviewId: result.reviewId,
-          userAgent: navigator.userAgent
+          userAgent: navigator.userAgent || ''
+          // searchProvinceId, searchDistrictId ve searchServiceId
+          // Redux store'dan otomatik olarak eklenecek
         }
       }));
-
-      // Form temizle
-      setCustomerFeedback({
-        rating: 0,
-        comment: ""
-      });
       
       // Modal kapat
       setShowRatingModal(false);
@@ -314,26 +321,28 @@ export default function Home() {
   );
 
   // Çilingir detay butonuna tıklama - aktivite kaydı ekle
-  const handleViewDetails = (locksmithId, locksmithSlug) => {
-    // Aktivite kaydı yap
+  const router = useRouter();
+  const handleViewDetails = (id, slug) => {
+    // Sadece ilgili çilingir için yükleniyor durumunu güncelle
+    const updatedLoadingStates = { ...loadingLocksmithIds };
+    updatedLoadingStates[id] = true;
+    setLoadingLocksmithIds(updatedLoadingStates);
+
+    // Çilingir görüntüleme aktivitesini logla
     dispatch(logUserActivity({
       action: 'cilingir-detay-goruntuleme',
-      entityId: locksmithId,
+      details: `Çilingir detay görüntüleme: ${id}`,
+      entityId: id,
       entityType: 'locksmith',
       additionalData: {
-        locksmithId: locksmithId,
-        userAgent: navigator.userAgent
+        locksmithId: id,
+        userAgent: navigator.userAgent || ''
       }
     }));
-    
-    // Çilingir detayını göster
-    setLoadingLocksmithIds(prev => ({
-      ...prev,
-      [locksmithId]: true
-    }));
-    
-    // Router ile yönlendirmeye gerek yok, Link componenti zaten bunu yapıyor
-    // Burada sadece loading state'i güncelliyoruz
+
+    // Detay sayfasına yönlendir
+    // URL'e fromDetail parametresi ekliyoruz
+    router.push(`/cilingir/${slug}?fromDetail=true`);
   };
 
   return (
@@ -623,83 +632,12 @@ export default function Home() {
       </section>
 
       {/* Derecelendirme Modalı */}
-      {showRatingModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
-            <button 
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-              onClick={() => setShowRatingModal(false)}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            
-            <div className="mb-6 text-center">
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Çilingir Hizmet Değerlendirmesi</h3>
-              <p className="text-gray-600">
-                {selectedLocksmith?.name} çilingiri için değerlendirmenizi paylaşın
-              </p>
-            </div>
-            
-            <form onSubmit={handleRatingSubmit}>
-              <div className="mb-6">
-                <div className="text-center mb-2">
-                  <p className="text-gray-700 mb-2">Hizmet kalitesini puanlayın</p>
-                  <div className="flex justify-center space-x-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setCustomerFeedback({ ...customerFeedback, rating: star })}
-                        onMouseEnter={() => setHoverRating(star)}
-                        onMouseLeave={() => setHoverRating(0)}
-                        className="text-3xl focus:outline-none"
-                      >
-                        {star <= (hoverRating || customerFeedback.rating) ? (
-                          <span className="text-yellow-400">★</span>
-                        ) : (
-                          <span className="text-gray-300">☆</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {customerFeedback.rating === 1 && "Çok Kötü"}
-                    {customerFeedback.rating === 2 && "Kötü"}
-                    {customerFeedback.rating === 3 && "Orta"}
-                    {customerFeedback.rating === 4 && "İyi"}
-                    {customerFeedback.rating === 5 && "Çok İyi"}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="mb-6">
-                <label htmlFor="comment" className="block text-gray-700 mb-2">
-                  Yorumunuz
-                </label>
-                <textarea
-                  id="comment"
-                  value={customerFeedback.comment}
-                  onChange={(e) => setCustomerFeedback({ ...customerFeedback, comment: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows="4"
-                  placeholder="Deneyiminizi paylaşın (opsiyonel)"
-                ></textarea>
-              </div>
-              <div className="flex justify-end space-x-3">
-                <Button 
-                  type="submit" 
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                  disabled={customerFeedback.rating === 0 }
-                >
-                  Gönder
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <RatingModal 
+        isOpen={showRatingModal}
+        onClose={() => setShowRatingModal(false)}
+        onSubmit={handleRatingSubmit}
+        locksmith={selectedLocksmith}
+      />
     </main>
   );
 } 

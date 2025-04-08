@@ -12,6 +12,9 @@ import { testServices } from "../../lib/test-data";
 import { EmergencyCallButton } from "../../components/emergency-button";
 import { ImageGallery } from "../../components/image-gallery";
 import { Loader2 } from "lucide-react";
+import { logUserActivity } from '../../redux/features/userSlice';
+import { RatingModal } from "../../components/RatingModal";
+import { useToast } from "../../components/ToastContext";
 
 const styles = {
   header: {
@@ -102,12 +105,16 @@ export default function LocksmithDetail({ params }) {
   // Slug'ı routeParams'dan veya normal params'dan al
   const slug = routeParams.slug || (params ? React.use(params).slug : null);
   
+  const { showToast } = useToast();
+
   const [locksmith, setLocksmith] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedRating, setSelectedRating] = useState(null);
   const [filteredReviews, setFilteredReviews] = useState([]);
   const [visibleReviews, setVisibleReviews] = useState(3); // İlk başta kaç yorum gösterileceği
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedLocksmith, setSelectedLocksmith] = useState(null);
 
   useEffect(() => {
     const fetchLocksmithDetails = async () => {
@@ -166,6 +173,82 @@ export default function LocksmithDetail({ params }) {
   // Daha fazla yorum yükle
   const loadMoreReviews = () => {
     setVisibleReviews(prev => prev + 3); // Her seferinde 3 yorum daha ekle
+  };
+
+  // Hemen Ara butonuna tıklandığında
+  const handleCallLocksmith = () => {
+    setSelectedLocksmith(locksmith);
+
+    // Çilingir arama aktivitesini kaydet
+    dispatch(logUserActivity({
+      action: 'cilingir-arama',
+      details: `${locksmith.businessname || locksmith.fullname}`,
+      entityType: 'locksmith',
+      entityId: locksmith.id,
+      additionalData: {
+        locksmithId: locksmith.id,
+        userAgent: navigator.userAgent || ''
+      }
+    }));
+
+    // Telefon numarasını çağırma işlemi
+    if (locksmith.phonenumber) {
+      window.location.href = `tel:${locksmith.phonenumber}`;
+    } else {
+      showToast("Bu çilingirin telefon numarası bulunamadı", "error");
+    }
+    
+    // Belirli bir süre sonra değerlendirme modalını göster
+    setTimeout(() => {
+      setShowRatingModal(true);
+    }, 1500);
+  };
+  
+  // Değerlendirme gönderildiğinde
+  const handleRatingSubmit = async ({ rating, comment }) => {
+    try {
+      // Değerlendirmeyi apiye gönder
+      const response = await fetch('/api/public/reviews/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          locksmithId: locksmith.id,
+          rating: rating,
+          comment: comment || "",
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Değerlendirme gönderilirken bir hata oluştu");
+      }
+
+      // Aktivite kaydını Redux ile yap
+      dispatch(logUserActivity({
+        action: 'degerlendirme-gonderme',
+        details: `${locksmith.businessname || locksmith.fullname} için ${rating} yıldız değerlendirme`,
+        entityId: locksmith.id,
+        entityType: 'locksmith',
+        additionalData: {
+          locksmithId: locksmith.id,
+          reviewId: result.reviewId,
+          userAgent: navigator.userAgent || ''
+        }
+      }));
+
+      // Modal kapat
+      setShowRatingModal(false);
+      
+      // Başarılı mesajı göster
+      showToast("Değerlendirmeniz için teşekkürler.", "success");
+
+    } catch (error) {
+      console.error("Değerlendirme gönderme hatası:", error);
+      showToast("Değerlendirme gönderilirken bir hata oluştu. Lütfen tekrar deneyin.", "error");
+    }
   };
 
   // Hata durumunda
@@ -415,7 +498,10 @@ export default function LocksmithDetail({ params }) {
 
             {/* Sağ Bölüm - İletişim ve Özet */}
             <div className="w-full lg:w-1/3 p-6 lg:p-8">
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 mb-6">
+              <Button 
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 mb-6"
+                onClick={handleCallLocksmith}
+              >
                 Hemen Ara: {locksmith.phonenumber || "İletişim bilgisi yok"}
               </Button>
 
@@ -477,6 +563,14 @@ export default function LocksmithDetail({ params }) {
           </div>
         </div>
       </div>
+
+      {/* Derecelendirme Modalı */}
+      <RatingModal
+        isOpen={showRatingModal}
+        onClose={() => setShowRatingModal(false)}
+        onSubmit={handleRatingSubmit}
+        locksmith={selectedLocksmith}
+      />
     </main>
   );
 } 

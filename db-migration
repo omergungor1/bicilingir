@@ -141,30 +141,6 @@ CREATE TABLE daily_key_preferences (
     PRIMARY KEY (locksmithId, dayOfWeek)
 );
 
--- Anahtar Kullanım Tipleri Tablosu
-CREATE TABLE key_usage_types (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name TEXT NOT NULL,
-    level INTEGER,
-    keyAmount INTEGER NOT NULL,
-    description TEXT,
-    isActive BOOLEAN DEFAULT TRUE,
-    createdAt TIMESTAMPTZ DEFAULT NOW(),
-    updatedAt TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(name, level)
-);
-
--- Anahtar Kullanım Logları Tablosu
-CREATE TABLE key_usage_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    locksmithId UUID NOT NULL REFERENCES locksmiths(id),
-    keyAmount INTEGER NOT NULL,
-    usageTypeId UUID REFERENCES key_usage_types(id),
-    description TEXT,
-    additionalDetails JSONB,
-    createdAt TIMESTAMPTZ DEFAULT NOW()
-);
-
 -- Key İşlemleri Tablosu
 CREATE TABLE key_transactions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -244,7 +220,6 @@ CREATE TYPE user_activity_type_enum AS ENUM (
     'locksmith_detail_view',
     'call_request',
     'review_submit',
-    'profile_visit',
     'whatsapp_message',
     'website_visit',
 );
@@ -264,9 +239,28 @@ CREATE TABLE user_activity_logs (
     reviewid UUID REFERENCES reviews(id),
     sessionId UUID,
     deviceType TEXT,
+
+    keyAmount INTEGER NOT NULL,
+    usageTypeId UUID REFERENCES key_usage_types(id),
     
     createdAt TIMESTAMPTZ DEFAULT NOW() 
 );
+
+
+
+-- Anahtar Kullanım Tipleri Tablosu
+CREATE TABLE key_usage_types (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    level INTEGER,
+    keyAmount INTEGER NOT NULL,
+    description TEXT,
+    isActive BOOLEAN DEFAULT TRUE,
+    createdAt TIMESTAMPTZ DEFAULT NOW(),
+    updatedAt TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(name, level)
+);
+
 
 
 -- Çilingir Aktivite Türleri
@@ -300,73 +294,3 @@ CREATE TABLE locksmith_activity_logs (
     additionalInfo JSONB,
     createdAt TIMESTAMPTZ DEFAULT NOW()
 );
-
-
-
-
--- Provinces Table Indexes
-CREATE INDEX idx_provinces_name ON provinces(name);
-
--- Districts Table Indexes
-CREATE INDEX idx_districts_province_id ON districts(province_id);
-CREATE INDEX idx_districts_name ON districts(name);
-CREATE INDEX idx_districts_province_name ON districts(province_id, name);
-
--- Locksmiths Table Indexes
-CREATE INDEX idx_locksmiths_province_district ON locksmiths(provinceId, districtId);
-CREATE INDEX idx_locksmiths_business_name ON locksmiths(businessName);
-CREATE INDEX idx_locksmiths_email ON locksmiths(email);
-CREATE INDEX idx_locksmiths_phone ON locksmiths(phoneNumber);
-CREATE INDEX idx_locksmiths_verification_status ON locksmiths(isVerified, isActive);
-
--- Locksmith Details Table Indexes
-CREATE INDEX idx_locksmith_details_status ON locksmith_details(status);
-CREATE INDEX idx_locksmith_details_email_verified ON locksmith_details(isEmailVerified);
-CREATE INDEX idx_locksmith_details_phone_verified ON locksmith_details(isPhoneVerified);
-CREATE INDEX idx_locksmith_details_ratings ON locksmith_details(avgRating, totalReviewsCount);
-
--- Services Table Indexes
-CREATE INDEX idx_services_name ON services(name);
-CREATE INDEX idx_services_active ON services(is_active);
-
--- Locksmith Services Table Indexes
-CREATE INDEX idx_locksmith_services_locksmith_id ON locksmith_services(locksmithId);
-CREATE INDEX idx_locksmith_services_service_id ON locksmith_services(serviceId);
-
--- Service Areas Table Indexes
-CREATE INDEX idx_service_areas_locksmith_id ON service_areas(locksmithId);
-CREATE INDEX idx_service_areas_province_id ON service_areas(provinceId);
-CREATE INDEX idx_service_areas_district_id ON service_areas(districtId);
-CREATE INDEX idx_service_areas_time_period ON service_areas(timePeriod);
-
--- Key Packages Table Indexes
-CREATE INDEX idx_key_packages_active ON key_packages(is_active);
-CREATE INDEX idx_key_packages_date_range ON key_packages(startDate, endDate);
-
--- Key Balance Table Indexes
-CREATE INDEX idx_key_balance_locksmith_id ON key_balance(locksmithId);
-
--- Key Usage Logs Table Indexes
-CREATE INDEX idx_key_usage_logs_locksmith_id ON key_usage_logs(locksmithId);
-CREATE INDEX idx_key_usage_logs_usage_type ON key_usage_logs(usageType);
-CREATE INDEX idx_key_usage_logs_timestamp ON key_usage_logs(usageTimestamp);
-
--- Key Transactions Table Indexes
-CREATE INDEX idx_key_transactions_locksmith_id ON key_transactions(locksmithId);
-CREATE INDEX idx_key_transactions_package_id ON key_transactions(packageId);
-CREATE INDEX idx_key_transactions_type ON key_transactions(transactionType);
-
--- Reviews Table Indexes
-CREATE INDEX idx_reviews_locksmith_id ON reviews(locksmithId);
-CREATE INDEX idx_reviews_status ON reviews(status);
-CREATE INDEX idx_reviews_rating ON reviews(rating);
-CREATE INDEX idx_reviews_suspicious ON reviews(isSuspicious);
-
--- User Activity Logs Table Indexes
-CREATE INDEX idx_user_activity_logs_search_filters ON user_activity_logs(searchProvinceId, searchDistrictId, searchServiceId);
-CREATE INDEX idx_user_activity_logs_activity_type ON user_activity_logs(activityType);
-CREATE INDEX idx_user_activity_logs_suspicious ON user_activity_logs(isSuspicious, isFraudulent);
-
--- Locksmith Activity Logs Table Indexes
-CREATE INDEX idx_locksmith_activity_logs_locksmith_id ON locksmith_activity_logs(locksmithId);
-CREATE INDEX idx_locksmith_activity_logs_activity_type ON locksmith_activity_logs(activityType);

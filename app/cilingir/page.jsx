@@ -142,6 +142,8 @@ function CilingirPanelContent() {
   const [isActivitiesPreviousPageLoading, setIsActivitiesPreviousPageLoading] = useState(false);
   const [totalPagesActivities, setTotalPagesActivities] = useState(1);
   const [currentPageActivities, setCurrentPageActivities] = useState(1);
+  const [isLogoutLoading, setIsLogoutLoading] = useState(false);
+
 
   const [provinceChanged, setProvinceChanged] = useState(false);
   
@@ -260,7 +262,6 @@ function CilingirPanelContent() {
       const data = await response.json();
       setDashboardStats(data.stats);
       setActivityList(data.list);
-      console.log(data.list, 'liste***');
       setCurrentPageActivities(data.currentPage);
 
       setTotalPagesActivities(data.totalPages);
@@ -276,9 +277,12 @@ function CilingirPanelContent() {
 
   };
 
+
   const handleLogout = () => {
+    setIsLogoutLoading(true);
     supabase.auth.signOut();
     router.push('/cilingir/auth/login');
+    setIsLogoutLoading(false);
   };
 
   const [dailyKeys, setDailyKeys] = useState([]);
@@ -396,6 +400,7 @@ function CilingirPanelContent() {
     });
 
     const data = await response.json();
+    console.log(data, 'data***');
     setKeyUsageHistory(data.data);
     setTotalKeyUsageHistory(data.total);
     setTotalPagesKeyUsageHistory(data.totalPages);
@@ -1562,13 +1567,14 @@ function CilingirPanelContent() {
 
                   <Link href="/cilingir/auth/login">
                     <button 
+                      disabled={isLogoutLoading}
                       onClick={handleLogout}
                       className="flex items-center space-x-3 p-3 rounded-lg text-left text-red-600 hover:bg-red-50 transition-colors w-full"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
-                      <span>Güvenli Çıkış</span>
+                      <span>{!isLogoutLoading?'Güvenli Çıkış':'Çıkış Yapılıyor...'}</span>
                     </button>
                   </Link>
                 </nav>
@@ -2994,7 +3000,7 @@ function CilingirPanelContent() {
                                 </div>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium text-gray-900 truncate">{activity.usagetype=='call' ? 'Bir arama aldınız' : activity.usagetype=='listing' ? 'Listelendiniz' : activity.usagetype=='similar-locksmiths' ? 'Benzer çilngir alanında listelendiniz' : activity.usagetype=='visit' ? 'Profiliniz ziyaret edildi' : activity.usagetype=='whatsapp' ? 'Whatsapptan bir mesaj aldınız' : 'Diğer'}</p>
+                                <p className="font-medium text-gray-900 truncate">{activity.activitytype=='locksmith_list_view' ? 'Çilingir aramasında profiliniz görüntülendi' : activity.activitytype=='call_request' ? 'Bir arama aldınız' : activity.activitytype=='whatsapp_message' ? 'Whatsapptan bir mesaj aldınız' : activity.activitytype=='website_visit' ? 'Bir müşteri web sitenizi ziyaret etti' : 'Diğer'}</p>
                                 <p className="text-sm text-gray-500">{new Date(activity.createdat).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
                               </div>
                               <div className="inline-flex items-center text-base font-semibold text-blue-600">

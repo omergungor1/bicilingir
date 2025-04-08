@@ -13,12 +13,12 @@ const start = (page - 1) * PAGE_SIZE;
 const end = start + PAGE_SIZE - 1;
 
 const { data, error } = await supabase
-  .from('key_usage_logs')
+  .from('user_activity_logs')
   .select('*')
   .eq('locksmithid', locksmithId)
+  .gt('keyamount', 0)
   .order('createdat', { ascending: false })
   .range(start, end);
-
 
   if (error) {
     console.error('Anahtar kullanım logları alınamadı:', error);
@@ -28,13 +28,15 @@ const { data, error } = await supabase
   }
 
   const totalData = await supabase
-    .from('key_usage_logs')
+    .from('user_activity_logs')
     .select('*', { count: 'exact' })
-    .eq('locksmithid', locksmithId);
+    .eq('locksmithid', locksmithId)
+    .gt('keyamount', 0);
 
   const total = totalData.count;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
+  console.log(data, 'data***', total, 'total***', totalPages, 'totalPages***');
 
   return NextResponse.json({
     success: true,

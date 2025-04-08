@@ -38,6 +38,9 @@ export async function GET(request) {
 
     const { data, error } = await query.range(start, end);
 
+    //searchprovinceid, searchdistrictid, searchserviceid
+    console.log(data, 'data***');
+
     if (error) {
       console.error('Activity logs error:', error);
       return NextResponse.json({ error: 'Activity logs error' }, { status: 500 });
@@ -53,8 +56,6 @@ export async function GET(request) {
     }
 
     const { data: totalRecords, error: totalError } = await query2;
-
-console.log(data, 'data***');
 
     if (totalError) {
       console.error('Total records error:', totalError);

@@ -483,7 +483,14 @@ export async function logUserActivity(supabase, userId, sessionId, action, detai
     if (additionalData.searchProvinceId) insertData.searchprovinceid = additionalData.searchProvinceId;
     if (additionalData.searchDistrictId) insertData.searchdistrictid = additionalData.searchDistrictId;
     if (additionalData.searchServiceId) insertData.searchserviceid = additionalData.searchServiceId;
-    if (additionalData.locksmithId || entityType === 'locksmith') insertData.locksmithid = additionalData.locksmithId || entityId;
+
+    // Çilingir ID'sini ekle - entityType locksmith ise veya additionalData.locksmithId varsa
+    if (additionalData.locksmithId) {
+      insertData.locksmithid = additionalData.locksmithId;
+    } else if (entityType === 'locksmith' && entityId) {
+      insertData.locksmithid = entityId;
+    }
+
     if (additionalData.reviewId) insertData.reviewid = additionalData.reviewId;
     
     

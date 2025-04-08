@@ -112,6 +112,17 @@ export default function AdresArama({ onPlaceSelect, placeholder, className, defa
     }
   };
 
+  // Input değerini temizle
+  const handleClear = () => {
+    setInputValue("");
+    setSuggestions([]);
+    
+    if (onPlaceSelect) {
+      // Seçimi temizle
+      onPlaceSelect(null);
+    }
+  };
+
   return (
     <div className="relative w-full" ref={wrapperRef}>
       <input
@@ -125,6 +136,20 @@ export default function AdresArama({ onPlaceSelect, placeholder, className, defa
         placeholder={placeholder || "Adresinizi girin"}
         className={className}
       />
+      
+      {/* Temizleme butonu */}
+      {inputValue.trim() !== "" && (
+        <button 
+          type="button"
+          onClick={handleClear}
+          className="absolute z-10 right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-gray-600 rounded-full flex items-center justify-center focus:outline-none"
+          aria-label="Temizle"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-full w-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
       
       {showSuggestions && suggestions.length > 0 && (
         <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">

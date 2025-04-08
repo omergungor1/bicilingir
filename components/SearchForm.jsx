@@ -23,15 +23,37 @@ export default function SearchForm({ onSearch, selectedValues, setSelectedValues
   }, []);
 
   const handlePlaceSelect = (place) => {
-    setSelectedValues({
-      districtId: place.id,
-      provinceId: place.province_id
-    });
+    if (place === null) {
+      // Temizleme butonu tıklandığında
+      setSelectedValues({
+        ...selectedValues, 
+        districtId: null,
+        provinceId: null
+      });
+    } else {
+      setSelectedValues({
+        ...selectedValues,
+        districtId: place.id,
+        provinceId: place.province_id
+      });
+    }
     setWarnLocation(false);
   };
 
   const handleServiceSelect = (value) => {
-    setSelectedValues({ serviceId: value });
+    setSelectedValues({ 
+      ...selectedValues,
+      serviceId: value 
+    });
+    setWarnService(false);
+  };
+
+  // Servis seçimini temizle
+  const handleClearService = () => {
+    setSelectedValues({ 
+      ...selectedValues,
+      serviceId: null
+    });
     setWarnService(false);
   };
 
@@ -72,22 +94,37 @@ export default function SearchForm({ onSearch, selectedValues, setSelectedValues
         </div>
         
         <div className={`w-full md:w-1/4 mt-2 md:mt-0 ${warnService ? 'border-red-500 border-2 rounded-lg' : ''}`}>
-          <Select 
-            onValueChange={handleServiceSelect} 
-            defaultValue={selectedValues.serviceId}
-            value={selectedValues.serviceId}
-          >
-            <SelectTrigger className={`h-10 md:h-14 bg-white text-gray-800 border-0 rounded-lg focus:ring-2 focus:ring-blue-500`}>
-              <SelectValue placeholder="Hizmet Seçin">
-                {getSelectedServiceName() || "Hizmet Seçin"}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent className="select-content">
-              {serviceList.map((service) => (
-                <SelectItem key={service.id} value={service.id} className="select-item">{service.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="relative">
+            <Select 
+              onValueChange={handleServiceSelect} 
+              defaultValue={selectedValues.serviceId}
+              value={selectedValues.serviceId}
+            >
+              <SelectTrigger className={`h-10 md:h-14 bg-white text-gray-800 border-0 rounded-lg focus:ring-2 focus:ring-blue-500`}>
+                <SelectValue placeholder="Hizmet Seçin">
+                  {getSelectedServiceName() || "Hizmet Seçin"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="select-content">
+                {serviceList.map((service) => (
+                  <SelectItem key={service.id} value={service.id} className="select-item">{service.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            {selectedValues.serviceId && (
+              <button 
+                type="button"
+                onClick={handleClearService}
+                className="absolute z-10 right-10 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 hover:text-gray-600 rounded-full flex items-center justify-center focus:outline-none"
+                aria-label="Servisi Temizle"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-full w-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
         
         <Button 
