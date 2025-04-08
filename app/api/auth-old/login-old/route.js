@@ -26,26 +26,32 @@ export async function POST(request) {
   );
 
   try {
+    console.log('burda***')
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-
+    console.log('burda***')
+    
     if (error) {
       return NextResponse.json(
         { error: error.message },
         { status: 400 }
       );
     }
-
+    
+    console.log('burda***')
     // Çilingir mi kontrol et - eğer çilingir ise kullanıcı tablosunu güncelle
     try {
       // Çilingir bilgisini kontrol et
       const { data: locksmithData, error: locksmithError } = await supabase
-        .from('locksmiths')
-        .select('id')
-        .eq('authId', data.user.id)
-        .single();
+      .from('locksmiths')
+      .select('id')
+      .eq('authId', data.user.id)
+      .single();
+      
+      console.log('burda***')
+        console.log(locksmithData, 'locksmithData***');
 
       // Eğer çilingirse bilgileri güncelle
       if (locksmithData && locksmithData.id) {

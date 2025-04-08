@@ -51,6 +51,8 @@ export const loginUser = createAsyncThunk(
       console.log('Login başarılı:', data);
       const user = data.user;
 
+      console.log('user***',user);
+
       // Kullanıcı rolünü al
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
@@ -61,6 +63,85 @@ export const loginUser = createAsyncThunk(
       if (roleError) {
         console.log('Rol sorgusu hatası:', roleError);
         return rejectWithValue("Kullanıcı rolü alınamadı. Lütfen daha sonra tekrar deneyin.");
+      }
+      
+      // Eğer kullanıcı bir çilingir ise
+      if (roleData.role === 'cilingir') {
+        try {
+          // Çilingir ID'sini al
+          const { data: locksmithData, error: locksmithError } = await supabase
+            .from('locksmiths')
+            .select('id')
+            .eq('authid', user.id)
+            .single();
+
+          console.log('user.id***',user.id);
+          console.log('locksmithData***',locksmithData);
+          
+          if (locksmithError) {
+            console.error('Çilingir bilgisi alınamadı:', locksmithError);
+          } else if (locksmithData && locksmithData.id) {
+            console.log('Çilingir bilgisi alındı, users tablosu güncelleniyor...');
+            
+            // User-Agent ve IP bilgilerini al
+            const userAgent = navigator.userAgent;
+            const userIp = await fetch('/api/public/user/get-ip')
+              .then(res => res.json())
+              .then(data => data.ip)
+              .catch(() => '0.0.0.0');
+            
+            // Mevcut kullanıcı kaydını ara
+            const { data: userData, error: userError } = await supabase
+              .from('users')
+              .select('id')
+              .eq('userip', userIp)
+              .eq('useragent', userAgent)
+              .order('createdat', { ascending: false })
+              .limit(1);
+
+            const userId = userData && userData.length > 0 ? userData[0].id : null;
+            
+            if (userId) {
+              // Mevcut kaydı güncelle
+              const { error: updateError } = await supabase
+                .from('users')
+                .update({
+                  islocksmith: true,
+                  locksmithid: locksmithData.id,
+                  updatedat: new Date().toISOString()
+                })
+                .eq('id', userId);
+              
+              if (updateError) {
+                console.error('Çilingir kullanıcı güncellenirken hata:', updateError);
+              } else {
+                console.log('Çilingir kullanıcı başarıyla güncellendi');
+              }
+            } else {
+              // Yeni kullanıcı kaydı oluştur
+              const { v4: uuidv4 } = await import('uuid');
+              const { error: newUserError } = await supabase
+                .from('users')
+                .insert({
+                  id: uuidv4(),
+                  userip: userIp,
+                  useragent: userAgent,
+                  islocksmith: true,
+                  locksmithid: locksmithData.id,
+                  createdat: new Date().toISOString(),
+                  updatedat: new Date().toISOString()
+                });
+              
+              if (newUserError) {
+                console.error('Çilingir kullanıcı oluşturulurken hata:', newUserError);
+              } else {
+                console.log('Çilingir kullanıcı başarıyla oluşturuldu');
+              }
+            }
+          }
+        } catch (userUpdateError) {
+          console.error('Çilingir kullanıcı güncelleme hatası:', userUpdateError);
+        }
       }
 
       // Rol bilgisini user_metadata'ya ekle (API isteklerinde kullanmak için)

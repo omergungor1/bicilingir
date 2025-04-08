@@ -36,19 +36,13 @@ export default function CilingirPanel() {
   const dispatch = useDispatch();
   const { user, role, isAuthenticated, loading } = useSelector(state => state.auth);
   const { showToast } = useToast();
-  
-  console.log('Çilingir panel ana bileşeni yükleniyor');
-  console.log('cilingir paneli isAuthenticated', isAuthenticated);
-  console.log('cilingir paneli role', role);
+
   
   // Kimlik doğrulama durumunu kontrol et
   useEffect(() => {
-    console.log("Çilingir paneli yükleniyor, auth durumu kontrol ediliyor...");
     dispatch(checkAuthState())
       .then((action) => {
-        console.log("Çilingir paneli - Auth durum kontrolü tamamlandı:", action.meta.requestStatus);
         if (action.meta.requestStatus === 'fulfilled' && !action.payload) {
-          console.log("Oturum bulunamadı, giriş sayfasına yönlendiriliyor...");
           router.push('/cilingir/auth/login');
         }
       })
@@ -400,7 +394,6 @@ function CilingirPanelContent() {
     });
 
     const data = await response.json();
-    console.log(data, 'data***');
     setKeyUsageHistory(data.data);
     setTotalKeyUsageHistory(data.total);
     setTotalPagesKeyUsageHistory(data.totalPages);
@@ -454,27 +447,6 @@ function CilingirPanelContent() {
     } catch (error) {
       console.error('Aktif hizmetler getirilirken bir hata oluştu:', error);
       showToast("Hizmet listesi yüklenirken bir hata oluştu", "error");
-    }
-  };
-
-  
-  // Dashboard istatistiklerini de yükle
-  const fetchDashboardStats = async () => {
-    try {
-      const response = await fetch('/api/locksmith/dashboard/stats', {
-        credentials: 'include' // Çerezleri isteğe dahil et
-      });
-      const data = await response.json();
-      
-      if (data && data.stats) {
-        setDashboardStats(data.stats);
-      } else if (data && data.error) {
-        console.error('Dashboard stats hatası:', data.error);
-        showToast("İstatistikler yüklenirken bir hata oluştu", "error");
-      }
-    } catch (error) {
-      console.error('Dashboard stats alınırken bir hata oluştu:', error);
-      showToast("İstatistikler yüklenirken bir hata oluştu", "error");
     }
   };
 
@@ -565,7 +537,6 @@ function CilingirPanelContent() {
       fetchLocksmith(),
       fetchDailyHours(),
       fetchActivities(),
-      fetchDashboardStats(),
       fetchReviews(),
       fetchNotifications(),
       fetchKeyPackages(),
@@ -1795,7 +1766,6 @@ function CilingirPanelContent() {
                       ) : activityList.length > 0 && activityList ? (
                         <div className="space-y-4">
                           {activityList.map((activity, index) => {
-                            console.log(activity);
                             // Aktivite türüne göre renkler ve simgeler
                             const getActivityColor = (type) => {
                               switch(type) {
