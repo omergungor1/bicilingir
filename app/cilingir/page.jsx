@@ -29,6 +29,86 @@ import { useSelector, useDispatch } from "react-redux";
 import { supabase } from "../../lib/supabase";
 import { Textarea } from "../../components/ui/textarea";
 import { formatPhoneNumber } from "../../lib/utils";
+import { checkAuthState } from "../../redux/features/authSlice";
+
+export default function CilingirPanel() {
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const { user, role, isAuthenticated, loading } = useSelector(state => state.auth);
+  const { showToast } = useToast();
+  
+  console.log('Çilingir panel ana bileşeni yükleniyor');
+  console.log('cilingir paneli isAuthenticated', isAuthenticated);
+  console.log('cilingir paneli role', role);
+  
+  // Kimlik doğrulama durumunu kontrol et
+  useEffect(() => {
+    console.log("Çilingir paneli yükleniyor, auth durumu kontrol ediliyor...");
+    dispatch(checkAuthState())
+      .then((action) => {
+        console.log("Çilingir paneli - Auth durum kontrolü tamamlandı:", action.meta.requestStatus);
+        if (action.meta.requestStatus === 'fulfilled' && !action.payload) {
+          console.log("Oturum bulunamadı, giriş sayfasına yönlendiriliyor...");
+          router.push('/cilingir/auth/login');
+        }
+      })
+      .catch(err => {
+        console.error("Auth durum kontrolü hatası:", err);
+        router.push('/cilingir/auth/login');
+      });
+  }, [dispatch, router]);
+  
+  // Oturum durumu değişince kontrol et
+  useEffect(() => {
+    // Oturum açılmamışsa veya yetkili rol değilse login sayfasına yönlendir
+    if (!loading && (!isAuthenticated || (role !== 'cilingir' && role !== 'admin'))) {
+      router.push('/cilingir/auth/login');
+    }
+  }, [isAuthenticated, role, loading, router]);
+
+  // Yükleniyor veya yetki kontrolü
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Yükleniyor...</h2>
+          <p className="text-gray-500">Lütfen bekleyin, çilingir paneli hazırlanıyor.</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Yetki kontrolü
+  if (role !== 'cilingir' && role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Erişim Engellendi</h2>
+          <p className="text-gray-500">Bu sayfaya erişim yetkiniz bulunmamaktadır.</p>
+          <Button 
+            onClick={() => router.push('/cilingir/auth/login')}
+            className="mt-4"
+          >
+            Giriş Sayfasına Dön
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Yükleniyor...</h2>
+          <p className="text-gray-500">Lütfen bekleyin, çilingir paneli hazırlanıyor.</p>
+        </div>
+      </div>
+    }>
+      <CilingirPanelContent />
+    </Suspense>
+  );
+}
 
 function CilingirPanelContent() {
   const { showToast } = useToast();
@@ -3193,61 +3273,5 @@ function CilingirPanelContent() {
       </div>
       )}
     </div>
-  );
-}
-
-export default function CilingirPanel() {
-  const { isAuthenticated, role, loading } = useSelector(state => state.auth);
-  const router = useRouter();
-
-  useEffect(() => {
-    // Oturum açılmamışsa veya yetkili rol değilse login sayfasına yönlendir
-    if (!loading && (!isAuthenticated || (role !== 'cilingir' && role !== 'admin'))) {
-      router.push('/cilingir/auth/login');
-    }
-  }, [isAuthenticated, role, loading, router]);
-
-
-  // Yükleniyor veya yetki kontrolü
-  if (loading || !isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Yükleniyor...</h2>
-          <p className="text-gray-500">Lütfen bekleyin, çilingir paneli hazırlanıyor.</p>
-        </div>
-      </div>
-    );
-  }
-  
-  // Yetki kontrolü
-  if (role !== 'cilingir' && role !== 'admin') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Erişim Engellendi</h2>
-          <p className="text-gray-500">Bu sayfaya erişim yetkiniz bulunmamaktadır.</p>
-          <Button 
-            onClick={() => router.push('/cilingir/auth/login')}
-            className="mt-4"
-          >
-            Giriş Sayfasına Dön
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Yükleniyor...</h2>
-          <p className="text-gray-500">Lütfen bekleyin, çilingir paneli hazırlanıyor.</p>
-        </div>
-      </div>
-    }>
-      <CilingirPanelContent />
-    </Suspense>
   );
 } 

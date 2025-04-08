@@ -25,7 +25,7 @@ import { useToast } from "../../../../components/ToastContext";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser, resetAuthError } from "../../../../redux/features/authSlice";
+import { loginUser, resetAuthError, checkAuthState } from "../../../../redux/features/authSlice";
 import { useRouter } from "next/navigation";
 
 export default function CilingirLogin() {
@@ -43,30 +43,44 @@ export default function CilingirLogin() {
   // Toast hook'unu kullan
   const { showToast } = useToast();
 
+  // Sayfa yüklendiğinde kimlik durumunu kontrol et
+  useEffect(() => {
+    console.log("Login sayfası yükleniyor, auth durumu kontrol ediliyor...");
+    dispatch(checkAuthState())
+      .then((action) => {
+        console.log("Auth durum kontrolü tamamlandı:", action.meta.requestStatus);
+      })
+      .catch(err => {
+        console.error("Auth durum kontrolü hatası:", err);
+      });
+  }, [dispatch]);
+
   // Kullanıcı giriş yapmışsa, rolüne göre yönlendir
   useEffect(() => {
-    console.log("useEffect: Auth durumu değişti", { isAuthenticated, role });
+    console.log("useEffect: Auth durumu değişti", { isAuthenticated, role, user });
     
-    if (isAuthenticated) {
+    if (isAuthenticated && user && role) {
       if (role === 'admin') {
         showToast("Admin olarak giriş yaptınız", "success");
-        // Redux state'den gelen authentication ile de yönlendirme yapılabilir
         console.log("useEffect: Admin yönlendirmesi yapılıyor...");
-        window.location.href = '/admin';
+        router.push('/admin');
       } else if (role === 'cilingir') {
         showToast("Çilingir olarak giriş yaptınız", "success");
-        // Redux state'den gelen authentication ile de yönlendirme yapılabilir
         console.log("useEffect: Çilingir yönlendirmesi yapılıyor...");
-        window.location.href = '/cilingir';
+        router.push('/cilingir');
+      } else {
+        console.log("Bilinmeyen rol:", role);
+        showToast(`Bilinmeyen rol: ${role}`, "warning");
       }
     }
-  }, [isAuthenticated, role, showToast]);
+  }, [isAuthenticated, role, user, showToast, router]);
 
   // Redux'tan gelen hataları yakala
   useEffect(() => {
     if (error) {
       console.log("Redux'tan hata bilgisi:", error);
       setFormError(error); // Redux'tan gelen hata direkt olarak kullanılabilir
+      showToast(error, "error");
     }
   }, [error, showToast]);
 
@@ -82,19 +96,22 @@ export default function CilingirLogin() {
     
     // Form doğrulama
     if (!formData.email || !formData.password) {
-      setFormError("Lütfen e-posta ve şifrenizi girin");
+      const errorMsg = "Lütfen e-posta ve şifrenizi girin";
+      setFormError(errorMsg);
+      showToast(errorMsg, "error");
       return;
     }
 
     console.log("Giriş denemesi başlatılıyor...");
     
-    // Redux login action'ını çağır (unwrap kullanmıyoruz)
+    // Redux login action'ını çağır
     dispatch(loginUser({
       email: formData.email,
       password: formData.password
     }))
       .then((action) => {
         // Fulfilled durumunda
+        console.log("Login işlemi sonucu:", action.meta.requestStatus, action.payload);
         if (action.meta.requestStatus === 'fulfilled') {
           const result = action.payload;
           console.log("Login başarılı, sonuç:", result);
@@ -102,19 +119,26 @@ export default function CilingirLogin() {
           if (result && result.role) {
             if (result.role === 'admin') {
               showToast("Admin olarak giriş yaptınız", "success");
-              window.location.href = '/admin';
+              router.push('/admin');
             } else if (result.role === 'cilingir') {
               showToast("Çilingir olarak giriş yaptınız", "success");
-              window.location.href = '/cilingir';
+              router.push('/cilingir');
+            } else {
+              showToast(`Bilinmeyen rol: ${result.role}`, "warning");
+              console.log("Bilinmeyen rol:", result.role);
             }
+          } else {
+            console.log("Rol bilgisi alınamadı:", result);
+            showToast("Rol bilgisi alınamadı", "error");
           }
+        } else if (action.meta.requestStatus === 'rejected') {
+          console.log("Login hatası:", action.payload || action.error);
+          showToast(action.payload || "Giriş hatası", "error");
         }
       })
-      // Hata durumunu burada ele almıyoruz çünkü Redux state'i zaten güncelleniyor
-      // ve useEffect hook'u ile setFormError ve showToast çağrılıyor
-      .catch(() => {
-        // Burada hiçbir şey yapmıyoruz
-        // Bu blok sadece komut hata vermemesi için var
+      .catch((error) => {
+        console.error("Login işlemi hatası:", error);
+        showToast("Giriş işlemi sırasında beklenmeyen bir hata oluştu", "error");
       });
   };
 

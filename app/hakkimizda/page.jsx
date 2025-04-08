@@ -177,7 +177,7 @@ export default function HakkimizdaPage() {
           <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">Platformumuzun Avantajları</h2>
           <div className="space-y-8">
             <div className="flex flex-col md:flex-row items-start gap-6">
-              <div className="bg-blue-100 rounded-full p-4 text-blue-600 text-2xl">
+              <div className="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-full p-6 text-blue-600 text-2xl">
                 <span>1</span>
               </div>
               <div>
@@ -188,7 +188,7 @@ export default function HakkimizdaPage() {
               </div>
             </div>
             <div className="flex flex-col md:flex-row items-start gap-6">
-              <div className="bg-blue-100 rounded-full p-4 text-blue-600 text-2xl">
+              <div className="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-full p-6 text-blue-600 text-2xl">
                 <span>2</span>
               </div>
               <div>
@@ -199,7 +199,7 @@ export default function HakkimizdaPage() {
               </div>
             </div>
             <div className="flex flex-col md:flex-row items-start gap-6">
-              <div className="bg-blue-100 rounded-full p-4 text-blue-600 text-2xl">
+              <div className="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-full p-6 text-blue-600 text-2xl">
                 <span>3</span>
               </div>
               <div>
@@ -210,7 +210,7 @@ export default function HakkimizdaPage() {
               </div>
             </div>
             <div className="flex flex-col md:flex-row items-start gap-6">
-              <div className="bg-blue-100 rounded-full p-4 text-blue-600 text-2xl">
+              <div className="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-full p-6 text-blue-600 text-2xl">
                 <span>4</span>
               </div>
               <div>
@@ -221,7 +221,7 @@ export default function HakkimizdaPage() {
               </div>
             </div>
             <div className="flex flex-col md:flex-row items-start gap-6">
-              <div className="bg-blue-100 rounded-full p-4 text-blue-600 text-2xl">
+              <div className="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-full p-6 text-blue-600 text-2xl">
                 <span>5</span>
               </div>
               <div>

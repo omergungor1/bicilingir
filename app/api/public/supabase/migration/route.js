@@ -113,6 +113,7 @@ export async function POST(request) {
               locksmithid UUID,
               reviewid UUID,
               sessionid UUID,
+              devicetype TEXT,
               metadata JSONB,
               createdat TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             );
@@ -140,6 +141,7 @@ export async function POST(request) {
                 locksmithid UUID,
                 reviewid UUID,
                 sessionid UUID,
+                devicetype TEXT,
                 metadata JSONB,
                 createdat TIMESTAMP WITH TIME ZONE DEFAULT NOW()
               );

@@ -25,17 +25,21 @@ export async function POST(request) {
       }, { status: 400 });
     }
     
-    // console.log('Kullanıcı aktivitesi:', { 
-    //   sessionId, 
-    //   userId, 
-    //   action, 
-    //   entityType, 
-    //   entityId,
-    //   searchProvinceId,
-    //   searchDistrictId,
-    //   searchServiceId,
-    //   locksmithId
-    // });
+    // User-Agent bilgisini al
+    const userAgent = request.headers.get('user-agent') || '';
+    
+    console.log('Kullanıcı aktivitesi:', { 
+      sessionId, 
+      userId, 
+      action, 
+      entityType, 
+      entityId,
+      searchProvinceId,
+      searchDistrictId,
+      searchServiceId,
+      locksmithId,
+      deviceType: userAgent.includes('Mobile') ? 'mobile' : 'desktop'
+    });
     
     // Önce tabloyu kontrol et
     const { data: tableInfo, error: tableError } = await supabase
@@ -77,7 +81,8 @@ export async function POST(request) {
       searchDistrictId,
       searchServiceId,
       locksmithId,
-      reviewId
+      reviewId,
+      userAgent
     };
     
     // Aktivite kaydet

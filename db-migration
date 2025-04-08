@@ -207,10 +207,7 @@ CREATE TABLE reviews (
     userAgent TEXT,
     moderatorId UUID,    -- Yorumun onaylayan admin/moderatör kimliği
     approvedAt TIMESTAMPTZ, -- Onaylandığı tarih
-    createdAt TIMESTAMPTZ DEFAULT NOW(),
-    isSuspicious BOOLEAN DEFAULT FALSE, -- Yorumun şüpheli olup olmadığını belirten alan
-    commentCountPerUser INTEGER DEFAULT 0, -- Kullanıcı başına yapılan yorum sayısı
-    lastCommentTime TIMESTAMPTZ -- Son yorumun zamanı
+    createdAt TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Bildirim Tablosu
@@ -266,6 +263,7 @@ CREATE TABLE user_activity_logs (
     locksmithId UUID REFERENCES locksmiths(id),
     reviewid UUID REFERENCES reviews(id),
     sessionId UUID,
+    deviceType TEXT,
     
     createdAt TIMESTAMPTZ DEFAULT NOW() 
 );

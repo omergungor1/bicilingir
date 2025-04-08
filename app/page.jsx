@@ -111,8 +111,7 @@ export default function Home() {
   
   const [customerFeedback, setCustomerFeedback] = useState({
     rating: 0,
-    comment: "",
-    phone: "",
+    comment: ""
   });
   
   // Local state yerine Redux state kullan
@@ -133,7 +132,10 @@ export default function Home() {
       action: 'sayfa-goruntuleme',
       details: 'anasayfa',
       entityType: 'page',
-      entityId: 'home'
+      entityId: 'home',
+      additionalData: {
+        userAgent: navigator.userAgent
+      }
     }))
   }, [dispatch]);
 
@@ -179,7 +181,8 @@ export default function Home() {
         additionalData: {
           searchProvinceId: selectedValues.provinceId,
           searchDistrictId: selectedValues.districtId,
-          searchServiceId: selectedValues.serviceId
+          searchServiceId: selectedValues.serviceId,
+          userAgent: navigator.userAgent
         }
       }));
       
@@ -218,41 +221,89 @@ export default function Home() {
     // Çilingir arama aktivitesini kaydet
     dispatch(logUserActivity({
       action: 'cilingir-arama',
-      details: `${locksmith.name}, ${locksmith.phone}`,
+      details: `${locksmith.name}`,
       entityType: 'locksmith',
-      entityId: locksmith.id
+      entityId: locksmith.id,
+      additionalData: {
+        userAgent: navigator.userAgent
+      }
     }))
 
     // Telefon numarasını çağırma işlemi
-    const phoneNumber = locksmith.phone;
-    // if (phoneNumber) {
-    //   window.location.href = `tel:${phoneNumber}`;
-    // } else {
-    //   showToast("Bu çilingirin telefon numarası bulunamadı", "error", 3000);
-    // }
+    if (locksmith.phone) {
+      window.location.href = `tel:${locksmith.phone}`;
+    } else {
+      showToast("Bu çilingirin telefon numarası bulunamadı", "error", 3000);
+    }
     
     setTimeout(() => {
       setShowRatingModal(true);
     }, 1000);
   };
 
-  const handleRatingSubmit = (e) => {
+  const handleRatingSubmit = async (e) => {
     e.preventDefault();
-    // Burada API'ye gönderilecek
-    console.log(`Değerlendirme: ${customerFeedback.rating} yıldız, Yorum: ${customerFeedback.comment}, Çilingir: ${selectedLocksmith.name}`);
     
-    // Form temizle
-    setCustomerFeedback({
-      rating: 0,
-      comment: "",
-      phone: ""
-    });
-    
-    // Modal kapat
-    setShowRatingModal(false);
-    
-    // Toast bildirimini göster
-    showToast("Değerlendirmeniz için teşekkür ederiz!", "success", 3000);
+    if (!selectedLocksmith) {
+      showToast("Bir hata oluştu, lütfen tekrar deneyin", "error", 3000);
+      return;
+    }
+
+    // Form validasyonu
+    if (customerFeedback.rating === 0) {
+      showToast("Lütfen bir değerlendirme puanı seçin", "warning", 3000);
+      return;
+    }
+
+    try {
+      // Değerlendirmeyi apiye gönder
+      const response = await fetch('/api/public/reviews/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          locksmithId: selectedLocksmith.id,
+          rating: customerFeedback.rating,
+          comment: customerFeedback.comment || "",
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Değerlendirme gönderilirken bir hata oluştu");
+      }
+
+      // Aktivite kaydını Redux ile yap
+      dispatch(logUserActivity({
+        action: 'degerlendirme-gonderme',
+        details: `${selectedLocksmith.name} için ${customerFeedback.rating} yıldız değerlendirme`,
+        entityId: selectedLocksmith.id,
+        entityType: 'locksmith',
+        additionalData: {
+          locksmithId: selectedLocksmith.id,
+          reviewId: result.reviewId,
+          userAgent: navigator.userAgent
+        }
+      }));
+
+      // Form temizle
+      setCustomerFeedback({
+        rating: 0,
+        comment: ""
+      });
+      
+      // Modal kapat
+      setShowRatingModal(false);
+      
+      // Toast bildirimini göster
+      showToast("Değerlendirmeniz için teşekkür ederiz! İncelendikten sonra yayınlanacaktır.", "success", 3000);
+
+    } catch (error) {
+      console.error("Değerlendirme gönderme hatası:", error);
+      showToast("Değerlendirme gönderilirken bir hata oluştu. Lütfen tekrar deneyin.", "error", 3000);
+    }
   };
 
   const LoadingSpinner = () => (
@@ -270,7 +321,8 @@ export default function Home() {
       entityId: locksmithId,
       entityType: 'locksmith',
       additionalData: {
-        locksmithId: locksmithId
+        locksmithId: locksmithId,
+        userAgent: navigator.userAgent
       }
     }));
     

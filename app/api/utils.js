@@ -449,10 +449,15 @@ export async function logUserActivity(supabase, userId, sessionId, action, detai
     // Aktivite tipini dönüştür veya varsayılan değeri kullan
     const activityType = activityTypeMap[action] || 'website_visit';
     
+    // User-Agent bilgisini al ve cihaz tipini belirle
+    const userAgent = additionalData.userAgent || '';
+    const deviceType = userAgent.includes('Mobile') ? 'mobile' : 'desktop';
+    
     const insertData = {
       // id: uuidv4(),
       userid: userId,
       activitytype: activityType,
+      devicetype: deviceType,
       createdat: new Date().toISOString()
     };
     
@@ -473,7 +478,6 @@ export async function logUserActivity(supabase, userId, sessionId, action, detai
         console.error('SessionId işleme hatası:', e);
       }
     }
-
     
     // Ek veri alanlarını ekle
     if (additionalData.searchProvinceId) insertData.searchprovinceid = additionalData.searchProvinceId;
@@ -482,6 +486,8 @@ export async function logUserActivity(supabase, userId, sessionId, action, detai
     if (additionalData.locksmithId || entityType === 'locksmith') insertData.locksmithid = additionalData.locksmithId || entityId;
     if (additionalData.reviewId) insertData.reviewid = additionalData.reviewId;
     
+    
+    console.log('Aktivite eklenecek:', insertData);
     
     const { data, error } = await supabase
       .from('user_activity_logs')

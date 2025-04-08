@@ -42,7 +42,7 @@ export default function Footer() {
             <h3 className="text-xl font-bold mb-4">İletişim</h3>
             <ul className="space-y-2 text-gray-300">
               <li>info@bicilingir.com</li>
-              <li>+90 850 123 45 67</li>
+              {/* <li>+90 850 123 45 67</li> */}
               <li>İstanbul, Türkiye</li>
             </ul>
             <div className="flex space-x-4 mt-4">
