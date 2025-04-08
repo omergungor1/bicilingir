@@ -36,8 +36,6 @@ const { data, error } = await supabase
   const total = totalData.count;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  console.log(data, 'data***', total, 'total***', totalPages, 'totalPages***');
-
   return NextResponse.json({
     success: true,
     data: data,

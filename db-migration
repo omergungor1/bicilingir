@@ -42,6 +42,7 @@ CREATE TABLE locksmiths (
     avgRating NUMERIC(3,2) DEFAULT 0,
     totalReviewCount INTEGER DEFAULT 0,
     profileImageUrl TEXT,
+    authid UUID REFERENCES auth.users(id),
     isVerified BOOLEAN DEFAULT FALSE,
     isActive BOOLEAN DEFAULT FALSE
 );
@@ -206,6 +207,7 @@ CREATE TABLE users (
     userIp INET,              
     userAgent TEXT,          
     islocksmith BOOLEAN DEFAULT false,
+    locksmithId UUID REFERENCES locksmiths(id),
     isSuspicious BOOLEAN DEFAULT false,
     isFraudulent BOOLEAN DEFAULT false,
     createdAt TIMESTAMPTZ DEFAULT NOW(),   

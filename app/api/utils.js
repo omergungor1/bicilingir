@@ -133,19 +133,19 @@ export async function checkApiAuth(request, allowedRoles = ['admin', 'cilingir']
   
   // 2. Debug için request headers'ı kontrol et
   const cookieHeader = request.headers.get('cookie');
-  console.log('API Auth - Cookie Header:', cookieHeader ? 'Mevcut' : 'Yok');
+  // console.log('API Auth - Cookie Header:', cookieHeader ? 'Mevcut' : 'Yok');
   
   try {
     // 3. Oturum kontrolü
-    console.log('API Auth - Oturum kontrolü yapılıyor...');
+    // console.log('API Auth - Oturum kontrolü yapılıyor...');
     const { data } = await supabase.auth.getSession();
     
     // 4. Session kontrol
     const session = data?.session;
-    console.log('API Auth - Session:', session ? 'Bulundu' : 'Bulunamadı');
+    // console.log('API Auth - Session:', session ? 'Bulundu' : 'Bulunamadı');
     
     if (!session || !session.user) {
-      console.log('API Auth - Oturum bulunamadı veya geçersiz');
+      // console.log('API Auth - Oturum bulunamadı veya geçersiz');
       return {
         error: NextResponse.json({ error: 'Oturum açmalısınız' }, { status: 401 }),
         user: null,
@@ -156,17 +156,17 @@ export async function checkApiAuth(request, allowedRoles = ['admin', 'cilingir']
     }
     
     // 5. Kullanıcı bilgisi log
-    console.log('API Auth - Kullanıcı ID:', session.user.id);
-    console.log('API Auth - Kullanıcı Email:', session.user.email);
+    // console.log('API Auth - Kullanıcı ID:', session.user.id);
+    // console.log('API Auth - Kullanıcı Email:', session.user.email);
     
     // 6. Kullanıcı rolünü kontrol et
-    console.log('API Auth - Kullanıcı rolü kontrol ediliyor...');
+    // console.log('API Auth - Kullanıcı rolü kontrol ediliyor...');
     const userRole = await getUserRoleFromSession(supabase, session);
-    console.log('API Auth - Kullanıcı Rolü:', userRole || 'Bulunamadı');
+    // console.log('API Auth - Kullanıcı Rolü:', userRole || 'Bulunamadı');
     
     // 7. Rol yetkisi kontrolü
     if (!userRole) {
-      console.log('API Auth - Kullanıcı rolü bulunamadı');
+      // console.log('API Auth - Kullanıcı rolü bulunamadı');
       return {
         error: NextResponse.json({ error: 'Kullanıcı rolü bulunamadı' }, { status: 403 }),
         user: session.user,
@@ -177,7 +177,7 @@ export async function checkApiAuth(request, allowedRoles = ['admin', 'cilingir']
     }
     
     if (!allowedRoles.includes(userRole)) {
-      console.log(`API Auth - '${userRole}' rolü erişim için yetkili değil. İzin verilen roller: ${allowedRoles.join(', ')}`);
+      // console.log(`API Auth - '${userRole}' rolü erişim için yetkili değil. İzin verilen roller: ${allowedRoles.join(', ')}`);
       return {
         error: NextResponse.json({ error: 'Bu API için yetkiniz yok' }, { status: 403 }),
         user: session.user,
@@ -188,7 +188,7 @@ export async function checkApiAuth(request, allowedRoles = ['admin', 'cilingir']
     }
     
     // 8. Başarılı kimlik doğrulama
-    console.log('API Auth - Kimlik doğrulama başarılı');
+    // console.log('API Auth - Kimlik doğrulama başarılı');
     return {
       error: null,
       user: session.user,
@@ -198,7 +198,7 @@ export async function checkApiAuth(request, allowedRoles = ['admin', 'cilingir']
     };
   } catch (error) {
     // 9. Hata durumu log
-    console.error('API Auth - Hata:', error.message);
+    // console.error('API Auth - Hata:', error.message);
     return {
       error: NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 }),
       user: null,
@@ -454,7 +454,7 @@ export async function logUserActivity(supabase, userId, sessionId, action, detai
     // call_request ve locksmith_detail_view için her zaman level 1 kullan
     if (action === 'call_request' || action === 'locksmith_detail_view') {
       finalLevel = 1;
-      console.log(`${action} için level zorla 1 olarak ayarlandı`);
+      // console.log(`${action} için level zorla 1 olarak ayarlandı`);
     }
     
     // Key usage bilgisini al
@@ -475,9 +475,9 @@ export async function logUserActivity(supabase, userId, sessionId, action, detai
     if (keyUsageData && keyUsageData.length > 0) {
       keyAmount = keyUsageData[0].keyamount;
       usageTypeId = keyUsageData[0].id;
-      console.log(`Key usage bilgisi alındı: ${action} (level: ${finalLevel}) - ${keyAmount} anahtar`);
+      // console.log(`Key usage bilgisi alındı: ${action} (level: ${finalLevel}) - ${keyAmount} anahtar`);
     } else {
-      console.warn(`Key usage bilgisi bulunamadı: ${action} (level: ${finalLevel}). Varsayılan değer kullanılıyor.`);
+      // console.warn(`Key usage bilgisi bulunamadı: ${action} (level: ${finalLevel}). Varsayılan değer kullanılıyor.`);
       // Varsayılan değer olarak 0 anahtar kullan
       keyAmount = 0;
     }
@@ -507,7 +507,7 @@ export async function logUserActivity(supabase, userId, sessionId, action, detai
           // Geçerli bir UUID değilse, yeni bir UUID oluştur
           insertData.sessionid = uuidv4();
           // Metadata yoksa JSONB alan ekleyip düzenleyebiliriz
-          console.log('SessionId UUID formatında değil, yeni UUID oluşturuluyor');
+          // console.log('SessionId UUID formatında değil, yeni UUID oluşturuluyor');
         }
       } catch (e) {
         console.error('SessionId işleme hatası:', e);
@@ -529,7 +529,7 @@ export async function logUserActivity(supabase, userId, sessionId, action, detai
     if (additionalData.reviewId) insertData.reviewid = additionalData.reviewId;
     
     
-    console.log('Aktivite eklenecek:', insertData);
+    // console.log('Aktivite eklenecek:', insertData);
     
     const { data, error } = await supabase
       .from('user_activity_logs')

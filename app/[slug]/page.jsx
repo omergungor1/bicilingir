@@ -175,17 +175,38 @@ export default function LocksmithDetail({ params }) {
     setSelectedLocksmith(locksmith);
 
     // Çilingir arama aktivitesini kaydet
-    dispatch(logUserActivity({
-      action: 'call_request',
-      details: `${locksmith.businessname || locksmith.fullname}`,
-      entityType: 'locksmith',
-      entityId: locksmith.id,
-      additionalData: {
-        locksmithId: locksmith.id,
-        userAgent: navigator.userAgent || ''
-      },
-      level: 1 // Detay sayfasında level her zaman 1
-    }));
+    try {
+      // API üzerinden doğrudan aktivite kaydı oluştur
+      fetch('/api/public/user/activity', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          activitytype: 'cilingir-arama',
+          level: 1,
+          data: JSON.stringify({
+            locksmithId: locksmith.id,
+            details: `${locksmith.businessname || locksmith.fullname}`
+          }),
+          userId: localStorage.getItem('userId'),
+          sessionId: localStorage.getItem('sessionId'),
+          userAgent: navigator.userAgent || ''
+        }),
+      })
+      .then(response => {
+        if (!response.ok) {
+          console.error('Aktivite log hatası:', response.statusText);
+        } else {
+          console.log('Çilingir arama aktivitesi kaydedildi.');
+        }
+      })
+      .catch(error => {
+        console.error('Aktivite log hatası:', error);
+      });
+    } catch (error) {
+      console.error('Aktivite log hatası:', error);
+    }
 
     // Telefon numarasını çağırma işlemi
     if (locksmith.phonenumber) {
@@ -222,19 +243,29 @@ export default function LocksmithDetail({ params }) {
         throw new Error(result.error || "Değerlendirme gönderilirken bir hata oluştu");
       }
 
-      // Aktivite kaydını Redux ile yap
-      dispatch(logUserActivity({
-        action: 'review_submit',
-        details: `${locksmith.businessname || locksmith.fullname} için ${rating} yıldız değerlendirme`,
-        entityId: locksmith.id,
-        entityType: 'locksmith',
-        additionalData: {
-          locksmithId: locksmith.id,
-          reviewId: result.reviewId,
-          userAgent: navigator.userAgent || ''
+      // API üzerinden doğrudan aktivite kaydı oluştur
+      const activityResponse = await fetch('/api/public/user/activity', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        level: 1 // Değerlendirme için level her zaman 1
-      }));
+        body: JSON.stringify({
+          activitytype: 'degerlendirme-gonderme',
+          level: 1,
+          data: JSON.stringify({
+            locksmithId: locksmith.id,
+            reviewId: result.reviewId,
+            details: `${locksmith.businessname || locksmith.fullname} için ${rating} yıldız değerlendirme`
+          }),
+          userId: localStorage.getItem('userId'),
+          sessionId: localStorage.getItem('sessionId'),
+          userAgent: navigator.userAgent || ''
+        }),
+      });
+      
+      if (!activityResponse.ok) {
+        console.error('Değerlendirme aktivite log hatası:', await activityResponse.text());
+      }
 
       // Modal kapat
       setShowRatingModal(false);

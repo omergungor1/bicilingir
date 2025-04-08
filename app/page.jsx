@@ -176,6 +176,9 @@ export default function Home() {
           provinceId: result.selectedValues.provinceId
         });
         setSelectedLocksmith(result.locksmiths[0]);
+        
+        // Sonuçlar bölümüne smooth scroll
+        document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } else {
         // Sonuç bulunamadı
         showToast('Seçilen kriterlere uygun çilingir bulunamadı', 'info', 3000);

@@ -4,6 +4,12 @@ import Footer from "../components/Footer";
 import ToastProvider from '../components/ToastContext'
 import Providers from './providers'
 
+
+//Bunu sonradan ekledik
+import { Inter } from 'next/font/google'
+const inter = Inter({ subsets: ['latin'] })
+// Bunu sonradan ekledik *** Cach hatası için
+
 export const metadata = {
   title: "Bi Çilingir - En yakın çilingiri bul",
   description: "Türkiye'nin en büyük çilingir arama platformu",
@@ -15,7 +21,8 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="tr">
-      <body className="font-sans">
+      {/* <body className="font-sans"> */}
+      <body className={inter.className}>
           <Providers>
             <ToastProvider>
                 <Header />
