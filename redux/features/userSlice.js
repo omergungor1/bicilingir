@@ -126,7 +126,7 @@ export const logUserActivity = createAsyncThunk(
   'user/logUserActivity',
   async ({ action, details, entityId, entityType, additionalData = {} }, { getState, rejectWithValue }) => {
     try {
-      const { user } = getState();
+      const { user, search } = getState();
       
       // Eğer kullanıcı oturumu başlatılmadıysa hata ver
       if (!user.isInitialized || !user.userId || !user.sessionId) {
@@ -135,6 +135,25 @@ export const logUserActivity = createAsyncThunk(
       }
       
       console.log(`[UserSlice] Aktivite kaydediliyor: ${action}`);
+
+      // Redux store'dan arama değerlerini ekle
+      const enhancedAdditionalData = { ...additionalData };
+      
+      // Eğer additionalData içinde zaten varsa, onları kullan
+      // Yoksa ve Redux store'da varsa, store'dan al
+      if (!enhancedAdditionalData.searchProvinceId && search.selectedValues.provinceId) {
+        enhancedAdditionalData.searchProvinceId = search.selectedValues.provinceId;
+      }
+      
+      if (!enhancedAdditionalData.searchDistrictId && search.selectedValues.districtId) {
+        enhancedAdditionalData.searchDistrictId = search.selectedValues.districtId;
+      }
+      
+      if (!enhancedAdditionalData.searchServiceId && search.selectedValues.serviceId) {
+        enhancedAdditionalData.searchServiceId = search.selectedValues.serviceId;
+      }
+      
+      console.log('[UserSlice] Aktivite kaydı ek verileri:', enhancedAdditionalData);
       
       const result = await logActivity(
         user.userId,
@@ -143,7 +162,7 @@ export const logUserActivity = createAsyncThunk(
         details,
         entityId,
         entityType,
-        additionalData
+        enhancedAdditionalData
       );
       
       if (!result) {

@@ -54,6 +54,7 @@ export async function GET(request) {
 
     const { data: totalRecords, error: totalError } = await query2;
 
+console.log(data, 'data***');
 
     if (totalError) {
       console.error('Total records error:', totalError);

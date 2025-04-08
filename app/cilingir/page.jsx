@@ -260,6 +260,7 @@ function CilingirPanelContent() {
       const data = await response.json();
       setDashboardStats(data.stats);
       setActivityList(data.list);
+      console.log(data.list, 'liste***');
       setCurrentPageActivities(data.currentPage);
 
       setTotalPagesActivities(data.totalPages);
@@ -1785,9 +1786,10 @@ function CilingirPanelContent() {
                         <div className="flex justify-center items-center p-12">
                           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                         </div>
-                      ) : activityList.length > 0 ? (
+                      ) : activityList.length > 0 && activityList ? (
                         <div className="space-y-4">
                           {activityList.map((activity, index) => {
+                            console.log(activity);
                             // Aktivite türüne göre renkler ve simgeler
                             const getActivityColor = (type) => {
                               switch(type) {
@@ -1834,15 +1836,15 @@ function CilingirPanelContent() {
                                     
                                     <p className="text-sm text-gray-600 mt-1">
                                       {activity.activitytype === "review_submit" ? (
-                                        <>5 üzerinden <span className="font-medium">{activity.reviews.rating}</span> yıldız aldınız: "<span className="italic">{activity.reviews.comment}</span>"</>
+                                        <>5 üzerinden <span className="font-medium">{activity?.reviews?.rating}</span> yıldız aldınız: "<span className="italic">{activity?.reviews?.comment}</span>"</>
                                       ) : activity.activitytype === "call_request" ? (
-                                        <><span className="font-medium">{activity.services.name}</span> hizmeti için arama aldınız</>
+                                        <><span className="font-medium">{activity?.services?.name}</span> hizmeti için arama aldınız</>
                                       ) : activity.activitytype === "locksmith_list_view" ? (
-                                        <><span className="font-medium">{activity.services.name}</span> hizmeti aramasında profiliniz görüntülendi</>
+                                        <><span className="font-medium">{activity?.services?.name}</span> hizmeti aramasında profiliniz görüntülendi</>
                                       ) : activity.activitytype === "locksmith_detail_view" ? (
                                         <>Bir müşteri profilinizi ziyaret etti</>
                                       ) : activity.activitytype === "whatsapp_message" ? (
-                                        <><span className="font-medium">{activity.services.name}</span> hizmeti için whatsapp mesajı aldınız</>
+                                        <><span className="font-medium">{activity?.services?.name}</span> hizmeti için whatsapp mesajı aldınız</>
                                       ) : activity.activitytype === "website_visit" ? (
                                         <>Bir müşteri web sitenizi ziyaret etti</>
                                       ) : (
@@ -1855,7 +1857,7 @@ function CilingirPanelContent() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                       </svg>
-                                      <span>{activity.districts.name} - {activity.services.name}</span>
+                                      <span>{activity?.districts?.name} - {activity?.services?.name}</span>
                                     </div>
                                   </div>
                                 </div>

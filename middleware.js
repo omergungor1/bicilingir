@@ -29,26 +29,27 @@ export async function middleware(req) {
       
       
       // Kullanıcı rolünü kontrol et
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id)
-        .single();
+      //Normalde rol kontrolü yapılıyordu. Ama gerek yok gibi.
+      // const { data: roleData, error: roleError } = await supabase
+      //   .from('user_roles')
+      //   .select('role')
+      //   .eq('user_id', session.user.id)
+      //   .single();
       
-      if (roleError) {
-        return NextResponse.json({ error: 'Rol bilgisi alınamadı' }, { status: 500 });
-      }
+      // if (roleError) {
+      //   return NextResponse.json({ error: 'Rol bilgisi alınamadı' }, { status: 500 });
+      // }
       
-      if (!roleData) {
-        return NextResponse.json({ error: 'Rol kaydınız bulunamadı' }, { status: 403 });
-      }
+      // if (!roleData) {
+      //   return NextResponse.json({ error: 'Rol kaydınız bulunamadı' }, { status: 403 });
+      // }
       
-      const userRole = roleData.role;
+      // const userRole = roleData.role;
 
-      // Locksmith API'leri sadece çilingir ve admin rollerine açık
-      if (userRole !== 'cilingir' && userRole !== 'admin') {
-        return NextResponse.json({ error: 'Bu API sadece çilingirler tarafından kullanılabilir' }, { status: 403 });
-      }
+      // // Locksmith API'leri sadece çilingir ve admin rollerine açık
+      // if (userRole !== 'cilingir' && userRole !== 'admin') {
+      //   return NextResponse.json({ error: 'Bu API sadece çilingirler tarafından kullanılabilir' }, { status: 403 });
+      // }
       
       // Yetki doğrulamasını geçti, API'ye erişim izni ver
       

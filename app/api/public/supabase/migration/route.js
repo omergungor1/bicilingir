@@ -10,7 +10,8 @@ export async function POST(request) {
     // Doğrudan SQL çalıştırmak için admin rolüne sahip bir Supabase istemcisi oluştur
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      // process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         auth: {
           autoRefreshToken: false,
