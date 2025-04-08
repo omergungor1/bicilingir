@@ -63,7 +63,7 @@ export const initUserSession = createAsyncThunk(
           // Eğer yeni bir kullanıcıysa, giriş aktivitesi kaydet
           if (trackData.isNewUser) {
             console.log('[UserSlice] Yeni kullanıcı, giriş aktivitesi kaydediliyor');
-            await logActivity(userId, sessionId, 'site-giris');
+            await logActivity(userId, sessionId, 'website_visit');
           }
         } else {
           console.error('[UserSlice] Kullanıcı izlenemedi:', await trackResponse.text());
@@ -85,11 +85,20 @@ export const initUserSession = createAsyncThunk(
 );
 
 // Yardımcı fonksiyon - aktivite kaydetme
-async function logActivity(userId, sessionId, action, details = null, entityId = null, entityType = null, additionalData = {}) {
+async function logActivity(userId, sessionId, action, details = null, entityId = null, entityType = null, additionalData = {}, level = 1) {
   try {
     if (!userId || !sessionId) {
       console.error('[UserSlice] Aktivite kaydı için kullanıcı ID veya oturum ID eksik');
       return null;
+    }
+    
+    // Action'a göre level kontrolü (sunucu tarafında da yapılıyor ama burada da yapalım)
+    let finalLevel = level;
+    
+    
+    if (action === 'call_request' || action === 'locksmith_detail_view') {
+      finalLevel = 1;
+      console.log(`[UserSlice] ${action} için level zorla 1 olarak ayarlandı`);
     }
     
     const response = await fetch('/api/public/user/activity', {
@@ -104,6 +113,7 @@ async function logActivity(userId, sessionId, action, details = null, entityId =
         details,
         entityId,
         entityType,
+        level: finalLevel, // Güncellenen level değerini gönder
         ...additionalData
       }),
     });
@@ -124,7 +134,7 @@ async function logActivity(userId, sessionId, action, details = null, entityId =
 // Kullanıcı aktivitesini kaydetme
 export const logUserActivity = createAsyncThunk(
   'user/logUserActivity',
-  async ({ action, details, entityId, entityType, additionalData = {} }, { getState, rejectWithValue }) => {
+  async ({ action, details, entityId, entityType, additionalData = {}, level = 1 }, { getState, rejectWithValue }) => {
     try {
       const { user, search } = getState();
       
@@ -162,7 +172,8 @@ export const logUserActivity = createAsyncThunk(
         details,
         entityId,
         entityType,
-        enhancedAdditionalData
+        enhancedAdditionalData,
+        level
       );
       
       if (!result) {

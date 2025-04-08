@@ -9,15 +9,14 @@ import { Checkbox } from "../components/ui/checkbox";
 import Hero from "../components/Hero";
 import SearchForm from "../components/SearchForm";
 import { useToast } from "../components/ToastContext";
-import { getLocksmiths } from "./actions";
 import { ChevronRight } from "lucide-react";
-import { testServices } from "../lib/test-data";
 import { useDispatch, useSelector } from 'react-redux'
 import { logUserActivity } from '../redux/features/userSlice'
 import { searchLocksmiths, setSelectedValues as setReduxSelectedValues } from '../redux/features/searchSlice';
 import Image from 'next/image';
 import { useRouter } from "next/navigation";
 import { RatingModal } from "../components/RatingModal";
+import { initUserSession } from '../redux/features/userSlice'
 
 const styles = {
   accentButton: {
@@ -143,52 +142,59 @@ export default function Home() {
     }));
   };
 
-  const handleSearch = async () => {
+  const handleSearch = async (e) => {
+    if (e) e.preventDefault();
+    
+    // Validasyon: Gerekli alanlar seçilmiş mi?
+    if (!selectedValues.provinceId || !selectedValues.districtId || !selectedValues.serviceId) {
+      showToast('Lütfen il, ilçe ve hizmet seçin');
+      return;
+    }
+
+    setLoadingLocksmithIds({});
+    
     try {
-      // Redux üzerinden arama yap
-      if (!selectedValues.provinceId || !selectedValues.districtId || !selectedValues.serviceId) {
-        showToast('Lütfen il, ilçe ve servis seçiniz', 'error');
-        return;
+      // Kullanıcı oturumu başlat
+      await dispatch(initUserSession());
+      
+      // Kullanıcı agent bilgisini al
+      const userAgent = navigator.userAgent;
+      
+      // Çilingir araması yap
+      const result = await dispatch(searchLocksmiths({ 
+        selectedValues, 
+        userAgent 
+      })).unwrap();
+      
+      // Sonuç kontrol ve gösterme
+      if (result.locksmiths && result.locksmiths.length > 0) {
+        // Başarılı arama, sonuçları göster
+        setLoadingLocksmithIds({});
+        setSelectedValues({
+          serviceId: result.selectedValues.serviceId,
+          districtId: result.selectedValues.districtId,
+          provinceId: result.selectedValues.provinceId
+        });
+        setSelectedLocksmith(result.locksmiths[0]);
+      } else {
+        // Sonuç bulunamadı
+        showToast('Seçilen kriterlere uygun çilingir bulunamadı', 'info', 3000);
+        setLoadingLocksmithIds({});
+        setSelectedValues({
+          serviceId: reduxSelectedValues.serviceId,
+          districtId: reduxSelectedValues.districtId,
+          provinceId: reduxSelectedValues.provinceId
+        });
       }
-      
-      // Redux arama işlemi
-      const resultAction = await dispatch(searchLocksmiths({
-        provinceId: selectedValues.provinceId,
-        districtId: selectedValues.districtId,
-        serviceId: selectedValues.serviceId
-      }));
-      
-      // Hata kontrolü
-      if (searchLocksmiths.rejected.match(resultAction)) {
-        showToast(resultAction.payload || 'Arama sırasında bir hata oluştu', 'error');
-        return;
-      }
-      
-      // Kullanıcı arama aktivitesi kaydı - Redux aktivitesi
-      dispatch(logUserActivity({
-        action: 'arama-yapildi',
-        details: `${selectedValues.provinceId}, ${selectedValues.districtId}, ${selectedValues.serviceId}`,
-        additionalData: {
-          userAgent: navigator.userAgent
-          // searchProvinceId, searchDistrictId ve searchServiceId
-          // değerleri otomatik olarak Redux store'dan eklenecek
-        }
-      }));
-      
-      // Sonuç kısmına kaydırma
-      setTimeout(() => {
-        const resultsSection = document.getElementById('results-section');
-        if (resultsSection) {
-          window.scrollTo({
-            top: resultsSection.offsetTop - 20,
-            behavior: 'smooth'
-          });
-        }
-      }, 100);
-      
     } catch (error) {
-      console.error('Arama hatası:', error);
-      showToast('Beklenmeyen bir hata oluştu', 'error');
+      console.error("Arama hatası:", error);
+      showToast('Arama sırasında bir hata oluştu. Lütfen tekrar deneyin.', 'error', 3000);
+      setLoadingLocksmithIds({});
+      setSelectedValues({
+        serviceId: reduxSelectedValues.serviceId,
+        districtId: reduxSelectedValues.districtId,
+        provinceId: reduxSelectedValues.provinceId
+      });
     }
   };
 
@@ -210,9 +216,12 @@ export default function Home() {
         if (isFromDetailPage && currentProvinceId && currentDistrictId && currentServiceId) {
           console.log('Detay sayfasından dönüş algılandı, loglama yapılmayacak');
           dispatch(searchLocksmiths({
-            provinceId: currentProvinceId,
-            districtId: currentDistrictId,
-            serviceId: currentServiceId,
+            selectedValues: {
+              provinceId: currentProvinceId,
+              districtId: currentDistrictId,
+              serviceId: currentServiceId
+            },
+            userAgent: navigator.userAgent,
             shouldLog: false // Detay sayfasından geliyorsa loglama yapma
           }));
         } else if (searchParams.has('location') || searchParams.has('service')) {
@@ -225,22 +234,39 @@ export default function Home() {
     return null;
   };
 
-  const handleCallLocksmith = (locksmith) => {
+  const handleCallLocksmith = async (locksmith, index = 0) => {
     setSelectedLocksmith(locksmith);
 
-    // Çilingir arama aktivitesini kaydet
-    dispatch(logUserActivity({
-      action: 'cilingir-arama',
-      details: `${locksmith.name}`,
-      entityType: 'locksmith',
-      entityId: locksmith.id,
-      additionalData: {
-        locksmithId: locksmith.id,
-        userAgent: navigator.userAgent || ''
-        // searchProvinceId, searchDistrictId ve searchServiceId
-        // Redux store'dan otomatik olarak eklenecek
+    try {
+      // API üzerinden doğrudan aktivite kaydı oluştur
+      const response = await fetch('/api/public/user/activity', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          activitytype: 'call_request',
+          level: 1,
+          data: JSON.stringify({
+            locksmithId: locksmith.id,
+            searchProvinceId: reduxSelectedValues.provinceId,
+            searchDistrictId: reduxSelectedValues.districtId,
+            searchServiceId: reduxSelectedValues.serviceId
+          }),
+          userId: localStorage.getItem('userId'),
+          sessionId: localStorage.getItem('sessionId'),
+          userAgent: navigator.userAgent || ''
+        }),
+      });
+      
+      if (!response.ok) {
+        console.error('Aktivite log hatası:', await response.text());
+      } else {
+        console.log('Çilingir arama aktivitesi kaydedildi.');
       }
-    }));
+    } catch (error) {
+      console.error('Aktivite log hatası:', error);
+    }
 
     // Telefon numarasını çağırma işlemi
     if (locksmith.phone) {
@@ -286,20 +312,31 @@ export default function Home() {
         throw new Error(result.error || "Değerlendirme gönderilirken bir hata oluştu");
       }
 
-      // Aktivite kaydını Redux ile yap
-      dispatch(logUserActivity({
-        action: 'degerlendirme-gonderme',
-        details: `${selectedLocksmith.name} için ${rating} yıldız değerlendirme`,
-        entityId: selectedLocksmith.id,
-        entityType: 'locksmith',
-        additionalData: {
-          locksmithId: selectedLocksmith.id,
-          reviewId: result.reviewId,
+      // API üzerinden doğrudan aktivite kaydı oluştur
+      const activityResponse = await fetch('/api/public/user/activity', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          activitytype: 'review_submit',
+          level: 1,
+          data: JSON.stringify({
+            locksmithId: selectedLocksmith.id,
+            reviewId: result.reviewId,
+            searchProvinceId: reduxSelectedValues.provinceId,
+            searchDistrictId: reduxSelectedValues.districtId,
+            searchServiceId: reduxSelectedValues.serviceId
+          }),
+          userId: localStorage.getItem('userId'),
+          sessionId: localStorage.getItem('sessionId'),
           userAgent: navigator.userAgent || ''
-          // searchProvinceId, searchDistrictId ve searchServiceId
-          // Redux store'dan otomatik olarak eklenecek
-        }
-      }));
+        }),
+      });
+      
+      if (!activityResponse.ok) {
+        console.error('Değerlendirme aktivite log hatası:', await activityResponse.text());
+      }
       
       // Modal kapat
       setShowRatingModal(false);
@@ -322,27 +359,46 @@ export default function Home() {
 
   // Çilingir detay butonuna tıklama - aktivite kaydı ekle
   const router = useRouter();
-  const handleViewDetails = (id, slug) => {
+  const handleViewDetails = async (id, slug) => {
     // Sadece ilgili çilingir için yükleniyor durumunu güncelle
     const updatedLoadingStates = { ...loadingLocksmithIds };
     updatedLoadingStates[id] = true;
     setLoadingLocksmithIds(updatedLoadingStates);
-
-    // Çilingir görüntüleme aktivitesini logla
-    dispatch(logUserActivity({
-      action: 'cilingir-detay-goruntuleme',
-      details: `Çilingir detay görüntüleme: ${id}`,
-      entityId: id,
-      entityType: 'locksmith',
-      additionalData: {
-        locksmithId: id,
-        userAgent: navigator.userAgent || ''
+    
+    try {
+      // API üzerinden doğrudan aktivite kaydı oluştur
+      const response = await fetch('/api/public/user/activity', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          activitytype: 'locksmith_detail_view',
+          level: 1,
+          data: JSON.stringify({
+            locksmithId: id,
+            searchProvinceId: reduxSelectedValues.provinceId,
+            searchDistrictId: reduxSelectedValues.districtId,
+            searchServiceId: reduxSelectedValues.serviceId
+          }),
+          userId: localStorage.getItem('userId'),
+          sessionId: localStorage.getItem('sessionId'),
+          userAgent: navigator.userAgent || ''
+        }),
+      });
+      
+      if (!response.ok) {
+        console.error('Aktivite log hatası:', await response.text());
+      } else {
+        console.log('Çilingir detay görüntüleme aktivitesi kaydedildi.');
       }
-    }));
+    } catch (error) {
+      console.error('Aktivite log hatası:', error);
+    }
 
     // Detay sayfasına yönlendir
     // URL'e fromDetail parametresi ekliyoruz
-    router.push(`/cilingir/${slug}?fromDetail=true`);
+    router.push(`/${slug}?fromDetail=true`);
   };
 
   return (
@@ -500,7 +556,7 @@ export default function Home() {
                         <div className="p-6 flex flex-col justify-center md:w-64">
                           <div className="space-y-3">
                             <Button 
-                              onClick={() => handleCallLocksmith(locksmith)}
+                              onClick={() => handleCallLocksmith(locksmith, index)}
                               className={`w-full ${index === 0 ? 'bg-blue-600 hover:bg-blue-700 text-white font-bold animate-pulse shadow-md' : 'bg-[#4169E1]'}`}
                             >
                               {index === 0 ? 'Hemen Ara' : 'Ara'}
@@ -510,7 +566,7 @@ export default function Home() {
                                 </svg>
                               )}
                             </Button>
-                            <Link href={`/${locksmith.slug}`} passHref>
+                            <Link href="#" passHref>
                               <Button 
                                 variant="outline" 
                                 className="w-full"

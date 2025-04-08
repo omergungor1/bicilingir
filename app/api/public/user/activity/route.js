@@ -3,109 +3,78 @@ import { createRouteClient, logUserActivity } from '../../../utils';
 
 export async function POST(request) {
   try {
-    const { supabase } = createRouteClient(request);
-    const { 
-      sessionId, 
-      userId, 
-      action, 
-      details, 
-      entityId, 
-      entityType,
-      searchProvinceId,
-      searchDistrictId,
-      searchServiceId,
-      locksmithId,
-      reviewId 
-    } = await request.json();
+    const requestData = await request.json();
     
-    if (!sessionId || !userId || !action) {
-      return NextResponse.json({
-        success: false,
-        error: 'Gerekli alanlar eksik: sessionId, userId ve action zorunludur'
+    // Gerekli alanları al
+    const { activitytype, data, userId, sessionId, userAgent, level } = requestData;
+    
+    // Gerekli alanların kontrolü
+    if (!sessionId || !userId || !activitytype) {
+      return NextResponse.json({ 
+        error: "Eksik alanlar: sessionId, userId ve activitytype gerekli" 
       }, { status: 400 });
     }
     
-    // User-Agent bilgisini al
-    const userAgent = request.headers.get('user-agent') || '';
+    // Supabase istemcisi oluştur
+    const { supabase } = createRouteClient(request);
     
-    console.log('Kullanıcı aktivitesi:', { 
-      sessionId, 
-      userId, 
-      action, 
-      entityType, 
-      entityId,
-      searchProvinceId,
-      searchDistrictId,
-      searchServiceId,
-      locksmithId,
-      deviceType: userAgent.includes('Mobile') ? 'mobile' : 'desktop'
-    });
-    
-    // Önce tabloyu kontrol et
-    const { data: tableInfo, error: tableError } = await supabase
-      .from('user_activity_logs')
-      .select('*')
-      .limit(1);
-      
-    if (tableError) {
-      console.error('Tablo yapısı kontrol edilirken hata:', tableError);
-      // Tablo yoksa oluşturmak için migration API'sini çağır
-      if (tableError.code === 'PGRST116' || tableError.code === 'PGRST204') {
-        console.log('user_activity_logs tablosu bulunamadı, migration çağırılıyor...');
-        try {
-          const migrationResponse = await fetch('/api/public/supabase/migration', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              action: 'create_tables'
-            }),
-          });
-          
-          if (!migrationResponse.ok) {
-            const errData = await migrationResponse.json();
-            console.error('Migration hatası:', errData);
-          } else {
-            console.log('Migration başarılı');
-          }
-        } catch (migErr) {
-          console.error('Migration API çağrısı hatası:', migErr);
-        }
-      }
+    // Data alanını analiz et
+    let parsedData;
+    try {
+      parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+    } catch (e) {
+      console.error('Data parse hatası:', e);
+      parsedData = {};
     }
     
-    // Ek veri hazırla
-    const additionalData = {
-      searchProvinceId,
-      searchDistrictId,
-      searchServiceId,
-      locksmithId,
-      reviewId,
-      userAgent
+    // Level bilgisini al, varsayılan olarak 1
+    const activityLevel = level || 1;
+    
+    // Activity türünü kontrol et, gerekiyorsa dönüştür 
+    const activityTypeMap = {
+      'arama-yapildi': 'search',
+      'cilingir-goruntuleme': 'locksmith_list_view', 
+      'cilingir-detay-goruntuleme': 'locksmith_detail_view',
+      'cilingir-arama': 'call_request',
+      'degerlendirme-gonderme': 'review_submit',
+      'profil-ziyaret': 'profile_visit',
+      'whatsapp-mesaj': 'whatsapp_message',
+      'site-ziyaret': 'website_visit',
+      'site-giris': 'website_visit'
     };
     
-    // Aktivite kaydet
+    // Aktivite tipini kontrol et ve dönüştür (Türkçe isimse İngilizce'ye çevir)
+    const finalActivityType = activityTypeMap[activitytype] || activitytype;
+    
+    // UserActivity ekle
     const activityId = await logUserActivity(
-      supabase, 
-      userId, 
-      sessionId, 
-      action, 
-      details, 
-      entityId, 
-      entityType,
-      additionalData
+      supabase,
+      userId,
+      sessionId,
+      finalActivityType,
+      parsedData.details || null,
+      parsedData.entityId || null,
+      parsedData.entityType || null,
+      {
+        locksmithId: parsedData.locksmithId,
+        searchProvinceId: parsedData.searchProvinceId,
+        searchDistrictId: parsedData.searchDistrictId,
+        searchServiceId: parsedData.searchServiceId,
+        reviewId: parsedData.reviewId,
+        userAgent: userAgent
+      },
+      activityLevel
     );
     
-    return NextResponse.json({
-      success: true,
-      activityId: activityId
+    return NextResponse.json({ 
+      success: true, 
+      activityId,
+      message: `Aktivite kaydedildi: ${finalActivityType}`
     });
   } catch (error) {
-    console.error('Aktivite kaydı hatası:', error);
-    return NextResponse.json({
-      success: false,
-      error: error.message || 'Bilinmeyen hata'
+    console.error('Aktivite log hatası:', error);
+    return NextResponse.json({ 
+      error: "Aktivite kaydedilemedi: " + error.message 
     }, { status: 500 });
   }
 } 

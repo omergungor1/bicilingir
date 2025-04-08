@@ -427,39 +427,74 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
  * @param {string} entityId - İlgili varlık ID'si
  * @param {string} entityType - İlgili varlık tipi
  * @param {Object} additionalData - Ek veri (searchProvinceId, searchDistrictId, searchServiceId, locksmithId, reviewid)
+ * @param {number} level - Sıralama seviyesi (özellikle locksmith_list_view için, varsayılan: 1)
  * @returns {Promise<string>} Aktivite ID'si
  */
-export async function logUserActivity(supabase, userId, sessionId, action, details, entityId, entityType, additionalData = {}) {
+export async function logUserActivity(supabase, userId, sessionId, action, details, entityId, entityType, additionalData = {}, level = 1) {
   try {
     const { v4: uuidv4 } = await import('uuid');
     
-    // Aktivite tipini kontrol et ve dönüştür
-    const activityTypeMap = {
-      'arama-yapildi': 'search',
-      'sayfa-goruntuleme': 'locksmith_list_view',
-      'cilingir-detay-goruntuleme': 'locksmith_detail_view',
-      'cilingir-arama': 'call_request',
-      'degerlendirme-gonderme': 'review_submit',
-      'profil-ziyaret': 'profile_visit',
-      'whatsapp-mesaj': 'whatsapp_message',
-      'site-ziyaret': 'website_visit',
-      'site-giris': 'website_visit'
-    };
-    
-    // Aktivite tipini dönüştür veya varsayılan değeri kullan
-    const activityType = activityTypeMap[action] || 'website_visit';
+    /**
+    'search',
+    'locksmith_list_view',
+    'locksmith_detail_view',
+    'call_request',
+    'review_submit',
+    'whatsapp_message',
+    'website_visit',
+     */
     
     // User-Agent bilgisini al ve cihaz tipini belirle
     const userAgent = additionalData.userAgent || '';
     const deviceType = userAgent.includes('Mobile') ? 'mobile' : 'desktop';
     
+    // Action tipine göre level ayarı
+    let finalLevel = level;
+    
+    // call_request ve locksmith_detail_view için her zaman level 1 kullan
+    if (action === 'call_request' || action === 'locksmith_detail_view') {
+      finalLevel = 1;
+      console.log(`${action} için level zorla 1 olarak ayarlandı`);
+    }
+    
+    // Key usage bilgisini al
+    const { data: keyUsageData, error: keyUsageError } = await supabase
+      .from('key_usage_types')
+      .select('id, keyamount')
+      .eq('name', action)
+      .eq('level', finalLevel)
+      .limit(1);
+      
+    if (keyUsageError) {
+      console.error('Key usage bilgisi alınamadı:', keyUsageError);
+    }
+    
+    let keyAmount = 0;
+    let usageTypeId = null;
+    
+    if (keyUsageData && keyUsageData.length > 0) {
+      keyAmount = keyUsageData[0].keyamount;
+      usageTypeId = keyUsageData[0].id;
+      console.log(`Key usage bilgisi alındı: ${action} (level: ${finalLevel}) - ${keyAmount} anahtar`);
+    } else {
+      console.warn(`Key usage bilgisi bulunamadı: ${action} (level: ${finalLevel}). Varsayılan değer kullanılıyor.`);
+      // Varsayılan değer olarak 0 anahtar kullan
+      keyAmount = 0;
+    }
+    
     const insertData = {
       // id: uuidv4(),
       userid: userId,
-      activitytype: activityType,
+      activitytype: action,
       devicetype: deviceType,
+      keyamount: keyAmount,
       createdat: new Date().toISOString()
     };
+    
+    // UsageTypeId varsa ekle
+    if (usageTypeId) {
+      insertData.usagetypeid = usageTypeId;
+    }
     
     // SessionId varsa ve UUID formatındaysa ekle
     if (sessionId) {

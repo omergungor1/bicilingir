@@ -115,6 +115,8 @@ export async function POST(request) {
               reviewid UUID,
               sessionid UUID,
               devicetype TEXT,
+              keyamount INTEGER DEFAULT 0,
+              usagetypeid UUID,
               metadata JSONB,
               createdat TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             );
@@ -143,6 +145,8 @@ export async function POST(request) {
                 reviewid UUID,
                 sessionid UUID,
                 devicetype TEXT,
+                keyamount INTEGER DEFAULT 0,
+                usagetypeid UUID,
                 metadata JSONB,
                 createdat TIMESTAMP WITH TIME ZONE DEFAULT NOW()
               );
@@ -156,6 +160,58 @@ export async function POST(request) {
             console.error('Alternatif tablo oluşturma hatası:', altError);
             throw altError;
           }
+        }
+      }
+      
+      // Key usage types tablosunu oluştur
+      const { error: keyUsageTypesError } = await supabaseAdmin.from('key_usage_types').select('count').limit(1);
+      
+      if (keyUsageTypesError && keyUsageTypesError.code === 'PGRST204') {
+        console.log('key_usage_types tablosu oluşturuluyor...');
+        
+        try {
+          // Tablo oluştur
+          const { error: createKeyUsageTypesError } = await supabaseAdmin.sql(`
+            CREATE TABLE IF NOT EXISTS key_usage_types (
+              id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+              name TEXT NOT NULL,
+              level INTEGER NOT NULL,
+              keyAmount INTEGER NOT NULL,
+              description TEXT,
+              isActive BOOLEAN DEFAULT TRUE,
+              createdAt TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+              updatedAt TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+              UNIQUE(name, level)
+            );
+          `);
+          
+          if (createKeyUsageTypesError) {
+            console.error('Key usage types tablosu oluşturma hatası:', createKeyUsageTypesError);
+            throw createKeyUsageTypesError;
+          }
+          
+          // Varsayılan key_usage_types değerlerini ekle
+          const { error: insertKeyUsageTypesError } = await supabaseAdmin.sql(`
+            INSERT INTO key_usage_types (name, level, keyAmount, description, isActive)
+            VALUES 
+            ('search', 1, 1, 'Arama işlemi', true),
+            ('locksmith_list_view', 1, 5, 'Çilingir listesi görüntüleme - 1. sıra', true),
+            ('locksmith_list_view', 2, 3, 'Çilingir listesi görüntüleme - 2. sıra', true),
+            ('locksmith_list_view', 3, 1, 'Çilingir listesi görüntüleme - 3+ sıra', true),
+            ('locksmith_detail_view', 1, 3, 'Çilingir detay görüntüleme', true),
+            ('call_request', 1, 10, 'Çilingir arama', true),
+            ('review_submit', 1, 0, 'Çilingir değerlendirme', true),
+            ('whatsapp_message', 1, 5, 'WhatsApp mesajı gönderme', true),
+            ('website_visit', 1, 1, 'Web sitesi ziyareti', true)
+            ON CONFLICT (name, level) DO NOTHING;
+          `);
+          
+          if (insertKeyUsageTypesError) {
+            console.error('Key usage types değerleri eklenirken hata:', insertKeyUsageTypesError);
+          }
+        } catch (sqlError) {
+          console.error('SQL hatası (key_usage_types):', sqlError);
+          throw sqlError;
         }
       }
       

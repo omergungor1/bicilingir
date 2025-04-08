@@ -2,16 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { getSimilarLocksmiths } from "../actions";
-import { testServices } from "../../lib/test-data";
 import { EmergencyCallButton } from "../../components/emergency-button";
 import { ImageGallery } from "../../components/image-gallery";
-import { Loader2 } from "lucide-react";
 import { logUserActivity } from '../../redux/features/userSlice';
 import { RatingModal } from "../../components/RatingModal";
 import { useToast } from "../../components/ToastContext";
@@ -181,14 +176,15 @@ export default function LocksmithDetail({ params }) {
 
     // Çilingir arama aktivitesini kaydet
     dispatch(logUserActivity({
-      action: 'cilingir-arama',
+      action: 'call_request',
       details: `${locksmith.businessname || locksmith.fullname}`,
       entityType: 'locksmith',
       entityId: locksmith.id,
       additionalData: {
         locksmithId: locksmith.id,
         userAgent: navigator.userAgent || ''
-      }
+      },
+      level: 1 // Detay sayfasında level her zaman 1
     }));
 
     // Telefon numarasını çağırma işlemi
@@ -228,7 +224,7 @@ export default function LocksmithDetail({ params }) {
 
       // Aktivite kaydını Redux ile yap
       dispatch(logUserActivity({
-        action: 'degerlendirme-gonderme',
+        action: 'review_submit',
         details: `${locksmith.businessname || locksmith.fullname} için ${rating} yıldız değerlendirme`,
         entityId: locksmith.id,
         entityType: 'locksmith',
@@ -236,7 +232,8 @@ export default function LocksmithDetail({ params }) {
           locksmithId: locksmith.id,
           reviewId: result.reviewId,
           userAgent: navigator.userAgent || ''
-        }
+        },
+        level: 1 // Değerlendirme için level her zaman 1
       }));
 
       // Modal kapat
