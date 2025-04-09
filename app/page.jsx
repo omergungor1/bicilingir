@@ -226,7 +226,12 @@ export default function Home() {
             },
             userAgent: navigator.userAgent,
             shouldLog: false // Detay sayfasından geliyorsa loglama yapma
-          }));
+          })).then(() => {
+            // Detay sayfasından dönüşte de sonuçlar bölümüne kaydır
+            setTimeout(() => {
+              document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+          });
         } else if (searchParams.has('location') || searchParams.has('service')) {
           // Normal arama
           handleSearch();
