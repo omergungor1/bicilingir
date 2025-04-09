@@ -16,9 +16,9 @@ export const initUserSession = createAsyncThunk(
         localStorage.setItem('sessionId', sessionId);
       }
       
-      console.log('[UserSlice] Oturum başlatılıyor...');
-      console.log(`[UserSlice] SessionID: ${sessionId}`);
-      console.log(`[UserSlice] UserID: ${userId || 'Yeni kullanıcı'}`);
+      // console.log('[UserSlice] Oturum başlatılıyor...');
+      // console.log(`[UserSlice] SessionID: ${sessionId}`);
+      // console.log(`[UserSlice] UserID: ${userId || 'Yeni kullanıcı'}`);
       
       // Kullanıcı IP adresini al
       let userIp = '0.0.0.0'; // Varsayılan değer
@@ -27,7 +27,7 @@ export const initUserSession = createAsyncThunk(
         if (ipResponse.ok) {
           const ipData = await ipResponse.json();
           userIp = ipData.ip;
-          console.log(`[UserSlice] Kullanıcı IP: ${userIp}`);
+          // console.log(`[UserSlice] Kullanıcı IP: ${userIp}`);
         } else {
           console.warn('[UserSlice] IP adresi alınamadı, varsayılan değer kullanılıyor');
         }
@@ -57,12 +57,12 @@ export const initUserSession = createAsyncThunk(
           if (trackData.userId) {
             localStorage.setItem('userId', trackData.userId);
             userId = trackData.userId;
-            console.log(`[UserSlice] Kullanıcı ID güncellendi: ${userId}`);
+            // console.log(`[UserSlice] Kullanıcı ID güncellendi: ${userId}`);
           }
           
           // Eğer yeni bir kullanıcıysa, giriş aktivitesi kaydet
           if (trackData.isNewUser) {
-            console.log('[UserSlice] Yeni kullanıcı, giriş aktivitesi kaydediliyor');
+            // console.log('[UserSlice] Yeni kullanıcı, giriş aktivitesi kaydediliyor');
             await logActivity(userId, sessionId, 'website_visit');
           }
         } else {
@@ -98,7 +98,7 @@ async function logActivity(userId, sessionId, action, details = null, entityId =
     
     if (action === 'call_request' || action === 'locksmith_detail_view') {
       finalLevel = 1;
-      console.log(`[UserSlice] ${action} için level zorla 1 olarak ayarlandı`);
+      // console.log(`[UserSlice] ${action} için level zorla 1 olarak ayarlandı`);
     }
     
     const response = await fetch('/api/public/user/activity', {
@@ -144,7 +144,7 @@ export const logUserActivity = createAsyncThunk(
         return rejectWithValue('Kullanıcı oturumu başlatılmamış');
       }
       
-      console.log(`[UserSlice] Aktivite kaydediliyor: ${action}`);
+      // console.log(`[UserSlice] Aktivite kaydediliyor: ${action}`);
 
       // Redux store'dan arama değerlerini ekle
       const enhancedAdditionalData = { ...additionalData };
@@ -163,7 +163,7 @@ export const logUserActivity = createAsyncThunk(
         enhancedAdditionalData.searchServiceId = search.selectedValues.serviceId;
       }
       
-      console.log('[UserSlice] Aktivite kaydı ek verileri:', enhancedAdditionalData);
+      // console.log('[UserSlice] Aktivite kaydı ek verileri:', enhancedAdditionalData);
       
       const result = await logActivity(
         user.userId,

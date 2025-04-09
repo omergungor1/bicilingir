@@ -717,7 +717,7 @@ export default function CilingirKayit() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-xs text-center text-gray-500">
-            Kayıt olarak, Bi Çilingir'in <Link href="/terms" className="text-blue-600 hover:underline">hizmet şartlarını</Link> ve <Link href="/privacy" className="text-blue-600 hover:underline">gizlilik politikasını</Link> kabul etmiş olursunuz.
+            Kayıt olarak, Bi Çilingir'in <Link href="/terms" target="_blank" className="text-blue-600 hover:underline">hizmet şartlarını</Link> ve <Link href="/privacy" target="_blank " className="text-blue-600 hover:underline">gizlilik politikasını</Link> kabul etmiş olursunuz.
           </div>
         </CardFooter>
       </Card>
