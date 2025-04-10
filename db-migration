@@ -36,7 +36,7 @@ CREATE TABLE locksmiths (
     fullName TEXT NOT NULL,
     tagline TEXT,
     email TEXT UNIQUE NOT NULL,
-    phoneNumber TEXT UNIQUE NOT NULL,
+    phoneNumber TEXT NOT NULL,
     whatsappNumber TEXT UNIQUE,
     customerLimitPerHour INTEGER DEFAULT 5,
     avgRating NUMERIC(3,2) DEFAULT 0,
@@ -50,7 +50,7 @@ CREATE TABLE locksmiths (
 -- Çilingir Detayları Tablosu
 CREATE TABLE locksmith_details (
     locksmithId UUID PRIMARY KEY REFERENCES locksmiths(id),
-    taxNumber TEXT UNIQUE,
+    taxNumber TEXT,
     fullAddress TEXT,
     aboutText TEXT,
     certificates JSONB,
@@ -309,7 +309,7 @@ CREATE TABLE referrals (
 );
 
 -- Sertifikalar tablosu
-CREATE TABLE certificates (
+CREATE TABLE locksmith_certificates (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     fileurl VARCHAR(512) NOT NULL,
@@ -319,7 +319,7 @@ CREATE TABLE certificates (
 );
 
 -- Dökümanlar tablosu
-CREATE TABLE documents (
+CREATE TABLE locksmith_documents (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     fileurl VARCHAR(512) NOT NULL,

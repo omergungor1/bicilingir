@@ -29,7 +29,7 @@ export async function POST(request) {
     // Dosya adını oluştur (timestamp ve random değer ile)
     const fileExt = file.name.split('.').pop();
     const fileName = `${locksmithId}_${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-    const filePath = `locksmith-images/${fileName}`;
+    const filePath = `${fileName}`;
     
     // Storage'a dosya yükle
     const { data: storageData, error: storageError } = await supabase

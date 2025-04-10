@@ -16,13 +16,120 @@ import { XCircle } from "lucide-react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
-import TextAlign from '@tiptap/extension-text-align';
-import Link from '@tiptap/extension-link';
+import TextAlign from '@tiptap/extension-text-align'; 
+
+import Link from 'next/link';
+
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import Placeholder from '@tiptap/extension-placeholder';
 import Image from '@tiptap/extension-image';
+import { Instagram } from 'lucide-react';
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser } from "../../../../redux/features/authSlice";
+
+
+// Dosya yükleme işlevleri
+const uploadFileToBucket = async (file, bucketName) => {
+  if (!file) return null;
+  
+  try {
+    // Form data oluştur
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('bucketName', bucketName);
+    
+    // API endpoint'e gönder
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Dosya yükleme hatası: ${errorData.error || response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    return {
+      name: file.name,
+      url: data.url,
+      path: data.path,
+      size: file.size,
+      type: file.type
+    };
+  } catch (error) {
+    console.error('Dosya yükleme hatası:', error);
+    throw error;
+  }
+};
+
+// Birden fazla dosya yükleme
+const uploadFilesToBucket = async (files, bucketName) => {
+  if (!files || files.length === 0) return [];
+  
+  try {
+    // Her dosyayı sırayla yükle
+    const promises = Array.from(files).map(file => uploadFileToBucket(file, bucketName));
+    return await Promise.all(promises);
+  } catch (error) {
+    console.error('Çoklu dosya yükleme hatası:', error);
+    throw error;
+  }
+};
+
+// Slug oluşturma fonksiyonu
+const generateSlug = (businessName, provinceName, districtName) => {
+  if (!businessName) return '';
+  
+  // Türkçe karakterleri ve boşlukları düzelt
+  const turkishToEnglish = {
+    'ğ': 'g', 'Ğ': 'G', 'ü': 'u', 'Ü': 'U', 'ş': 's', 'Ş': 'S',
+    'ı': 'i', 'İ': 'I', 'ö': 'o', 'Ö': 'O', 'ç': 'c', 'Ç': 'C'
+  };
+  
+  let slug = businessName.toLowerCase();
+  
+  // Türkçe karakterleri değiştir
+  Object.keys(turkishToEnglish).forEach(key => {
+    slug = slug.replace(new RegExp(key, 'g'), turkishToEnglish[key]);
+  });
+  
+  // Alfanumerik ve boşluk dışındaki karakterleri kaldır
+  slug = slug.replace(/[^a-z0-9\s]/g, '');
+  
+  // Boşlukları tire ile değiştir
+  slug = slug.replace(/\s+/g, '-');
+  
+  // İl ve ilçe ekle (varsa)
+  if (provinceName) {
+    let province = provinceName.toLowerCase();
+    Object.keys(turkishToEnglish).forEach(key => {
+      province = province.replace(new RegExp(key, 'g'), turkishToEnglish[key]);
+    });
+    province = province.replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-');
+    slug += `-${province}`;
+  }
+  
+  if (districtName) {
+    let district = districtName.toLowerCase();
+    Object.keys(turkishToEnglish).forEach(key => {
+      district = district.replace(new RegExp(key, 'g'), turkishToEnglish[key]);
+    });
+    district = district.replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-');
+    slug += `-${district}`;
+  }
+  
+  // Fazla tireleri temizle
+  slug = slug.replace(/-+/g, '-');
+  
+  // Baştaki ve sondaki tireleri kaldır
+  slug = slug.replace(/^-+|-+$/g, '');
+  
+  return slug;
+};
 
 // Renk seçimi için bir bileşen oluşturalım
 const ColorPicker = ({ title, colors, onColorSelect, buttonClass }) => {
@@ -314,40 +421,6 @@ const TiptapToolbar = ({ editor }) => {
               }} 
             />
           </div>
-
-          {/* Bağlantı Araçları */}
-          <div className="flex gap-1 mb-1 flex-wrap">
-            <button
-              type="button"
-              onClick={() => {
-                const url = window.prompt('URL girin:');
-                if (url) {
-                  editor.chain().focus().setLink({ href: url }).run();
-                }
-              }}
-              className={`px-2 py-1 rounded text-sm ${editor.isActive('link') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
-              title="Bağlantı Ekle"
-            >
-              Bağlantı
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().unsetLink().run()}
-              className={`px-2 py-1 rounded text-sm bg-gray-100 text-gray-700 ${!editor.isActive('link') ? 'opacity-50' : ''}`}
-              title="Bağlantıyı Kaldır"
-              disabled={!editor.isActive('link')}
-            >
-              Bağlantıyı Kaldır
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
-              className={`px-2 py-1 rounded text-sm bg-gray-100 text-gray-700`}
-              title="Formatı Temizle"
-            >
-              Temizle
-            </button>
-          </div>
         </div>
       )}
     </div>
@@ -356,17 +429,79 @@ const TiptapToolbar = ({ editor }) => {
 
 export default function CilingirKayit() {
   const { showToast } = useToast();
-  const [activeStep, setActiveStep] = useState(6);
+  const dispatch = useDispatch();
+  const authState = useSelector(state => state.auth);
+  const [activeStep, setActiveStep] = useState(1);
   const [isLoadingAi, setIsLoadingAi] = useState({
     tagline: false,
     hakkinda:false
   });
 
+  const [isFormSubmitting, setIsFormSubmitting] = useState(false);
+
+
   const [isCertificateModalOpen, setIsCertificateModalOpen] = useState(false);
-  const [certificates, setCertificates] = useState([]);
   const [errors, setErrors] = useState({});
   const [errorText, setErrorText] = useState("");
   const [isClient, setIsClient] = useState(false); // Client render kontrolü için state
+  
+  // Daha sonra sertifikayı da aynı isimle isimlendireceğiz.
+  const [certificates, setCertificates] = useState([]);
+  const [formDataIsletmeResimleri, setFormDataIsletmeResimleri] = useState([]);
+  const [formDataIsletmeBelgesi, setFormDataIsletmeBelgesi] = useState(null);
+  const [formDataProfilResmiIndex, setFormDataProfilResmiIndex] = useState(-1);
+  const [dailyHours, setDailyHours] = useState([
+    {
+      dayofweek: 0,
+      opentime: "09:00",
+      closetime: "18:00",
+      is24hopen: false,
+      isworking: true
+    },
+    {
+      dayofweek: 1,
+      opentime: "09:00",
+      closetime: "18:00",
+      is24hopen: false,
+      isworking: true
+    },
+    {
+      dayofweek: 2,
+      opentime: "09:00",
+      closetime: "18:00",
+      is24hopen: false,
+      isworking: true
+    },
+    {
+      dayofweek: 3,
+      opentime: "09:00",
+      closetime: "18:00",
+      is24hopen: false,
+      isworking: true
+    },
+    {
+      dayofweek: 4,
+      opentime: "09:00",
+      closetime: "18:00",
+      is24hopen: false,
+      isworking: true
+    },
+    {
+      dayofweek: 5,
+      opentime: "09:00",
+      closetime: "18:00",
+      is24hopen: false,
+      isworking: true
+    },
+    {
+      dayofweek: 6,
+      opentime: "09:00",
+      closetime: "18:00",
+      is24hopen: false,
+      isworking: true
+    }
+  ]);
+
   const [formData, setFormData] = useState({
     adSoyad: "",
     telefon: "",
@@ -374,8 +509,8 @@ export default function CilingirKayit() {
     sifre: "",
     sifreTekrari: "",
     isletmeAdi: "",
-    personelSayisi: "1",
-    maxMusteriLimiti: "5", // Saatte max müşteri limiti
+    personelSayisi: "1", //Default Dolu
+    maxMusteriLimiti: "5", //Default Dolu
     vergiNo: "", // Opsiyonel
     websiteUrl: "", // Opsiyonel
     tagline: "", // Şirket sloganı
@@ -384,13 +519,9 @@ export default function CilingirKayit() {
     ilce: "",
     acikAdres: "",
     postaKodu: "",
-    tecrube: "",
+    startDate: "",
     hizmetBolgeleri: [],
     hizmetler: [],
-    isletmeBelgesi: null,
-    sertifikalar: [],
-    isletmeResimleri: [], // İşletme resimleri için dizi
-    profilResmiIndex: -1, // Profil resmi olarak seçilen resmin indeksi
     sosyalMedya: {
       instagram: "",
       facebook: "",
@@ -403,6 +534,7 @@ export default function CilingirKayit() {
     dataAccuracyAccepted: false
   });
 
+  // Gerekiyor mu? Gereksiz ise sil
   const [previewUrls, setPreviewUrls] = useState({
     isletmeBelgesi: null,
     sertifikalar: [],
@@ -571,9 +703,6 @@ export default function CilingirKayit() {
       Highlight.configure({
         multicolor: true,
       }),
-      Link.configure({
-        openOnClick: false,
-      }),
       Placeholder.configure({
         placeholder: 'İşletmeniz hakkında bilgi verin...',
       }),
@@ -591,8 +720,10 @@ export default function CilingirKayit() {
       attributes: {
         class: 'prose prose-sm sm:prose focus:outline-none p-3 min-h-[150px] max-w-none',
       },
-    }
-  });
+    },
+    // SSR sorunu için bu seçeneği ekliyoruz
+    immediatelyRender: false
+  }, [isClient]); // isClient'i bağımlılık olarak ekledik, sadece client tarafında render edilsin
 
   const handleHakkindaChange = (content) => {
     setFormData({
@@ -604,6 +735,7 @@ export default function CilingirKayit() {
       setErrors(prev => ({ ...prev, hakkinda: undefined }));
     }
   };
+
 
   const handleCheckboxChange = (name) => {
     setFormData({
@@ -620,45 +752,98 @@ export default function CilingirKayit() {
     setIsLoadingAi(prev => ({ ...prev, [field]: true }));
     
     try {
-      // Gerçek bir API çağrısı yapılabilir, şimdilik gecikme simülasyonu yapıyoruz
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Hangi alanı düzenleyeceğimize bağlı olarak AI cevabı oluşturuyoruz
       if (field === 'tagline') {
-        const text = formData.tagline || formData.isletmeAdi;
-        if (!text) {
-          showToast("Önce bir slogan yazın veya işletme adı girin", "warning");
+        const currentText = formData.tagline || "";
+        const businessName = formData.isletmeAdi;
+        
+        if (!businessName) {
+          showToast("Önce işletme adı girin", "warning");
           setIsLoadingAi(prev => ({ ...prev, [field]: false }));
           return;
         }
         
-        // Simulate AI enhancement
-        const enhancedText = `${text} - Güvenilir ve Hızlı Çözümler`;
-        setFormData(prev => ({ ...prev, tagline: enhancedText }));
+        // İl bilgisi
+        const location = formData.il ? turkiyeIlIlce.provinces.find(il => il.id === formData.il)?.name : "";
+        
+        // Seçilen hizmetlerin isimlerini al
+        const selectedServices = formData.hizmetler.map(hizmetId => {
+          const hizmet = hizmetListesi.find(h => h.id === hizmetId);
+          return hizmet ? hizmet.name : "";
+        }).filter(Boolean);
+        
+        // AI API'sine istek gönder
+        const response = await fetch('/api/ai/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            field: 'tagline',
+            businessName,
+            currentText,
+            location,
+            services: selectedServices
+          }),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "AI ile slogan oluşturulurken bir hata oluştu");
+        }
+        
+        const data = await response.json();
+        
+        // Üretilen tagline'ı set et
+        setFormData(prev => ({ ...prev, tagline: data.text }));
         showToast("Slogan AI ile iyileştirildi", "success");
       } 
       else if (field === 'hakkinda') {
-        const text = formData.hakkinda || formData.isletmeAdi;
-        if (!text && !formData.isletmeAdi) {
-          showToast("Önce bir metin girin veya işletme adı girin", "warning");
+        const currentText = formData.hakkinda || "";
+        const businessName = formData.isletmeAdi;
+        
+        if (!businessName) {
+          showToast("Önce işletme adı girin", "warning");
           setIsLoadingAi(prev => ({ ...prev, [field]: false }));
           return;
         }
         
-        // Simulate AI enhancement - şimdi Tiptap için HTML formatında
-        const enhancedText = `<p><strong>${formData.isletmeAdi}</strong> olarak ${formData.il || 'bölgemizde'} 
-        en kaliteli çilingir hizmetlerini sunmaktayız. Müşteri memnuniyetini ön planda tutarak, 
-        profesyonel ekibimizle 7/24 hizmet vermekteyiz. Modern ekipmanlarımız ve uzman kadromuzla 
-        kapı açma, kilit değiştirme ve anahtar kopyalama gibi çeşitli hizmetleri hızlı ve güvenilir 
-        bir şekilde sağlıyoruz.</p><p>Deneyimli ustalarımız en karmaşık kilit sistemleri için bile 
-        çözüm sunmaktadır. Müşterilerimizin güvenliği bizim için her şeyden önemlidir.</p>`;
+        // İl bilgisi
+        const location = formData.il ? turkiyeIlIlce.provinces.find(il => il.id === formData.il)?.name : "";
         
-        // Önce formData'yı güncelle
-        setFormData(prev => ({ ...prev, hakkinda: enhancedText }));
+        // Seçilen hizmetlerin isimlerini al
+        const selectedServices = formData.hizmetler.map(hizmetId => {
+          const hizmet = hizmetListesi.find(h => h.id === hizmetId);
+          return hizmet ? hizmet.name : "";
+        }).filter(Boolean);
         
-        // Ardından editörü güncelle
+        // AI API'sine istek gönder
+        const response = await fetch('/api/ai/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            field: 'hakkinda',
+            businessName,
+            currentText: currentText.replace(/<[^>]*>/g, ' ').trim(), // HTML taglerini kaldır
+            location,
+            services: selectedServices
+          }),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "AI ile hakkında metni oluşturulurken bir hata oluştu");
+        }
+        
+        const data = await response.json();
+        
+        // Üretilen HTML içeriğini set et
+        setFormData(prev => ({ ...prev, hakkinda: data.text }));
+        
+        // Editörü güncelle
         if (editor) {
-          editor.commands.setContent(enhancedText);
+          editor.commands.setContent(data.text);
         }
         
         showToast("Hakkında metni AI ile iyileştirildi", "success");
@@ -672,7 +857,15 @@ export default function CilingirKayit() {
   };
 
   const handleAddCertificate = (certificateData) => {
-    setCertificates(prev => [...prev, certificateData]);
+    setCertificates(prev => [
+      ...prev, 
+      { 
+        name: certificateData.name,
+        key: certificateData.key,  // Otomatik oluşturulan camelCase anahtar
+        file: certificateData.file,
+        previewUrl: certificateData.previewUrl 
+      }
+    ]);
   };
 
   const handleRemoveCertificate = (index) => {
@@ -713,10 +906,14 @@ export default function CilingirKayit() {
     }
     
     // Form verilerini güncelle
-    setFormData({
-      ...formData,
-      [fieldName]: file
-    });
+    if (fieldName === 'isletmeBelgesi') {
+      setFormDataIsletmeBelgesi(file);
+    } else {
+      setFormData({
+        ...formData,
+        [fieldName]: file
+      });
+    }
     
     // Hata varsa temizle
     if (errors[fieldName]) {
@@ -729,13 +926,13 @@ export default function CilingirKayit() {
     if (!files.length) return;
     
     // Halihazırda yüklenen resimleri kontrol et
-    if (formData.isletmeResimleri.length + files.length > 10) {
+    if (formDataIsletmeResimleri.length + files.length > 10) {
       showToast("En fazla 10 adet resim yükleyebilirsiniz.", "error");
       return;
     }
     
     // Geçerli resimleri koru
-    let newIsletmeResimleri = [...formData.isletmeResimleri];
+    let newIsletmeResimleri = [...formDataIsletmeResimleri];
     let newPreviewUrls = [...previewUrls.isletmeResimleri];
     
     // Her dosyayı kontrol et
@@ -765,17 +962,14 @@ export default function CilingirKayit() {
     }
     
     // Profil resmi kontrolü
-    let profilResmiIndex = formData.profilResmiIndex;
+    let profilResmiIndex = formDataProfilResmiIndex;
     if (profilResmiIndex === -1 && newIsletmeResimleri.length > 0) {
       profilResmiIndex = 0; // İlk resmi otomatik profil resmi yap
     }
     
     // Form verilerini güncelle
-    setFormData({
-      ...formData,
-      isletmeResimleri: newIsletmeResimleri,
-      profilResmiIndex: profilResmiIndex
-    });
+    setFormDataIsletmeResimleri(newIsletmeResimleri);
+    setFormDataProfilResmiIndex(profilResmiIndex);
     
     // Önizleme URL'lerini güncelle
     setPreviewUrls({
@@ -790,7 +984,7 @@ export default function CilingirKayit() {
   };
 
   const handleRemoveIsletmeResmi = (index) => {
-    const newIsletmeResimleri = [...formData.isletmeResimleri];
+    const newIsletmeResimleri = [...formDataIsletmeResimleri];
     const newPreviewUrls = [...previewUrls.isletmeResimleri];
     
     // URL'yi serbest bırak
@@ -801,22 +995,19 @@ export default function CilingirKayit() {
     newPreviewUrls.splice(index, 1);
     
     // Profil resmi indeksini güncelle
-    let newProfilResmiIndex = formData.profilResmiIndex;
+    let newProfilResmiIndex = formDataProfilResmiIndex;
     
     if (newIsletmeResimleri.length === 0) {
       newProfilResmiIndex = -1; // Resim kalmadıysa indeksi sıfırla
-    } else if (index === formData.profilResmiIndex) {
+    } else if (index === formDataProfilResmiIndex) {
       newProfilResmiIndex = 0; // Silinen profil resmiyse ilk resmi profil yap
-    } else if (index < formData.profilResmiIndex) {
+    } else if (index < formDataProfilResmiIndex) {
       newProfilResmiIndex--; // Silinen resim profil resminden önceyse indeksi azalt
     }
     
     // Güncelle
-    setFormData({
-      ...formData,
-      isletmeResimleri: newIsletmeResimleri,
-      profilResmiIndex: newProfilResmiIndex
-    });
+    setFormDataIsletmeResimleri(newIsletmeResimleri);
+    setFormDataProfilResmiIndex(newProfilResmiIndex);
     
     setPreviewUrls({
       ...previewUrls,
@@ -825,16 +1016,54 @@ export default function CilingirKayit() {
   };
 
   const handleSetProfilResmi = (index) => {
-    setFormData({
-      ...formData,
-      profilResmiIndex: index
-    });
+    setFormDataProfilResmiIndex(index);
   };
 
+  const validateAllFields = () => {
+    const requiredFields = [
+      'adSoyad', 'telefon', 'email', 'isletmeAdi', 
+      'il', 'ilce', 'acikAdres', 'startDate'
+    ];
 
-  const validateStep = (step) => {
-    const newErrors = {};
     
+    // Temel alanları kontrol et
+    for (const field of requiredFields) {
+      if (!formData[field] || formData[field].trim() === '') {
+        return false;
+      }
+    }
+    
+    // Hizmet bölgeleri
+    if (!formData.hizmetBolgeleri || formData.hizmetBolgeleri.length === 0) {
+      return false;
+    }
+    
+    // Hizmetler
+    if (!formData.hizmetler || formData.hizmetler.length === 0) {
+      return false;
+    }
+    
+    // İşletme resimleri
+    if (!formDataIsletmeResimleri || formDataIsletmeResimleri.length === 0) {
+      return false;
+    }
+    
+    // İşletme belgesi
+    if (!formDataIsletmeBelgesi) {
+      return false;
+    }
+    
+    // Kabul zorunlu koşullar
+    if (!formData.termsAccepted || !formData.privacyAccepted || !formData.dataAccuracyAccepted) {
+      return false;
+    }
+    
+    return true;
+  };
+
+  const validateStep = async (step) => {
+    const newErrors = {};
+
     // Adım 1: Kişisel bilgiler doğrulaması
     if (step === 1) {
       if (!formData.adSoyad || formData.adSoyad.trim() === '') {
@@ -857,6 +1086,24 @@ export default function CilingirKayit() {
         newErrors.email = 'Geçerli bir e-posta adresi giriniz';
         return 'Geçerli bir e-posta adresi giriniz';
       }
+
+      //is email unique
+      const response = await fetch('/api/register/auth/check-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email
+        }),
+      });
+      const data = await response.json();
+
+      if (data.exists) {
+        newErrors.email = 'Bu e-posta adresi zaten kayıtlı. Lütfen başka bir e-posta adresi kullanınız.';
+        return 'Bu e-posta adresi zaten kayıtlı. Lütfen başka bir e-posta adresi kullanınız.';
+      }
+      
       
       if (!formData.sifre || formData.sifre.trim() === '') {
         newErrors.sifre = 'Şifre alanı zorunludur';
@@ -874,8 +1121,8 @@ export default function CilingirKayit() {
         return 'Şifreler eşleşmiyor';
       }
 
-      if (!formData.tecrube || formData.tecrube.trim() === '') {
-        newErrors.tecrube = 'İşe başlangıç yılı seçimi zorunludur';
+      if (!formData.startDate || formData.startDate.trim() === '') {
+        newErrors.startDate = 'İşe başlangıç yılı seçimi zorunludur';
         return 'İşe başlangıç yılı seçimi zorunludur';
       }
     }
@@ -896,7 +1143,7 @@ export default function CilingirKayit() {
         newErrors.ilce = 'İlçe seçimi zorunludur';
         return 'İlçe seçimi zorunludur';
       }
-
+      
       if (!formData.acikAdres || formData.acikAdres.trim() === '') {
         newErrors.acikAdres = 'Açık adres alanı zorunludur';
         return 'Açık adres alanı zorunludur';
@@ -965,7 +1212,7 @@ export default function CilingirKayit() {
     
     // Adım 5: İşletme Resimleri doğrulaması
     else if (step === 5) {
-      if (!formData.isletmeResimleri || formData.isletmeResimleri.length === 0) {
+      if (!formDataIsletmeResimleri || formDataIsletmeResimleri.length === 0) {
         newErrors.isletmeResimleri = 'En az bir işletme resmi yüklemelisiniz';
         return 'En az bir işletme resmi yüklemelisiniz';
       }
@@ -973,7 +1220,7 @@ export default function CilingirKayit() {
     
     // Adım 6: Belgeler doğrulaması
     else if (step === 6) {
-      if (!formData.isletmeBelgesi) {
+      if (!formDataIsletmeBelgesi) {
         newErrors.isletmeBelgesi = 'İşletme belgesi yüklemeniz zorunludur';
         return 'İşletme belgesi yüklemeniz zorunludur';
       }
@@ -1003,13 +1250,13 @@ export default function CilingirKayit() {
       }
     }
 
-    setErrors(newErrors);
+    // setErrors(newErrors);
     return true; // Tüm doğrulamalar başarılı
   };
 
-  const nextStep = () => {
+  const nextStep = async () => {
     // Mevcut adımı doğrula
-    const validationResult = validateStep(activeStep);
+    const validationResult = await validateStep(activeStep);
     if (validationResult !== true) {
       showToast(validationResult, "error");
       return;
@@ -1024,31 +1271,254 @@ export default function CilingirKayit() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSubmit = (e) => {
+  // Açılış/kapanış saatlerini güncelleme
+  const handleTimeChange = (dayIndex, field, value) => {
+    setDailyHours(prev => 
+      prev.map(day => {
+        if (day.dayofweek === dayIndex) {
+          return {
+            ...day,
+            [field === 'start' ? 'opentime' : 'closetime']: value
+          };
+        }
+        return day;
+      })
+    );
+  };
+
+  // Çalışma gününün açık/kapalı durumunu değiştirme
+  const handleWorkDayToggle = (dayIndex, isOpen) => {    
+    setDailyHours(prev => 
+      prev.map(day => {
+        if (day.dayofweek === dayIndex) {
+          return {
+            ...day,
+            isworking: isOpen
+          };
+        }
+        return day;
+      })
+    );
+  };
+  
+  // 24 saat açık durumunu değiştirme
+  const handle24HourToggle = (dayIndex, is24h) => {
+    setDailyHours(prev => 
+      prev.map(day => {
+        if (day.dayofweek === dayIndex) {
+          return {
+            ...day,
+            is24hopen: is24h,
+            opentime: is24h ? "00:00" : "09:00",
+            closetime: is24h ? "00:00" : "18:00"
+          };
+        }
+        return day;
+      })
+    );
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsFormSubmitting(true);
     
     // Son formun doğrulamasını yap
-    const validationResult = validateStep(activeStep);
+    const validationResult = await validateStep(activeStep);
     if (validationResult !== true) {
       showToast(validationResult, "error");
+      setIsFormSubmitting(false);
       return;
     }
     
-    // Sertifikaları finalFormData içine ekle
-    const finalFormData = {
-      ...formData,
-      // Sertifikaları doğrudan certificates üzerinden al
-      sertifikalar: certificates.map(cert => cert.file)
-    };
-    
-    // Form verilerini işleme ve API'ye gönderme işlemleri burada yapılacak
-    console.log("Form verileri:", finalFormData);
-    console.log("Sertifikalar:", certificates);
-    
-    // Başvuru tamamlandı mesajını göster
-    showToast("Başvurunuz başarıyla alındı!", "success");
-    setActiveStep(8);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Tüm formun bir son kontrolü
+    const allFieldsValid = await validateAllFields();
+    if (!allFieldsValid) {
+      setErrorText("Lütfen tüm zorunlu alanları doldurun.");
+      showToast("Lütfen tüm zorunlu alanları doldurun.", "error");
+      setIsFormSubmitting(false);
+      return;
+    }
+
+    try {
+      showToast("Kaydınız işleniyor, lütfen bekleyin...", "info");
+      
+      // 1. Önce Supabase Auth ile yeni hesap oluştur
+      const authResponse = await fetch('/api/register/auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.sifre,
+          fullName: formData.adSoyad,
+          phone: formData.telefon
+        }),
+      });
+      
+      if (!authResponse.ok) {
+        const errorData = await authResponse.json();
+        throw new Error(errorData.error || "Kullanıcı kaydı sırasında bir hata oluştu");
+      }
+      
+      const authData = await authResponse.json();
+      const userId = authData.id; // Auth.users tablosundan gelen id
+
+
+      
+      // 5. İl adı ve ilçe adını al
+      const provinceName = turkiyeIlIlce.provinces.find(il => il.id === formData.il)?.name || '';
+      const districtName = turkiyeIlIlce.districts.find(ilce => ilce.id === formData.ilce)?.name || '';
+      
+      // 6. Slug oluştur
+      const slug = generateSlug(formData.isletmeAdi, provinceName, districtName);
+
+      
+      const locksmithInsertData = {
+        authid: userId,
+        slug: slug,
+        provinceid: formData.il,
+        districtid: formData.ilce,
+        businessname: formData.isletmeAdi,
+        fullname: formData.adSoyad,
+        tagline: formData.tagline,
+        email: formData.email,
+        phonenumber: formData.telefon,
+        customerlimitperhour: formData.maxMusteriLimiti,
+        profileimageurl: null,
+        isverified: false,
+        isactive: false
+      }
+
+      const locksmithDetailsInsertData = {
+        taxnumber: formData.vergiNo || null,
+        fulladdress: formData.acikAdres,
+        abouttext: formData.hakkinda,
+        instagram_url: formData.sosyalMedya.instagram || null,
+        facebook_url: formData.sosyalMedya.facebook || null,
+        tiktok_url: formData.sosyalMedya.tiktok || null,
+        youtube_url: formData.sosyalMedya.youtube || null,
+        websiteurl: formData.websiteUrl || null,
+        startdate: `${formData.startDate}-01-01`
+      }
+
+      const locksmithDistrictsInsertData = {
+        provinceid: formData.il,
+        districts: formData.hizmetBolgeleri,
+      }
+
+      const locksmithWorkingHoursInsertData = {
+        workinghours: dailyHours
+      }
+      
+      const locksmithServicesInsertData = {
+        services: formData.hizmetler
+      }
+
+
+       // Locksmith inserts
+       const locksmithResponse = await fetch('/api/register/locksmiths', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          locksmithInsertData,
+          locksmithDetailsInsertData,
+          locksmithServicesInsertData,
+          locksmithDistrictsInsertData,
+          locksmithWorkingHoursInsertData
+        }),
+      });
+
+            
+      if (!locksmithResponse.ok) {
+        const errorData = await locksmithResponse.json();
+        throw new Error(errorData.error || "Çilingir kaydı sırasında bir hata oluştu");
+      }
+
+      const locksmithResponseData = await locksmithResponse.json();   
+      const locksmithid = await locksmithResponseData.locksmithid;
+
+
+      console.log('Giriş denemesi başlatılıyor');
+        try {
+          await dispatch(loginUser({
+            email: formData.email,
+            password: formData.sifre
+          }));
+          console.log('Giriş isteği gönderildi');
+        } catch (loginError) {
+          console.error('Giriş hatası:', loginError);
+          showToast("Kayıt başarılı fakat otomatik giriş yapılamadı. Lütfen manuel olarak giriş yapın.", "warning");
+        }
+      console.log('Giriş denemesi tamamlandı');
+
+      
+      // 2. İşletme resimlerini Supabase bucket'a yükle
+      const uploadedImages = await uploadFilesToBucket(formDataIsletmeResimleri, 'business-images');
+      
+      // 3. İşletme belgesini Supabase bucket'a yükle
+      const uploadedDocument = await uploadFileToBucket(formDataIsletmeBelgesi, 'business-documents');
+      
+      // 4. Sertifikaları Supabase bucket'a yükle
+      const uploadedCertificates = await uploadFilesToBucket(
+        certificates.map(cert => cert.file), 
+        'business-certificates'
+      );
+
+      //add cert.name to uploadedCertificates
+      uploadedCertificates.forEach((cert, index) => {
+        uploadedCertificates[index].name = certificates[index].name;
+      });
+
+
+      const locksmithCertificatesInsertData = {
+        certificates: uploadedCertificates
+      }
+
+      const locksmithDocumentsInsertData = {
+        documents: uploadedDocument
+      }
+
+
+      const locksmithImagesInsertData = {
+        images: uploadedImages.map((img, index) => ({
+          image_url: img.url,
+          is_profile: index === formDataProfilResmiIndex,
+          display_order: index
+        }))
+      }
+
+       // Locksmith inserts
+       const locksmithUpdateResponse = await fetch('/api/register/locksmiths', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          locksmithid,
+          locksmithImagesInsertData,
+          locksmithCertificatesInsertData,
+          locksmithDocumentsInsertData
+        }),
+      });
+
+      if (!locksmithUpdateResponse.ok) {
+        const errorData = await locksmithUpdateResponse.json();
+        throw new Error(errorData.error || "Çilingir ayarları yapılırken bir hata oluştu");
+      }      
+      
+      // Başvuru tamamlandı mesajını göster
+      showToast("Başvurunuz başarıyla alındı!", "success");
+      setActiveStep(8);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error) {
+      console.error("Kayıt hatası:", error);
+      showToast(error.message || "Kayıt sırasında bir hata oluştu", "error");
+    } finally {
+      setIsFormSubmitting(false);
+    }
   };
 
   const handleStepClick = (step) => {
@@ -1104,6 +1574,7 @@ export default function CilingirKayit() {
         {/* Mobil için adım adı */}
         <div className="md:hidden text-center mt-4 py-3 px-4 bg-blue-50 rounded-md border border-blue-100 shadow-sm transition-all duration-300 transform hover:shadow">
           <span className="text-blue-700 font-medium">
+            {activeStep} -&nbsp;
             {activeStep === 1 && "Kişisel Bilgiler"}
             {activeStep === 2 && "İşletme Bilgileri"}
             {activeStep === 3 && "Hizmetler ve Bölgeler"}
@@ -1206,17 +1677,17 @@ export default function CilingirKayit() {
                   </div>
                   <div className="mb-4">
                     <label 
-                      htmlFor="tecrube"
+                      htmlFor="startDate"
                       className="block text-sm font-medium text-gray-700 mb-1">
                       İşe Başlangıç Yılı
                     </label>
                     <select
-                      id="tecrube"
-                      name="tecrube"
-                      value={formData.tecrube}
+                      id="startDate"
+                      name="startDate"
+                      value={formData.startDate}
                       onChange={handleChange}
                       className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                      ${errors.tecrube ? 'border-red-500' : 'border-gray-300'}`}
+                      ${errors.startDate ? 'border-red-500' : 'border-gray-300'}`}
                     >
                       <option value="">Yıl Seçiniz</option>
                       {Array.from({ length: new Date().getFullYear() - 2000 }, (_, i) => 2000 + i).map((yil) => (
@@ -1225,8 +1696,8 @@ export default function CilingirKayit() {
                         </option>
                       ))}
                     </select>
-                    {errors.tecrube && (
-                      <p className="mt-1 text-sm text-red-600">{errors.tecrube}</p>
+                    {errors.startDate && (
+                      <p className="mt-1 text-sm text-red-600">{errors.startDate}</p>
                     )}
                   </div>
                 </div>
@@ -1392,6 +1863,72 @@ export default function CilingirKayit() {
                   )}
                 </div>
 
+                {/* Çalışma Saatleri */}
+                <div>
+                  <h4 className="font-medium mb-4 mt-6">Çalışma Saatleri</h4>
+                  <div className="space-y-4">
+                    { dailyHours.map((day) => (
+                      <div key={day.dayofweek} className="flex md:items-center items-start md:flex-row flex-col justify-between border p-3 rounded-md bg-gray-50">
+                        <div className="flex items-center space-x-3">
+                          <Checkbox 
+                            id={`workday-${day.dayofweek}`} 
+                            checked={day.isworking}
+                            onCheckedChange={(checked) => {
+                              handleWorkDayToggle(day.dayofweek, !!checked);
+                            }}
+                          />
+                          <label 
+                            htmlFor={`workday-${day.dayofweek}`} 
+                            className={`font-medium ${!day.isworking ? "text-gray-400" : ""}`}
+                          >
+                            {day.dayofweek==0 ? "Pazartesi" : day.dayofweek==1 ? "Salı" : day.dayofweek==2 ? "Çarşamba" : day.dayofweek==3 ? "Perşembe" : day.dayofweek==4 ? "Cuma" : day.dayofweek==5 ? "Cumartesi" : "Pazar"}
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2 md:mt-0 mt-2">
+                          <div className="flex items-center space-x-2 mr-4">
+                            <Checkbox 
+                              id={`24hours-${day.dayofweek}`}
+                              checked={day.isworking && day.is24hopen}
+                              onCheckedChange={(checked) => {
+                                handle24HourToggle(day.dayofweek, !!checked);
+                              }}
+                              disabled={!day.isworking}
+                            />
+                            <label 
+                              htmlFor={`24hours-${day.dayofweek}`}
+                              className={`text-sm ${!day.isworking ? "text-gray-400" : ""}`}
+                            >
+                              24 Saat
+                            </label>
+                          </div>
+                          <Input 
+                            type="time"
+                            value={day.opentime ? day.opentime.substring(0, 5) : "09:00"}
+                            onChange={(e) => {
+                              handleTimeChange(day.dayofweek, 'start', e.target.value);
+                            }}
+                            disabled={!day.isworking || day.is24hopen}
+                            className={`w-24 ${(!day.isworking || day.is24hopen) ? "bg-gray-100 text-gray-400" : ""}`}
+                          />
+                          <span className={!day.isworking ? "text-gray-400" : ""}>-</span>
+                          <Input 
+                            type="time"
+                            value={day.closetime ? day.closetime.substring(0, 5) : "18:00"}
+                            onChange={(e) => {
+                              handleTimeChange(day.dayofweek, 'end', e.target.value);
+                            }}
+                            disabled={!day.isworking || day.is24hopen}
+                            className={`w-24 ${(!day.isworking || day.is24hopen) ? "bg-gray-100 text-gray-400" : ""}`}
+                          />
+                          <span className={`ml-2 text-sm ${day.isworking ? "text-green-600" : "text-red-500"}`}>
+                            {day.isworking ? "Açık" : "Kapalı"}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Sosyal Medya Linkleri */}
                   <div className="md:col-span-2 mt-4">
@@ -1402,11 +1939,14 @@ export default function CilingirKayit() {
                   </div>
                   
                   <div className="mb-4">
-                    <label 
-                      htmlFor="instagram"
-                      className="block text-sm font-medium text-gray-700 mb-1">
-                      Instagram Linki
-                    </label>
+                    <div className="flex items-center mb-4">
+                      <Instagram className="h-6 w-6 text-pink-600 mr-2" />
+                      <label 
+                        htmlFor="instagram"
+                        className="block text-sm font-medium text-gray-700 mb-1">
+                        Instagram Linki
+                      </label>
+                    </div>                    
                     <input
                       type="text"
                       id="instagram"
@@ -1423,11 +1963,16 @@ export default function CilingirKayit() {
                   </div>
                   
                   <div className="mb-4">
-                    <label 
-                      htmlFor="facebook"
-                      className="block text-sm font-medium text-gray-700 mb-1">
-                      Facebook Linki
-                    </label>
+                    <div className="flex items-center mb-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                      </svg>
+                      <label 
+                        htmlFor="facebook"
+                        className="block text-sm font-medium text-gray-700 mb-1">
+                        Facebook Linki
+                      </label>
+                    </div>                    
                     <input
                       type="text"
                       id="facebook"
@@ -1444,11 +1989,16 @@ export default function CilingirKayit() {
                   </div>
                   
                   <div className="mb-4">
-                    <label 
-                      htmlFor="youtube"
-                      className="block text-sm font-medium text-gray-700 mb-1">
-                      YouTube Linki
+                    <div className="flex items-center mb-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                      </svg>
+                      <label 
+                        htmlFor="youtube"
+                        className="block text-sm font-medium text-gray-700 mb-1">
+                        YouTube Linki
                     </label>
+                    </div>
                     <input
                       type="text"
                       id="youtube"
@@ -1465,11 +2015,16 @@ export default function CilingirKayit() {
                   </div>
                   
                   <div className="mb-4">
-                    <label 
-                      htmlFor="tiktok"
-                      className="block text-sm font-medium text-gray-700 mb-1">
-                      TikTok Linki
-                    </label>
+                    <div className="flex items-center mb-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black mr-2" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+                      </svg>                    
+                      <label 
+                        htmlFor="tiktok"
+                        className="block text-sm font-medium text-gray-700 mb-1">
+                        TikTok Linki
+                      </label>
+                    </div>
                     <input
                       type="text"
                       id="tiktok"
@@ -1519,7 +2074,7 @@ export default function CilingirKayit() {
                     ))}
                   </div>
                 )}
-
+                
                 <p className="text-md font-medium mb-3">Hizmetleriniz</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {hizmetListesi.map((hizmet) => (
@@ -1552,7 +2107,7 @@ export default function CilingirKayit() {
                 <div className="mb-6 mt-8">
                   <div className="flex justify-between items-center mb-2">
                     <label htmlFor="tagline" className="block text-sm font-medium text-gray-700">
-                      İşletme Sloganı
+                      İşletme Sloganı ({formData.tagline.length}/150)
                     </label>
                     <AiAssistButton 
                       onClick={() => handleAiAssist('tagline')} 
@@ -1576,7 +2131,7 @@ export default function CilingirKayit() {
                 <div className="mb-6">
                   <div className="flex justify-between items-center mb-2">
                     <label htmlFor="hakkinda" className="block text-sm font-medium text-gray-700">
-                      İşletme Hakkında
+                      İşletme Hakkında ({formData.hakkinda.length}/1000)
                     </label>
                     <AiAssistButton 
                       onClick={() => handleAiAssist('hakkinda')} 
@@ -1706,12 +2261,12 @@ export default function CilingirKayit() {
                   )}
                   
                   {/* Yüklenen Resimler Önizleme */}
-                  {formData.isletmeResimleri.length > 0 && (
+                  {formDataIsletmeResimleri.length > 0 && (
                     <div className="mt-6">
-                      <h4 className="font-medium text-gray-700 mb-2">Yüklenen Resimler ({formData.isletmeResimleri.length}/10)</h4>
+                      <h4 className="font-medium text-gray-700 mb-2">Yüklenen Resimler ({formDataIsletmeResimleri.length}/10)</h4>
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                         {previewUrls.isletmeResimleri.map((url, index) => (
-                          <div key={index} className={`relative group rounded-md overflow-hidden border-2 ${formData.profilResmiIndex === index ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'}`}>
+                          <div key={index} className={`relative group rounded-md overflow-hidden border-2 ${formDataProfilResmiIndex === index ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'}`}>
                             <img 
                               src={url} 
                               alt={`İşletme resmi ${index + 1}`} 
@@ -1719,7 +2274,7 @@ export default function CilingirKayit() {
                             />
                             
                             {/* Profil Resmi Rozeti */}
-                            {formData.profilResmiIndex === index && (
+                            {formDataProfilResmiIndex === index && (
                               <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs rounded-full px-2 py-1">
                                 Profil Resmi
                               </div>
@@ -1781,8 +2336,8 @@ export default function CilingirKayit() {
                     </p>
                     <div className="flex items-center space-x-4">
                       <label className="block w-full">
-                        <div className={`border-2 border-dashed ${formData.isletmeBelgesi ? 'border-blue-400' : 'border-gray-300'} rounded-md p-6 text-center cursor-pointer hover:bg-gray-50 relative`}>
-                          {!formData.isletmeBelgesi ? (
+                        <div className={`border-2 border-dashed ${formDataIsletmeBelgesi ? 'border-blue-400' : 'border-gray-300'} rounded-md p-6 text-center cursor-pointer hover:bg-gray-50 relative`}>
+                          {!formDataIsletmeBelgesi ? (
                             <>
                               <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                                 <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -1793,14 +2348,14 @@ export default function CilingirKayit() {
                             </>
                           ) : (
                             <>
-                              {formData.isletmeBelgesi.type.startsWith('image/') ? (
+                              {formDataIsletmeBelgesi.type.startsWith('image/') ? (
                                 <div className="flex flex-col items-center">
                                   <img 
                                     src={previewUrls.isletmeBelgesi} 
                                     alt="İşletme belgesi önizleme" 
                                     className="max-h-40 object-contain mb-3 rounded"
                                   />
-                                  <p className="text-sm text-gray-500">{formData.isletmeBelgesi.name}</p>
+                                  <p className="text-sm text-gray-500">{formDataIsletmeBelgesi.name}</p>
                                 </div>
                               ) : (
                                 <div className="flex flex-col items-center">
@@ -1808,7 +2363,7 @@ export default function CilingirKayit() {
                                     <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
                                   </svg>
                                   <p className="text-sm text-blue-600 font-medium">PDF dosyası</p>
-                                  <p className="text-sm text-gray-500 mt-1">{formData.isletmeBelgesi.name}</p>
+                                  <p className="text-sm text-gray-500 mt-1">{formDataIsletmeBelgesi.name}</p>
                                 </div>
                               )}
                             </>
@@ -1822,13 +2377,13 @@ export default function CilingirKayit() {
                           />
                         </div>
                       </label>
-                      {formData.isletmeBelgesi && (
+                      {formDataIsletmeBelgesi && (
                         <Button 
                           type="button" 
                           variant="outline" 
                           onClick={() => {
                             URL.revokeObjectURL(previewUrls.isletmeBelgesi);
-                            setFormData({...formData, isletmeBelgesi: null});
+                            setFormDataIsletmeBelgesi(null);
                             setPreviewUrls({...previewUrls, isletmeBelgesi: null});
                           }}
                           className="shrink-0"
@@ -1870,12 +2425,12 @@ export default function CilingirKayit() {
                     </div>
                   </div>
 
-                  <CertificateModal
-                    isOpen={isCertificateModalOpen}
-                    onClose={() => setIsCertificateModalOpen(false)}
-                    onSave={handleAddCertificate}
-                  />
-                  
+                    <CertificateModal
+                      isOpen={isCertificateModalOpen}
+                      onClose={() => setIsCertificateModalOpen(false)}
+                      onSave={handleAddCertificate}
+                    />
+                    
                   {/* Sertifikalar */}
                   {certificates.length > 0 && (
                     <div className="mt-4 mb-6">
@@ -1886,21 +2441,21 @@ export default function CilingirKayit() {
                             <div className="flex-1">
                               <p className="font-medium text-sm">{certificate.name}</p>
                               <p className="text-xs text-gray-500 truncate">{certificate.file.name}</p>
-                            </div>
-                            <Button 
-                              type="button" 
-                              variant="ghost" 
-                              size="sm"
+                                  </div>
+                                  <Button 
+                                    type="button" 
+                                    variant="ghost" 
+                                    size="sm"
                               onClick={() => handleRemoveCertificate(index)}
                               className="h-8 w-8 p-0 rounded-full"
-                            >
+                                  >
                               <XCircle className="h-5 w-5 text-red-500" />
-                            </Button>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                                  </Button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                 </div>
                 
                 <div className="flex justify-between mt-8">
@@ -1943,8 +2498,8 @@ export default function CilingirKayit() {
                     <div className="flex justify-between">
                       <span className="text-gray-500">Konum:</span>
                       <span className="font-medium">
-                        {turkiyeIlIlce.provinces.find(il => il.id === formData.il)?.name}, 
-                        {turkiyeIlIlce.districts.find(ilce => ilce.id === formData.ilce)?.name}
+                        {turkiyeIlIlce.provinces.find(il => il.id == formData.il)?.name}, 
+                        {turkiyeIlIlce.districts.find(ilce => ilce.id == formData.ilce)?.name}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -1962,76 +2517,76 @@ export default function CilingirKayit() {
                   </div>
                 </div>
 
-                {/* Onay Checkboxları */}
+                    {/* Onay Checkboxları */}
                 <div className="space-y-4 mb-6">
                   <h4 className="font-medium mb-2">Kullanım Şartları ve Onaylar</h4>
-                  
-                  <div className="flex items-start space-x-3 p-3 rounded-md bg-blue-50">
-                    <Checkbox 
-                      id="termsAccepted" 
-                      checked={formData.termsAccepted}
-                      onCheckedChange={() => handleCheckboxChange('termsAccepted')}
-                      className={errors.termsAccepted ? 'border-red-500 text-red-500' : ''}
-                    />
-                    <div>
-                      <label 
-                        htmlFor="termsAccepted" 
-                        className={`text-sm font-medium ${errors.termsAccepted ? 'text-red-500' : 'text-gray-700'}`}
-                      >
-                        Hizmet Şartlarını kabul ediyorum *
-                      </label>
-                      <p className="text-xs text-gray-500 mt-1">
-                        <Link href="/terms" target="_blank" className="text-blue-600 hover:underline font-medium">
-                          Hizmet Şartlarını
-                        </Link> okudum ve kabul ediyorum. 
-                      </p>
-                      {errors.termsAccepted && (
-                        <p className="mt-1 text-sm text-red-600">{errors.termsAccepted}</p>
-                      )}
+                      
+                      <div className="flex items-start space-x-3 p-3 rounded-md bg-blue-50">
+                        <Checkbox 
+                          id="termsAccepted" 
+                          checked={formData.termsAccepted}
+                          onCheckedChange={() => handleCheckboxChange('termsAccepted')}
+                          className={errors.termsAccepted ? 'border-red-500 text-red-500' : ''}
+                        />
+                        <div>
+                          <label 
+                            htmlFor="termsAccepted" 
+                            className={`text-sm font-medium ${errors.termsAccepted ? 'text-red-500' : 'text-gray-700'}`}
+                          >
+                            Hizmet Şartlarını kabul ediyorum *
+                          </label>
+                          <p className="text-xs text-gray-500 mt-1">
+                            <Link href="/terms" target="_blank" className="text-blue-600 hover:underline font-medium">
+                              Hizmet Şartlarını
+                            </Link> okudum ve kabul ediyorum. 
+                          </p>
+                          {errors.termsAccepted && (
+                            <p className="mt-1 text-sm text-red-600">{errors.termsAccepted}</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start space-x-3 p-3 rounded-md bg-blue-50">
+                        <Checkbox 
+                          id="privacyAccepted" 
+                          checked={formData.privacyAccepted}
+                          onCheckedChange={() => handleCheckboxChange('privacyAccepted')}
+                          className={errors.privacyAccepted ? 'border-red-500 text-red-500' : ''}
+                        />
+                        <div>
+                          <label 
+                            htmlFor="privacyAccepted" 
+                            className={`text-sm font-medium ${errors.privacyAccepted ? 'text-red-500' : 'text-gray-700'}`}
+                          >
+                            Gizlilik Politikasını kabul ediyorum *
+                          </label>
+                          <p className="text-xs text-gray-500 mt-1">
+                            <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline font-medium">
+                              Gizlilik Politikasını
+                            </Link> okudum ve kabul ediyorum.
+                          </p>
+                          {errors.privacyAccepted && (
+                            <p className="mt-1 text-sm text-red-600">{errors.privacyAccepted}</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start space-x-3 p-3 rounded-md bg-gray-50">
+                        <Checkbox 
+                          id="marketingAccepted" 
+                          checked={formData.marketingAccepted || false}
+                          onCheckedChange={() => handleCheckboxChange('marketingAccepted')}
+                        />
+                        <div>
+                          <label htmlFor="marketingAccepted" className="text-sm font-medium text-gray-700">
+                            Pazarlama iletişimlerini kabul ediyorum
+                          </label>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Yeni özellikler, güncellemeler, kampanyalar ve fırsatlar hakkında bilgilendirme e-postaları almak istiyorum.
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3 p-3 rounded-md bg-blue-50">
-                    <Checkbox 
-                      id="privacyAccepted" 
-                      checked={formData.privacyAccepted}
-                      onCheckedChange={() => handleCheckboxChange('privacyAccepted')}
-                      className={errors.privacyAccepted ? 'border-red-500 text-red-500' : ''}
-                    />
-                    <div>
-                      <label 
-                        htmlFor="privacyAccepted" 
-                        className={`text-sm font-medium ${errors.privacyAccepted ? 'text-red-500' : 'text-gray-700'}`}
-                      >
-                        Gizlilik Politikasını kabul ediyorum *
-                      </label>
-                      <p className="text-xs text-gray-500 mt-1">
-                        <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline font-medium">
-                          Gizlilik Politikasını
-                        </Link> okudum ve kabul ediyorum.
-                      </p>
-                      {errors.privacyAccepted && (
-                        <p className="mt-1 text-sm text-red-600">{errors.privacyAccepted}</p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3 p-3 rounded-md bg-gray-50">
-                    <Checkbox 
-                      id="marketingAccepted" 
-                      checked={formData.marketingAccepted || false}
-                      onCheckedChange={() => handleCheckboxChange('marketingAccepted')}
-                    />
-                    <div>
-                      <label htmlFor="marketingAccepted" className="text-sm font-medium text-gray-700">
-                        Pazarlama iletişimlerini kabul ediyorum
-                      </label>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Yeni özellikler, güncellemeler, kampanyalar ve fırsatlar hakkında bilgilendirme e-postaları almak istiyorum.
-                      </p>
-                    </div>
-                  </div>
-                </div>
                 
                 <div className="flex items-start space-x-3 p-3 rounded-md bg-green-50 border border-green-100">
                   <Checkbox 
@@ -2057,7 +2612,9 @@ export default function CilingirKayit() {
                 </div>
                 <div className="flex justify-between mt-8">
                   <Button type="button" variant="outline" onClick={prevStep}>Geri</Button>
-                  <Button type="button" onClick={nextStep}>Başvuruyu Tamamla</Button>
+                  <Button
+                  disabled={isFormSubmitting}
+                  type="submit">{isFormSubmitting ? "İşleniyor..." : "Kaydımı Tamamla"}</Button>
                 </div>
               </div>
             )}

@@ -4,11 +4,37 @@ import { useState } from "react";
 import { Button } from "./button";
 import { Input } from "./input";
 
+// camelCase dönüştürme fonksiyonu
+const toCamelCase = (str) => {
+  if (!str) return '';
+  
+  // Türkçe karakterleri ve boşlukları düzelt
+  const turkishToEnglish = {
+    'ğ': 'g', 'Ğ': 'G', 'ü': 'u', 'Ü': 'U', 'ş': 's', 'Ş': 'S',
+    'ı': 'i', 'İ': 'I', 'ö': 'o', 'Ö': 'O', 'ç': 'c', 'Ç': 'C'
+  };
+  
+  let result = str.trim();
+  
+  // Türkçe karakterleri değiştir
+  Object.keys(turkishToEnglish).forEach(key => {
+    result = result.replace(new RegExp(key, 'g'), turkishToEnglish[key]);
+  });
+  
+  // CamelCase'e dönüştür
+  return result
+    .replace(/\s+(.)/g, (_, c) => c.toUpperCase())
+    .replace(/\s/g, '')
+    .replace(/^(.)/, (_, c) => c.toLowerCase())
+    .replace(/[^a-zA-Z0-9]/g, ''); // Alfanümerik olmayanları temizle
+};
+
 export function CertificateModal({ isOpen, onClose, onSave }) {
   const [file, setFile] = useState(null);
   const [certificateName, setCertificateName] = useState("");
   const [previewUrl, setPreviewUrl] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [certificateKey, setCertificateKey] = useState("");
 
   // Forma girilen değerlere göre kaydetme düğmesinin aktif olup olmayacağını kontrol et
   const isFormValid = file !== null && certificateName.trim() !== "";
@@ -40,30 +66,30 @@ export function CertificateModal({ isOpen, onClose, onSave }) {
     }
   };
 
-  const handleSave = () => {
-    if (!file) {
-      setErrorMessage("Lütfen bir dosya seçin");
+  const handleSubmit = () => {    
+    // Form doğrulaması
+    if (!certificateName || !file) {
+      setErrorMessage("Lütfen sertifika adı girin ve bir dosya seçin");
       return;
     }
-
-    if (!certificateName.trim()) {
-      setErrorMessage("Lütfen sertifika adını girin");
-      return;
-    }
-
-    onSave({
-      file,
+    
+    // Sertifika verisini oluştur
+    const certificateData = {
       name: certificateName,
-      previewUrl
-    });
-
-    // Formu temizle
+      key: certificateKey || toCamelCase(certificateName), // camelCase anahtarı kullan
+      file: file,
+      previewUrl: previewUrl
+    };
+    
+    // Sertifikayı ekle
+    onSave(certificateData);
+    
+    // Modal'ı kapat ve formu temizle
     setFile(null);
     setCertificateName("");
+    setCertificateKey("");
     setPreviewUrl(null);
     setErrorMessage("");
-    
-    // Modalı kapat
     onClose();
   };
 
@@ -86,84 +112,108 @@ export function CertificateModal({ isOpen, onClose, onSave }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg w-full max-w-md mx-4 p-6">
-        <h3 className="text-lg font-medium mb-4">Sertifika Yükle</h3>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Sertifika Adı *</label>
-            <Input 
-              type="text"
-              value={certificateName}
-              onChange={(e) => setCertificateName(e.target.value)}
-              placeholder="Örn: Ustalık Belgesi"
-              required
-            />
+    <>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-4">Sertifika Ekle</h3>
+            
+            {errorMessage && (
+              <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">
+                {errorMessage}
+              </div>
+            )}
+            
+            <div>
+              <div className="mb-4">
+                <label htmlFor="certificateName" className="block text-sm font-medium text-gray-700 mb-1">
+                  Sertifika Adı
+                </label>
+                <Input 
+                  id="certificateName"
+                  type="text"
+                  value={certificateName}
+                  onChange={(e) => {
+                    const inputValue = e.target.value;
+                    // Değeri her zaman set et
+                    setCertificateName(inputValue);
+                    
+                    // Ayrıca camelCase versiyonunu da güncelle
+                    if (inputValue) {
+                      const camelCased = toCamelCase(inputValue);
+                      setCertificateKey(camelCased);
+                    }
+                  }}
+                  placeholder="Örn: Ustalık Belgesi"
+                  required
+                />
+                
+                {certificateName && (
+                  <div className="mt-2 text-sm text-gray-500">
+                    Sistem adı: <span className="font-mono bg-gray-100 px-1 py-0.5 rounded">{toCamelCase(certificateName)}</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="mb-4">
+                <label htmlFor="certificateFile" className="block text-sm font-medium text-gray-700 mb-1">
+                  Sertifika Dosyası
+                </label>
+                <div className="mt-1 flex items-center">
+                  <label className="block">
+                    <span className="sr-only">Dosya Seç</span>
+                    <input
+                      id="certificateFile"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,application/pdf"
+                      onChange={handleFileChange}
+                      className="block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-md file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-50 file:text-blue-700
+                        hover:file:bg-blue-100
+                      "
+                      required
+                    />
+                  </label>
+                </div>
+                {previewUrl && (
+                  <div className="mt-2">
+                    <img src={previewUrl} alt="Önizleme" className="h-32 w-auto object-contain" />
+                  </div>
+                )}
+              </div>
+              
+              <div className="mt-6 flex justify-end space-x-2">
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    // Formu temizle ve modalı kapat
+                    setFile(null);
+                    setCertificateName("");
+                    setCertificateKey("");
+                    setPreviewUrl(null);
+                    setErrorMessage("");
+                    onClose();
+                  }}
+                >
+                  İptal
+                </Button>
+                <Button 
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={!isFormValid}
+                  className={!isFormValid ? 'opacity-50 cursor-not-allowed' : ''}
+                >
+                  Kaydet
+                </Button>
+              </div>
+            </div>
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-2">Sertifika Dosyası *</label>
-            <label htmlFor="certificateFile" className={`border-2 border-dashed ${file ? 'border-blue-400' : 'border-gray-300'} rounded-md p-4 text-center cursor-pointer hover:bg-gray-50 block`}>
-              {!file ? (
-                <>
-                  <svg className="mx-auto h-10 w-10 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Dosya seçin veya buraya sürükleyin
-                  </p>
-                </>
-              ) : (
-                <>
-                  {file.type.startsWith('image/') ? (
-                    <div className="flex flex-col items-center">
-                      <img 
-                        src={previewUrl} 
-                        alt="Sertifika önizleme" 
-                        className="max-h-36 object-contain mb-2 rounded"
-                      />
-                      <p className="text-sm text-gray-500">{file.name}</p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center">
-                      <svg className="w-10 h-10 text-blue-500 mb-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
-                      </svg>
-                      <p className="text-sm text-blue-600 font-medium">PDF dosyası</p>
-                      <p className="text-sm text-gray-500 mt-1">{file.name}</p>
-                    </div>
-                  )}
-                </>
-              )}
-            </label>
-            <input 
-              id="certificateFile"
-              type="file"
-              className="hidden"
-              accept="image/*,.pdf"
-              onChange={handleFileChange}
-            />
-          </div>
-          
-          {errorMessage && (
-            <div className="text-red-500 text-sm">{errorMessage}</div>
-          )}
         </div>
-        
-        <div className="flex justify-end space-x-3 mt-6">
-          <Button variant="outline" onClick={handleCancel}>
-            İptal
-          </Button>
-          <Button 
-            onClick={handleSave}
-            disabled={!isFormValid}
-            className={!isFormValid ? 'opacity-50 cursor-not-allowed' : ''}
-          >
-            Kaydet
-          </Button>
-        </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 } 

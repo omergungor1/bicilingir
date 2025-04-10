@@ -410,11 +410,24 @@ function CilingirPanelContent() {
 
 
   const fetchKeyBalance = async () => {
-    const response = await fetch('/api/locksmith/ads/balance', {
-      credentials: 'include'
-    });
-    const data = await response.json();
-    setKeyBalance(data.data);
+    try {
+      const response = await fetch('/api/locksmith/ads/balance', {
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        console.error("Key balance alınamadı:", response.statusText);
+        setKeyBalance({ totalkeybalance: 0, lastupdated: new Date().toISOString() });
+        return;
+      }
+      
+      const data = await response.json();
+      setKeyBalance(data.data || { totalkeybalance: 0, lastupdated: new Date().toISOString() });
+    } catch (error) {
+      console.error("Key balance alınamadı:", error);
+      setKeyBalance({ totalkeybalance: 0, lastupdated: new Date().toISOString() });
+    }
   };
 
   
@@ -2590,7 +2603,7 @@ function CilingirPanelContent() {
                   <div className="mb-6">
                     <div className="flex items-center space-x-4 mb-4">
                       <div className="text-center">
-                        <div className="text-4xl font-bold">{reviewStats?.averageRating?.toFixed(1)}</div>
+                        <div className="text-4xl font-bold">{reviewStats?.averageRating?.toFixed(1)||0}</div>
                         <div className="flex">
                           {[...Array(5)].map((_, i) => (
                             <svg key={i} className={`w-5 h-5 ${i < 5 ? "text-yellow-400" : "text-gray-300"}`} fill="currentColor" viewBox="0 0 20 20">
