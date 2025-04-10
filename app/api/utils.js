@@ -422,7 +422,7 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
  * @param {Object} supabase - Supabase istemcisi
  * @param {string} userId - Kullanıcı ID
  * @param {string} sessionId - Oturum ID
- * @param {string} action - Aktivite tipi (enum: search, locksmith_list_view, locksmith_detail_view, call_request, review_submit, profile_visit, whatsapp_message, website_visit)
+ * @param {string} activitytype - Aktivite tipi (enum: search, locksmith_list_view, locksmith_detail_view, call_request, review_submit, profile_visit, whatsapp_message, website_visit)
  * @param {string} details - Aktivite detayları
  * @param {string} entityId - İlgili varlık ID'si
  * @param {string} entityType - İlgili varlık tipi
@@ -430,7 +430,7 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
  * @param {number} level - Sıralama seviyesi (özellikle locksmith_list_view için, varsayılan: 1)
  * @returns {Promise<string>} Aktivite ID'si
  */
-export async function logUserActivity(supabase, userId, sessionId, action, details, entityId, entityType, additionalData = {}, level = 1) {
+export async function logUserActivity(supabase, userId, sessionId, activitytype, details, entityId, entityType, additionalData = {}, level = 1) {
   try {
     const { v4: uuidv4 } = await import('uuid');
     
@@ -448,20 +448,20 @@ export async function logUserActivity(supabase, userId, sessionId, action, detai
     const userAgent = additionalData.userAgent || '';
     const deviceType = userAgent.includes('Mobile') ? 'mobile' : 'desktop';
     
-    // Action tipine göre level ayarı
+    // activitytype tipine göre level ayarı
     let finalLevel = level;
     
     // call_request ve locksmith_detail_view için her zaman level 1 kullan
-    if (action === 'call_request' || action === 'locksmith_detail_view') {
+    if (activitytype === 'call_request' || activitytype === 'locksmith_detail_view') {
       finalLevel = 1;
-      // console.log(`${action} için level zorla 1 olarak ayarlandı`);
+      // console.log(`${activitytype} için level zorla 1 olarak ayarlandı`);
     }
     
     // Key usage bilgisini al
     const { data: keyUsageData, error: keyUsageError } = await supabase
       .from('key_usage_types')
       .select('id, keyamount')
-      .eq('name', action)
+      .eq('name', activitytype)
       .eq('level', finalLevel)
       .limit(1);
       
@@ -475,17 +475,98 @@ export async function logUserActivity(supabase, userId, sessionId, action, detai
     if (keyUsageData && keyUsageData.length > 0) {
       keyAmount = keyUsageData[0].keyamount;
       usageTypeId = keyUsageData[0].id;
-      // console.log(`Key usage bilgisi alındı: ${action} (level: ${finalLevel}) - ${keyAmount} anahtar`);
+      // console.log(`Key usage bilgisi alındı: ${activitytype} (level: ${finalLevel}) - ${keyAmount} anahtar`);
     } else {
-      // console.warn(`Key usage bilgisi bulunamadı: ${action} (level: ${finalLevel}). Varsayılan değer kullanılıyor.`);
+      // console.warn(`Key usage bilgisi bulunamadı: ${activitytype} (level: ${finalLevel}). Varsayılan değer kullanılıyor.`);
       // Varsayılan değer olarak 0 anahtar kullan
       keyAmount = 0;
+    }
+    
+    // Kullanıcının varlığını kontrol et, yoksa yeni bir kullanıcı oluştur
+    // Bu adım, users tablosu boşaltıldığında foreign key hatası almanın önüne geçecek
+    if (userId) {
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', userId)
+        .limit(1);
+        
+      if (userError) {
+        console.error('Kullanıcı kontrolü sırasında hata:', userError);
+      }
+      
+      // Kullanıcı bulunamadıysa yeni bir kullanıcı oluştur
+      if (!userData || userData.length === 0) {
+        console.log(`Kullanıcı ID ${userId} veritabanında bulunamadı, yeni kullanıcı oluşturuluyor...`);
+        const newUserData = {
+          id: userId, // Mevcut ID'yi koruyoruz
+          useragent: userAgent || 'Unknown',
+          userip: '0.0.0.0', // Varsayılan IP
+          createdat: new Date().toISOString(),
+          updatedat: new Date().toISOString(),
+          islocksmith: false
+        };
+        
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert(newUserData);
+          
+        if (insertError) {
+          console.error('Kullanıcı oluşturma hatası:', insertError);
+          // Eski kullanıcı ID'si çakışma yarattıysa, yeni bir ID oluştur
+          if (insertError.code === '23505') { // Unique violation (çakışma)
+            userId = uuidv4();
+            newUserData.id = userId;
+            
+            const { error: retryError } = await supabase
+              .from('users')
+              .insert(newUserData);
+              
+            if (retryError) {
+              console.error('Yeni ID ile kullanıcı oluşturma hatası:', retryError);
+              // Bu noktada aktivite kaydı için geri dön
+              return null;
+            } else {
+              console.log(`Yeni kullanıcı ID ile başarıyla oluşturuldu: ${userId}`);
+            }
+          } else {
+            // Başka bir hata durumunda, aktivite kaydı için geri dön
+            return null;
+          }
+        } else {
+          console.log(`Kullanıcı başarıyla oluşturuldu: ${userId}`);
+        }
+      }
+    } else {
+      // userId yoksa yeni bir UUID oluştur
+      userId = uuidv4();
+      
+      // Yeni kullanıcı ekle
+      const newUserData = {
+        id: userId,
+        useragent: userAgent || 'Unknown',
+        userip: '0.0.0.0', // Varsayılan IP
+        createdat: new Date().toISOString(),
+        updatedat: new Date().toISOString(),
+        islocksmith: false
+      };
+      
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert(newUserData);
+        
+      if (insertError) {
+        console.error('Yeni kullanıcı oluşturma hatası:', insertError);
+        return null;
+      }
+      
+      console.log(`Yeni kullanıcı oluşturuldu: ${userId}`);
     }
     
     const insertData = {
       // id: uuidv4(),
       userid: userId,
-      activitytype: action,
+      activitytype: activitytype,
       devicetype: deviceType,
       keyamount: keyAmount,
       createdat: new Date().toISOString()

@@ -183,7 +183,7 @@ export default function LocksmithDetail({ params }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          activitytype: 'cilingir-arama',
+          activitytype: 'call_request',
           level: 1,
           data: JSON.stringify({
             locksmithId: locksmith.id,
@@ -250,7 +250,7 @@ export default function LocksmithDetail({ params }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          activitytype: 'degerlendirme-gonderme',
+          activitytype: 'review_submit',
           level: 1,
           data: JSON.stringify({
             locksmithId: locksmith.id,
@@ -285,7 +285,7 @@ export default function LocksmithDetail({ params }) {
       <div className="flex min-h-screen flex-col items-center justify-center">
         <h1 className="text-2xl font-bold mb-4">Bir hata oluştu</h1>
         <p className="mb-4">{error}</p>
-        <Link href="/" className="text-blue-600 hover:text-blue-800">
+        <Link href="/?focusList=true" className="text-blue-600 hover:text-blue-800">
           Ana Sayfaya Dön
         </Link>
       </div>
@@ -303,7 +303,7 @@ export default function LocksmithDetail({ params }) {
       <div className="flex min-h-screen flex-col items-center justify-center">
         <h1 className="text-2xl font-bold mb-4">Çilingir Bulunamadı</h1>
         <p className="mb-4">Aradığınız çilingir bulunamadı veya artık aktif değil.</p>
-        <Link href="/" className="text-blue-600 hover:text-blue-800">
+        <Link href="/?focusList=true" className="text-blue-600 hover:text-blue-800">
           Ana Sayfaya Dön
         </Link>
       </div>
@@ -315,7 +315,7 @@ export default function LocksmithDetail({ params }) {
       {/* Geri Butonu */}
       <div className="container mx-auto px-4 py-4">
         <Link 
-          href="/" 
+          href="/?focusList=true" 
           className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
           prefetch={true}
         >

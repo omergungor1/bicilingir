@@ -3,62 +3,75 @@ import { createRouteClient, createOrUpdateUser } from '../../../utils';
 
 export async function POST(request) {
   try {
+    // İstemci oluştur
     const { supabase } = createRouteClient(request);
-    const { sessionId, userId, userIp, userAgent } = await request.json();
     
-    // Önce users tablosunun yapısını kontrol et
-    const { data: tableInfo, error: tableError } = await supabase
-      .from('users')
-      .select('*')
-      .limit(1);
-      
-    if (tableError) {
-      console.error('Tablo yapısı kontrol edilirken hata:', tableError);
-      // Tablo yoksa oluşturmak için migration API'sini çağır
-      if (tableError.code === 'PGRST116' || tableError.code === 'PGRST204') {
-        console.log('Users tablosu bulunamadı, migration çağırılıyor...');
-        try {
-          const migrationResponse = await fetch('/api/public/supabase/migration', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              action: 'create_tables'
-            }),
-          });
-          
-          if (!migrationResponse.ok) {
-            const errData = await migrationResponse.json();
-            console.error('Migration hatası:', errData);
-          } else {
-            console.log('Migration başarılı');
-          }
-        } catch (migErr) {
-          console.error('Migration API çağrısı hatası:', migErr);
-        }
-      }
+    // İstek gövdesini al
+    const requestData = await request.json();
+    const { sessionId, userId, userIp, userAgent } = requestData;
+    
+    // console.log('User Track API', { sessionId, userId, userIp, userAgent });
+    
+    // Session ID kontrolü
+    if (!sessionId) {
+      return NextResponse.json({
+        error: "Session ID gerekli"
+      }, { status: 400 });
     }
     
     // Kullanıcı oluştur veya güncelle
-    const { userId: newUserId, isNewUser } = await createOrUpdateUser(
-      supabase, 
-      userId, 
-      sessionId, 
-      userIp, 
-      userAgent
-    );
-    
-    return NextResponse.json({
-      success: true,
-      userId: newUserId,
-      isNewUser: isNewUser
-    });
+    try {
+      // Önce userId var mı ve users tablosunda mevcut mu kontrol et
+      let newUserId = userId;
+      let isNewUser = false;
+      
+      // Eğer userId varsa, veritabanında kontrol et
+      if (userId) {
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('id', userId)
+          .limit(1);
+          
+        if (userError) {
+          console.error('Kullanıcı kontrolü sırasında hata:', userError);
+        }
+        
+        // Kullanıcı bulunamadıysa, createOrUpdateUser fonksiyonunu çağır
+        if (!userData || userData.length === 0) {
+          console.log(`Belirtilen kullanıcı ID (${userId}) veritabanında bulunamadı, yeni kayıt oluşturulacak`);
+          const result = await createOrUpdateUser(supabase, null, sessionId, userIp, userAgent);
+          newUserId = result.userId;
+          isNewUser = result.isNewUser;
+        } else {
+          console.log(`Kullanıcı ID (${userId}) bulundu, güncelleniyor...`);
+          const result = await createOrUpdateUser(supabase, userId, sessionId, userIp, userAgent);
+          newUserId = result.userId;
+          isNewUser = false; // Kullanıcı zaten var, yeni değil
+        }
+      } else {
+        // userId yoksa yeni bir kullanıcı oluştur
+        console.log('Kullanıcı ID yok, yeni kullanıcı oluşturuluyor...');
+        const result = await createOrUpdateUser(supabase, null, sessionId, userIp, userAgent);
+        newUserId = result.userId;
+        isNewUser = result.isNewUser;
+      }
+      
+      return NextResponse.json({
+        userId: newUserId,
+        sessionId,
+        isNewUser
+      });
+    } catch (error) {
+      console.error('Kullanıcı bilgileri işlenirken hata:', error);
+      return NextResponse.json({ 
+        error: "Kullanıcı bilgileri işlenirken hata oluştu" 
+      }, { status: 500 });
+    }
   } catch (error) {
-    console.error('Kullanıcı izleme hatası:', error);
-    return NextResponse.json({
-      success: false,
-      error: error.message || 'Bilinmeyen hata'
+    console.error('Kullanıcı takip hatası:', error);
+    return NextResponse.json({ 
+      error: "Sunucu hatası" 
     }, { status: 500 });
   }
 } 

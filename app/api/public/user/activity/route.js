@@ -30,28 +30,12 @@ export async function POST(request) {
     // Level bilgisini al, varsayılan olarak 1
     const activityLevel = level || 1;
     
-    // Activity türünü kontrol et, gerekiyorsa dönüştür 
-    const activityTypeMap = {
-      'arama-yapildi': 'search',
-      'cilingir-goruntuleme': 'locksmith_list_view', 
-      'cilingir-detay-goruntuleme': 'locksmith_detail_view',
-      'cilingir-arama': 'call_request',
-      'degerlendirme-gonderme': 'review_submit',
-      'profil-ziyaret': 'profile_visit',
-      'whatsapp-mesaj': 'whatsapp_message',
-      'site-ziyaret': 'website_visit',
-      'site-giris': 'website_visit'
-    };
-    
-    // Aktivite tipini kontrol et ve dönüştür (Türkçe isimse İngilizce'ye çevir)
-    const finalActivityType = activityTypeMap[activitytype] || activitytype;
-    
     // UserActivity ekle
     const activityId = await logUserActivity(
       supabase,
       userId,
       sessionId,
-      finalActivityType,
+      activitytype,
       parsedData.details || null,
       parsedData.entityId || null,
       parsedData.entityType || null,
@@ -69,7 +53,7 @@ export async function POST(request) {
     return NextResponse.json({ 
       success: true, 
       activityId,
-      message: `Aktivite kaydedildi: ${finalActivityType}`
+      message: `Aktivite kaydedildi: ${activitytype}`
     });
   } catch (error) {
     console.error('Aktivite log hatası:', error);

@@ -204,6 +204,13 @@ export default function Home() {
   // SearchParamsHandler bileşeni
   const SearchParamsHandler = ({ searchParams }) => {
     useEffect(() => {
+
+      if (searchParams.has('focusList')) {
+        setTimeout(() => {
+          document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+
       // URL'de parametre varsa (başka sayfadan yönlendirildiyse)
       if (searchParams.has('location') || searchParams.has('service') || searchParams.has('fromDetail')) {
         // URL'de fromDetail parametresi varsa, bu geri dönüş aramasıdır
@@ -217,7 +224,6 @@ export default function Home() {
         // Eğer değerler zaten seçiliyse ve detay sayfasından geliyorsa,
         // sadece arama sonuçlarını göster ama loglama yapma
         if (isFromDetailPage && currentProvinceId && currentDistrictId && currentServiceId) {
-          console.log('Detay sayfasından dönüş algılandı, loglama yapılmayacak');
           dispatch(searchLocksmiths({
             selectedValues: {
               provinceId: currentProvinceId,
@@ -404,9 +410,8 @@ export default function Home() {
       console.error('Aktivite log hatası:', error);
     }
 
-    // Detay sayfasına yönlendir
-    // URL'e fromDetail parametresi ekliyoruz
-    router.push(`/${slug}?fromDetail=true`);
+    // Detay sayfasına yönlendir, scroll davranışını engellemek için scroll=false
+    router.push(`/${slug}?fromDetail=true`, undefined, { scroll: false });
   };
 
   return (
@@ -574,23 +579,21 @@ export default function Home() {
                                 </svg>
                               )}
                             </Button>
-                            <Link href="#" passHref>
-                              <Button 
-                                variant="outline" 
-                                className="w-full"
-                                disabled={loadingLocksmithIds[locksmith.id]}
-                                onClick={() => handleViewDetails(locksmith.id, locksmith.slug)}
-                              >
-                                {loadingLocksmithIds[locksmith.id] ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <>
-                                    Detaylar
-                                    <ChevronRight className="w-4 h-4" />
-                                  </>
-                                )}
-                              </Button>
-                            </Link>
+                            <Button 
+                              variant="outline" 
+                              className="w-full"
+                              disabled={loadingLocksmithIds[locksmith.id]}
+                              onClick={() => handleViewDetails(locksmith.id, locksmith.slug)}
+                            >
+                              {loadingLocksmithIds[locksmith.id] ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <>
+                                  Detaylar
+                                  <ChevronRight className="w-4 h-4" />
+                                </>
+                              )}
+                            </Button>
                           </div>
                         </div>
                       </div>

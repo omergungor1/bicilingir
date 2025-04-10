@@ -65,7 +65,6 @@ export default function CilingirLogin() {
         console.log("useEffect: Admin yönlendirmesi yapılıyor...");
         router.push('/admin');
       } else if (role === 'cilingir') {
-        showToast("Çilingir olarak giriş yaptınız", "success");
         console.log("useEffect: Çilingir yönlendirmesi yapılıyor...");
         router.push('/cilingir');
       } else {
@@ -206,8 +205,8 @@ export default function CilingirLogin() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
+            <div className="flex items-center justify-end">
+              {/* <div className="flex items-center">
                 <input
                   id="remember-me"
                   name="remember-me"
@@ -217,7 +216,7 @@ export default function CilingirLogin() {
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
                   Beni hatırla
                 </label>
-              </div>
+              </div> */}
 
               <div className="text-sm">
                 <Link href="/cilingir/auth/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">

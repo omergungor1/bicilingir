@@ -241,6 +241,39 @@ export async function POST(request) {
       );
     }
 
+    const name = locksmithInsertData.fullname.split(' ')[0]||'';
+    //Create a welcome notification
+    const welcomeNotification = {
+      locksmithid: locksmithId,
+      title: 'Hoş Geldiniz',
+      message: 'Merhaba '+name+', Bi Çilingire hoş geldin. Seni aramızda görmek çok güzel.',
+      type: 'info',
+      createdat: new Date().toISOString()
+    }
+
+    const buyAndStartNotification = {
+      locksmithid: locksmithId,
+      title: 'Anahtar Paketlerini Gözden Geçirin',
+      message: 'Anahtar paketlerini gözden geçirin ve başlamak için satın alın. Anahtar paketleri ile 10 kata kadar fazla görünürlük elde edebilirsin.',
+      type: 'success',
+      link: '/cilingir?tab=advertising',
+      createdat: new Date().toISOString()
+    }
+
+    const { data: welcomeNotificationData, error: welcomeNotificationError } = await supabase
+      .from('notifications')
+      .insert([welcomeNotification, buyAndStartNotification])
+      .select();
+      
+    if (welcomeNotificationError) {
+      console.error('Hoş Geldiniz bildirimi kaydı hatası:', welcomeNotificationError);
+      return NextResponse.json(
+        { error: welcomeNotificationError.message },
+        { status: 500 }
+      );
+    }
+
+
     // Başarılı yanıt
     return NextResponse.json(
       {

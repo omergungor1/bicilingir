@@ -88,6 +88,18 @@ export const searchLocksmiths = createAsyncThunk(
                 userAgent
               }),
             });
+
+            console.log('firstLocksmithResponse', firstLocksmithResponse)
+            console.log('activitytype', 'locksmith_list_view')
+            console.log('level', 1)
+            console.log('locksmithId', data.locksmiths[0].id)
+            console.log('searchProvinceId', selectedValues.provinceId)
+            console.log('searchDistrictId', selectedValues.districtId)
+            console.log('searchServiceId', selectedValues.serviceId)
+            console.log('position', 1)
+            console.log('userId', userId)
+            console.log('sessionId', sessionId)
+            console.log('userAgent', userAgent)
             
             if (!firstLocksmithResponse.ok) {
               console.error('1. çilingir aktivite log hatası:', await firstLocksmithResponse.text());
