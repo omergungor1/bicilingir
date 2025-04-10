@@ -121,7 +121,6 @@ export default function CilingirLogin() {
               showToast("Admin olarak giriş yaptınız", "success");
               router.push('/admin');
             } else if (result.role === 'cilingir') {
-              showToast("Çilingir olarak giriş yaptınız", "success");
               router.push('/cilingir');
             } else {
               showToast(`Bilinmeyen rol: ${result.role}`, "warning");

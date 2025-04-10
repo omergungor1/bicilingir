@@ -327,3 +327,12 @@ CREATE TABLE locksmith_documents (
     locksmithid UUID NOT NULL,
     FOREIGN KEY (locksmithid) REFERENCES locksmiths(id) ON DELETE CASCADE
 );
+
+-- Subscriber List
+CREATE TABLE newsletter_subscribers (
+  id uuid primary key default gen_random_uuid(),
+  email text not null unique,
+  created_at timestamp with time zone default now(),
+  unsubscribed boolean default false,
+  unsubscribe_at timestamp
+);

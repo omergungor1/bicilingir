@@ -186,11 +186,20 @@ export const logoutUser = createAsyncThunk(
 
 export const checkAuthState = createAsyncThunk(
   'auth/checkState',
-  async (_, { rejectWithValue }) => {
+  async (options = {}, { rejectWithValue }) => {
     try {
+      const { silent = false } = options;
+      console.log('Auth durumu kontrol ediliyor, sessiz mod:', silent);
+      
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) return null;
+
+      // Eğer sessiz modda çalışıyorsak ve oturum varsa ek sorguları yapmaya gerek yok
+      if (silent && session) {
+        console.log('Sessiz modda oturum kontrolü: Oturum aktif');
+        return { sessionActive: true };
+      }
 
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -253,55 +262,78 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Login
+      // Login cases
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
-        console.log('loginUser.fulfilled çalışıyor, payload:', action.payload);
         state.loading = false;
         state.user = action.payload.user;
         state.role = action.payload.role;
         state.isAdmin = action.payload.role === 'admin';
         state.isCilingir = action.payload.role === 'cilingir';
         state.isAuthenticated = true;
-        console.log('State güncellendi:', { 
-          role: state.role, 
-          isAuthenticated: state.isAuthenticated 
-        });
+        state.error = null;
       })
       .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Bilinmeyen bir hata oluştu";
+      })
+      
+      // Logout cases
+      .addCase(logoutUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.loading = false;
+        state.user = null;
+        state.role = null;
+        state.isAdmin = false;
+        state.isCilingir = false;
+        state.isAuthenticated = false;
+        state.error = null;
+      })
+      .addCase(logoutUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
       
-      // Logout
-      .addCase(logoutUser.fulfilled, (state) => {
-        return initialState;
-      })
-      
-      // Check Auth State
+      // Check auth state cases
       .addCase(checkAuthState.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(checkAuthState.fulfilled, (state, action) => {
-        if (action.payload) {
-          state.loading = false;
+        state.loading = false;
+        
+        // Sessiz mod kontrolü - eğer sadece sessionActive özelliği varsa
+        // state'i güncelleme, bu sayede gereksiz render önlenmiş olur
+        if (action.payload && action.payload.sessionActive === true) {
+          // Sadece oturum kontrolü yapıldığında state'i değiştirmiyoruz
+          return;
+        }
+        
+        if (!action.payload) {
+          // Oturum yoksa tüm state'i sıfırla
+          state.user = null;
+          state.role = null;
+          state.isAdmin = false;
+          state.isCilingir = false;
+          state.isAuthenticated = false;
+        } else {
+          // Oturum varsa bilgileri güncelle
           state.user = action.payload.user;
           state.role = action.payload.role;
           state.isAdmin = action.payload.role === 'admin';
           state.isCilingir = action.payload.role === 'cilingir';
           state.isAuthenticated = true;
-        } else {
-          Object.assign(state, initialState);
         }
+        state.error = null;
       })
       .addCase(checkAuthState.rejected, (state, action) => {
-        Object.assign(state, {
-          ...initialState,
-          error: action.payload
-        });
+        state.loading = false;
+        state.error = action.payload;
       });
   }
 });

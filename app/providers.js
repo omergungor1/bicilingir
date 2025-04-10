@@ -11,13 +11,15 @@ export default function Providers({ children }) {
     // Kullanıcı oturumunu başlat
     store.dispatch(initUserSession());
     
-    // Kimlik doğrulama durumunu kontrol et
+    // Kimlik doğrulama durumunu kontrol et - sadece ilk yüklemede
     store.dispatch(checkAuthState());
     
-    // 60 saniyede bir oturum durumunu kontrol et (token yenileme)
+    // Oturum kontrolü için interval - 5 dakikada bir yap
+    // Böylece her dakikada bir yenileme sorunu ortadan kalkacak
     const authCheckInterval = setInterval(() => {
-      store.dispatch(checkAuthState());
-    }, 60000);
+      // Sadece token kontrolü yap, tam sayfa yenileme olmadan
+      store.dispatch(checkAuthState({ silent: true }));
+    }, 300000); // 5 dakikaya çıkarıldı (300000 ms)
     
     return () => clearInterval(authCheckInterval);
   }, []);

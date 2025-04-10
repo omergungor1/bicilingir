@@ -1,9 +1,10 @@
-import React from "react";
+"use client"
+
+import React, { useState } from "react";
 import Link from "next/link";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import Hero from "../../components/Hero";
-import SearchForm from "../../components/SearchForm";
 
 const benefits = [
   {
@@ -95,6 +96,41 @@ const testimonials = [
 ];
 
 export default function CilingirlerPage() {
+  const [email, setEmail] = useState('');
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    //Tamamlanacak
+    setIsLoading(true);
+    console.log('Email:', email);
+
+    try {
+      const response = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Abonelik hatası');
+      }
+
+      setIsSubscribed(true);
+      setEmail('');
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Abonelik hatası:', error);
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
+    }
+
+  };
+
   return (
     <main className="flex min-h-screen flex-col items-center">
       {/* Hero Bölümü */}
@@ -199,10 +235,10 @@ export default function CilingirlerPage() {
           <p className="text-xl max-w-3xl mx-auto mb-8">
             Türkiye'nin en büyük çilingir ağının bir parçası olun, işinizi büyütün ve kazancınızı artırın.
           </p>
-          <Link href="/cilingir/kayit">
-          <Button className="bg-white text-blue-600 hover:bg-gray-100 font-bold text-lg px-8 py-4 cursor-pointer">
-            Şimdi Başvur
-          </Button>
+          <Link href="/cilingir/auth/register">
+            <Button className="bg-white text-blue-600 hover:bg-gray-100 font-bold text-lg px-8 py-4 cursor-pointer">
+              Şimdi Başvur
+            </Button>
           </Link>
         </div>
       </section>
@@ -243,23 +279,54 @@ export default function CilingirlerPage() {
 
       {/* Bülten Bölümü */}
       <section className="w-full bg-gradient-to-r from-[#4169E1] to-[#6495ED] text-white py-16">
-        <div className="container mx-auto px-4 py-16 text-center">
+        <form onSubmit={handleSubscribe} className="container mx-auto px-4 py-16 text-center">
           <h2 className="text-3xl font-bold mb-4">Bültenimize Abone Olun</h2>
           <p className="text-lg mb-8 max-w-2xl mx-auto">
             Kampanyalardan, indirimlerden ve yeni hizmetlerimizden haberdar olmak için çilingirler için özenle hazırladığımız bültenimize abone olun. Güncel haberleri kaçırmayın!
           </p>
           
-          <div className="max-w-md mx-auto flex gap-2">
+          <div className="max-w-md mx-auto flex items-center gap-2">
             <Input 
               type="email" 
               placeholder="E-posta adresiniz" 
+              name="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="bg-white text-gray-800 rounded-l-lg w-full"
             />
-            <Button className="bg-white text-blue-600 font-bold py-2 px-6 rounded-r-lg cursor-pointer">
-              ABONE OL
+            <Button 
+              type="submit"
+              disabled={isLoading}
+              className={`font-bold py-2 px-6 rounded-r-lg transition-all duration-300 ${
+                isSubscribed 
+                  ? "bg-green-500 text-white cursor-default hover:bg-green-500" 
+                  : isLoading 
+                    ? "bg-gray-300 text-gray-500 cursor-wait" 
+                    : "bg-white text-blue-600 hover:bg-blue-50 cursor-pointer"
+              }`}
+            >
+              {isSubscribed ? (
+                <span className="flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Abone Oldunuz
+                </span>
+              ) : isLoading ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  İşleniyor...
+                </span>
+              ) : (
+                "Abone Ol"
+              )}
             </Button>
           </div>
-        </div>
+        </form>
       </section>
     </main>
   );
