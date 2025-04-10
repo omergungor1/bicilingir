@@ -1782,7 +1782,7 @@ export default function CilingirKayit() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Saatlik Müşteri Limiti</label>
+                    <label className="block text-sm font-medium mb-2">Bir Saatte max Kaç Müşteriye Hizmet Verebilirsiniz?</label>
                     <Input 
                       name="maxMusteriLimiti"
                       value={formData.maxMusteriLimiti}

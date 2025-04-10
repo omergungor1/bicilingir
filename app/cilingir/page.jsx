@@ -564,7 +564,6 @@ function CilingirPanelContent() {
   }, []);
 
 
-
   const [businessImages, setBusinessImages] = useState([]);
   const [mainImageIndex, setMainImageIndex] = useState(0);
   const [isUploading, setIsUploading] = useState(false);

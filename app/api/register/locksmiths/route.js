@@ -120,11 +120,6 @@ export async function POST(request) {
       );
     }
 
-    //devammmm...
-    console.log('POST:');
-    console.log('locksmithServicesInsertData:',locksmithServicesInsertData);
-    console.log('locksmithDistrictsInsertData:',locksmithDistrictsInsertData);
-    console.log('locksmithWorkingHoursInsertData:',locksmithWorkingHoursInsertData);
 
 
     const serviceObjects = locksmithServicesInsertData.services.map(serviceId => ({
@@ -195,7 +190,56 @@ export async function POST(request) {
       );
     }
 
+    const dailyKeyPreferencesObjects = [{
+      locksmithid: locksmithId, 
+      dayofweek: 0,
+      keyamount: 60,  
+      isactive: true
+    },{
+      locksmithid: locksmithId, 
+      dayofweek: 1,
+      keyamount: 60,
+      isactive: true
+    },{
+      locksmithid: locksmithId, 
+      dayofweek: 2,
+      keyamount: 60,
+      isactive: true
+    },{
+      locksmithid: locksmithId, 
+      dayofweek: 3,
+      keyamount: 60,
+      isactive: true
+    },{
+      locksmithid: locksmithId, 
+      dayofweek: 4,
+      keyamount: 60,
+      isactive: true
+    },{
+      locksmithid: locksmithId, 
+      dayofweek: 5,
+      keyamount: 60,
+      isactive: true
+    },{
+      locksmithid: locksmithId, 
+      dayofweek: 6,
+      keyamount: 60,
+      isactive: true
+    }];
 
+    //daily_key_preferences tablosuna kayıt
+    const { data: dailyKeyPreferencesData, error: dailyKeyPreferencesError } = await supabase
+      .from('daily_key_preferences')
+      .insert(dailyKeyPreferencesObjects)
+      .select();
+    
+    if (dailyKeyPreferencesError) {
+      console.error('Günlük anahtar tercihleri kaydı hatası:', dailyKeyPreferencesError);
+      return NextResponse.json(
+        { error: dailyKeyPreferencesError.message },
+        { status: 500 }
+      );
+    }
 
     // Başarılı yanıt
     return NextResponse.json(
