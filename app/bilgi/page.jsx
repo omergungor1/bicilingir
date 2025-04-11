@@ -180,18 +180,20 @@ export default function CilingirlerPage() {
           <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">Nasıl Çalışır?</h2>
           <div className="flex flex-col md:flex-row justify-between items-start">
             {steps.map((step, index) => (
-              <div key={step.id} className="flex-1 text-center mb-8 md:mb-0 px-4">
-                <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                  {step.id}
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-gray-800">{step.title}</h3>
-                <p className="text-gray-600">{step.description}</p>
-                {index < steps.length - 1 && (
-                  <div className="hidden md:block absolute transform translate-x-full">
-                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
+              <div key={step.id} className="flex flex-row justify-between items-start md:mb-0 px-4">
+                <div className="flex-1 text-center">
+                  <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                    {step.id}
                   </div>
+                  <h3 className="text-xl font-bold mb-2 text-gray-800">{step.title}</h3>
+                  <p className="text-gray-600">{step.description}</p>
+                </div>
+                {index < steps.length - 1 && (
+                <div className="hidden md:block transform translate-x-full">
+                  <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </div>
                 )}
               </div>
             ))}

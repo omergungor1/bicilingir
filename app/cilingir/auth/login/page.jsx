@@ -257,7 +257,7 @@ export default function CilingirLogin() {
           <div className="flex flex-col space-y-4">
         
           <div className="text-xs mt-2 text-center text-gray-500">
-            Giriş yaparak, Bi Çilingir'in <Link href="/terms" className="text-blue-600 hover:underline">hizmet şartlarını</Link> ve <Link href="/privacy" className="text-blue-600 hover:underline">gizlilik politikasını</Link> kabul etmiş olursunuz.
+            Giriş yaparak, Bi Çilingir'in <Link href="/terms" target="_blank" className="text-blue-600 hover:underline">hizmet şartlarını</Link> ve <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline">gizlilik politikasını</Link> kabul etmiş olursunuz.
           </div>
         </div>
         </div>

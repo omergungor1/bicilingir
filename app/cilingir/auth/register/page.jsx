@@ -28,6 +28,7 @@ import Image from '@tiptap/extension-image';
 import { Instagram } from 'lucide-react';
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../../../../redux/features/authSlice";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../../../components/ui/dialog";
 
 
 // Dosya yükleme işlevleri
@@ -431,7 +432,7 @@ export default function CilingirKayit() {
   const { showToast } = useToast();
   const dispatch = useDispatch();
   const authState = useSelector(state => state.auth);
-  const [activeStep, setActiveStep] = useState(1);
+  const [activeStep, setActiveStep] = useState(0);
   const [isLoadingAi, setIsLoadingAi] = useState({
     tagline: false,
     hakkinda:false
@@ -439,6 +440,7 @@ export default function CilingirKayit() {
 
   const [isFormSubmitting, setIsFormSubmitting] = useState(false);
 
+  const [areYouSure, setAreYouSure] = useState(false);
 
   const [isCertificateModalOpen, setIsCertificateModalOpen] = useState(false);
   const [errors, setErrors] = useState({});
@@ -1267,7 +1269,11 @@ export default function CilingirKayit() {
   };
 
   const prevStep = () => {
-    setActiveStep(activeStep - 1);
+    if (activeStep > 1) {
+      setActiveStep(activeStep - 1);
+    } else if (activeStep === 1) {
+      setActiveStep(0);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -1539,517 +1545,617 @@ export default function CilingirKayit() {
   }, [editor]);
 
   return (
-    <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-8 text-center">Çilingir Kayıt</h1>
-      {activeStep<7 && <div className="mb-8">
-        {/* Büyük ekranlar için adım göstergeleri */}
-        <div className="flex justify-between items-center relative">
-          {[1, 2, 3, 4, 5, 6].map((step) => (
-            <div key={step} className="flex flex-col items-center relative z-10">
-              <div 
-                onClick={() => handleStepClick(step)}
-                className={`w-10 h-10 rounded-full flex items-center justify-center cursor-pointer  
-                  ${activeStep >= step ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}
-              >
-                {step}
-              </div>
-              <span className={`mt-2 text-sm ${activeStep >= step ? 'text-blue-600' : 'text-gray-500'} hidden md:block`}>
-                {step === 1 && "Kişisel Bilgiler"}
-                {step === 2 && "İşletme Bilgileri"}
-                {step === 3 && "Hizmetler ve Bölgeler"}
-                {step === 4 && "İşletme Açıklaması"}
-                {step === 5 && "İşletme Resimleri"}
-                {step === 6 && "Evrak Yükleme"}
-              </span>
-            </div>
-          ))}
-          <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200 -z-10">
-            <div 
-              className="h-full bg-blue-600 transition-all" 
-              style={{ width: `${(activeStep - 1) * 20}%` }}
-            ></div>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-400 to-blue-600 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto">
+        {activeStep>0 && <div className="text-center mb-10">
+          <h1 className="text-3xl font-bold text-white mb-2 drop-shadow-md">Çilingir Kayıt</h1>
+          <p className="text-blue-100">Bi Çilingir platformuna üye olarak müşterilerinize daha kolay ulaşın</p>
+        </div>}
         
-        {/* Mobil için adım adı */}
-        <div className="md:hidden text-center mt-4 py-3 px-4 bg-blue-50 rounded-md border border-blue-100 shadow-sm transition-all duration-300 transform hover:shadow">
-          <span className="text-blue-700 font-medium">
-            {activeStep} -&nbsp;
-            {activeStep === 1 && "Kişisel Bilgiler"}
-            {activeStep === 2 && "İşletme Bilgileri"}
-            {activeStep === 3 && "Hizmetler ve Bölgeler"}
-            {activeStep === 4 && "İşletme Açıklaması"}
-            {activeStep === 5 && "İşletme Resimleri"}
-            {activeStep === 6 && "Evrak Yükleme"}
-          </span>
-        </div>
-      </div>}
-
-      <Card className="max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle>
-            {activeStep === 1 && "Kişisel Bilgiler"}
-            {activeStep === 2 && "İşletme Bilgileri"}
-            {activeStep === 3 && "Bölge ve Hizmetler"}
-            {activeStep === 4 && "İşletme Açıklaması"}
-            {activeStep === 5 && "İşletme Resimleri"}
-            {activeStep === 6 && "Evrak Yükleme"}
-            {activeStep === 7 && "Onaylar"}
-            {activeStep === 8 && "Başvuru Tamamlandı"}
-          </CardTitle>
-          <CardDescription>
-            {activeStep === 1 && "Lütfen kişisel bilgilerinizi girin"}
-            {activeStep === 2 && "İşletmeniz hakkında detayları girin"}
-            {activeStep === 3 && "Hizmet verdiğiniz bölgeleri ve sunduğunuz hizmetleri seçin"}
-            {activeStep === 4 && "İşletme açıklamasını girin"}
-            {activeStep === 5 && "İşletme resimlerinizi yükleyin"}
-            {activeStep === 6 && "Gerekli belgeleri yükleyin"}
-            {activeStep === 7 && "Başvurunuzu tamamlamak için gereken onayları verin"}
-            {activeStep === 8 && "Başvurunuz başarıyla alınmıştır"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit}>
-            {/* Adım 1: Kişisel Bilgiler */}
-            {activeStep === 1 && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="mb-4">
-                    <label 
-                      htmlFor="adSoyad"
-                      className="block text-sm font-medium text-gray-700 mb-1">
-                      Ad Soyad
-                    </label>
-                    <input
-                      type="text"
-                      id="adSoyad"
-                      name="adSoyad"
-                      value={formData.adSoyad}
-                      onChange={handleChange}
-                      className={`mt-1 h-10 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                      ${errors.adSoyad ? 'border-red-500' : 'border-gray-300'}`}
-                    />
-                    {errors.adSoyad && (
-                      <p className="mt-1 text-sm text-red-600">{errors.adSoyad}</p>
-                    )}
-                  </div>
-                  <div className="mb-4">
-                    <label 
-                      htmlFor="telefon"
-                      className="block text-sm font-medium text-gray-700 mb-1">
-                      Telefon
-                    </label>
-                    <input
-                      type="tel"
-                      id="telefon"
-                      name="telefon"
-                      value={formatPhoneNumber(formData.telefon)}
-                      onChange={handleChange}
-                      maxLength={14}
-                      placeholder="05XX XXX XX XX"
-                      className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                      ${errors.telefon ? 'border-red-500' : 'border-gray-300'}`}
-                    />
-                    {errors.telefon && (
-                      <p className="mt-1 text-sm text-red-600">{errors.telefon}</p>
-                    )}
-                  </div>
+        {activeStep > 0 && activeStep < 7 && <div className="mb-8 bg-white/20 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+          {/* Büyük ekranlar için adım göstergeleri */}
+          <div className="flex justify-between items-center relative">
+            {[1, 2, 3, 4, 5, 6].map((step) => (
+              <div key={step} className="flex flex-col items-center relative z-10">
+                <div 
+                  onClick={() => handleStepClick(step)}
+                  className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center cursor-pointer shadow-md transition-all duration-300 
+                    ${activeStep >= step 
+                      ? 'bg-blue-600 text-white border-2 border-white' 
+                      : 'bg-white/80 text-blue-600'}`}
+                >
+                  {step}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="mb-4">
-                    <label 
-                      htmlFor="email"
-                      className="block text-sm font-medium text-gray-700 mb-1">
-                      E-posta
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                      ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
-                    />
-                    {errors.email && (
-                      <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-                    )}
-                  </div>
-                  <div className="mb-4">
-                    <label 
-                      htmlFor="startDate"
-                      className="block text-sm font-medium text-gray-700 mb-1">
-                      İşe Başlangıç Yılı
-                    </label>
-                    <select
-                      id="startDate"
-                      name="startDate"
-                      value={formData.startDate}
-                      onChange={handleChange}
-                      className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                      ${errors.startDate ? 'border-red-500' : 'border-gray-300'}`}
-                    >
-                      <option value="">Yıl Seçiniz</option>
-                      {Array.from({ length: new Date().getFullYear() - 2000 }, (_, i) => 2000 + i).map((yil) => (
-                        <option key={yil} value={yil}>
-                          {yil}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.startDate && (
-                      <p className="mt-1 text-sm text-red-600">{errors.startDate}</p>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="mb-4">
-                    <label 
-                      htmlFor="sifre"
-                      className="block text-sm font-medium text-gray-700 mb-1">
-                      Şifre
-                    </label>
-                    <input
-                      type="password"
-                      id="sifre"
-                      name="sifre"
-                      value={formData.sifre}
-                      onChange={handleChange}
-                      className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                      ${errors.sifre ? 'border-red-500' : 'border-gray-300'}`}
-                    />
-                    {errors.sifre && (
-                      <p className="mt-1 text-sm text-red-600">{errors.sifre}</p>
-                    )}
-                  </div>
-                  <div className="mb-4">
-                    <label 
-                      htmlFor="sifreTekrari"
-                      className="block text-sm font-medium text-gray-700 mb-1">
-                      Şifre Tekrarı
-                    </label>
-                    <input
-                      type="password"
-                      id="sifreTekrari"
-                      name="sifreTekrari"
-                      value={formData.sifreTekrari}
-                      onChange={handleChange}
-                      className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                      ${errors.sifreTekrari ? 'border-red-500' : 'border-gray-300'}`}
-                    />
-                    {errors.sifreTekrari && (
-                      <p className="mt-1 text-sm text-red-600">{errors.sifreTekrari}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex justify-between mt-8">
-                  <Link href="/bilgi" >
-                    <Button type="button" variant="outline" >İptal</Button>
-                  </Link> 
-                  <Button type="button" onClick={nextStep}>İleri</Button>
-                </div>
+                <span className={`mt-3 text-sm font-medium ${activeStep >= step ? 'text-white' : 'text-blue-100'} hidden md:block`}>
+                  {step === 1 && "Kişisel Bilgiler"}
+                  {step === 2 && "İşletme Bilgileri"}
+                  {step === 3 && "Hizmetler ve Bölgeler"}
+                  {step === 4 && "İşletme Açıklaması"}
+                  {step === 5 && "İşletme Resimleri"}
+                  {step === 6 && "Evrak Yükleme"}
+                </span>
               </div>
-            )}
+            ))}
+            <div className="absolute top-4 md:top-6 left-0 right-0 h-2 bg-white/30 -z-10 rounded-full">
+              <div 
+                className="h-full bg-white rounded-full transition-all shadow-md" 
+                style={{ width: `${(activeStep - 1) * 20}%` }}
+              ></div>
+            </div>
+          </div>
+          
+          {/* Mobil için adım adı */}
+          <div className="md:hidden flex flex-col justify-center text-center mt-4 py-3 px-4 bg-white/80 rounded-md shadow-md transition-all duration-300 transform hover:shadow-lg">
+            <span className="text-blue-700 font-medium">
+              {activeStep} -&nbsp;
+              {activeStep === 1 && "Kişisel Bilgiler"}
+              {activeStep === 2 && "İşletme Bilgileri"}
+              {activeStep === 3 && "Hizmetler ve Bölgeler"}
+              {activeStep === 4 && "İşletme Açıklaması"}
+              {activeStep === 5 && "İşletme Resimleri"}
+              {activeStep === 6 && "Evrak Yükleme"}
+            </span>
+            <span className="text-blue-600 font-regular text-sm">
+              {activeStep === 1 && "Lütfen kişisel bilgilerinizi girin"}
+              {activeStep === 2 && "İşletmeniz hakkında detayları girin"}
+              {activeStep === 3 && "Hizmet verdiğiniz bölgeleri ve sunduğunuz hizmetleri seçin"}
+              {activeStep === 4 && "İşletme açıklamasını girin"}
+              {activeStep === 5 && "İşletme resimlerinizi yükleyin"}
+              {activeStep === 6 && "Gerekli belgeleri yükleyin"}
+              {activeStep === 7 && "Başvurunuzu tamamlamak için gereken onayları verin"}
+              {activeStep === 8 && "Başvurunuz başarıyla alınmıştır"}
+            </span>
+          </div>
+        </div>}
 
-            {/* Adım 2: İşletme Bilgileri */}
-            {activeStep === 2 && (
-              <div className="space-y-6">
-                <div>
-                  <label htmlFor="isletmeAdi" className="block text-sm font-medium text-gray-700">
-                    İşletme Adı
-                  </label>
-                  <input
-                    type="text"
-                    id="isletmeAdi"
-                    name="isletmeAdi"
-                    className={`mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${errors.isletmeAdi ? 'border-red-500' : ''}`}
-                    value={formData.isletmeAdi || ''}
-                    onChange={handleChange}
-                  />
-                  {errors.isletmeAdi && <p className="mt-1 text-sm text-red-600">{errors.isletmeAdi}</p>}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Personel Sayısı</label>
-                    <Input 
-                      name="personelSayisi"
-                      value={formData.personelSayisi}
-                      onChange={handleChange}
-                      placeholder="Örn: 2"
-                      type="number"
-                    />
+        <Card className="max-w-4xl mx-auto backdrop-blur-sm bg-white/90 shadow-2xl border-0">
+          {activeStep>0 && <CardHeader className="hidden md:block bg-gradient-to-r from-blue-600 to-blue-800 text-white py-1">
+            <CardTitle className="text-2xl">
+              {activeStep === 0 && "Bi Çilingir'e Hoş Geldiniz"}
+              {activeStep === 1 && "Kişisel Bilgiler"}
+              {activeStep === 2 && "İşletme Bilgileri"}
+              {activeStep === 3 && "Bölge ve Hizmetler"}
+              {activeStep === 4 && "İşletme Açıklaması"}
+              {activeStep === 5 && "İşletme Resimleri"}
+              {activeStep === 6 && "Evrak Yükleme"}
+              {activeStep === 7 && "Onaylar"}
+              {activeStep === 8 && "Başvuru Tamamlandı"}
+            </CardTitle>
+            <CardDescription className="text-blue-100">
+              {activeStep === 0 && "Türkiye'nin en büyük çilingir platformuna katılın ve işlerinizi büyütün"}
+              {activeStep === 1 && "Lütfen kişisel bilgilerinizi girin"}
+              {activeStep === 2 && "İşletmeniz hakkında detayları girin"}
+              {activeStep === 3 && "Hizmet verdiğiniz bölgeleri ve sunduğunuz hizmetleri seçin"}
+              {activeStep === 4 && "İşletme açıklamasını girin"}
+              {activeStep === 5 && "İşletme resimlerinizi yükleyin"}
+              {activeStep === 6 && "Gerekli belgeleri yükleyin"}
+              {activeStep === 7 && "Başvurunuzu tamamlamak için gereken onayları verin"}
+              {activeStep === 8 && "Başvurunuz başarıyla alınmıştır"}
+            </CardDescription>
+          </CardHeader>}
+          <CardContent>
+            <form onSubmit={handleSubmit}>
+              
+              {/* İptal Onay Modal */}
+              <Dialog open={areYouSure} onOpenChange={setAreYouSure}>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Kayıt işleminden çıkmak istediğinize emin misiniz?</DialogTitle>
+                  </DialogHeader>
+                  <div className="py-4 text-center">
+                    <p className="text-muted-foreground mb-2">Kayıt işleminden çıkarsanız, şimdiye kadar girdiğiniz bilgiler kaydedilmeyecektir.</p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Bir Saatte max Kaç Müşteriye Hizmet Verebilirsiniz?</label>
-                    <Input 
-                      name="maxMusteriLimiti"
-                      value={formData.maxMusteriLimiti}
-                      onChange={handleChange}
-                      placeholder="Örn: 5"
-                      type="number"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="mb-4">
-                    <label 
-                      htmlFor="il"
-                      className="block text-sm font-medium text-gray-700 mb-1">
-                      İl
-                    </label>
-                    <select
-                      id="il"
-                      name="il"
-                      value={formData.il}
-                      onChange={handleChange}
-                      className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                      ${errors.il ? 'border-red-500' : 'border-gray-300'}`}
+                  <DialogFooter className="flex flex-row justify-center gap-2 sm:justify-center">
+                    <Button variant="outline" onClick={() => setAreYouSure(false)}>
+                      Hayır, kaydıma devam et
+                    </Button>
+                    <Button 
+                      type="button"
+                      variant="destructive"
+                      onClick={() => window.location.href = "/bilgi"}
                     >
-                      <option value="">İl Seçiniz</option>
-                      {turkiyeIlIlce.provinces.map((il) => (
-                        <option key={il.id} value={il.id}>
-                          {il.name}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.il && (
-                      <p className="mt-1 text-sm text-red-600">{errors.il}</p>
-                    )}
-                  </div>
-                  <div className="mb-4">
-                    <label 
-                      htmlFor="ilce"
-                      className="block text-sm font-medium text-gray-700 mb-1">
-                      İlçe
-                    </label>
-                    <select
-                      id="ilce"
-                      name="ilce"
-                      value={formData.ilce}
-                      onChange={handleChange}
-                      className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                      ${errors.ilce ? 'border-red-500' : 'border-gray-300'}`}
-                      disabled={!formData.il}
-                    >
-                      <option value="">İlçe Seçiniz</option>
-                      {turkiyeIlIlce.districts.filter(ilce => ilce.province_id==formData.il).map((ilce) => (
-                        <option key={ilce.id} value={ilce.id}>
-                          {ilce.name}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.ilce && (
-                      <p className="mt-1 text-sm text-red-600">{errors.ilce}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="mb-4">
-                  <label 
-                    htmlFor="acikAdres"
-                    className="block text-sm font-medium text-gray-700 mb-1">
-                    Açık Adres
-                  </label>
-                  <textarea
-                    id="acikAdres"
-                    name="acikAdres"
-                    rows="3"
-                    value={formData.acikAdres}
-                    onChange={handleChange}
-                    className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                    ${errors.acikAdres ? 'border-red-500' : 'border-gray-300'}`}
-                  ></textarea>
-                  {errors.acikAdres && (
-                    <p className="mt-1 text-sm text-red-600">{errors.acikAdres}</p>
-                  )}
-                </div>
-
-                {/* Çalışma Saatleri */}
-                <div>
-                  <h4 className="font-medium mb-4 mt-6">Çalışma Saatleri</h4>
-                  <div className="space-y-4">
-                    { dailyHours.map((day) => (
-                      <div key={day.dayofweek} className="flex md:items-center items-start md:flex-row flex-col justify-between border p-3 rounded-md bg-gray-50">
-                        <div className="flex items-center space-x-3">
-                          <Checkbox 
-                            id={`workday-${day.dayofweek}`} 
-                            checked={day.isworking}
-                            onCheckedChange={(checked) => {
-                              handleWorkDayToggle(day.dayofweek, !!checked);
-                            }}
-                          />
-                          <label 
-                            htmlFor={`workday-${day.dayofweek}`} 
-                            className={`font-medium ${!day.isworking ? "text-gray-400" : ""}`}
-                          >
-                            {day.dayofweek==0 ? "Pazartesi" : day.dayofweek==1 ? "Salı" : day.dayofweek==2 ? "Çarşamba" : day.dayofweek==3 ? "Perşembe" : day.dayofweek==4 ? "Cuma" : day.dayofweek==5 ? "Cumartesi" : "Pazar"}
-                          </label>
-                        </div>
-                        <div className="flex items-center space-x-2 md:mt-0 mt-2">
-                          <div className="flex items-center space-x-2 mr-4">
-                            <Checkbox 
-                              id={`24hours-${day.dayofweek}`}
-                              checked={day.isworking && day.is24hopen}
-                              onCheckedChange={(checked) => {
-                                handle24HourToggle(day.dayofweek, !!checked);
-                              }}
-                              disabled={!day.isworking}
-                            />
-                            <label 
-                              htmlFor={`24hours-${day.dayofweek}`}
-                              className={`text-sm ${!day.isworking ? "text-gray-400" : ""}`}
-                            >
-                              24 Saat
-                            </label>
-                          </div>
-                          <Input 
-                            type="time"
-                            value={day.opentime ? day.opentime.substring(0, 5) : "09:00"}
-                            onChange={(e) => {
-                              handleTimeChange(day.dayofweek, 'start', e.target.value);
-                            }}
-                            disabled={!day.isworking || day.is24hopen}
-                            className={`w-24 ${(!day.isworking || day.is24hopen) ? "bg-gray-100 text-gray-400" : ""}`}
-                          />
-                          <span className={!day.isworking ? "text-gray-400" : ""}>-</span>
-                          <Input 
-                            type="time"
-                            value={day.closetime ? day.closetime.substring(0, 5) : "18:00"}
-                            onChange={(e) => {
-                              handleTimeChange(day.dayofweek, 'end', e.target.value);
-                            }}
-                            disabled={!day.isworking || day.is24hopen}
-                            className={`w-24 ${(!day.isworking || day.is24hopen) ? "bg-gray-100 text-gray-400" : ""}`}
-                          />
-                          <span className={`ml-2 text-sm ${day.isworking ? "text-green-600" : "text-red-500"}`}>
-                            {day.isworking ? "Açık" : "Kapalı"}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Sosyal Medya Linkleri */}
-                  <div className="md:col-span-2 mt-4">
-                    <h3 className="text-lg font-medium mb-3">Sosyal Medya Hesaplarınız</h3>
-                    <p className="text-sm text-gray-500 mb-4">
-                      İşletmenizin sosyal medya hesaplarını ekleyebilirsiniz. Bu alanlar opsiyoneldir.
+                      Evet, çıkacağım
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              
+              {/* Hoş Geldin Ekranı */}
+              {activeStep === 0 && (
+                <div className="py-6">
+                  <div className="flex flex-col items-center mb-10">
+                    <h2 className="text-2xl font-bold text-center mb-4">Çilingir İşletmenizi Büyütün</h2>
+                    <p className="text-center text-gray-600 max-w-2xl mb-8">
+                      Bi Çilingir platformu ile işletmenizi dijital dünyada tanıtın, daha fazla müşteriye ulaşın ve işlerinizi büyütün.
                     </p>
                   </div>
                   
-                  <div className="mb-4">
-                    <div className="flex items-center mb-4">
-                      <Instagram className="h-6 w-6 text-pink-600 mr-2" />
-                      <label 
-                        htmlFor="instagram"
-                        className="block text-sm font-medium text-gray-700 mb-1">
-                        Instagram Linki
-                      </label>
-                    </div>                    
-                    <input
-                      type="text"
-                      id="instagram"
-                      name="sosyalMedya.instagram"
-                      value={formData.sosyalMedya.instagram}
-                      onChange={handleSosyalMedyaChange}
-                      placeholder="https://www.instagram.com/kullaniciadi"
-                      className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                      ${errors['sosyalMedya.instagram'] ? 'border-red-500' : 'border-gray-300'}`}
-                    />
-                    {errors['sosyalMedya.instagram'] && (
-                      <p className="mt-1 text-sm text-red-600">{errors['sosyalMedya.instagram']}</p>
-                    )}
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                      </svg>
-                      <label 
-                        htmlFor="facebook"
-                        className="block text-sm font-medium text-gray-700 mb-1">
-                        Facebook Linki
-                      </label>
-                    </div>                    
-                    <input
-                      type="text"
-                      id="facebook"
-                      name="sosyalMedya.facebook"
-                      value={formData.sosyalMedya.facebook}
-                      onChange={handleSosyalMedyaChange}
-                      placeholder="https://www.facebook.com/sayfaadi"
-                      className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                      ${errors['sosyalMedya.facebook'] ? 'border-red-500' : 'border-gray-300'}`}
-                    />
-                    {errors['sosyalMedya.facebook'] && (
-                      <p className="mt-1 text-sm text-red-600">{errors['sosyalMedya.facebook']}</p>
-                    )}
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                      </svg>
-                      <label 
-                        htmlFor="youtube"
-                        className="block text-sm font-medium text-gray-700 mb-1">
-                        YouTube Linki
-                    </label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    <div className="bg-blue-50 p-6 rounded-lg text-center hover:shadow-md transition-all">
+                      <div className="bg-blue-100 w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-xl font-bold mb-3 text-gray-800">Daha Fazla Müşteri</h3>
+                      <p className="text-gray-600">Çilingir arayanlar artık size kolayca ulaşabilir. Size özel profil sayfanızla müşterilerinizi artırın.</p>
                     </div>
-                    <input
-                      type="text"
-                      id="youtube"
-                      name="sosyalMedya.youtube"
-                      value={formData.sosyalMedya.youtube}
-                      onChange={handleSosyalMedyaChange}
-                      placeholder="https://www.youtube.com/c/kanaladi"
-                      className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                      ${errors['sosyalMedya.youtube'] ? 'border-red-500' : 'border-gray-300'}`}
-                    />
-                    {errors['sosyalMedya.youtube'] && (
-                      <p className="mt-1 text-sm text-red-600">{errors['sosyalMedya.youtube']}</p>
-                    )}
+                    
+                    <div className="bg-blue-50 p-6 rounded-lg text-center hover:shadow-md transition-all">
+                      <div className="bg-blue-100 w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-xl font-bold mb-3 text-gray-800">Artan Kazanç</h3>
+                      <p className="text-gray-600">Dijital kanallar üzerinden gelen ilave müşterilerle işletmenizin cirosu artacak ve daha yüksek kazanç elde edeceksiniz.</p>
+                    </div>
+                    
+                    <div className="bg-blue-50 p-6 rounded-lg text-center hover:shadow-md transition-all">
+                      <div className="bg-blue-100 w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-xl font-bold mb-3 text-gray-800">Profesyonel Görünüm</h3>
+                      <p className="text-gray-600">Profesyonel iş profili ve müşteri yorumlarıyla işletmenize güven oluşturun ve markanızı büyütün.</p>
+                    </div>
                   </div>
                   
-                  <div className="mb-4">
-                    <div className="flex items-center mb-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black mr-2" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
-                      </svg>                    
-                      <label 
-                        htmlFor="tiktok"
-                        className="block text-sm font-medium text-gray-700 mb-1">
-                        TikTok Linki
-                      </label>
-                    </div>
-                    <input
-                      type="text"
-                      id="tiktok"
-                      name="sosyalMedya.tiktok"
-                      value={formData.sosyalMedya.tiktok}
-                      onChange={handleSosyalMedyaChange}
-                      placeholder="https://www.tiktok.com/@kullaniciadi"
-                      className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                      ${errors['sosyalMedya.tiktok'] ? 'border-red-500' : 'border-gray-300'}`}
-                    />
-                    {errors['sosyalMedya.tiktok'] && (
-                      <p className="mt-1 text-sm text-red-600">{errors['sosyalMedya.tiktok']}</p>
-                    )}
+                  <div className="flex justify-center">
+                    <Button 
+                      type="button" 
+                      onClick={() => setActiveStep(1)} 
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg rounded-lg shadow-lg transition-all hover:scale-105"
+                    >
+                      Hemen Kayıt Olmaya Başla →
+                    </Button>
                   </div>
                 </div>
+              )}
 
-                <div className="flex justify-between mt-8">
-                  <Button type="button" variant="outline" onClick={prevStep}>Geri</Button>
-                  <Button type="button" onClick={nextStep}>İleri</Button>
+              {/* Adım 1: Kişisel Bilgiler */}
+              {activeStep === 1 && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="mb-4">
+                      <label 
+                        htmlFor="adSoyad"
+                        className="block text-sm font-medium text-gray-700 mb-1">
+                        Ad Soyad
+                      </label>
+                      <input
+                        type="text"
+                        id="adSoyad"
+                        name="adSoyad"
+                        value={formData.adSoyad}
+                        onChange={handleChange}
+                        className={`mt-1 h-10 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
+                        ${errors.adSoyad ? 'border-red-500' : 'border-gray-300'}`}
+                      />
+                      {errors.adSoyad && (
+                        <p className="mt-1 text-sm text-red-600">{errors.adSoyad}</p>
+                      )}
+                    </div>
+                    <div className="mb-4">
+                      <label 
+                        htmlFor="telefon"
+                        className="block text-sm font-medium text-gray-700 mb-1">
+                        Telefon
+                      </label>
+                      <input
+                        type="tel"
+                        id="telefon"
+                        name="telefon"
+                        value={formatPhoneNumber(formData.telefon)}
+                        onChange={handleChange}
+                        maxLength={14}
+                        placeholder="05XX XXX XX XX"
+                        className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
+                        ${errors.telefon ? 'border-red-500' : 'border-gray-300'}`}
+                      />
+                      {errors.telefon && (
+                        <p className="mt-1 text-sm text-red-600">{errors.telefon}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="mb-4">
+                      <label 
+                        htmlFor="email"
+                        className="block text-sm font-medium text-gray-700 mb-1">
+                        E-posta
+                      </label>
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
+                        ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
+                      />
+                      {errors.email && (
+                        <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                      )}
+                    </div>
+                    <div className="mb-4">
+                      <label 
+                        htmlFor="startDate"
+                        className="block text-sm font-medium text-gray-700 mb-1">
+                        İşe Başlangıç Yılı
+                      </label>
+                      <select
+                        id="startDate"
+                        name="startDate"
+                        value={formData.startDate}
+                        onChange={handleChange}
+                        className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
+                        ${errors.startDate ? 'border-red-500' : 'border-gray-300'}`}
+                      >
+                        <option value="">Yıl Seçiniz</option>
+                        {Array.from({ length: new Date().getFullYear() - 2000 }, (_, i) => 2000 + i).map((yil) => (
+                          <option key={yil} value={yil}>
+                            {yil}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.startDate && (
+                        <p className="mt-1 text-sm text-red-600">{errors.startDate}</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="mb-4">
+                      <label 
+                        htmlFor="sifre"
+                        className="block text-sm font-medium text-gray-700 mb-1">
+                        Şifre
+                      </label>
+                      <input
+                        type="password"
+                        id="sifre"
+                        name="sifre"
+                        value={formData.sifre}
+                        onChange={handleChange}
+                        className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
+                        ${errors.sifre ? 'border-red-500' : 'border-gray-300'}`}
+                      />
+                      {errors.sifre && (
+                        <p className="mt-1 text-sm text-red-600">{errors.sifre}</p>
+                      )}
+                    </div>
+                    <div className="mb-4">
+                      <label 
+                        htmlFor="sifreTekrari"
+                        className="block text-sm font-medium text-gray-700 mb-1">
+                        Şifre Tekrarı
+                      </label>
+                      <input
+                        type="password"
+                        id="sifreTekrari"
+                        name="sifreTekrari"
+                        value={formData.sifreTekrari}
+                        onChange={handleChange}
+                        className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
+                        ${errors.sifreTekrari ? 'border-red-500' : 'border-gray-300'}`}
+                      />
+                      {errors.sifreTekrari && (
+                        <p className="mt-1 text-sm text-red-600">{errors.sifreTekrari}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between mt-8">
+                    <Button type="button" variant="outline" onClick={()=>setAreYouSure(true)}>İptal</Button>
+                    <Button type="button" onClick={nextStep}>İleri</Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* Adım 2: İşletme Bilgileri */}
+              {activeStep === 2 && (
+                <div className="space-y-6">
+                  <div>
+                    <label htmlFor="isletmeAdi" className="block text-sm font-medium text-gray-700">
+                      İşletme Adı
+                    </label>
+                    <input
+                      type="text"
+                      id="isletmeAdi"
+                      name="isletmeAdi"
+                      className={`mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${errors.isletmeAdi ? 'border-red-500' : ''}`}
+                      value={formData.isletmeAdi || ''}
+                      onChange={handleChange}
+                    />
+                    {errors.isletmeAdi && <p className="mt-1 text-sm text-red-600">{errors.isletmeAdi}</p>}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Personel Sayısı</label>
+                      <Input 
+                        name="personelSayisi"
+                        value={formData.personelSayisi}
+                        onChange={handleChange}
+                        placeholder="Örn: 2"
+                        type="number"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Bir Saatte max Kaç Müşteriye Hizmet Verebilirsiniz?</label>
+                      <Input 
+                        name="maxMusteriLimiti"
+                        value={formData.maxMusteriLimiti}
+                        onChange={handleChange}
+                        placeholder="Örn: 5"
+                        type="number"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="mb-4">
+                      <label 
+                        htmlFor="il"
+                        className="block text-sm font-medium text-gray-700 mb-1">
+                        İl
+                      </label>
+                      <select
+                        id="il"
+                        name="il"
+                        value={formData.il}
+                        onChange={handleChange}
+                        className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
+                        ${errors.il ? 'border-red-500' : 'border-gray-300'}`}
+                      >
+                        <option value="">İl Seçiniz</option>
+                        {turkiyeIlIlce.provinces.map((il) => (
+                          <option key={il.id} value={il.id}>
+                            {il.name}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.il && (
+                        <p className="mt-1 text-sm text-red-600">{errors.il}</p>
+                      )}
+                    </div>
+                    <div className="mb-4">
+                      <label 
+                        htmlFor="ilce"
+                        className="block text-sm font-medium text-gray-700 mb-1">
+                        İlçe
+                      </label>
+                      <select
+                        id="ilce"
+                        name="ilce"
+                        value={formData.ilce}
+                        onChange={handleChange}
+                        className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
+                        ${errors.ilce ? 'border-red-500' : 'border-gray-300'}`}
+                        disabled={!formData.il}
+                      >
+                        <option value="">İlçe Seçiniz</option>
+                        {turkiyeIlIlce.districts.filter(ilce => ilce.province_id==formData.il).map((ilce) => (
+                          <option key={ilce.id} value={ilce.id}>
+                            {ilce.name}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.ilce && (
+                        <p className="mt-1 text-sm text-red-600">{errors.ilce}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <label 
+                      htmlFor="acikAdres"
+                      className="block text-sm font-medium text-gray-700 mb-1">
+                      Açık Adres
+                    </label>
+                    <textarea
+                      id="acikAdres"
+                      name="acikAdres"
+                      rows="3"
+                      value={formData.acikAdres}
+                      onChange={handleChange}
+                      className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
+                      ${errors.acikAdres ? 'border-red-500' : 'border-gray-300'}`}
+                    ></textarea>
+                    {errors.acikAdres && (
+                      <p className="mt-1 text-sm text-red-600">{errors.acikAdres}</p>
+                    )}
+                  </div>
+
+                  {/* Çalışma Saatleri */}
+                  <div>
+                    <h4 className="font-medium mb-4 mt-6">Çalışma Saatleri</h4>
+                    <div className="space-y-4">
+                      { dailyHours.map((day) => (
+                        <div key={day.dayofweek} className="flex flex-col md:flex-row justify-between border p-3 rounded-md bg-gray-50">
+                          <div className="flex items-center space-x-3 mb-3 md:mb-0">
+                            <Checkbox 
+                              id={`workday-${day.dayofweek}`} 
+                              checked={day.isworking}
+                              onCheckedChange={(checked) => {
+                                handleWorkDayToggle(day.dayofweek, !!checked);
+                              }}
+                            />
+                            <label 
+                              htmlFor={`workday-${day.dayofweek}`} 
+                              className={`font-medium ${!day.isworking ? "text-gray-400" : ""}`}
+                            >
+                              {day.dayofweek==0 ? "Pazartesi" : day.dayofweek==1 ? "Salı" : day.dayofweek==2 ? "Çarşamba" : day.dayofweek==3 ? "Perşembe" : day.dayofweek==4 ? "Cuma" : day.dayofweek==5 ? "Cumartesi" : "Pazar"}
+                              <span className={`ml-2 text-sm ${day.isworking ? "text-green-600" : "text-red-500"}`}>
+                                {day.isworking ? "(Açık)" : "(Kapalı)"}
+                              </span>
+                            </label>
+                          </div>
+                          
+                          <div className="flex flex-col space-y-3 md:space-y-0 md:flex-row md:items-center">
+                            <div className="flex items-center space-x-2 mb-2 md:mb-0 md:mr-4">
+                              <Checkbox 
+                                id={`24hours-${day.dayofweek}`}
+                                checked={day.isworking && day.is24hopen}
+                                onCheckedChange={(checked) => {
+                                  handle24HourToggle(day.dayofweek, !!checked);
+                                }}
+                                disabled={!day.isworking}
+                              />
+                              <label 
+                                htmlFor={`24hours-${day.dayofweek}`}
+                                className={`text-sm ${!day.isworking ? "text-gray-400" : ""}`}
+                              >
+                                24 Saat
+                              </label>
+                            </div>
+                            
+                            <div className="flex items-center space-x-2 flex-wrap md:flex-nowrap">
+                              <Input 
+                                type="time"
+                                value={day.opentime ? day.opentime.substring(0, 5) : "09:00"}
+                                onChange={(e) => {
+                                  handleTimeChange(day.dayofweek, 'start', e.target.value);
+                                }}
+                                disabled={!day.isworking || day.is24hopen}
+                                className={`w-24 ${(!day.isworking || day.is24hopen) ? "bg-gray-100 text-gray-400" : ""}`}
+                              />
+                              <span className={!day.isworking ? "text-gray-400" : ""}>-</span>
+                              <Input 
+                                type="time"
+                                value={day.closetime ? day.closetime.substring(0, 5) : "18:00"}
+                                onChange={(e) => {
+                                  handleTimeChange(day.dayofweek, 'end', e.target.value);
+                                }}
+                                disabled={!day.isworking || day.is24hopen}
+                                className={`w-24 ${(!day.isworking || day.is24hopen) ? "bg-gray-100 text-gray-400" : ""}`}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Sosyal Medya Linkleri */}
+                    <div className="md:col-span-2 mt-4">
+                      <h3 className="text-lg font-medium mb-3">Sosyal Medya Hesaplarınız</h3>
+                      <p className="text-sm text-gray-500 mb-4">
+                        İşletmenizin sosyal medya hesaplarını ekleyebilirsiniz. Bu alanlar opsiyoneldir.
+                      </p>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <div className="flex items-center mb-4">
+                        <Instagram className="h-6 w-6 text-pink-600 mr-2" />
+                        <label 
+                          htmlFor="instagram"
+                          className="block text-sm font-medium text-gray-700 mb-1">
+                          Instagram Linki
+                        </label>
+                      </div>                    
+                      <input
+                        type="text"
+                        id="instagram"
+                        name="sosyalMedya.instagram"
+                        value={formData.sosyalMedya.instagram}
+                        onChange={handleSosyalMedyaChange}
+                        placeholder="https://www.instagram.com/kullaniciadi"
+                        className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
+                        ${errors['sosyalMedya.instagram'] ? 'border-red-500' : 'border-gray-300'}`}
+                      />
+                      {errors['sosyalMedya.instagram'] && (
+                        <p className="mt-1 text-sm text-red-600">{errors['sosyalMedya.instagram']}</p>
+                      )}
+                    </div>
+                    
+                    <div className="mb-4">
+                      <div className="flex items-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                        <label 
+                          htmlFor="facebook"
+                          className="block text-sm font-medium text-gray-700 mb-1">
+                          Facebook Linki
+                        </label>
+                      </div>                    
+                      <input
+                        type="text"
+                        id="facebook"
+                        name="sosyalMedya.facebook"
+                        value={formData.sosyalMedya.facebook}
+                        onChange={handleSosyalMedyaChange}
+                        placeholder="https://www.facebook.com/sayfaadi"
+                        className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
+                        ${errors['sosyalMedya.facebook'] ? 'border-red-500' : 'border-gray-300'}`}
+                      />
+                      {errors['sosyalMedya.facebook'] && (
+                        <p className="mt-1 text-sm text-red-600">{errors['sosyalMedya.facebook']}</p>
+                      )}
+                    </div>
+                    
+                    <div className="mb-4">
+                      <div className="flex items-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                        </svg>
+                        <label 
+                          htmlFor="youtube"
+                          className="block text-sm font-medium text-gray-700 mb-1">
+                          YouTube Linki
+                      </label>
+                      </div>
+                      <input
+                        type="text"
+                        id="youtube"
+                        name="sosyalMedya.youtube"
+                        value={formData.sosyalMedya.youtube}
+                        onChange={handleSosyalMedyaChange}
+                        placeholder="https://www.youtube.com/c/kanaladi"
+                        className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
+                        ${errors['sosyalMedya.youtube'] ? 'border-red-500' : 'border-gray-300'}`}
+                      />
+                      {errors['sosyalMedya.youtube'] && (
+                        <p className="mt-1 text-sm text-red-600">{errors['sosyalMedya.youtube']}</p>
+                      )}
+                    </div>
+                    
+                    <div className="mb-4">
+                      <div className="flex items-center mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black mr-2" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+                        </svg>                    
+                        <label 
+                          htmlFor="tiktok"
+                          className="block text-sm font-medium text-gray-700 mb-1">
+                          TikTok Linki
+                        </label>
+                      </div>
+                      <input
+                        type="text"
+                        id="tiktok"
+                        name="sosyalMedya.tiktok"
+                        value={formData.sosyalMedya.tiktok}
+                        onChange={handleSosyalMedyaChange}
+                        placeholder="https://www.tiktok.com/@kullaniciadi"
+                        className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
+                        ${errors['sosyalMedya.tiktok'] ? 'border-red-500' : 'border-gray-300'}`}
+                      />
+                      {errors['sosyalMedya.tiktok'] && (
+                        <p className="mt-1 text-sm text-red-600">{errors['sosyalMedya.tiktok']}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between mt-8">
+                    <Button type="button" variant="outline" onClick={prevStep}>Geri</Button>
+                    <Button type="button" onClick={nextStep}>İleri</Button>
+                  </div>
+                </div>
+              )}
 
             {/* Adım 3: Hizmet Bölgeleri */}
             {activeStep === 3 && (
@@ -2644,5 +2750,6 @@ export default function CilingirKayit() {
         </CardContent>
       </Card>
     </div>
+  </div>
   );
 } 
