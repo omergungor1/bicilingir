@@ -23,6 +23,7 @@ export async function GET(request, { params }) {
       businessname,
       fullname,
       phonenumber,
+      whatsappnumber,
       email,
       provinceid,
       districtid,
@@ -49,9 +50,11 @@ export async function GET(request, { params }) {
     .eq('isactive', true)
     .single();
 
-    //çilingir çalışma günlerini listele -> dayofweek'e göre sırala
-    const sortedWorkingHours = locksmith?.locksmith_working_hours?.sort((a, b) => a.dayofweek - b.dayofweek); 
-    locksmith.locksmith_working_hours = sortedWorkingHours;
+    if (locksmith?.locksmith_working_hours) {
+      //çilingir çalışma günlerini listele -> dayofweek'e göre sırala
+      const sortedWorkingHours = locksmith?.locksmith_working_hours?.sort((a, b) => a.dayofweek - b.dayofweek); 
+      locksmith.locksmith_working_hours = sortedWorkingHours;
+    }
 
     if (locksmithError) {
       console.error('Çilingir bulunamadı:', locksmithError);
@@ -132,6 +135,7 @@ export async function GET(request, { params }) {
         fullname,
         tagline,
         phonenumber,
+        whatsappnumber,
         provinceid,
         districtid,
         avgrating,
@@ -181,6 +185,7 @@ export async function GET(request, { params }) {
         rating: item.avgrating || 0,
         reviewCount: item.totalreviewcount || 0,
         phone: item.phonenumber || "",
+        whatsappnumber: item.whatsappnumber || "",
         slug: item.slug
       })) : []
     };
