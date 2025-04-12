@@ -136,7 +136,7 @@ export default function CilingirlerPage() {
       {/* Hero Bölümü */}
       <Hero 
         title="Çilingir Ağımıza Katılın" 
-        description="Türkiye'nin en büyük çilingir ağına katılarak işinizi büyütün, daha fazla müşteriye ulaşın ve kazancınızı artırın."
+        description="Türkiye'nin ilk ve tek çilingir arama platformuna katılarak işinizi büyütün, daha fazla müşteriye ulaşın ve kazancınızı artırın."
       />
 
       {/* Avantajlar Bölümü */}
@@ -235,7 +235,7 @@ export default function CilingirlerPage() {
         <div className="container mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">Hemen Bi Çilingir Ağına Katılın</h2>
           <p className="text-xl max-w-3xl mx-auto mb-8">
-            Türkiye'nin en büyük çilingir ağının bir parçası olun, işinizi büyütün ve kazancınızı artırın.
+            Türkiye'nin ilk ve tek çilingir ağının bir parçası olun, işinizi büyütün ve kazancınızı artırın.
           </p>
           <Link href="/cilingir/auth/register">
             <Button className="bg-white text-blue-600 hover:bg-gray-100 font-bold text-lg px-8 py-4 cursor-pointer">

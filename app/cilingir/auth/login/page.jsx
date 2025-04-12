@@ -45,7 +45,6 @@ export default function CilingirLogin() {
 
   // Sayfa yüklendiğinde kimlik durumunu kontrol et
   useEffect(() => {
-    console.log("Login sayfası yükleniyor, auth durumu kontrol ediliyor...");
     dispatch(checkAuthState())
       .then((action) => {
         console.log("Auth durum kontrolü tamamlandı:", action.meta.requestStatus);

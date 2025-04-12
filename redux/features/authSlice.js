@@ -189,7 +189,6 @@ export const checkAuthState = createAsyncThunk(
   async (options = {}, { rejectWithValue }) => {
     try {
       const { silent = false } = options;
-      console.log('Auth durumu kontrol ediliyor, sessiz mod:', silent);
       
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -197,7 +196,6 @@ export const checkAuthState = createAsyncThunk(
 
       // Eğer sessiz modda çalışıyorsak ve oturum varsa ek sorguları yapmaya gerek yok
       if (silent && session) {
-        console.log('Sessiz modda oturum kontrolü: Oturum aktif');
         return { sessionActive: true };
       }
 

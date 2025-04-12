@@ -18,7 +18,7 @@ export default function Footer() {
           <div>
             <h3 className="text-xl font-bold mb-4">Bi Çilingir</h3>
             <p className="text-gray-300">
-              Türkiye'nin en büyük çilingir pazaryeri. 7/24 hizmet veren profesyonel çilingirler.
+              Türkiye'nin ilk ve tek çilingir arama platformu. 7/24 hizmet veren profesyonel çilingirler, dakikalar içinde kapınızda.
             </p>
           </div>
           <div>

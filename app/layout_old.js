@@ -4,7 +4,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
   title: 'Bi Çilingir - En yakın çilingiri bul',
-  description: 'Türkiye\'nin en büyük çilingir arama platformu',
+  description: 'Türkiye\'nin ilk ve tek çilingir arama platformu',
 }
 
 export default function RootLayout({ children }) {

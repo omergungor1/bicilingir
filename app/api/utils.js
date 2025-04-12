@@ -430,7 +430,7 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
  * @param {number} level - Sıralama seviyesi (özellikle locksmith_list_view için, varsayılan: 1)
  * @returns {Promise<string>} Aktivite ID'si
  */
-export async function logUserActivity(supabase, userId, sessionId, activitytype, details, entityId, entityType, additionalData = {}, level = 1) {
+export async function logUserActivity(supabase, userId='00000000-0000-0000-0000-000000000000', sessionId='00000000-0000-0000-0000-000000000000', activitytype='search', details, entityId, entityType, additionalData = {}, level = 1) {
   try {
     const { v4: uuidv4 } = await import('uuid');
     

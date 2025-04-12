@@ -37,7 +37,7 @@ export const RatingModal = ({
         <div className="mb-6 text-center">
           <h3 className="text-xl font-bold text-gray-800 mb-2">Çilingir Hizmet Değerlendirmesi</h3>
           <p className="text-gray-600">
-            {locksmith?.name || "Çilingir"} için değerlendirmenizi paylaşın
+            <span className="font-bold">{locksmith?.name || "Çilingir"}</span> için değerlendirmenizi paylaşın
           </p>
         </div>
         

@@ -112,7 +112,7 @@ export default function HakkimizdaPage() {
             <div>
               <h2 className="text-3xl font-bold mb-6 text-gray-800">Vizyonumuz</h2>
               <p className="text-gray-600 mb-4">
-                Türkiye'nin ve dünyanın en büyük ve en güvenilir çilingir platformu olmak. Teknoloji ve inovasyonu kullanarak çilingir hizmetlerini sürekli olarak geliştirmek ve iyileştirmek.
+                Türkiye'nin en büyük ve en güvenilir çilingir platformu olmak. Teknoloji ve inovasyonu kullanarak çilingir hizmetlerini sürekli olarak geliştirmek ve iyileştirmek.
               </p>
               <p className="text-gray-600">
                 Gelecekte, yapay zeka ve IoT teknolojilerini kullanarak daha akıllı ve daha hızlı çilingir hizmetleri sunmayı hedefliyoruz. Amacımız, müşterilerimizin güvenlik ihtiyaçlarını en iyi şekilde karşılamaktır.

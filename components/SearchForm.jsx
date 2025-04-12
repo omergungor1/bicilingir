@@ -10,12 +10,22 @@ export default function SearchForm({ onSearch, selectedValues, setSelectedValues
   const [warnLocation, setWarnLocation] = useState(false);
   const [warnService, setWarnService] = useState(false);
   const [serviceList, setServiceList] = useState([]);
+  const [isLoadingServices, setIsLoadingServices] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
   const { showToast } = useToast();
 
   const getServices = async () => {
-    const response = await fetch('/api/public/services');
-    const data = await response.json();
-    setServiceList(data.services);
+    try {
+      setIsLoadingServices(true);
+      const response = await fetch('/api/public/services');
+      const data = await response.json();
+      setServiceList(data.services);
+    } catch (error) {
+      console.error("Hizmetler yüklenirken hata:", error);
+      showToast("Hizmetler yüklenirken bir sorun oluştu", "error", 3000);
+    } finally {
+      setIsLoadingServices(false);
+    }
   };
 
   useEffect(() => {
@@ -65,7 +75,12 @@ export default function SearchForm({ onSearch, selectedValues, setSelectedValues
       setWarnService(true);
       showToast("Lütfen bir hizmet türü seçiniz", "warning", 3000);
     } else {
-      if (onSearch) onSearch();
+      setIsSearching(true);
+      if (onSearch) {
+        onSearch().finally(() => {
+          setIsSearching(false);
+        });
+      }
     }
   };
 
@@ -106,9 +121,15 @@ export default function SearchForm({ onSearch, selectedValues, setSelectedValues
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="select-content">
-                {serviceList.map((service) => (
-                  <SelectItem key={service.id} value={service.id} className="select-item">{service.name}</SelectItem>
-                ))}
+                {isLoadingServices ? (
+                  <SelectItem value="loading" disabled className="text-gray-400 italic select-item">
+                    Yükleniyor...
+                  </SelectItem>
+                ) : (
+                  serviceList.map((service) => (
+                    <SelectItem key={service.id} value={service.id} className="select-item">{service.name}</SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
             
@@ -129,9 +150,17 @@ export default function SearchForm({ onSearch, selectedValues, setSelectedValues
         
         <Button 
           onClick={handleSearch}
-          className={`bg-blue-600 h-10 md:h-14 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg mt-2 md:mt-0 w-full md:w-auto ${!(selectedValues.districtId && selectedValues.serviceId) ? 'opacity-90 cursor-pointer' : ''}`}
+          disabled={isSearching}
+          className={`bg-blue-600 h-10 md:h-14 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg mt-2 md:mt-0 w-full md:w-auto ${!(selectedValues.districtId && selectedValues.serviceId) ? 'opacity-90 cursor-pointer' : ''} ${isSearching ? 'opacity-70 cursor-not-allowed' : ''}`}
         >
-          Çilingir Bul
+          {isSearching ? (
+            <div className="flex items-center justify-center">
+              <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+              Aranıyor...
+            </div>
+          ) : (
+            "Çilingir Bul"
+          )}
         </Button>
       </div>
     </div>

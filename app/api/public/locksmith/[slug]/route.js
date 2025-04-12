@@ -50,7 +50,7 @@ export async function GET(request, { params }) {
     .single();
 
     //çilingir çalışma günlerini listele -> dayofweek'e göre sırala
-    const sortedWorkingHours = locksmith.locksmith_working_hours.sort((a, b) => a.dayofweek - b.dayofweek); 
+    const sortedWorkingHours = locksmith?.locksmith_working_hours?.sort((a, b) => a.dayofweek - b.dayofweek); 
     locksmith.locksmith_working_hours = sortedWorkingHours;
 
     if (locksmithError) {

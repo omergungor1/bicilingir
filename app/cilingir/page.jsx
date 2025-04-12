@@ -24,18 +24,315 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../../components/ui/popover"
-import turkiyeIlIlce from "../../data/turkiye-il-ilce.js";
 import { useSelector, useDispatch } from "react-redux";
 import { supabase } from "../../lib/supabase";
 import { Textarea } from "../../components/ui/textarea";
 import { formatPhoneNumber } from "../../lib/utils";
 import { checkAuthState } from "../../redux/features/authSlice";
+import { AiAssistButton } from "../../components/ui/ai-assist-button";
+import { TiptapEditor } from "../../components/ui/tiptap-editor";
+
+
+// Renk seçimi için bir bileşen oluşturalım
+const ColorPicker = ({ title, colors, onColorSelect, buttonClass }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={buttonClass}
+        title={title}
+      >
+        {title}
+      </button>
+      
+      {isOpen && (
+        <div className="absolute z-10 top-full left-0 mt-1 bg-white rounded shadow-lg p-2 border border-gray-200 flex flex-wrap gap-1 w-[200px]">
+          {colors.map((color) => (
+            <button
+              key={color}
+              type="button"
+              title={color}
+              onClick={() => {
+                onColorSelect(color);
+                setIsOpen(false);
+              }}
+              className="w-6 h-6 rounded-sm border border-gray-300"
+              style={{ backgroundColor: color }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Emoji seçimi için bir bileşen
+const EmojiPicker = ({ onEmojiSelect }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const emojis = [
+    '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', 
+    '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', 
+    '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', 
+    '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', 
+    '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', 
+    '😭', '😤', '😠', '😡', '🤬', '😈', '👿', '💀', '☠️', 
+    '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖', '🎃', 
+    '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾',
+    '👍', '👎', '👏', '🙌', '👐', '🤲', '🤝', '🙏', '✌️',
+    '🌟', '⭐', '🔥', '💯', '❤️', '🧡', '💛', '💚', '💙', '💜'
+  ];
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="px-2 py-1 rounded text-sm bg-gray-100 text-gray-700"
+        title="Emoji Ekle"
+      >
+        Emoji 😊
+      </button>
+      
+      {isOpen && (
+        <div className="absolute z-10 top-full left-0 mt-1 bg-white rounded shadow-lg p-2 border border-gray-200 flex flex-wrap gap-1 w-[240px] max-h-[200px] overflow-y-auto">
+          {emojis.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              onClick={() => {
+                onEmojiSelect(emoji);
+                setIsOpen(false);
+              }}
+              className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded"
+              title={emoji}
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Basit bir toolbar bileşeni oluşturalım
+const TiptapToolbar = ({ editor }) => {
+  if (!editor) {
+    return null;
+  }
+
+  const [moreToolsOpen, setMoreToolsOpen] = useState(false);
+
+  const textColors = [
+    '#000000', '#434343', '#666666', '#999999', '#cccccc', 
+    '#ff0000', '#ff4d00', '#ffff00', '#00ff00', '#00ffff', 
+    '#0000ff', '#9900ff', '#ff00ff', '#663300', '#336600'
+  ];
+
+  const bgColors = [
+    '#ffffff', '#f5f5f5', '#ffe0e0', '#fff0e0', '#fffde0',
+    '#e0ffe0', '#e0ffff', '#e0e0ff', '#ffe0ff', '#ffd6d6',
+    '#ffebd6', '#fffbd6', '#d6ffd6', '#d6ffff', '#d6d6ff'
+  ];
+
+  // Resim yükleme işlevi
+  const addImage = () => {
+    const url = window.prompt('Resim URL\'i girin:');
+    if (url) {
+      editor.chain().focus().setImage({ src: url }).run();
+    }
+  };
+
+  return (
+    <div className="border-b border-gray-200 flex flex-wrap gap-1 bg-gray-50">
+      {/* Ana Araç Çubuğu */}
+      <div className="p-1 flex flex-wrap gap-1 w-full">
+        {/* Temel Biçimlendirme Araçları */}
+        <div className="flex gap-1 mr-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            className={`px-2 py-1 rounded text-sm ${editor.isActive('bold') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
+            title="Kalın"
+          >
+            B
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            className={`px-2 py-1 rounded text-sm ${editor.isActive('italic') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
+            title="İtalik"
+          >
+            I
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            className={`px-2 py-1 rounded text-sm ${editor.isActive('underline') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
+            title="Altı Çizili"
+          >
+            U
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            className={`px-2 py-1 rounded text-sm ${editor.isActive('strike') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
+            title="Üstü Çizili"
+          >
+            S
+          </button>
+        </div>
+
+        {/* Hizalama Araçları */}
+        <div className="flex gap-1 mr-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().setTextAlign('left').run()}
+            className={`px-2 py-1 rounded text-sm ${editor.isActive({ textAlign: 'left' }) ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
+            title="Sola Hizala"
+          >
+            ⟮
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().setTextAlign('center').run()}
+            className={`px-2 py-1 rounded text-sm ${editor.isActive({ textAlign: 'center' }) ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
+            title="Ortala"
+          >
+            ≡
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().setTextAlign('right').run()}
+            className={`px-2 py-1 rounded text-sm ${editor.isActive({ textAlign: 'right' }) ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
+            title="Sağa Hizala"
+          >
+            ⟯
+          </button>
+        </div>
+
+        {/* Liste Araçları */}
+        <div className="flex gap-1 mr-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className={`px-2 py-1 rounded text-sm ${editor.isActive('bulletList') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
+            title="Madde İşaretli Liste"
+          >
+            • Liste
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            className={`px-2 py-1 rounded text-sm ${editor.isActive('orderedList') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
+            title="Numaralı Liste"
+          >
+            1. Liste
+          </button>
+        </div>
+
+        {/* Ek Araçlar Butonu (Mobil uyumlu) */}
+        <div className="ml-auto">
+          <button
+            type="button"
+            onClick={() => setMoreToolsOpen(!moreToolsOpen)}
+            className="px-2 py-1 rounded text-sm bg-blue-50 text-blue-600 flex items-center"
+          >
+            {moreToolsOpen ? 'Araçları Gizle' : 'Daha Fazla Araç'} 
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={moreToolsOpen ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"} />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Genişletilmiş Araçlar */}
+      {moreToolsOpen && (
+        <div className="w-full p-1 border-t border-gray-200 flex flex-wrap gap-2">
+          {/* Başlıklar */}
+          <div className="flex gap-1 mr-2 mb-1">
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+              className={`px-2 py-1 rounded text-sm ${editor.isActive('heading', { level: 2 }) ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
+              title="Büyük Başlık"
+            >
+              H2
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+              className={`px-2 py-1 rounded text-sm ${editor.isActive('heading', { level: 3 }) ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
+              title="Orta Başlık"
+            >
+              H3
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().setParagraph().run()}
+              className={`px-2 py-1 rounded text-sm ${editor.isActive('paragraph') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
+              title="Paragraf"
+            >
+              P
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().toggleBlockquote().run()}
+              className={`px-2 py-1 rounded text-sm ${editor.isActive('blockquote') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
+              title="Alıntı"
+            >
+              Alıntı
+            </button>
+          </div>
+
+          {/* Renk ve Görsel Araçları */}
+          <div className="flex gap-1 mr-2 mb-1 flex-wrap">
+            <ColorPicker
+              title="Metin Rengi"
+              colors={textColors}
+              onColorSelect={(color) => {
+                editor.chain().focus().setColor(color).run();
+              }}
+              buttonClass={`px-2 py-1 rounded text-sm bg-gray-100 text-gray-700`}
+            />
+            
+            <ColorPicker
+              title="Arka Plan"
+              colors={bgColors}
+              onColorSelect={(color) => {
+                editor.chain().focus().setHighlight({ color }).run();
+              }}
+              buttonClass={`px-2 py-1 rounded text-sm bg-gray-100 text-gray-700`}
+            />
+            
+            <button
+              type="button"
+              onClick={addImage}
+              className={`px-2 py-1 rounded text-sm bg-gray-100 text-gray-700`}
+              title="Resim Ekle"
+            >
+              Resim
+            </button>
+            
+            <EmojiPicker 
+              onEmojiSelect={(emoji) => {
+                editor.chain().focus().insertContent(emoji).run();
+              }} 
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function CilingirPanel() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { user, role, isAuthenticated, loading } = useSelector(state => state.auth);
-  const { showToast } = useToast();
 
   
   // Kimlik doğrulama durumunu kontrol et
@@ -61,30 +358,12 @@ export default function CilingirPanel() {
   }, [isAuthenticated, role, loading, router]);
 
   // Yükleniyor veya yetki kontrolü
-  if (loading) {
+  if (loading || (role !== 'cilingir' && role !== 'admin')) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Yükleniyor...</h2>
           <p className="text-gray-500">Lütfen bekleyin, çilingir paneli hazırlanıyor.</p>
-        </div>
-      </div>
-    );
-  }
-  
-  // Yetki kontrolü
-  if (role !== 'cilingir' && role !== 'admin') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Erişim Engellendi</h2>
-          <p className="text-gray-500">Bu sayfaya erişim yetkiniz bulunmamaktadır.</p>
-          <Button 
-            onClick={() => router.push('/cilingir/auth/login')}
-            className="mt-4"
-          >
-            Giriş Sayfasına Dön
-          </Button>
         </div>
       </div>
     );
@@ -138,6 +417,10 @@ function CilingirPanelContent() {
   const [currentPageActivities, setCurrentPageActivities] = useState(1);
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
 
+  const [isLoadingAi, setIsLoadingAi] = useState({
+    tagline: false,
+    hakkinda: false
+  });
 
   const [provinceChanged, setProvinceChanged] = useState(false);
   
@@ -211,6 +494,14 @@ function CilingirPanelContent() {
 
   const [notificationOpen, setNotificationOpen] = useState(false);
 
+  const [isClient, setIsClient] = useState(false); // Client render kontrolü için state
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Tiptap editörünü başlat - Kaldırıldı, artık TiptapEditor bileşeni kullanılıyor
+  
   const fetchActivities = async () => {
     handleDashboardFilterChange('today',1);
   };
@@ -629,6 +920,7 @@ function CilingirPanelContent() {
       });
 
       if (!response.ok) {
+        showToast('Hizmetler güncellenirken bir hata oluştu', 'error');
         console.error('Hizmet güncellenirken bir hata oluştu');
       } else {
         showToast('Hizmetler başarıyla güncellendi', 'success');
@@ -985,6 +1277,7 @@ function CilingirPanelContent() {
       [field]: value
     }));
   };
+  
 
   const handleUpdateLocksmithData = async () => {
     setIsUpdatingProfile(true);
@@ -996,7 +1289,7 @@ function CilingirPanelContent() {
         },
         body: JSON.stringify(locksmith),
         credentials: 'include'
-      });
+      }); 
 
       const data = await response.json();
 
@@ -1013,6 +1306,105 @@ function CilingirPanelContent() {
       console.error("Profil bilgileri güncellenirken bir hata oluştu:", error);
     } finally {
       setIsUpdatingProfile(false);
+    }
+  };
+
+
+  const handleAiAssist = async (field) => {
+    setIsLoadingAi(prev => ({ ...prev, [field]: true }));
+    
+    try {
+      if (field === 'tagline') {
+        const currentText = locksmith.tagline || "";
+        const businessName = locksmith.businessname;
+        
+        if (!businessName) {
+          showToast("Önce işletme adı girin", "warning");
+          setIsLoadingAi(prev => ({ ...prev, [field]: false }));
+          return;
+        }
+        
+        // İl bilgisi
+        const location = districts.filter(district => district.isDayActive).map(district => district.name).join(', ');
+        
+        // Seçilen hizmetlerin isimlerini al
+        const selectedServices = serviceList.filter(service => service.isactive).map(service => service.name);
+        
+        // AI API'sine istek gönder
+        const response = await fetch('/api/ai/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            field: 'tagline',
+            businessName,
+            currentText,
+            location,
+            services: selectedServices
+          }),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "AI ile slogan oluşturulurken bir hata oluştu");
+        }
+        
+        const data = await response.json();
+        
+        // Üretilen tagline'ı set et
+        setLocksmith(prev => ({ ...prev, tagline: data.text }));
+        showToast("Slogan AI ile iyileştirildi", "success");
+      } 
+      else if (field === 'hakkinda') {
+        const currentText = locksmith.abouttext || "";
+        const businessName = locksmith.businessname;
+        
+        if (!businessName) {
+          showToast("Önce işletme adı girin", "warning");
+          setIsLoadingAi(prev => ({ ...prev, [field]: false }));
+          return;
+        }
+        
+        // İl bilgisi
+        const location = districts.filter(district => district.isDayActive).map(district => district.name).join(', ');
+        
+        // Seçilen hizmetlerin isimlerini al
+        const selectedServices = serviceList.filter(service => service.isactive).map(service => service.name);
+        
+        // AI API'sine istek gönder
+        const response = await fetch('/api/ai/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            field: 'hakkinda',
+            businessName,
+            currentText: currentText.replace(/<[^>]*>/g, ' ').trim(), // HTML taglerini kaldır
+            location,
+            services: selectedServices
+          }),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "AI ile hakkında metni oluşturulurken bir hata oluştu");
+        }
+        
+        const data = await response.json();
+        
+        // Üretilen HTML içeriğini set et
+        handleLocksmithDataChange('abouttext', data.text);
+        
+        
+        showToast("Hakkında metni AI ile iyileştirildi", "success");
+      }
+    } catch (error) {
+      console.error("AI iyileştirme hatası:", error);
+      showToast("AI iyileştirme sırasında bir hata oluştu", "error");
+    } finally {
+      setIsLoadingAi(prev => ({ ...prev, [field]: false }));
     }
   };
 
@@ -1314,10 +1706,11 @@ function CilingirPanelContent() {
     }
   };
 
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 py-4 px-4 md:px-6 sticky top-0 z-10 shadow-sm">
+      <header className="bg-white border-b border-gray-200 py-4 px-4 md:px-6 sticky top-0 z-100 shadow-sm">
         <div className="container mx-auto">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
@@ -1446,7 +1839,12 @@ function CilingirPanelContent() {
 
               <button 
                 className="text-gray-500 hover:text-blue-600 md:hidden"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                onClick={() => {
+                  if (!mobileMenuOpen) {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }
+                  setMobileMenuOpen(!mobileMenuOpen)
+                }}
               >
                 {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
@@ -1501,7 +1899,7 @@ function CilingirPanelContent() {
                 <nav className="flex flex-col p-2">
                   <button 
                     onClick={() => handleTabChange("dashboard")}
-                    className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "dashboard" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
+                    className={`flex items-center space-x-3 p-3 rounded-lg text-left cursor-pointer transition-colors ${activeTab === "dashboard" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -1511,7 +1909,7 @@ function CilingirPanelContent() {
                   
                   <button 
                     onClick={() => handleTabChange("profile")}
-                    className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "profile" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
+                    className={`flex items-center space-x-3 p-3 rounded-lg text-left cursor-pointer transition-colors ${activeTab === "profile" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -1521,7 +1919,7 @@ function CilingirPanelContent() {
                   
                   <button 
                     onClick={() => handleTabChange("services")}
-                    className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "services" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
+                    className={`flex items-center space-x-3 p-3 rounded-lg text-left cursor-pointer transition-colors ${activeTab === "services" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -1531,7 +1929,7 @@ function CilingirPanelContent() {
                   
                   <button 
                     onClick={() => handleTabChange("location")}
-                    className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "location" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
+                    className={`flex items-center space-x-3 p-3 rounded-lg text-left cursor-pointer transition-colors ${activeTab === "location" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                   >
                     <MapPin className="h-5 w-5"/>
                     <span>Hizmet Alanlarım</span>
@@ -1539,7 +1937,7 @@ function CilingirPanelContent() {
                   
                   <button 
                     onClick={() => handleTabChange("reviews")}
-                    className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "reviews" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
+                    className={`flex items-center space-x-3 p-3 rounded-lg text-left cursor-pointer transition-colors ${activeTab === "reviews" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
@@ -1549,7 +1947,7 @@ function CilingirPanelContent() {
                   
                   <button 
                     onClick={() => handleTabChange("advertising")}
-                    className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "advertising" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
+                    className={`flex items-center space-x-3 p-3 rounded-lg text-left cursor-pointer transition-colors ${activeTab === "advertising" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
@@ -1559,7 +1957,7 @@ function CilingirPanelContent() {
                   
                   <button 
                     onClick={() => handleTabChange("settings")}
-                    className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "settings" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
+                    className={`flex items-center space-x-3 p-3 rounded-lg text-left cursor-pointer transition-colors ${activeTab === "settings" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -1574,7 +1972,7 @@ function CilingirPanelContent() {
                     <button 
                       disabled={isLogoutLoading}
                       onClick={handleLogout}
-                      className="flex items-center space-x-3 p-3 rounded-lg text-left text-red-600 hover:bg-red-50 transition-colors w-full"
+                      className="flex items-center space-x-3 p-3 rounded-lg text-left cursor-pointer text-red-600 hover:bg-red-50 transition-colors w-full"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -2042,12 +2440,16 @@ function CilingirPanelContent() {
                         ></textarea>
                       </div>
 
-
-
-
                       {/*tagline*/}
                       <div className="md:col-span-2">
-                        <label className="block text-sm mb-1">Kısa Tanıtım {locksmith?.tagline?.length}/150</label>
+                        <div className="flex justify-between items-center mb-2">
+                          <label className="block text-sm mb-1">Kısa Tanıtım {locksmith?.tagline?.length}/150</label>
+                          <AiAssistButton 
+                            onClick={() => handleAiAssist('tagline')} 
+                            loading={isLoadingAi.tagline}
+                            className="text-xs py-1 px-2"
+                          />
+                        </div>
                         <Input 
                           maxLength={150}
                           value={locksmith?.tagline || ""} 
@@ -2055,13 +2457,18 @@ function CilingirPanelContent() {
                         />
                       </div>
                       <div className="md:col-span-2">
-                        <label className="block text-sm mb-1">Hakkında {locksmith?.abouttext?.length}/1000</label>
-                        <textarea 
-                          className="w-full min-h-[100px] p-2 border rounded-md"
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          İşletme Hakkında ({locksmith?.abouttext?.length || 0}/1000)
+                        </label>
+                        <TiptapEditor
+                          content={locksmith?.abouttext || ""}
+                          onChange={(content) => handleLocksmithDataChange('abouttext', content)}
+                          placeholder="İşletmeniz hakkında detaylı bilgi verin..."
                           maxLength={1000}
-                          value={locksmith?.abouttext || ""}
-                          onChange={(e) => handleLocksmithDataChange('abouttext', e.target.value)}
-                        ></textarea>
+                          showAiAssist={true}
+                          aiAssistField="hakkinda"
+                          className="mt-2"
+                        />
                       </div>
                     </div>
 

@@ -1,21 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, memo } from "react";
 import { Button } from "./button";
 import { Sparkles } from "lucide-react";
 
-export function AiAssistButton({ onClick, type = "button", loading = false, className = "" }) {
+export const AiAssistButton = memo(function AiAssistButton({ onClick, type = "button", loading = false, className = "", field = "content" }) {
   const [hover, setHover] = useState(false);
+  
+  const handleMouseEnter = useCallback(() => setHover(true), []);
+  const handleMouseLeave = useCallback(() => setHover(false), []);
+  
+  // Standart onClick handler'ı kullanılabilir veya field parametresi ile kendi API çağrımızı yapabiliriz
+  const handleClick = useCallback(() => {
+    if (onClick) {
+      onClick();
+    }
+  }, [onClick]);
 
   return (
     <Button
       type={type}
       variant="outline"
       className={`flex items-center bg-gradient-to-r hover:from-purple-100 hover:to-indigo-100 transition-all ${className}`}
-      onClick={onClick}
+      onClick={handleClick}
       disabled={loading}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <Sparkles
         className={`w-4 h-4 mr-2 transition-colors ${hover ? 'text-purple-600' : 'text-gray-600'}`}
@@ -33,4 +43,4 @@ export function AiAssistButton({ onClick, type = "button", loading = false, clas
       )}
     </Button>
   );
-} 
+}); 

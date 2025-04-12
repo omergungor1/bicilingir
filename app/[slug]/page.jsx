@@ -458,7 +458,7 @@ export default function LocksmithDetail({ params }) {
 
               <div className="border-t border-gray-200 pt-6 mb-6">
                 <div className="flex items-center mb-4">
-                  <span className="font-semibold text-gray-700 mr-3">Paylaş:</span>
+                  <span className="font-semibold text-gray-700 mr-3">Sosyal Hesaplar:</span>
                   <div className="flex space-x-2">
                     {/* facebook, instagram, whatsapp */}
                     <a href="#" className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white">

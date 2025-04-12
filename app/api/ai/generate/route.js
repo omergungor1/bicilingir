@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
+// OpenAI istemcisini global olarak bir kez oluştur
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+// Önbellek için basit bir mekanizma
+const cache = new Map();
+const CACHE_TTL = 1000 * 60 * 60; // 1 saat
 
 export async function POST(request) {
   try {
@@ -14,6 +19,21 @@ export async function POST(request) {
         success: false, 
         error: 'Gerekli alanlar eksik: field ve businessName zorunludur' 
       }, { status: 400 });
+    }
+    
+    // Önbellek anahtarı oluştur
+    const cacheKey = JSON.stringify({ field, businessName, currentText, location, services });
+    
+    // Önbellekte varsa ve süresi dolmamışsa, önbellekten döndür
+    if (cache.has(cacheKey)) {
+      const { data, timestamp } = cache.get(cacheKey);
+      if (Date.now() - timestamp < CACHE_TTL) {
+        return NextResponse.json({
+          success: true,
+          text: data,
+          cached: true
+        });
+      }
     }
     
     let prompt = '';
@@ -31,13 +51,13 @@ export async function POST(request) {
       maxTokens = 60; // Tagline için kısa bir cevap yeterli
     } 
     else if (field === 'hakkinda') {
-      prompt = `Bir çilingir şirketi için profesyonel, güven verici ve detaylı bir tanıtım metni yaz. HTML formatında olsun. Şirket adı: "${businessName}". ${
+      prompt = `Bir çilingir şirketi için profesyonel, güven verici ve detaylı bir tanıtım metni yaz. Şirket adı: "${businessName}". ${
         location ? `Konum: ${location}. ` : ''
       }${
         services.length > 0 ? `Sundukları hizmetler: ${services.join(', ')}. ` : ''
       }${
         currentText ? `Mevcut metin: "${currentText}". Bunu geliştir ve daha profesyonel hale getir. ` : ''
-      }Metin, müşterilere güven vermeli, işletmenin profesyonelliği ve tecrübesi vurgulanmalı. HTML formatında <p> etiketleri kullanarak paragraflar oluştur. En fazla 1000 karakter olsun.`;
+      }Metin, müşterilere güven vermeli, işletmenin profesyonelliği ve tecrübesi vurgulanmalı. En fazla 1000 karakter olsun.`;
       
       maxTokens = 500; // Hakkında için daha uzun bir cevap gerekli
     } 
@@ -87,6 +107,12 @@ export async function POST(request) {
       // Bazen AI "Slogan: " gibi bir ön ek ekleyebilir, bunları kaldır
       generatedText = generatedText.replace(/^(slogan:?\s*)/i, '');
     }
+    
+    // Sonucu önbelleğe ekle
+    cache.set(cacheKey, {
+      data: generatedText,
+      timestamp: Date.now()
+    });
     
     return NextResponse.json({
       success: true,

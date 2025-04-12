@@ -452,6 +452,8 @@ export default function CilingirKayit() {
   const [formDataIsletmeResimleri, setFormDataIsletmeResimleri] = useState([]);
   const [formDataIsletmeBelgesi, setFormDataIsletmeBelgesi] = useState(null);
   const [formDataProfilResmiIndex, setFormDataProfilResmiIndex] = useState(-1);
+
+
   const [dailyHours, setDailyHours] = useState([
     {
       dayofweek: 0,
@@ -1622,7 +1624,7 @@ export default function CilingirKayit() {
               {activeStep === 8 && "Başvuru Tamamlandı"}
             </CardTitle>
             <CardDescription className="text-blue-100">
-              {activeStep === 0 && "Türkiye'nin en büyük çilingir platformuna katılın ve işlerinizi büyütün"}
+              {activeStep === 0 && "Türkiye'nin ilk ve tek çilingir platformuna katılın ve işlerinizi büyütün"}
               {activeStep === 1 && "Lütfen kişisel bilgilerinizi girin"}
               {activeStep === 2 && "İşletmeniz hakkında detayları girin"}
               {activeStep === 3 && "Hizmet verdiğiniz bölgeleri ve sunduğunuz hizmetleri seçin"}
