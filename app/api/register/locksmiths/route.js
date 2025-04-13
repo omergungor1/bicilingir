@@ -44,7 +44,8 @@ export async function POST(request) {
           profileimageurl: locksmithInsertData.profileimageurl,
           isverified: locksmithInsertData.isverified || false,
           isactive: locksmithInsertData.isactive || false,
-          status: 'pending'
+          status: 'pending',
+          createdat: new Date().toISOString()
         }
       ])
       .select();
@@ -88,7 +89,8 @@ export async function POST(request) {
           tiktok_url: locksmithDetailsInsertData.tiktok_url,
           youtube_url: locksmithDetailsInsertData.youtube_url,
           websiteurl: locksmithDetailsInsertData.websiteurl,
-          startdate: locksmithDetailsInsertData.startdate
+          startdate: locksmithDetailsInsertData.startdate,
+          createdat: new Date().toISOString()
         }
       ])
       .select();

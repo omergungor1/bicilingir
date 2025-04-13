@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect,Suspense } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -29,7 +29,6 @@ import {
   Search,
   Edit,
   Trash2,
-  MessageSquare,
   CheckCircle,
   XCircle,
   History,
@@ -42,7 +41,8 @@ import {
   ShoppingCart,
   DollarSign,
   Filter,
-  ChevronDown
+  ChevronDown,
+  Loader2
 } from "lucide-react";
 import Image from "next/image";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
@@ -70,11 +70,13 @@ function AdminPanelContent() {
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [packageToDelete, setPackageToDelete] = useState(null);
   const [newService, setNewService] = useState({
+    id: "",
     name: "",
-    category: "",
-    minPrice: "",
-    maxPrice: ""
+    minPriceMesai: "",
+    maxPriceMesai: "",
+    isActive: true
   });
+
   const [newPackage, setNewPackage] = useState({
     name: "",
     rocketAmount: "",
@@ -84,15 +86,54 @@ function AdminPanelContent() {
     validFrom: new Date(),
     validTo: new Date(new Date().setMonth(new Date().getMonth() + 1)) // 1 ay sonrası
   });
-  const [serviceCategories, setServiceCategories] = useState([
-    "Kapı Açma",
-    "Kilit Değiştirme",
-    "Anahtar Yapımı",
-    "Kasa İşlemleri",
-    "Oto Çilingir",
-    "Diğer"
-  ]);
-  const [activeReviewFilter, setActiveReviewFilter] = useState("all");
+
+  
+  const [locksmithList, setLocksmithList] = useState([]);
+  const [locksmithListLoading, setLocksmithListLoading] = useState(true);
+  const [locksmithListError, setLocksmithListError] = useState(null);
+
+  const fetchLocksmithList = async () => {
+    try {
+      setLocksmithListLoading(true);
+      const response = await fetch('/api/admin/getLocksmiths');
+      const data = await response.json();
+      setLocksmithList(data.data);
+    } catch (error) {
+      setLocksmithList([]);
+      setLocksmithListError(error);
+    } finally {
+      setLocksmithListLoading(false);
+    }
+  };
+
+
+  const [servicesList, setServicesList] = useState([]);
+  const [servicesListLoading, setServicesListLoading] = useState(true);
+  const [servicesListError, setServicesListError] = useState(null);
+
+
+  const fetchServicesList = async () => {
+    try {
+      setServicesListLoading(true);
+      const response = await fetch('/api/admin/serviceSettings');
+      const data = await response.json();
+      console.log(data.data);
+      setServicesList(data.data);
+    } catch (error) {
+      setServicesList([]);
+      setServicesListError(error);
+    } finally {
+      setServicesListLoading(false);
+    }
+  };
+  
+
+  useEffect(() => {
+    Promise.all([
+      fetchLocksmithList(),
+      fetchServicesList()
+    ]);
+  }, []);
 
   useEffect(() => {
     if (tabParam && tabParam !== activeTab) {
@@ -121,31 +162,60 @@ function AdminPanelContent() {
   const isNewServiceValid = () => {
     return (
       newService.name.trim() !== "" && 
-      newService.category !== "" && 
-      newService.minPrice !== "" && 
-      newService.maxPrice !== "" &&
-      Number(newService.minPrice) <= Number(newService.maxPrice)
+      newService.minPriceMesai !== "" && 
+      newService.maxPriceMesai !== "" &&
+      Number(newService.minPriceMesai) <= Number(newService.maxPriceMesai)
     );
   };
 
-  const handleAddService = () => {
-    // Burada API'ye yeni hizmet eklemek için istek yapılabilir
-    console.log("Yeni hizmet eklendi:", newService);
-    
-    // Modal'ı kapat
-    setShowServiceModal(false);
-    
-    // Form'u sıfırla
-    setNewService({
-      name: "",
-      category: "",
-      minPrice: "",
-      maxPrice: ""
-    });
-    
-    // Başarılı bildirim göster
-    showToast("Yeni hizmet başarıyla eklendi!", "success");
+  const handleAddService = async () => {
+      const response = await fetch('/api/admin/serviceSettings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newService)
+      });
+      const data = await response.json();
+      console.log(data);
+      if (data.success) {
+        // Modal'ı kapat
+        setShowServiceModal(false);
+          
+        // Form'u sıfırla
+        setNewService({
+          id: "",
+          name: "",
+          minPriceMesai: "",
+          maxPriceMesai: "",
+          isActive: true
+        });
+        
+        // Başarılı bildirim göster
+        showToast("Yeni hizmet başarıyla eklendi!", "success");
+      } else {
+        showToast("Hizmet ekleme hatası", "error");
+      }
   };
+
+  const handleDeleteService = async (serviceId) => {
+    const response = await fetch('/api/admin/serviceSettings', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id: serviceId })
+    });
+    console.log(serviceId);
+    const data = await response.json();
+    if (data.success) {
+      showToast("Hizmet başarıyla silindi!", "success");
+      setServicesList(servicesList.map(service => service.id === serviceId ? { ...service, isActive: false } : service));
+    } else {
+      showToast("Hizmet silme hatası", "error");
+    }
+  };
+  
 
   const handleNewPackageChange = (field, value) => {
     setNewPackage(prev => ({
@@ -549,8 +619,19 @@ function AdminPanelContent() {
                     <div className="flex justify-between items-center mb-6">
                       <Input placeholder="Çilingir ara..." className="max-w-sm" />
                     </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
+                    {locksmithListLoading ? (
+                      <div className="flex justify-center items-center h-48">
+                        <Loader2 className="h-8 w-8 animate-spin" />
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        {/* if any error, show error message */}
+                        {locksmithListError && (
+                          <div className="flex justify-center items-center h-48">
+                            <p className="text-red-500">Bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.</p>
+                          </div>
+                        )}
+                        <table className="w-full">
                         <thead>
                           <tr className="border-b">
                             <th className="text-left p-3">Çilingir ID</th>
@@ -562,21 +643,21 @@ function AdminPanelContent() {
                           </tr>
                         </thead>
                         <tbody>
-                          {[1, 2, 3, 4, 5].map((item) => (
-                            <tr key={item} className="border-b hover:bg-gray-50">
-                              <td className="p-3">#LCK{1000 + item}</td>
-                              <td className="p-3">Çilingir {item}</td>
-                              <td className="p-3">İstanbul</td>
+                          {locksmithList && locksmithList?.map((locksmith) => (
+                            <tr key={locksmith.id} className="border-b hover:bg-gray-50">
+                              <td className="p-3">{locksmith.id.slice(0, 5)}</td>
+                              <td className="p-3">{locksmith.businessname}</td>
+                              <td className="p-3">{locksmith.provinces.name} / {locksmith.districts.name}</td>
                               <td className="p-3">
-                                <span className={`px-2 py-1 rounded-full text-xs ${item % 2 === 0 ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>
-                                  {item % 2 === 0 ? "Aktif" : "Onay Bekliyor"}
+                                <span className={`px-2 py-1 rounded-full text-xs ${locksmith.status === "approved" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>
+                                  {locksmith.status}
                                 </span>
                               </td>
-                              <td className="p-3">2024-03-19</td>
+                              <td className="p-3">{new Date(locksmith.createdat).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
                               <td className="p-3">
                                 <div className="flex space-x-2">
                                   <Link href={`/cilingir`}>
-                                    <Button variant="outline" size="sm">Düzenle</Button>
+                                    <Button variant="outline" size="sm">Panel</Button>
                                   </Link>
                                 </div>
                               </td>
@@ -585,6 +666,7 @@ function AdminPanelContent() {
                         </tbody>
                       </table>
                     </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
@@ -597,36 +679,64 @@ function AdminPanelContent() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex justify-start items-center mb-6">
-                      <Button onClick={() => setShowServiceModal(true)}>Yeni Hizmet</Button>
+                      <Button onClick={() => {
+                        setNewService({
+                          id: "",
+                          name: "",
+                          minPriceMesai: "",
+                          maxPriceMesai: "",
+                          isActive: true
+                        });
+                        setShowServiceModal(true)
+                        }}>Yeni Hizmet</Button>
                     </div>
                     <div className="overflow-x-auto">
-                      <table className="w-full">
+                      {servicesListError && (
+                        <div className="flex justify-center items-center h-48">
+                          <p className="text-red-500">Bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.</p>
+                        </div>
+                      )}
+                      {servicesListLoading ? (
+                        <div className="flex justify-center items-center h-48">
+                          <Loader2 className="h-8 w-8 animate-spin" />
+                        </div>
+                          ) : (<table className="w-full">
                         <thead>
                           <tr className="border-b">
-                            <th className="text-left p-3">Hizmet ID</th>
                             <th className="text-left p-3">Hizmet Adı</th>
-                            <th className="text-left p-3">Kategori</th>
-                            <th className="text-left p-3">Fiyat Aralığı</th>
+                            <th className="text-left p-3">Mesai Tarifesi</th>
+                            <th className="text-left p-3">Akşam Tarifesi</th>
+                            <th className="text-left p-3">Gece Tarifesi</th>
+                            <th className="text-left p-3">isActive</th>
                             <th className="text-left p-3">İşlemler</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {[1, 2, 3, 4, 5].map((item) => (
-                            <tr key={item} className="border-b hover:bg-gray-50">
-                              <td className="p-3">#SRV{1000 + item}</td>
-                              <td className="p-3">Hizmet {item}</td>
-                              <td className="p-3">Kapı Açma</td>
-                              <td className="p-3">₺150 - ₺300</td>
-                              <td className="p-3">
-                                <div className="flex space-x-2">
-                                  <Button variant="outline" size="sm">Düzenle</Button>
-                                  <Button variant="outline" size="sm" className="text-red-500">Sil</Button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
+                            {servicesList && servicesList?.map((service) => (
+                              <tr key={service.id} className="border-b hover:bg-gray-50">
+                                <td className="p-3">{service.name}</td>
+                                <td className="p-3">{service.minPriceMesai}₺-{service.maxPriceMesai}₺</td>
+                                <td className="p-3">{service.minPriceAksam}₺-{service.maxPriceAksam}₺</td>
+                                <td className="p-3">{service.minPriceGece}₺-{service.maxPriceGece}₺</td>
+                                <td className="p-3">                                
+                                <span className={`px-2 py-1 rounded-full text-xs ${service.isActive ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>
+                                  {service.isActive ? "Aktif" : "Kapalı"}
+                                </span></td>
+                                <td className="p-3">
+                                  <div className="flex space-x-2">
+                                    <Button
+                                    onClick={() => {
+                                      setNewService(service);
+                                      setShowServiceModal(true);
+                                    }}
+                                    variant="outline" size="sm">Düzenle</Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
                         </tbody>
                       </table>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -1623,6 +1733,7 @@ function AdminPanelContent() {
             <DialogTitle>Yeni Hizmet Ekle</DialogTitle>
             <DialogDescription>
               Platformda kullanılacak yeni bir hizmet tanımı ekleyin.
+              {newService.id ? `(ID: ${newService.id})` : ""}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -1638,58 +1749,116 @@ function AdminPanelContent() {
                 onChange={(e) => handleNewServiceChange("name", e.target.value)}
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="service-category" className="text-right text-sm font-medium">
-                Kategori
+            <div className="flex items-center gap-4">
+              <label htmlFor="min-price" className="text-right w-36 text-sm font-medium">
+                Mesai Fiyat
               </label>
-              <Select 
-                value={newService.category} 
-                onValueChange={(value) => handleNewServiceChange("category", value)}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Kategori seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  {serviceCategories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="min-price" className="text-right text-sm font-medium">
-                Min. Fiyat
-              </label>
-              <div className="col-span-3 flex items-center">
-                <Input
-                  id="min-price"
-                  type="number"
-                  placeholder="150"
-                  value={newService.minPrice}
-                  onChange={(e) => handleNewServiceChange("minPrice", e.target.value)}
-                  className="w-full"
-                />
-                <span className="ml-2 text-sm font-medium">₺</span>
+              <div className="flex items-center gap-4">
+                <div className="col-span-3 flex items-center">
+                  <Input
+                    id="min-price"
+                    type="number"
+                    placeholder="150"
+                    value={newService.minPriceMesai}
+                    onChange={(e) => handleNewServiceChange("minPriceMesai", e.target.value)}
+                    className="w-3/4"
+                    />
+                  <span className="ml-2 text-sm font-medium">₺</span>
+                </div>
+                <div className="text-sm font-medium"> - </div>
+                <div className="col-span-3 flex items-center">
+                  <Input
+                    id="max-price"
+                    type="number"
+                    placeholder="300"
+                    value={newService.maxPriceMesai}
+                    onChange={(e) => handleNewServiceChange("maxPriceMesai", e.target.value)}
+                    className="w-3/4"
+                    />
+                  <span className="ml-2 text-sm font-medium">₺</span>
+                </div>
               </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="max-price" className="text-right text-sm font-medium">
-                Max. Fiyat
+            <div className="flex items-center gap-4">
+              <label htmlFor="min-price" className="text-right w-36 text-sm font-medium">
+                Akşam Fiyat
               </label>
-              <div className="col-span-3 flex items-center">
-                <Input
-                  id="max-price"
-                  type="number"
-                  placeholder="300"
-                  value={newService.maxPrice}
-                  onChange={(e) => handleNewServiceChange("maxPrice", e.target.value)}
-                  className="w-full"
-                />
-                <span className="ml-2 text-sm font-medium">₺</span>
+              <div className="flex items-center gap-4">
+                <div className="col-span-3 flex items-center">
+                  <Input
+                    id="min-price"
+                    type="number"
+                    disabled={true}
+                    placeholder="150"
+                    value={newService.minPriceMesai*1.5}
+                    onChange={(e) => handleNewServiceChange("minPriceMesai", e.target.value)}
+                    className="w-3/4"
+                    />
+                  <span className="ml-2 text-sm font-medium">₺</span>
+                </div>
+                <div className="text-sm font-medium"> - </div>
+                <div className="col-span-3 flex items-center">
+                  <Input
+                    id="max-price"
+                    type="number"
+                    disabled={true}
+                    placeholder="300"
+                    value={newService.maxPriceMesai*1.5}
+                    onChange={(e) => handleNewServiceChange("maxPriceMesai", e.target.value)}
+                    className="w-3/4"
+                    />
+                  <span className="ml-2 text-sm font-medium">₺</span>
+                </div>
               </div>
             </div>
+            <div className="flex items-center gap-4">
+              <label htmlFor="min-price" className="text-right w-36 text-sm font-medium">
+                Gece Fiyat
+              </label>
+              <div className="flex items-center gap-4">
+                <div className="col-span-3 flex items-center">
+                  <Input
+                    id="min-price"
+                    type="number"
+                    disabled={true}
+                    placeholder="150"
+                    value={newService.minPriceMesai*2}
+                    onChange={(e) => handleNewServiceChange("minPriceMesai", e.target.value)}
+                    className="w-3/4"
+                    />
+                  <span className="ml-2 text-sm font-medium">₺</span>
+                </div>
+                <div className="text-sm font-medium"> - </div>
+                <div className="col-span-3 flex items-center">
+                  <Input
+                    id="max-price"
+                    type="number"
+                    disabled={true}
+                    placeholder="300"
+                    value={newService.maxPriceMesai*2}
+                    onChange={(e) => handleNewServiceChange("maxPriceMesai", e.target.value)}
+                    className="w-3/4"
+                    />
+                  <span className="ml-2 text-sm font-medium">₺</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <label htmlFor="is-active" className="text-right w-30 text-sm font-medium">
+                Durum
+              </label>
+              <div className="col-span-3 flex w-full items-center gap-2">
+                <Checkbox
+                  id="is-active"
+                  checked={newService.isActive}
+                  onCheckedChange={(checked) => handleNewServiceChange("isActive", checked)}
+                />
+                <span className={`px-2 py-1 rounded-full text-xs ${newService.isActive ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>
+                  {newService.isActive ? "Aktif" : "Kapalı"}  
+                </span>
+              </div>
+            </div>
+
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowServiceModal(false)}>
