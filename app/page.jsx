@@ -80,15 +80,15 @@ function SearchParamsWrapper({ children }) {
 export default function Home() {
   // Redux state ve dispatch
   const dispatch = useDispatch();
-  const { 
-    selectedValues: reduxSelectedValues, 
-    locksmiths: reduxLocksmiths, 
-    isLoading: reduxIsLoading, 
+  const {
+    selectedValues: reduxSelectedValues,
+    locksmiths: reduxLocksmiths,
+    isLoading: reduxIsLoading,
     error: reduxError,
     showResults: reduxShowResults,
     hasSearched: reduxHasSearched
   } = useSelector(state => state.search);
-  
+
   // Lokal state - Redux tarafından yönetilecek alanlar için artık iskeleti tutuyoruz
   const [showFilters, setShowFilters] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
@@ -110,21 +110,21 @@ export default function Home() {
       provinceId: reduxSelectedValues.provinceId
     });
   }, [reduxSelectedValues]);
-  
+
   const [customerFeedback, setCustomerFeedback] = useState({
     rating: 0,
     comment: ""
   });
-  
+
   // Local state yerine Redux state kullan
   const locksmiths = reduxLocksmiths;
   const isLoading = reduxIsLoading;
   const error = reduxError;
   const showResults = reduxShowResults;
-  
+
   // Tek bir loading state yerine, her çilingir ID'si için ayrı loading state tutacağız
   const [loadingLocksmithIds, setLoadingLocksmithIds] = useState({});
-  
+
   // Toast context hook
   const { showToast } = useToast();
 
@@ -135,7 +135,7 @@ export default function Home() {
       ...selectedValues,
       ...newValues
     }));
-    
+
     // Sonra local state'i güncelle
     setSelectedValues(prev => ({
       ...prev,
@@ -145,7 +145,7 @@ export default function Home() {
 
   const handleSearch = async (e) => {
     if (e) e.preventDefault();
-    
+
     // Validasyon: Gerekli alanlar seçilmiş mi?
     if (!selectedValues.provinceId || !selectedValues.districtId || !selectedValues.serviceId) {
       showToast('Lütfen il, ilçe ve hizmet seçin');
@@ -153,20 +153,20 @@ export default function Home() {
     }
 
     setLoadingLocksmithIds({});
-    
+
     try {
       // Kullanıcı oturumu başlat
       await dispatch(initUserSession());
-      
+
       // Kullanıcı agent bilgisini al
       const userAgent = navigator.userAgent;
-      
+
       // Çilingir araması yap
-      const result = await dispatch(searchLocksmiths({ 
-        selectedValues, 
-        userAgent 
+      const result = await dispatch(searchLocksmiths({
+        selectedValues,
+        userAgent
       })).unwrap();
-      
+
       // Sonuç kontrol ve gösterme
       if (result.locksmiths && result.locksmiths.length > 0) {
         // Başarılı arama, sonuçları göster
@@ -177,7 +177,7 @@ export default function Home() {
           provinceId: result.selectedValues.provinceId
         });
         setSelectedLocksmith(result.locksmiths[0]);
-        
+
         // Sonuçlar bölümüne smooth scroll
         document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } else {
@@ -216,12 +216,12 @@ export default function Home() {
       if (searchParams.has('location') || searchParams.has('service') || searchParams.has('fromDetail')) {
         // URL'de fromDetail parametresi varsa, bu geri dönüş aramasıdır
         const isFromDetailPage = searchParams.has('fromDetail');
-        
+
         // Redux store'dan mevcut seçili değerleri al
         const currentProvinceId = reduxSelectedValues.provinceId;
         const currentDistrictId = reduxSelectedValues.districtId;
         const currentServiceId = reduxSelectedValues.serviceId;
-        
+
         // Eğer değerler zaten seçiliyse ve detay sayfasından geliyorsa,
         // sadece arama sonuçlarını göster ama loglama yapma
         if (isFromDetailPage && currentProvinceId && currentDistrictId && currentServiceId) {
@@ -273,7 +273,7 @@ export default function Home() {
           userAgent: navigator.userAgent || ''
         }),
       });
-      
+
       if (!response.ok) {
         console.error('Aktivite log hatası:', await response.text());
       } else {
@@ -283,23 +283,29 @@ export default function Home() {
       console.error('Aktivite log hatası:', error);
     }
 
+    // Google Analytics'e arama sonucu görüntüleme kaydı
+    if (locksmith) {
+      window.gtag_report_conversion(`/${locksmith.slug}`)
+    }
+
+
     // Telefon numarasını çağırma işlemi
     if (locksmith.phone) {
       window.location.href = `tel:${locksmith.phone}`;
     } else {
       showToast("Bu çilingirin telefon numarası bulunamadı", "error", 3000);
     }
-    
+
     setTimeout(() => {
       setShowRatingModal(true);
     }, 1500);
   };
 
 
-  const handleWhatsappMessage = async (locksmith,index) => {
+  const handleWhatsappMessage = async (locksmith, index) => {
     try {
       setSelectedLocksmith(locksmith);
-      
+
       const response = await fetch('/api/public/user/activity', {
         method: 'POST',
         headers: {
@@ -319,26 +325,26 @@ export default function Home() {
           userAgent: navigator.userAgent || ''
         }),
       });
-      
+
       if (!response.ok) {
         console.error('Aktivite log hatası:', await response.text());
       } else {
         console.log('Whatsapp mesaj aktivitesi kaydedildi.');
       }
-      
+
       // WhatsApp numarasını formatlama ve yönlendirme
       if (locksmith.phone) {
         let formattedNumber = locksmith.phone.replace(/\s+/g, '');
         if (formattedNumber.startsWith('+')) {
           formattedNumber = formattedNumber.substring(1);
         }
-        
+
         if (!formattedNumber.startsWith('90') && !formattedNumber.startsWith('0')) {
           formattedNumber = '90' + formattedNumber;
         } else if (formattedNumber.startsWith('0')) {
           formattedNumber = '90' + formattedNumber.substring(1);
         }
-        
+
         const defaultMessage = encodeURIComponent("Merhaba, Bi Çilingir uygulamasından ulaşıyorum. Çilingir hizmetine ihtiyacım var.");
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         const whatsappUrl = `https://wa.me/${formattedNumber}?text=${defaultMessage}`;
@@ -419,14 +425,14 @@ export default function Home() {
           userAgent: navigator.userAgent || ''
         }),
       });
-      
+
       if (!activityResponse.ok) {
         console.error('Değerlendirme aktivite log hatası:', await activityResponse.text());
       }
-      
+
       // Modal kapat
       setShowRatingModal(false);
-      
+
       // Toast bildirimini göster
       showToast("Değerlendirmeniz için teşekkür ederiz! İncelendikten sonra yayınlanacaktır.", "success", 3000);
 
@@ -450,7 +456,7 @@ export default function Home() {
     const updatedLoadingStates = { ...loadingLocksmithIds };
     updatedLoadingStates[id] = true;
     setLoadingLocksmithIds(updatedLoadingStates);
-    
+
     try {
       // API üzerinden doğrudan aktivite kaydı oluştur
       const response = await fetch('/api/public/user/activity', {
@@ -472,7 +478,7 @@ export default function Home() {
           userAgent: navigator.userAgent || ''
         }),
       });
-      
+
       if (!response.ok) {
         console.error('Aktivite log hatası:', await response.text());
       } else {
@@ -494,19 +500,19 @@ export default function Home() {
           {(searchParams) => <SearchParamsHandler searchParams={searchParams} />}
         </SearchParamsWrapper>
       </Suspense>
-      
+
       {/* Hero Bölümü */}
-      <Hero 
-        title="En yakın çilingirleri bulun" 
+      <Hero
+        title="En yakın çilingirleri bulun"
         description="Kapınız kilitli mi kaldı? Anahtarınızı mı kaybettiniz? Endişelenmeyin, Bi Çilingir yanınızda!"
       >
         <div className="w-full max-w-4xl mx-auto">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="w-full">
-              <SearchForm 
-                onSearch={handleSearch} 
-                selectedValues={selectedValues} 
-                setSelectedValues={handleLocalSelectedValuesChange} 
+              <SearchForm
+                onSearch={handleSearch}
+                selectedValues={selectedValues}
+                setSelectedValues={handleLocalSelectedValuesChange}
               />
             </div>
           </div>
@@ -528,7 +534,7 @@ export default function Home() {
               {showFilters ? "Gizle" : "Filtrele"}
             </button> */}
           </div>
-          
+
           {/* Yüklenirken spinner göster */}
           {isLoading ? (
             <LoadingSpinner />
@@ -581,14 +587,14 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex justify-end mt-4">
                     <Button variant="outline" className="mr-2">Temizle</Button>
                     <Button>Filtrele</Button>
                   </div>
                 </div>
               )}
-              
+
               {/* Çilingir Listesi */}
               <div className="space-y-6">
                 {locksmiths.length === 0 ? (
@@ -615,7 +621,7 @@ export default function Home() {
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                      Onaylı Çilingir
+                                    Onaylı Çilingir
                                   </span>
                                 )}
                                 <div className="w-1 h-1 bg-gray-400 rounded-full hidden md:block" />
@@ -627,9 +633,9 @@ export default function Home() {
                               </div>
                             </div>
                           </div>
-                          
+
                           <p className="text-gray-700 mb-4">{locksmith.description}</p>
-                          
+
                           <div className="flex flex-wrap gap-2">
                             {locksmith.serviceNames.map((serviceName, index) => (
                               <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{serviceName}</span>
@@ -637,10 +643,10 @@ export default function Home() {
                             <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{locksmith.price.min}₺ - {locksmith.price.max}₺</span>
                           </div>
                         </div>
-                        
+
                         <div className="p-6 flex flex-col justify-center md:w-64">
                           <div className="space-y-3">
-                            <Button 
+                            <Button
                               onClick={() => handleCallLocksmith(locksmith, index)}
                               className={`w-full ${index === 0 ? 'bg-blue-600 hover:bg-blue-700 text-white font-bold animate-pulse shadow-md' : 'bg-[#4169E1]'}`}
                             >
@@ -652,22 +658,22 @@ export default function Home() {
                               )}
                             </Button>
                             {/* Whatsapp Butonu */}
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               className={`w-full text-white! flex items-center justify-center gap-2 ${index === 0 ? 'bg-green-600 hover:bg-green-700 font-bold shadow-md' : 'bg-green-500 hover:bg-green-600'}`}
-                              onClick={() => handleWhatsappMessage(locksmith,index)}
+                              onClick={() => handleWhatsappMessage(locksmith, index)}
                             >
                               WhatsApp
-                              <svg 
-                                xmlns="http://www.w3.org/2000/svg" 
-                                className="h-5 w-5" 
-                                fill="currentColor" 
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5"
+                                fill="currentColor"
                                 viewBox="0 0 24 24">
-                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
                               </svg>
                             </Button>
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               className="w-full"
                               disabled={loadingLocksmithIds[locksmith.id]}
                               onClick={() => handleViewDetails(locksmith.id, locksmith.slug)}
@@ -700,7 +706,7 @@ export default function Home() {
             <h2 className="text-3xl font-bold mb-4 text-gray-800">Neden Bi Çilingir?</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">Türkiye'nin ilk ve tek çilingir arama platformu</p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-blue-50 p-6 rounded-lg text-center">
               <div className="bg-blue-100 w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center">
@@ -711,7 +717,7 @@ export default function Home() {
               <h3 className="text-xl font-bold mb-3 text-gray-800">Güvenilir Çilingirler</h3>
               <p className="text-gray-600">Platformumuzdaki tüm çilingirler titizlikle seçilir ve kimlik doğrulamasından geçer. Sadece lisanslı ve onaylı çilingirler hizmet verebilir.</p>
             </div>
-            
+
             <div className="bg-blue-50 p-6 rounded-lg text-center">
               <div className="bg-blue-100 w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -721,7 +727,7 @@ export default function Home() {
               <h3 className="text-xl font-bold mb-3 text-gray-800">Hızlı Hizmet</h3>
               <p className="text-gray-600">Acil durumlar için 7/24 hizmet veren çilingirlerimiz en kısa sürede kapınızda. Ortalama yanıt süremiz 15 dakikanın altında!</p>
             </div>
-            
+
             <div className="bg-blue-50 p-6 rounded-lg text-center">
               <div className="bg-blue-100 w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -732,7 +738,7 @@ export default function Home() {
               <p className="text-gray-600">Gerçek müşteri yorumları ve derecelendirmeleri ile en iyi çilingiri seçebilirsiniz. %98 müşteri memnuniyet oranıyla hizmet veriyoruz.</p>
             </div>
           </div>
-          
+
           <div className="text-center mt-12">
             <h3 className="text-2xl font-bold mb-4 text-gray-800">Nasıl Çalışır?</h3>
             <div className="flex flex-col md:flex-row justify-center gap-4 mb-8">
@@ -759,11 +765,11 @@ export default function Home() {
                 <p className="text-gray-700">Dilediğiniz çilingiri seçin ve hemen arayın</p>
               </div>
             </div>
-            
-            <Button 
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-4 text-lg rounded-lg shadow-lg" 
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          > Hemen Çilingir Arayın
+
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-4 text-lg rounded-lg shadow-lg"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            > Hemen Çilingir Arayın
             </Button>
           </div>
         </div>
@@ -776,8 +782,8 @@ export default function Home() {
           <p className="text-lg mb-8 max-w-2xl mx-auto text-gray-800">
             7/24 hizmet veren çilingir ağımız ile en yakın çilingire hemen ulaşın.
           </p>
-          <Button 
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-4 text-lg rounded-lg shadow-lg" 
+          <Button
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-4 text-lg rounded-lg shadow-lg"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           >
             Hemen Çilingir Çağır
@@ -786,7 +792,7 @@ export default function Home() {
       </section>
 
       {/* Derecelendirme Modalı */}
-      <RatingModal 
+      <RatingModal
         isOpen={showRatingModal}
         onClose={() => setShowRatingModal(false)}
         onSubmit={handleRatingSubmit}

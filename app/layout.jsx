@@ -24,12 +24,36 @@ export default function RootLayout({ children }) {
       <head>
         {/* Google tag (gtag.js) */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17009716148"></script>
+        {/* <script dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-17009716148');
+          `
+        }} /> */}
         <script dangerouslySetInnerHTML={{
           __html: `
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', 'AW-17009716148');
+
+            // Dönüşüm İzleme Fonksiyonu
+            window.gtag_report_conversion = function(url) {
+              var callback = function () {
+                if (typeof(url) !== 'undefined') {
+                  window.location = url;
+                }
+              };
+              gtag('event', 'conversion', {
+                  'send_to': 'AW-17009716148/PTvNCIz1_LgaELTX7q4_',
+                  'value': 1.0,
+                  'currency': 'TRY',
+                  'event_callback': callback
+              });
+              return false;
+            };
           `
         }} />
       </head>

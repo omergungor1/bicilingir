@@ -90,16 +90,16 @@ export default function LocksmithDetail({ params }) {
   // Redux state'ini al
   const dispatch = useDispatch();
   const { hasSearched } = useSelector(state => state.search);
-  
+
   // Next.js 14'te iki yoldan slug alabiliriz: 
   // 1. React.use ile params'ı unwrap ederek (server component uyumlu)
   // 2. useParams hook'u ile (client component uyumlu)
-  
+
   // Önce useParams ile deneyelim, olmazsa params'ı kullanacağız
   const routeParams = useParams();
   // Slug'ı routeParams'dan veya normal params'dan al
   const slug = routeParams.slug || (params ? React.use(params).slug : null);
-  
+
   const { showToast } = useToast();
 
   const [locksmith, setLocksmith] = useState(null);
@@ -117,11 +117,11 @@ export default function LocksmithDetail({ params }) {
         setLoading(true);
         const response = await fetch(`/api/public/locksmith/${slug}`);
         const data = await response.json();
-        
+
         if (!response.ok) {
           throw new Error(data.error || 'Çilingir detayları yüklenirken bir hata oluştu');
         }
-        
+
         if (data.success && data.locksmith) {
           setLocksmith(data.locksmith);
           setFilteredReviews(data.locksmith.reviews || []);
@@ -135,25 +135,25 @@ export default function LocksmithDetail({ params }) {
         setLoading(false);
       }
     };
-    
+
     if (slug) {
       fetchLocksmithDetails();
     }
   }, [slug]);
-  
+
   // Yıldız ratingine göre yorumları filtrele
   useEffect(() => {
     if (!locksmith || !locksmith.reviews) return;
-    
+
     // Yeni bir filtre seçildiğinde görünen yorum sayısını sıfırla
     setVisibleReviews(3);
-    
+
     if (selectedRating === null) {
       // Eğer hiçbir yıldız seçilmemişse tüm yorumları göster
       setFilteredReviews(locksmith.reviews);
     } else {
       // Seçilen yıldıza göre yorumları filtrele
-      const filtered = locksmith.reviews.filter(review => 
+      const filtered = locksmith.reviews.filter(review =>
         Math.floor(review.rating) === selectedRating
       );
       setFilteredReviews(filtered);
@@ -164,7 +164,7 @@ export default function LocksmithDetail({ params }) {
   const showAllReviews = () => {
     setSelectedRating(null);
   };
-  
+
   // Daha fazla yorum yükle
   const loadMoreReviews = () => {
     setVisibleReviews(prev => prev + 3); // Her seferinde 3 yorum daha ekle
@@ -194,18 +194,23 @@ export default function LocksmithDetail({ params }) {
           userAgent: navigator.userAgent || ''
         }),
       })
-      .then(response => {
-        if (!response.ok) {
-          console.error('Aktivite log hatası:', response.statusText);
-        } else {
-          console.log('Çilingir arama aktivitesi kaydedildi.');
-        }
-      })
-      .catch(error => {
-        console.error('Aktivite log hatası:', error);
-      });
+        .then(response => {
+          if (!response.ok) {
+            console.error('Aktivite log hatası:', response.statusText);
+          } else {
+            console.log('Çilingir arama aktivitesi kaydedildi.');
+          }
+        })
+        .catch(error => {
+          console.error('Aktivite log hatası:', error);
+        });
     } catch (error) {
       console.error('Aktivite log hatası:', error);
+    }
+
+    // Google Analytics'e arama sonucu görüntüleme kaydı
+    if (locksmith) {
+      window.gtag_report_conversion(`/${locksmith.slug}`)
     }
 
     // Telefon numarasını çağırma işlemi
@@ -214,7 +219,7 @@ export default function LocksmithDetail({ params }) {
     } else {
       showToast("Bu çilingirin telefon numarası bulunamadı", "error");
     }
-    
+
     // Belirli bir süre sonra değerlendirme modalını göster
     setTimeout(() => {
       setShowRatingModal(true);
@@ -242,16 +247,16 @@ export default function LocksmithDetail({ params }) {
           userAgent: navigator.userAgent || ''
         }),
       })
-      .then(response => {
-        if (!response.ok) {
-          console.error('Aktivite log hatası:', response.statusText);
-        } else {
-          console.log('Çilingir whatsapp mesajı aktivitesi kaydedildi.');
-        }
-      })
-      .catch(error => {
-        console.error('Aktivite log hatası:', error);
-      });
+        .then(response => {
+          if (!response.ok) {
+            console.error('Aktivite log hatası:', response.statusText);
+          } else {
+            console.log('Çilingir whatsapp mesajı aktivitesi kaydedildi.');
+          }
+        })
+        .catch(error => {
+          console.error('Aktivite log hatası:', error);
+        });
     } catch (error) {
       console.error('Aktivite log hatası:', error);
     }
@@ -264,13 +269,13 @@ export default function LocksmithDetail({ params }) {
         if (formattedNumber.startsWith('+')) {
           formattedNumber = formattedNumber.substring(1);
         }
-        
+
         if (!formattedNumber.startsWith('90') && !formattedNumber.startsWith('0')) {
           formattedNumber = '90' + formattedNumber;
         } else if (formattedNumber.startsWith('0')) {
           formattedNumber = '90' + formattedNumber.substring(1);
         }
-        
+
         const defaultMessage = encodeURIComponent("Merhaba, Bi Çilingir uygulamasından ulaşıyorum. Çilingir hizmetine ihtiyacım var.");
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         const whatsappUrl = `https://wa.me/${formattedNumber}?text=${defaultMessage}`;
@@ -297,7 +302,7 @@ export default function LocksmithDetail({ params }) {
       showToast("WhatsApp mesajı gönderilirken bir hata oluştu", "error", 3000);
     }
   };
-  
+
   // Değerlendirme gönderildiğinde
   const handleRatingSubmit = async ({ rating, comment }) => {
     try {
@@ -339,14 +344,14 @@ export default function LocksmithDetail({ params }) {
           userAgent: navigator.userAgent || ''
         }),
       });
-      
+
       if (!activityResponse.ok) {
         console.error('Değerlendirme aktivite log hatası:', await activityResponse.text());
       }
 
       // Modal kapat
       setShowRatingModal(false);
-      
+
       // Başarılı mesajı göster
       showToast("Değerlendirmeniz için teşekkürler.", "success");
 
@@ -368,12 +373,12 @@ export default function LocksmithDetail({ params }) {
       </div>
     );
   }
-  
+
   // Yükleme durumunda
   if (loading) {
     return <LoadingSpinner />;
   }
-  
+
   // Çilingir bulunamadıysa
   if (!locksmith) {
     return (
@@ -389,34 +394,34 @@ export default function LocksmithDetail({ params }) {
 
   const CallButtons = ({ customClass }) => {
     return (
-    <div className={`flex gap-2 ${customClass}`}>
-      {/* Telefon */}
-      <Button 
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 mb-3 flex items-center justify-center gap-2 animate-pulse shadow-md"
-        onClick={handleCallLocksmith}>
-        Hemen Ara
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-        </svg>
-      </Button>
-      {/* Whatsapp */}
-      <Button 
-        className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 flex items-center justify-center gap-2"
-        onClick={handleWhatsappMessage}>
-        WhatsApp
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          className="h-5 w-5" 
-          fill="currentColor" 
-          viewBox="0 0 24 24">
-          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-        </svg>
-      </Button>
-    </div>
+      <div className={`flex gap-2 ${customClass}`}>
+        {/* Telefon */}
+        <Button
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 mb-3 flex items-center justify-center gap-2 animate-pulse shadow-md"
+          onClick={handleCallLocksmith}>
+          Hemen Ara
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+          </svg>
+        </Button>
+        {/* Whatsapp */}
+        <Button
+          className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 flex items-center justify-center gap-2"
+          onClick={handleWhatsappMessage}>
+          WhatsApp
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            fill="currentColor"
+            viewBox="0 0 24 24">
+            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+          </svg>
+        </Button>
+      </div>
     )
   }
 
-  const WorkingHours = ({customClass}) => {
+  const WorkingHours = ({ customClass }) => {
     return (
       <>
         {locksmith.locksmith_working_hours && locksmith.locksmith_working_hours.length > 0 && (
@@ -429,10 +434,10 @@ export default function LocksmithDetail({ params }) {
                   // Zamanı saat:dakika formatına dönüştür
                   let openTime = hours.opentime ? hours.opentime.substring(0, 5) : "";
                   let closeTime = hours.closetime ? hours.closetime.substring(0, 5) : "";
-                  
+
                   return (
                     <div key={hours.dayofweek} className="flex justify-between items-center">
-                      <span className="text-gray-600">{hours.dayofweek==0 ? "Pazartesi" : hours.dayofweek==1 ? "Salı" : hours.dayofweek==2 ? "Çarşamba" : hours.dayofweek==3 ? "Perşembe" : hours.dayofweek==4 ? "Cuma" : hours.dayofweek==5 ? "Cumartesi" : "Pazar"}</span>
+                      <span className="text-gray-600">{hours.dayofweek == 0 ? "Pazartesi" : hours.dayofweek == 1 ? "Salı" : hours.dayofweek == 2 ? "Çarşamba" : hours.dayofweek == 3 ? "Perşembe" : hours.dayofweek == 4 ? "Cuma" : hours.dayofweek == 5 ? "Cumartesi" : "Pazar"}</span>
                       {hours.is24hopen ? (
                         <span className="text-green-600">24 Saat Açık</span>
                       ) : (
@@ -450,15 +455,15 @@ export default function LocksmithDetail({ params }) {
     )
   }
 
-  const ImagesGallery = ({customClass}) => {
+  const ImagesGallery = ({ customClass }) => {
     return (
       <>
         {locksmith.locksmith_images && locksmith.locksmith_images.length > 0 && (
           <div className={`bg-gray-50 rounded-lg p-6 mb-6 ${customClass}`}>
             <h3 className="text-lg font-bold text-gray-800 mb-4">Galeri</h3>
-            <ImageGallery 
-              images={locksmith.locksmith_images.filter(img => img.image_url)} 
-              locksmithName={locksmith.businessname || locksmith.fullname} 
+            <ImageGallery
+              images={locksmith.locksmith_images.filter(img => img.image_url)}
+              locksmithName={locksmith.businessname || locksmith.fullname}
             />
           </div>
         )}
@@ -466,7 +471,7 @@ export default function LocksmithDetail({ params }) {
     )
   }
 
-  const Map = ({customClass}) => {
+  const Map = ({ customClass }) => {
     return (
       <>
         <div className={`bg-gray-50 rounded-lg p-6 mb-6 ${customClass}`}>
@@ -479,13 +484,13 @@ export default function LocksmithDetail({ params }) {
       </>
     )
   }
-  
+
   return (
     <main className="flex min-h-screen flex-col items-center">
       {/* Geri Butonu */}
       <div className="container mx-auto px-4 py-4">
-        <Link 
-          href="/?focusList=true" 
+        <Link
+          href="/?focusList=true"
           className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
           prefetch={true}
         >
@@ -505,8 +510,8 @@ export default function LocksmithDetail({ params }) {
               <div className="mb-6">
                 <div style={styles.companyLogo} className="mb-3">
                   {locksmith.locksmith_images && locksmith.locksmith_images.find(image => image.is_profile)?.image_url ? (
-                    <img 
-                      src={locksmith.locksmith_images.find(image => image.is_profile)?.image_url} 
+                    <img
+                      src={locksmith.locksmith_images.find(image => image.is_profile)?.image_url}
                       alt="İşletme Profil Resmi"
                       className="w-full h-full object-cover"
                     />
@@ -516,18 +521,18 @@ export default function LocksmithDetail({ params }) {
                 </div>
                 <div className="text-gray-500 mb-1">{locksmith.province}, {locksmith.district}</div>
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">{locksmith.businessname || locksmith.fullname}</h1>
-                
+
                 <div className="flex items-center mb-4">
                   <StarRating rating={locksmith.avgrating || 0} />
                   <span className="ml-2 text-gray-500">({locksmith.totalreviewcount || 0} yorum)</span>
                 </div>
-                
+
                 <div className="flex items-center mb-4">
                   <p className="text-gray-600 mb-4">
                     {locksmith.tagline || "Bu çilingir henüz açıklama eklememiş."}
                   </p>
                 </div>
-                
+
                 <div className="flex flex-wrap gap-2 mb-4">
                   {locksmith.services?.map((service, index) => (
                     <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded hover:bg-blue-200 cursor-pointer">{service.name}</span>
@@ -573,11 +578,11 @@ export default function LocksmithDetail({ params }) {
               {locksmith.reviews && locksmith.reviews.length > 0 && (
                 <div className="border-t border-gray-200 pt-6 mb-6">
                   <h2 className="text-xl font-bold text-gray-800 mb-4">Müşteri Yorumları</h2>
-                  
+
                   {/* Yıldız Filtreleme Butonları */}
                   <div className="flex flex-wrap gap-2 mb-4">
                     {[5, 4, 3, 2, 1].map((star) => (
-                      <button 
+                      <button
                         key={star}
                         onClick={() => setSelectedRating(star)}
                         className={`flex items-center space-x-1 border hover:bg-blue-50 hover:border-blue-200 rounded-lg px-3 py-1.5 transition-colors ${selectedRating === star ? 'bg-blue-50 border-blue-200' : ' bg-white border-gray-200'}`}
@@ -588,14 +593,14 @@ export default function LocksmithDetail({ params }) {
                         </svg>
                       </button>
                     ))}
-                    <button 
+                    <button
                       onClick={showAllReviews}
                       className={`text-blue-600 hover:text-blue-800 text-sm font-medium px-3 py-1.5 ${selectedRating == null ? 'font-bold underline' : ''}`}
                     >
                       Tümü
                     </button>
                   </div>
-                  
+
                   <div className="space-y-4">
                     {filteredReviews.length > 0 ? (
                       <>
@@ -612,11 +617,11 @@ export default function LocksmithDetail({ params }) {
                             <p className="text-gray-600">{review.comment || "Yorum yok"}</p>
                           </div>
                         ))}
-                        
+
                         {/* Daha fazla yorum var mı? */}
                         {visibleReviews < filteredReviews.length && (
                           <div className="text-center mt-4">
-                            <button 
+                            <button
                               onClick={loadMoreReviews}
                               className="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
                             >
@@ -642,14 +647,14 @@ export default function LocksmithDetail({ params }) {
                     <div className="flex space-x-2">
                       {/* Facebook */}
                       {locksmith.facebook_url && (
-                        <a href={locksmith.facebook_url} target="_blank" rel="noopener noreferrer" 
+                        <a href={locksmith.facebook_url} target="_blank" rel="noopener noreferrer"
                           className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white hover:bg-blue-700 transition">
                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"></path>
                           </svg>
                         </a>
                       )}
-                      
+
                       {/* Instagram */}
                       {locksmith.instagram_url && (
                         <a href={locksmith.instagram_url} target="_blank" rel="noopener noreferrer"
@@ -659,33 +664,33 @@ export default function LocksmithDetail({ params }) {
                           </svg>
                         </a>
                       )}
-                      
+
                       {/* TikTok */}
                       {locksmith.tiktok_url && (
                         <a href={locksmith.tiktok_url} target="_blank" rel="noopener noreferrer"
                           className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-white hover:bg-gray-800 transition">
                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M19.589 6.686a4.793 4.793 0 0 1-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 0 1-5.201 1.743l-.002-.001.002.001a2.895 2.895 0 0 1 3.183-4.51v-3.5a6.329 6.329 0 0 0-5.394 10.692 6.33 6.33 0 0 0 10.857-4.424V8.687a8.182 8.182 0 0 0 4.773 1.526V6.79a4.831 4.831 0 0 1-1.003-.104z"/>
+                            <path d="M19.589 6.686a4.793 4.793 0 0 1-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 0 1-5.201 1.743l-.002-.001.002.001a2.895 2.895 0 0 1 3.183-4.51v-3.5a6.329 6.329 0 0 0-5.394 10.692 6.33 6.33 0 0 0 10.857-4.424V8.687a8.182 8.182 0 0 0 4.773 1.526V6.79a4.831 4.831 0 0 1-1.003-.104z" />
                           </svg>
                         </a>
                       )}
-                      
+
                       {/* YouTube */}
                       {locksmith.youtube_url && (
                         <a href={locksmith.youtube_url} target="_blank" rel="noopener noreferrer"
                           className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white hover:bg-red-700 transition">
                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                           </svg>
                         </a>
                       )}
-                      
+
                       {/* Website */}
                       {locksmith.websiteurl && (
                         <a href={locksmith.websiteurl} target="_blank" rel="noopener noreferrer"
                           className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white hover:bg-gray-700 transition">
                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zM4 12c0-.899.156-1.762.431-2.569L6 11l2 2v2l2 2 1 1v1.931C7.061 19.436 4 16.072 4 12zm14.33 4.873C17.677 16.347 16.687 16 16 16v-1a2 2 0 0 0-2-2h-4v-3a2 2 0 0 0 2-2V7h1a2 2 0 0 0 2-2v-.411C17.928 5.778 20 8.65 20 12c0 1.76-.58 3.37-1.67 4.873z"/>
+                            <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zM4 12c0-.899.156-1.762.431-2.569L6 11l2 2v2l2 2 1 1v1.931C7.061 19.436 4 16.072 4 12zm14.33 4.873C17.677 16.347 16.687 16 16 16v-1a2 2 0 0 0-2-2h-4v-3a2 2 0 0 0 2-2V7h1a2 2 0 0 0 2-2v-.411C17.928 5.778 20 8.65 20 12c0 1.76-.58 3.37-1.67 4.873z" />
                           </svg>
                         </a>
                       )}
@@ -707,7 +712,7 @@ export default function LocksmithDetail({ params }) {
                               <span>{item.name.substring(0, 2)}</span>
                             </div>
                           </div>
-                          
+
                           <div className="flex-grow">
                             <div className="flex justify-between items-start">
                               <div>
@@ -723,7 +728,7 @@ export default function LocksmithDetail({ params }) {
                               {item.description}
                             </p>
                           </div>
-                          
+
                           <div className="mt-4 md:mt-0 md:ml-4">
                             <Link href={`/${item.slug}`} className="text-blue-600 hover:text-blue-800 flex items-center">
                               Detaylar
@@ -751,7 +756,7 @@ export default function LocksmithDetail({ params }) {
               {/* Resim Galerisi */}
               <ImagesGallery customClass="hidden md:block" />
 
-              {/* Harita */}  
+              {/* Harita */}
               <Map customClass="hidden md:block" />
 
               {/* Acil Durum Butonu */}
