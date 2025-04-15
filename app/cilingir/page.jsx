@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Checkbox } from "../../components/ui/checkbox";
-import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X, Footprints, File, ExternalLinkIcon, Clock, Search, CheckCircle, AlertTriangle, AlertCircle, Bell, User, Trash2, MessageCircle, Globe, MapPin } from "lucide-react";
+import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X, Footprints, File, ExternalLinkIcon, Clock, Search, CheckCircle, AlertTriangle, AlertCircle, Bell, User, Trash2, MessageCircle, Globe, MapPin, Key, ShoppingCart } from "lucide-react";
 import { useToast } from "../../components/ToastContext";
 import Link from "next/link";
 import Image from "next/image";
@@ -1710,7 +1710,7 @@ function CilingirPanelContent() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 py-4 px-4 md:px-6 sticky top-0 z-100 shadow-sm">
+      <header className="bg-white border-b border-gray-200 py-4 px-4 md:px-6 sticky top-0 z-20 shadow-sm">
         <div className="container mx-auto">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
@@ -3577,9 +3577,12 @@ function CilingirPanelContent() {
       
       {/* Anahtar Paketi Satın Alma Modalı */}
       <Dialog open={isPackageModalOpen} onOpenChange={setIsPackageModalOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Anahtar Paketi Satın Al</DialogTitle>
+            <DialogTitle className="text-xl flex items-center gap-2">
+              <Key className="h-5 w-5 text-blue-600" />
+              Anahtar Paketi Satın Al
+            </DialogTitle>
             <DialogDescription>
               Aşağıdaki bilgileri inceleyip satın alma talebinizi oluşturabilirsiniz.
             </DialogDescription>
@@ -3587,17 +3590,67 @@ function CilingirPanelContent() {
           
           {selectedPackage && (
             <div className="space-y-6">
-              <div className="bg-blue-50 p-4 rounded-lg flex items-center justify-between">
-                <div className="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-blue-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                  </svg>
-                  <div>
-                    <h4 className="font-medium text-lg text-gray-900">{selectedPackage.keyAmount} Anahtar</h4>
-                    <p className="text-sm text-gray-600">Paket No: #{selectedPackage.id}</p>
+              <div className="rounded-lg border border-blue-100 overflow-hidden">
+                {/* Paket Başlık */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border-b border-blue-100">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-bold text-xl text-blue-800">{selectedPackage.name}</h4>
+                    {selectedPackage.isRecommended && (
+                      <span className="bg-blue-600 text-white text-xs font-medium px-2.5 py-1 rounded-full">
+                        Önerilen
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-blue-600 mt-1">
+                    {selectedPackage.description || "Bu paket ile profilinizi üst sıralarda göstererek daha fazla müşteriye ulaşabilirsiniz."}
+                  </p>
+                </div>
+                
+                {/* Paket Detayları */}
+                <div className="p-4 bg-white">
+                  <div className="flex flex-col sm:flex-row justify-between gap-4">
+                    {/* Sol Kısım - Anahtar Bilgileri */}
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                          <Key className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <h5 className="font-semibold text-gray-900">{selectedPackage.keyAmount.toLocaleString('tr-TR')}</h5>
+                          <p className="text-xs text-gray-500">Toplam Anahtar</p>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-blue-50 p-3 rounded-md">
+                        <div className="text-xs font-medium text-gray-500 mb-1">Anahtar Başına Maliyet</div>
+                        <div className="text-lg font-bold text-blue-700">
+                          {(selectedPackage.price / selectedPackage.keyAmount).toFixed(2)} ₺
+                          <span className="text-xs font-normal text-blue-600 ml-1">/ anahtar</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Sağ Kısım - Fiyat Bilgileri */}
+                    <div className="flex flex-col items-center justify-center bg-green-50 p-4 rounded-lg">
+                      <div className="text-sm font-medium text-green-700 mb-1">Toplam Tutar</div>
+                      <div className="text-2xl font-bold text-green-700">
+                        {selectedPackage.price.toLocaleString('tr-TR')} ₺
+                      </div>
+                      {!selectedPackage.isUnlimited && (
+                        <div className="text-xs text-green-600 mt-2">
+                          {selectedPackage.validFrom && selectedPackage.validTo && 
+                            `${new Date(selectedPackage.validFrom).toLocaleDateString('tr-TR')} - ${new Date(selectedPackage.validTo).toLocaleDateString('tr-TR')}`
+                          }
+                        </div>
+                      )}
+                      {selectedPackage.isUnlimited && (
+                        <div className="text-xs font-medium text-green-600 mt-2">
+                          Süresiz Paket
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <span className="text-xl font-bold text-blue-700">{selectedPackage.price} ₺</span>
               </div>
               
               <div>
@@ -3606,29 +3659,33 @@ function CilingirPanelContent() {
                   value={purchaseNote} 
                   onChange={(e) => setPurchaseNote(e.target.value)}
                   placeholder="Yöneticiye satın alma işlemi hakkında iletmek istediğiniz bir not yazabilirsiniz."
-                  className="w-full"
+                  className="w-full resize-none"
                 />
               </div>
               
-              <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded-lg flex items-start space-x-2">
-                <Info className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
-                <p>Satın alma işleminiz site yöneticisi tarafından onaylandıktan sonra anahtar bakiyenize eklenecektir. Size e-posta ile bilgilendirme yapılacaktır.</p>
+              <div className="text-sm text-gray-600 bg-amber-50 p-4 rounded-lg flex items-start space-x-3 border border-amber-100">
+                <Info className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-amber-800 mb-1">Ödeme Bilgisi</p>
+                  <p>Satın alma işleminiz site yöneticisi tarafından onaylandıktan sonra anahtar bakiyenize eklenecektir. İşlem ile ilgili bilgilendirme e-posta adresinize gönderilecektir.</p>
+                </div>
               </div>
             </div>
           )}
           
-          <DialogFooter>
+          <DialogFooter className="sm:justify-end gap-2 mt-4">
             <Button
               variant="outline"
               onClick={() => setIsPackageModalOpen(false)}
               disabled={isPurchasePending}
+              className="w-full sm:w-auto"
             >
               İptal
             </Button>
             <Button 
               onClick={handlePurchaseSubmit}
               disabled={isPurchasePending}
-              className="relative"
+              className="relative w-full sm:w-auto bg-green-600 hover:bg-green-700"
             >
               {isPurchasePending ? (
                 <>
@@ -3639,7 +3696,10 @@ function CilingirPanelContent() {
                   İşleniyor...
                 </>
               ) : (
-                'Satın Alma Talebi Oluştur'
+                <>
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Satın Alma Talebi Oluştur
+                </>
               )}
             </Button>
           </DialogFooter>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 
 export const RatingModal = ({ 
@@ -11,15 +11,24 @@ export const RatingModal = ({
   const [rating, setRating] = useState(initialRating);
   const [comment, setComment] = useState("");
   const [hoverRating, setHoverRating] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit({ rating, comment });
-    // Form temizle
-    setRating(0);
-    setComment("");
+    setIsSubmitting(true);
+
+    try {
+      await onSubmit({ rating, comment });
+      // Form temizle
+      setRating(0);
+      setComment("");
+    } catch (error) {
+      console.error("Değerlendirme gönderirken hata:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -90,9 +99,9 @@ export const RatingModal = ({
             <Button 
               type="submit" 
               className="bg-blue-600 hover:bg-blue-700 text-white"
-              disabled={rating === 0}
+              disabled={rating === 0 || isSubmitting}
             >
-              Gönder
+              {isSubmitting ? "Gönderiliyor..." : "Gönder"}
             </Button>
           </div>
         </form>

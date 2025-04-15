@@ -33,3 +33,36 @@ export async function GET(request) {
     });
   }
 }
+
+export async function PUT(request) {
+  try {
+    const { supabase } = await checkAdminAuth(request);
+
+    const { id, status } = await request.json();
+
+    const updateStatus = status === "approved" ? "approved" : status === "rejected" ? "rejected" : "pending";
+
+
+    const { data, error } = await supabase
+    .from('locksmiths')
+    .update({ status: updateStatus })
+    .eq('id', id);
+
+    if (error) {
+      throw error;
+    } 
+
+    return NextResponse.json({
+      success: true,
+      data: data
+    });
+  } catch (error) {
+    console.error('Çilingir güncellenemedi:', error);
+    return NextResponse.json({
+      success: false,
+      data: {},
+      error: 'Çilingir güncellenemedi'
+    });
+  }
+}
+
