@@ -41,18 +41,12 @@ export default function RootLayout({ children }) {
 
             // Dönüşüm İzleme Fonksiyonu
             window.gtag_report_conversion = function(url) {
-              var callback = function () {
-                if (typeof(url) !== 'undefined') {
-                  window.location = url;
-                }
-              };
               gtag('event', 'conversion', {
                   'send_to': 'AW-17009716148/PTvNCIz1_LgaELTX7q4_',
                   'value': 1.0,
-                  'currency': 'TRY',
-                  'event_callback': callback
+                  'currency': 'TRY'
               });
-              return false;
+              return true;
             };
           `
         }} />
