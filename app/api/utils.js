@@ -598,14 +598,43 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
       keyAmount = 0;
     }
 
+    try {
+      //count user_activity_logs with userId
+      const { count: userActivityLogsCount, error: userActivityLogsError } = await supabase
+        .from('user_activity_logs')
+        .select('id', { count: 'exact', head: true })
+        .eq('userid', userId)
+
+      if (userActivityLogsError) {
+        console.error('Kullanıcı aktivite kayıtları alınamadı:', userActivityLogsError);
+      }
+
+
+      if (userActivityLogsCount > 10) {
+        //update users table issuspicious to true
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({ issuspicious: true })
+          .eq('id', userId);
+
+        if (updateError) {
+          console.error('Kullanıcı güncellenemedi:', updateError);
+        }
+
+      }
+    } catch (error) {
+      console.error('Kullanıcı aktivite kayıtları alınamadı:', error);
+    }
+
+
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('id,islocksmith,issuspicious')
+      .eq('id', userId)
+      .limit(1);
     // Kullanıcının varlığını kontrol et, yoksa yeni bir kullanıcı oluştur
     // Bu adım, users tablosu boşaltıldığında foreign key hatası almanın önüne geçecek
     if (userId) {
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('id', userId)
-        .limit(1);
 
       if (userError) {
         console.error('Kullanıcı kontrolü sırasında hata:', userError);
@@ -679,13 +708,76 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
       console.log(`Yeni kullanıcı oluşturuldu: ${userId}`);
     }
 
+    try {
+      if (userData[0]?.islocksmith) {
+        keyAmount = 0;
+      }
+
+      if (userData[0]?.issuspicious) {
+        keyAmount = 0;
+      }
+
+    } catch (error) {
+      console.error('Kullanıcı bilgisi alınamadı:', error);
+    }
+
+
+    try {
+      if (additionalData.locksmithId) {
+        const { data: locksmithData, error: locksmithError } = await supabase
+          .from('locksmiths')
+          .select('provinceid')
+          .eq('id', additionalData.locksmithId)
+          .limit(1);
+
+        if (locksmithError) {
+          console.error('Çilingir bilgisi alınamadı:', locksmithError);
+        }
+
+
+        if (locksmithData && locksmithData.length > 0) {
+          if (locksmithData[0].provinceid !== additionalData.searchProvinceId) {
+            keyAmount = 0;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Çilingir bilgisi alınamadı:', error);
+    }
+
+
+    try {
+      if (additionalData.locksmithId && additionalData.searchServiceId) {
+        const { data: locksmithData, error: locksmithError } = await supabase
+          .from('locksmith_services')
+          .select('serviceid')
+          .eq('locksmithid', additionalData.locksmithId)
+          .eq('serviceid', additionalData.searchServiceId)
+          .eq('isactive', true)
+          .limit(1);
+
+        if (locksmithError) {
+          console.error('Çilingir bilgisi alınamadı:', locksmithError);
+        }
+
+        if (locksmithData && locksmithData.length > 0) {
+          keyAmount = 0;
+        }
+      }
+
+    } catch (error) {
+      console.error('Çilingir bilgisi alınamadı:', error);
+    }
+
+
+
     const insertData = {
       // id: uuidv4(),
       userid: userId,
       activitytype: activitytype,
       devicetype: deviceType,
       keyamount: keyAmount,
-      createdat: new Date().toISOString()
+      createdat: new Date().toISOString(),
     };
 
     // UsageTypeId varsa ekle

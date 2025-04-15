@@ -8,7 +8,7 @@ export const searchLocksmiths = createAsyncThunk(
       // Kullanıcı bilgilerini ve oturum kimliğini al
       const userId = localStorage.getItem('userId');
       const sessionId = localStorage.getItem('sessionId');
-      
+
       // shouldLog true ise aktivite logu oluştur
       if (shouldLog && userId && sessionId) {
         // Önce arama aktivitesini logla
@@ -30,7 +30,7 @@ export const searchLocksmiths = createAsyncThunk(
               userAgent
             }),
           });
-          
+
           if (!activityResponse.ok) {
             console.error('Arama aktivite log hatası:', await activityResponse.text());
           } else {
@@ -42,31 +42,31 @@ export const searchLocksmiths = createAsyncThunk(
       } else {
         //console.log('shouldLog=false olduğu için arama aktivitesi loglanmadı');
       }
-      
+
       // Çilingir verilerini GET ile getir
       const queryParams = new URLSearchParams({
         serviceId: selectedValues.serviceId,
         districtId: selectedValues.districtId,
         provinceId: selectedValues.provinceId
       }).toString();
-      
+
       const response = await fetch(`/api/public/search?${queryParams}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         }
       });
-      
+
       if (!response.ok) {
         return rejectWithValue('Arama sırasında bir hata oluştu');
       }
-      
+
       const data = await response.json();
-      
+
       // Çilingir görüntüleme aktivitelerini logla - seviyelerine göre (shouldLog true ise)
       if (shouldLog && userId && sessionId && data.locksmiths && data.locksmiths.length > 0) {
         //console.log(`${data.locksmiths.length} çilingir için görüntüleme aktiviteleri loglanıyor...`);
-        
+
         try {
           // İlk çilingir - seviye 1
           if (data.locksmiths.length >= 1) {
@@ -89,23 +89,11 @@ export const searchLocksmiths = createAsyncThunk(
               }),
             });
 
-            //console.log('firstLocksmithResponse', firstLocksmithResponse)
-            //console.log('activitytype', 'locksmith_list_view')
-            //console.log('level', 1)
-            //console.log('locksmithId', data.locksmiths[0].id)
-            //console.log('searchProvinceId', selectedValues.provinceId)
-            //console.log('searchDistrictId', selectedValues.districtId)
-            //console.log('searchServiceId', selectedValues.serviceId)
-            //console.log('position', 1)
-            //console.log('userId', userId)
-            //console.log('sessionId', sessionId)
-            //console.log('userAgent', userAgent)
-            
             if (!firstLocksmithResponse.ok) {
               console.error('1. çilingir aktivite log hatası:', await firstLocksmithResponse.text());
             }
           }
-          
+
           // İkinci çilingir - seviye 2
           if (data.locksmiths.length >= 2) {
             const secondLocksmithResponse = await fetch('/api/public/user/activity', {
@@ -126,12 +114,12 @@ export const searchLocksmiths = createAsyncThunk(
                 userAgent
               }),
             });
-            
+
             if (!secondLocksmithResponse.ok) {
               console.error('2. çilingir aktivite log hatası:', await secondLocksmithResponse.text());
             }
           }
-          
+
           // Diğer tüm çilingirler - seviye 3
           for (let i = 2; i < data.locksmiths.length; i++) {
             const otherLocksmithResponse = await fetch('/api/public/user/activity', {
@@ -152,12 +140,12 @@ export const searchLocksmiths = createAsyncThunk(
                 userAgent
               }),
             });
-            
+
             if (!otherLocksmithResponse.ok) {
-              console.error(`${i+1}. çilingir aktivite log hatası:`, await otherLocksmithResponse.text());
+              console.error(`${i + 1}. çilingir aktivite log hatası:`, await otherLocksmithResponse.text());
             }
           }
-          
+
           //console.log('Tüm çilingir görüntüleme aktiviteleri loglandı.');
         } catch (error) {
           console.error('Çilingir görüntüleme aktivitesi log hatası:', error);
@@ -165,11 +153,11 @@ export const searchLocksmiths = createAsyncThunk(
       } else if (!shouldLog) {
         //console.log('shouldLog=false olduğu için çilingir görüntüleme aktiviteleri loglanmadı');
       }
-      
+
       // Seçilen değerleri de yanıtta gönder
-      return { 
+      return {
         locksmiths: data.locksmiths || [],
-        selectedValues 
+        selectedValues
       };
     } catch (error) {
       console.error('Çilingir arama hatası:', error);

@@ -21,19 +21,31 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="tr">
+      <head>
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17009716148"></script>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-17009716148');
+          `
+        }} />
+      </head>
       {/* <body className="font-sans"> */}
       <body className={inter.className}>
-          <Providers>
-            <ToastProvider>
-                <Header />
-                <div className="global-loading-container">
-                  <div className="global-loader"></div>
-                </div>
-                <div className="custom-notification-container"></div>
-                {children}
-                <Footer />
-            </ToastProvider>
-          </Providers>
+        <Providers>
+          <ToastProvider>
+            <Header />
+            <div className="global-loading-container">
+              <div className="global-loader"></div>
+            </div>
+            <div className="custom-notification-container"></div>
+            {children}
+            <Footer />
+          </ToastProvider>
+        </Providers>
       </body>
     </html>
   );

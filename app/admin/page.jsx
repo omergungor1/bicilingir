@@ -758,7 +758,7 @@ function AdminPanelContent() {
                     </div>
 
                     {/* İkinci Sıra İstatistikler */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                       <Card className="hover:shadow-md transition-all">
                         <CardContent className="p-4">
                           <div className="flex items-center space-x-3">
@@ -796,20 +796,6 @@ function AdminPanelContent() {
                             <div>
                               <p className="text-sm text-gray-500">Görüntülenme</p>
                               <p className="text-lg font-semibold">2,845</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="hover:shadow-md transition-all">
-                        <CardContent className="p-4">
-                          <div className="flex items-center space-x-3">
-                            <div className="bg-green-100 p-2 rounded-lg">
-                              <Calendar className="h-5 w-5 text-green-600" />
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-500">Aktif Çilingir</p>
-                              <p className="text-lg font-semibold">286</p>
                             </div>
                           </div>
                         </CardContent>
@@ -1442,7 +1428,7 @@ function AdminPanelContent() {
                         )
                         }
                         {!isReviewsLoading && reviews && reviews.length > 0 && reviews.map((review) => (
-                          <Card key={review.id} className={`hover:shadow-md transition-all ${review.status === "waiting" ? "border-l-4 border-l-yellow-400" :
+                          <Card key={review.id} className={`hover:shadow-md ${review.users.islocksmith && "bg-red-50"} transition-all ${review.status === "waiting" ? "border-l-4 border-l-yellow-400" :
                             review.status === "approved" ? "border-l-4 border-l-green-400" :
                               "border-l-4 border-l-red-400"
                             }`}>
@@ -1450,7 +1436,7 @@ function AdminPanelContent() {
                               <div className="flex flex-col md:flex-row justify-between">
                                 <div className="mb-3 md:mb-0">
                                   <div className="flex items-center space-x-2 mb-1">
-                                    <h3 className="font-semibold text-gray-900">Müşteri</h3>
+                                    <h3 className="font-semibold text-gray-900">{review.users.islocksmith ? "Çilingir" : "Müşteri"}{review.users.issuspicious && " - Şüpheli"}</h3>
                                     <span className="text-sm text-gray-500">→</span>
                                     <span className="font-medium text-blue-600">{review.locksmiths.businessname}</span>
                                     <span className={`px-2 py-0.5 rounded-full text-xs ${review.status === "pending" ? "bg-yellow-100 text-yellow-800" :

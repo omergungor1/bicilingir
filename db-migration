@@ -337,3 +337,15 @@ CREATE TABLE newsletter_subscribers (
   unsubscribed boolean default false,
   unsubscribe_at timestamp
 );
+
+
+  -- İletişim Formu Tablosu
+CREATE TABLE public.contact_form (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  type TEXT CHECK (type IN ('customer', 'locksmith')) NOT NULL,
+  name TEXT NOT NULL,
+  phone TEXT,
+  email TEXT,
+  message TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now())
+);

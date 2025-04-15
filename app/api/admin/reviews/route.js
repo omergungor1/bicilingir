@@ -14,7 +14,7 @@ export async function GET(request) {
 
     const { data: reviews, error } = await supabase
         .from('reviews')
-        .select('*, locksmiths(businessname,provinces(name))')
+        .select('*, locksmiths(businessname,provinces(name)),users(islocksmith,issuspicious)')
         .order('createdat', { ascending: false })
         .eq('status', filter)
         .range(start, end);
@@ -70,19 +70,15 @@ export async function GET(request) {
         .eq('status', 'approved')
         .eq('rating', 1);
 
-
-
     const statsData = {
         avgRating: Number(((fiveStarCount * 5 + fourStarCount * 4 + threeStarCount * 3 + twoStarCount * 2 + oneStarCount * 1) / reviewCount).toFixed(1)),
-        totalReviews: totalCount,
+        totalReviews: reviewCount,
         fiveStar: Number(((fiveStarCount * 100) / reviewCount).toFixed(1)),
         fourStar: Number(((fourStarCount * 100) / reviewCount).toFixed(1)),
         threeStar: Number(((threeStarCount * 100) / reviewCount).toFixed(1)),
         twoStar: Number(((twoStarCount * 100) / reviewCount).toFixed(1)),
         oneStar: Number(((oneStarCount * 100) / reviewCount).toFixed(1))
     }
-
-
 
     return NextResponse.json({ success: true, data: reviews, totalCount: totalCount, totalPages: totalPages, currentPage: parseInt(page), filter: filter, statsData: statsData });
 }
