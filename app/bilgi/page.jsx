@@ -134,8 +134,8 @@ export default function CilingirlerPage() {
   return (
     <main className="flex min-h-screen flex-col items-center">
       {/* Hero Bölümü */}
-      <Hero 
-        title="Çilingir Ağımıza Katılın" 
+      <Hero
+        title="Çilingir Ağımıza Katılın"
         description="Türkiye'nin ilk ve tek çilingir arama platformuna katılarak işinizi büyütün, daha fazla müşteriye ulaşın ve kazancınızı artırın."
       />
 
@@ -189,11 +189,11 @@ export default function CilingirlerPage() {
                   <p className="text-gray-600">{step.description}</p>
                 </div>
                 {index < steps.length - 1 && (
-                <div className="hidden md:block transform translate-x-full">
-                  <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </div>
+                  <div className="hidden md:block transform translate-x-full">
+                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </div>
                 )}
               </div>
             ))}
@@ -253,7 +253,7 @@ export default function CilingirlerPage() {
             <div className="bg-white rounded-lg p-6 shadow-md">
               <h3 className="text-xl font-bold mb-2 text-gray-800">Bi Çilingir'e katılmak için ne gerekiyor?</h3>
               <p className="text-gray-600">
-                Bi Çilingir'e katılmak için çilingirlik mesleğini icra ettiğinizi gösteren belgeler, kimlik bilgileriniz ve iletişim bilgileriniz gerekiyor. Ayrıca, hizmet verdiğiniz bölgeleri ve sunduğunuz hizmetleri belirtmeniz gerekiyor.
+                Bi Çilingir'e katılmak için çilingirlik mesleğini icra ettiğinizi gösteren belge ve iletişim bilgileriniz gerekiyor. Ayrıca, hizmet verdiğiniz bölgeleri ve sunduğunuz hizmetleri belirtmeniz gerekiyor.
               </p>
             </div>
             <div className="bg-white rounded-lg p-6 shadow-md">
@@ -265,7 +265,7 @@ export default function CilingirlerPage() {
             <div className="bg-white rounded-lg p-6 shadow-md">
               <h3 className="text-xl font-bold mb-2 text-gray-800">Ödemeler nasıl yapılıyor?</h3>
               <p className="text-gray-600">
-                Ödemeler, müşteriden doğrudan size yapılır. Müşteri, hizmet bedelini nakit veya kredi kartı ile sizin tercihinize göre ödeyebilir. Bi Çilingir, sadece müşteri ile çilingir arasında bağlantı kurar ve reklam ücreti alır.
+                Ödemeler, müşteriden doğrudan size yapılır. Müşteri, hizmet bedelini nakit veya kredi kartı ile sizin tercihinize göre ödeyebilir. Bi Çilingir, sadece müşteri ile çilingir arasında bağlantı kurar. Daha fazla öne çıkmak isteyen çilingirler için reklam ücreti alır.
               </p>
             </div>
             <div className="bg-white rounded-lg p-6 shadow-md">
@@ -286,27 +286,26 @@ export default function CilingirlerPage() {
           <p className="text-lg mb-8 max-w-2xl mx-auto">
             Kampanyalardan, indirimlerden ve yeni hizmetlerimizden haberdar olmak için çilingirler için özenle hazırladığımız bültenimize abone olun. Güncel haberleri kaçırmayın!
           </p>
-          
+
           <div className="max-w-md mx-auto flex items-center gap-2">
-            <Input 
-              type="email" 
-              placeholder="E-posta adresiniz" 
+            <Input
+              type="email"
+              placeholder="E-posta adresiniz"
               name="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="bg-white text-gray-800 rounded-l-lg w-full"
             />
-            <Button 
+            <Button
               type="submit"
               disabled={isLoading}
-              className={`font-bold py-2 px-6 rounded-r-lg transition-all duration-300 ${
-                isSubscribed 
-                  ? "bg-green-500 text-white cursor-default hover:bg-green-500" 
-                  : isLoading 
-                    ? "bg-gray-300 text-gray-500 cursor-wait" 
-                    : "bg-white text-blue-600 hover:bg-blue-50 cursor-pointer"
-              }`}
+              className={`font-bold py-2 px-6 rounded-r-lg transition-all duration-300 ${isSubscribed
+                ? "bg-green-500 text-white cursor-default hover:bg-green-500"
+                : isLoading
+                  ? "bg-gray-300 text-gray-500 cursor-wait"
+                  : "bg-white text-blue-600 hover:bg-blue-50 cursor-pointer"
+                }`}
             >
               {isSubscribed ? (
                 <span className="flex items-center">

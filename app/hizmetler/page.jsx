@@ -109,8 +109,8 @@ export default function HizmetlerPage() {
   return (
     <main className="flex min-h-screen flex-col items-center">
       {/* Hero Bölümü */}
-      <Hero 
-        title="Çilingir Hizmetlerimiz" 
+      <Hero
+        title="Çilingir Hizmetlerimiz"
         description="Bi Çilingir olarak, kapsamlı çilingir hizmetleri sunuyoruz. Acil durumlardan rutin bakımlara kadar tüm ihtiyaçlarınız için profesyonel çözümler."
       />
 
@@ -152,9 +152,9 @@ export default function HizmetlerPage() {
             Kapınız kilitli kaldı? Anahtarınızı kaybettiniz? Endişelenmeyin, 7/24 hızlı çilingir hizmeti ile en kısa sürede yanınızdayız.
           </p>
           <Link href="/">
-          <Button className="bg-white text-blue-600 hover:bg-gray-100 font-bold text-lg px-8 py-4 cursor-pointer">
-            Hızlı Çilingir Bul
-          </Button>
+            <Button className="bg-white text-blue-600 hover:bg-gray-100 font-bold text-lg px-8 py-4 cursor-pointer">
+              Hızlı Çilingir Bul
+            </Button>
           </Link>
         </div>
       </section>
