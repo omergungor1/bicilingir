@@ -6,15 +6,15 @@ export async function GET(request) {
     const { supabase } = await checkAdminAuth(request);
 
     const { data: locksmithsData, error } = await supabase
-    .from('locksmiths')
-    .select(`
+      .from('locksmiths')
+      .select(`
       *,
       locksmith_details ( * ),
       provinces ( * ),
       districts!locksmiths_districtid_fkey ( * )
     `)
-    .order('createdat', { ascending: false });
-  
+      .order('createdat', { ascending: false });
+
 
     if (error) {
       throw error;
@@ -44,13 +44,31 @@ export async function PUT(request) {
 
 
     const { data, error } = await supabase
-    .from('locksmiths')
-    .update({ status: updateStatus })
-    .eq('id', id);
+      .from('locksmiths')
+      .update({ status: updateStatus, isactive: true, isverified: true })
+      .eq('id', id);
 
     if (error) {
       throw error;
-    } 
+    }
+
+    //import notifcation
+    const accountApprovedNotification = {
+      locksmithid: id,
+      title: 'Hesabınız Onaylandı',
+      message: 'Hesabınız onaylandı. Artık aramalarda görünür olacaksınız.',
+      type: 'success',
+      createdat: new Date().toISOString()
+    }
+
+    const { data: accountApprovedNotificationData, error: accountApprovedNotificationError } = await supabase
+      .from('notifications')
+      .insert(accountApprovedNotification)
+      .select();
+
+    if (accountApprovedNotificationError) {
+      throw accountApprovedNotificationError;
+    }
 
     return NextResponse.json({
       success: true,
