@@ -908,6 +908,7 @@ function AdminPanelContent() {
                               <th className="text-left p-3">İşletme Adı</th>
                               <th className="text-left p-3">Bölge</th>
                               <th className="text-left p-3">Durum</th>
+                              <th className="text-left p-3">Aktiflik</th>
                               <th className="text-left p-3">Created At</th>
                               <th className="text-left p-3">İşlemler</th>
                             </tr>
@@ -921,6 +922,11 @@ function AdminPanelContent() {
                                 <td className="p-3">
                                   <span className={`px-2 py-1 rounded-full text-xs ${locksmith.status === "approved" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>
                                     {locksmith.status === "approved" ? "Onaylandı" : locksmith.status === "pending" ? "Beklemede" : "Reddedildi"}
+                                  </span>
+                                </td>
+                                <td className="p-3">
+                                  <span className={`px-2 py-1 rounded-full text-xs ${locksmith.isactive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                                    {locksmith.isactive ? "Aktif" : "Pasif"}
                                   </span>
                                 </td>
                                 <td className="p-3">{new Date(locksmith.createdat).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>

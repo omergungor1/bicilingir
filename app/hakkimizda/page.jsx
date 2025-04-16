@@ -2,38 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { Button } from "../../components/ui/button";
 import Hero from "../../components/Hero";
-import SearchForm from "../../components/SearchForm";
 
-const teamMembers = [
-  {
-    id: 1,
-    name: "Ali Yılmaz",
-    role: "Kurucu & CEO",
-    image: "https://randomuser.me/api/portraits/men/32.jpg",
-    bio: "10 yıllık yazılım ve girişimcilik deneyimine sahip. Bi Çilingir'i kurarak çilingir hizmetlerini daha erişilebilir hale getirmeyi hedefliyor."
-  },
-  {
-    id: 2,
-    name: "Ayşe Kaya",
-    role: "Operasyon Müdürü",
-    image: "https://randomuser.me/api/portraits/women/44.jpg",
-    bio: "Lojistik ve operasyon alanında 8 yıllık deneyime sahip. Bi Çilingir'de çilingir ağının sorunsuz çalışmasını sağlıyor."
-  },
-  {
-    id: 3,
-    name: "Mehmet Demir",
-    role: "Teknoloji Direktörü",
-    image: "https://randomuser.me/api/portraits/men/22.jpg",
-    bio: "Yazılım geliştirme ve teknoloji alanında 12 yıllık deneyime sahip. Bi Çilingir'in teknolojik altyapısını yönetiyor."
-  },
-  {
-    id: 4,
-    name: "Zeynep Şahin",
-    role: "Müşteri İlişkileri Müdürü",
-    image: "https://randomuser.me/api/portraits/women/28.jpg",
-    bio: "Müşteri hizmetleri alanında 6 yıllık deneyime sahip. Bi Çilingir'de müşteri memnuniyetini en üst seviyede tutmayı hedefliyor."
-  }
-];
 
 const stats = [
   { id: 1, value: "10,000+", label: "Tamamlanan İş" },
@@ -73,8 +42,8 @@ export default function HakkimizdaPage() {
   return (
     <main className="flex min-h-screen flex-col items-center">
       {/* Hero Bölümü */}
-      <Hero 
-        title="Hakkımızda" 
+      <Hero
+        title="Hakkımızda"
         description="Bi Çilingir, çilingir hizmetlerini daha erişilebilir, güvenilir ve şeffaf hale getirmek için kurulmuş bir platformdur."
       />
 
@@ -87,7 +56,7 @@ export default function HakkimizdaPage() {
               Bi Çilingir, 2020 yılında kuruldu. Ömer, bir gün evinin anahtarını kaybettiğinde güvenilir bir çilingir bulmakta zorlandı. Saatlerce araştırma yaptıktan sonra, sonunda bir çilingir bulabildi, ancak bu süreç oldukça stresli ve zaman alıcıydı.
             </p>
             <p className="text-gray-600 mb-4">
-              Bu deneyimden sonra, Ömer çilingir hizmetlerini daha erişilebilir hale getirmek için bir platform oluşturmaya karar verdi. Böylece Bi Çilingir doğdu - insanların güvenilir, profesyonel ve uygun fiyatlı çilingirlere hızlıca ulaşabilecekleri bir platform.
+              Bu deneyimden sonra, Ömer çilingir hizmetlerini daha erişilebilir hale getirmek için bir platform oluşturmaya karar verdi. Böylece Bi Çilingir doğdu. Bi Çilingir, insanların güvenilir, profesyonel ve uygun fiyatlı çilingirlere hızlıca ulaşabilecekleri bir platform.
             </p>
             <p className="text-gray-600 mb-4">
               Bugün, Bi Çilingir Türkiye'nin 81 ilinde hizmet veren 500'den fazla profesyonel çilingiri bir araya getiriyor. Platformumuz sayesinde, müşteriler ihtiyaç duydukları çilingir hizmetine sadece birkaç tıkla ulaşabiliyorlar.
@@ -146,25 +115,6 @@ export default function HakkimizdaPage() {
                 <div className="text-4xl mb-4">{value.icon}</div>
                 <h3 className="text-xl font-bold mb-2 text-blue-600">{value.title}</h3>
                 <p className="text-gray-600">{value.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Ekibimiz */}
-      <section className="w-full py-16 px-4 bg-gray-50">
-        <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">Ekibimiz</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {teamMembers.map((member) => (
-              <div key={member.id} className="bg-white rounded-lg overflow-hidden shadow-md">
-                <img src={member.image} alt={member.name} className="w-full h-64 object-cover" />
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-1 text-gray-800">{member.name}</h3>
-                  <p className="text-blue-600 mb-4">{member.role}</p>
-                  <p className="text-gray-600">{member.bio}</p>
-                </div>
               </div>
             ))}
           </div>

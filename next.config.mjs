@@ -27,7 +27,7 @@ const nextConfig = {
     //     preload: "swap"
     //   }
     // },
-    optimizeCss:false,
+    optimizeCss: false,
     forceSwcTransforms: true,
   },
   // Önbellek sorunlarını çözmek için

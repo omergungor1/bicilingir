@@ -283,16 +283,16 @@ export default function Home() {
       console.error('Aktivite log hatası:', error);
     }
 
-    // Google Analytics'e arama sonucu görüntüleme kaydı
-    try {
-      if (typeof window !== 'undefined' && window.gtag_report_conversion && locksmith) {
-        // Dönüşüm takibi, URL'yi iletmeden gerçekleştir
-        window.gtag_report_conversion();
-        console.log('Google Ads dönüşüm takibi gönderildi');
-      }
-    } catch (error) {
-      console.error('Google Ads dönüşüm takibi hatası:', error);
-    }
+    // // Google Analytics'e arama sonucu görüntüleme kaydı
+    // try {
+    //   if (typeof window !== 'undefined' && window.gtag_report_conversion && locksmith) {
+    //     // Dönüşüm takibi, URL'yi iletmeden gerçekleştir
+    //     window.gtag_report_conversion();
+    //     console.log('Google Ads dönüşüm takibi gönderildi');
+    //   }
+    // } catch (error) {
+    //   console.error('Google Ads dönüşüm takibi hatası:', error);
+    // }
 
     // Telefon numarasını çağırma işlemi
     if (locksmith.phone) {
