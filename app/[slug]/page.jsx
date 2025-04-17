@@ -552,9 +552,14 @@ export default function LocksmithDetail({ params }) {
 
               <div className="border-t border-gray-200 pt-6 mb-6">
                 <h2 className="text-xl font-bold text-gray-800 mb-4">Hakkında</h2>
-                <p className="text-gray-600 mb-4">
-                  {locksmith.abouttext || "Bu çilingir henüz açıklama eklememiş."}
-                </p>
+                {locksmith.abouttext ? (
+                  <div
+                    className="text-gray-600 mb-4 prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: locksmith.abouttext }}
+                  />
+                ) : (
+                  <p className="text-gray-600 mb-4">Bu çilingir henüz açıklama eklememiş.</p>
+                )}
               </div>
 
               <div className="border-t border-gray-200 pt-6 mb-6">

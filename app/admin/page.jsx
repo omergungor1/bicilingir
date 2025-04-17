@@ -44,7 +44,10 @@ import {
   ChevronDown,
   Loader2,
   MoreVertical,
-  Info
+  Info,
+  Footprints,
+  MessageCircle,
+  Globe,
 } from "lucide-react";
 import Image from "next/image";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
@@ -72,7 +75,7 @@ function AdminPanelContent() {
   const [showPackageModal, setShowPackageModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [packageToDelete, setPackageToDelete] = useState(null);
-
+  const [activeDashboardFilter, setActiveDashboardFilter] = useState('today');
 
   const [activeReviewFilter, setActiveReviewFilter] = useState("pending");
   const [reviews, setReviews] = useState([]);
@@ -89,6 +92,62 @@ function AdminPanelContent() {
   useEffect(() => {
     fetchReviews();
   }, [currentPage, activeReviewFilter]);
+
+
+  const [isActivitiesLoading, setIsActivitiesLoading] = useState(true);
+  const [isActivitiesNextPageLoading, setIsActivitiesNextPageLoading] = useState(false);
+  const [isActivitiesPreviousPageLoading, setIsActivitiesPreviousPageLoading] = useState(false);
+  const [activityList, setActivityList] = useState([]);
+  const [currentPageActivities, setCurrentPageActivities] = useState(1);
+  const [totalPagesActivities, setTotalPagesActivities] = useState(1);
+  const [dashboardStats, setDashboardStats] = useState({
+    total_locksmiths: 0,
+    total_users: 0,
+    total_activity_logs: 0,
+    total_locksmiths_percent: 0,
+    total_users_percent: 0,
+    total_activity_logs_percent: 0,
+    see: 0,
+    see_percent: 0,
+    call: 0,
+    call_percent: 0,
+    visit: 0,
+    visit_percent: 0,
+    review: 0,
+    review_percent: 0,
+    whatsapp: 0,
+    whatsapp_percent: 0,
+    website_visit: 0,
+    website_visit_percent: 0,
+  });
+
+  const handleDashboardFilterChange = async (filter = 'today', page = 1) => {
+    setActiveDashboardFilter(filter);
+    try {
+      setIsActivitiesLoading(true);
+      const response = await fetch(`/api/admin/dashboard/activity?period=${filter}&page=${page}`,
+        {
+          credentials: 'include',
+        }
+      );
+      const data = await response.json();
+      setDashboardStats(data.stats);
+      setActivityList(data.list);
+      setCurrentPageActivities(data.currentPage);
+
+      setTotalPagesActivities(data.totalPages);
+      setCurrentPageActivities(data.currentPage);
+    } catch (error) {
+      console.error("Dashboard verisi güncellenirken hata:", error);
+      showToast("İstatistikler alınırken bir hata oluştu", "error");
+    } finally {
+      setIsActivitiesLoading(false);
+      setIsActivitiesNextPageLoading(false);
+      setIsActivitiesPreviousPageLoading(false);
+    }
+
+  };
+
 
   const handleReviewStatusChange = async (reviewId, status) => {
     const response = await fetch('/api/admin/reviews', {
@@ -218,7 +277,8 @@ function AdminPanelContent() {
       fetchLocksmithList(),
       fetchServicesList(),
       fetchKeyPackagesList(),
-      fetchReviews()
+      fetchReviews(),
+      handleDashboardFilterChange()
     ]);
   }, []);
 
@@ -701,38 +761,47 @@ function AdminPanelContent() {
                     </div>
                   </CardHeader>
                   <CardContent>
+                    <div className="flex justify-between items-center mb-6">
+                      <div className="flex space-x-2 w-full overflow-x-auto scrollbar-hide scrollbar-thumb-blue-500 scrollbar-track-gray-100">
+                        <Button variant="outline" className={`${activeDashboardFilter === 'today' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => handleDashboardFilterChange('today')}>Bugün</Button>
+                        <Button variant="outline" className={`${activeDashboardFilter === 'yesterday' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => handleDashboardFilterChange('yesterday')}>Dün</Button>
+                        <Button variant="outline" className={`${activeDashboardFilter === 'last7days' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => handleDashboardFilterChange('last7days')}>Son 7 Gün</Button>
+                        <Button variant="outline" className={`${activeDashboardFilter === 'last30days' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => handleDashboardFilterChange('last30days')}>Son 30 Gün</Button>
+                        <Button variant="outline" className={`${activeDashboardFilter === 'all' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`} onClick={() => handleDashboardFilterChange('all')}>Tümü</Button>
+                      </div>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                      <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-none hover:shadow-lg transition-all">
+                      <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-none hover:shadow-lg transition-all">
                         <CardContent className="p-6">
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="text-sm text-blue-600 mb-1 font-medium">Toplam Kullanıcı</p>
-                              <h3 className="text-2xl font-bold text-blue-900">1,245</h3>
-                              <p className="text-sm text-blue-600 mt-2 flex items-center">
+                              <p className="text-sm text-purple-600 mb-1 font-medium">Kaydolan Çilingir</p>
+                              <h3 className="text-2xl font-bold text-purple-900">{dashboardStats?.total_locksmiths}</h3>
+                              {dashboardStats?.total_locksmiths_percent != 0 && <p className="text-sm text-purple-600 mt-2 flex items-center">
                                 <TrendingUp className="w-4 h-4 mr-1" />
-                                %12.5 artış
-                              </p>
+                                %{dashboardStats?.total_locksmiths_percent} artış
+                              </p>}
                             </div>
-                            <div className="bg-blue-500 p-3 rounded-full">
-                              <UserCheck className="h-8 w-8 text-white" />
+                            <div className="bg-purple-500 p-3 rounded-full">
+                              <Key className="h-8 w-8 text-white" />
                             </div>
                           </div>
                         </CardContent>
                       </Card>
 
-                      <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-none hover:shadow-lg transition-all">
+                      <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-none hover:shadow-lg transition-all">
                         <CardContent className="p-6">
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="text-sm text-purple-600 mb-1 font-medium">Toplam Çilingir</p>
-                              <h3 className="text-2xl font-bold text-purple-900">328</h3>
-                              <p className="text-sm text-purple-600 mt-2 flex items-center">
+                              <p className="text-sm text-blue-600 mb-1 font-medium">Kaydolan Kullanıcı</p>
+                              <h3 className="text-2xl font-bold text-blue-900">{dashboardStats?.total_users}</h3>
+                              {dashboardStats?.total_users_percent != 0 && <p className="text-sm text-blue-600 mt-2 flex items-center">
                                 <TrendingUp className="w-4 h-4 mr-1" />
-                                %8.3 artış
-                              </p>
+                                %{dashboardStats?.total_users_percent} artış
+                              </p>}
                             </div>
-                            <div className="bg-purple-500 p-3 rounded-full">
-                              <Key className="h-8 w-8 text-white" />
+                            <div className="bg-blue-500 p-3 rounded-full">
+                              <UserCheck className="h-8 w-8 text-white" />
                             </div>
                           </div>
                         </CardContent>
@@ -742,12 +811,12 @@ function AdminPanelContent() {
                         <CardContent className="p-6">
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="text-sm text-green-600 mb-1 font-medium">Tamamlanan İşler</p>
-                              <h3 className="text-2xl font-bold text-green-900">5,672</h3>
-                              <p className="text-sm text-green-600 mt-2 flex items-center">
+                              <p className="text-sm text-green-600 mb-1 font-medium">Eklenen Aktivite Logları</p>
+                              <h3 className="text-2xl font-bold text-green-900">{dashboardStats?.total_activity_logs}</h3>
+                              {dashboardStats?.total_activity_logs_percent != 0 && <p className="text-sm text-green-600 mt-2 flex items-center">
                                 <TrendingUp className="w-4 h-4 mr-1" />
-                                %15.2 artış
-                              </p>
+                                %{dashboardStats?.total_activity_logs_percent} artış
+                              </p>}
                             </div>
                             <div className="bg-green-500 p-3 rounded-full">
                               <Clock className="h-8 w-8 text-white" />
@@ -758,48 +827,181 @@ function AdminPanelContent() {
                     </div>
 
                     {/* İkinci Sıra İstatistikler */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                      <Card className="hover:shadow-md transition-all">
-                        <CardContent className="p-4">
-                          <div className="flex items-center space-x-3">
-                            <div className="bg-yellow-100 p-2 rounded-lg">
-                              <Star className="h-5 w-5 text-yellow-600" />
-                            </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
+                      <Card className="hover:shadow-lg transition-shadow bg-gradient-to-br from-blue-50 to-white">
+                        <CardContent className="p-4 md:p-6">
+                          <div className="flex items-center justify-between">
                             <div>
-                              <p className="text-sm text-gray-500">Ort. Puan</p>
-                              <p className="text-lg font-semibold">4.8/5</p>
+                              <p className="text-sm text-gray-600 mb-1 font-medium">Görüntülenme</p>
+                              <h3 className="text-2xl md:text-3xl font-bold text-gray-800">{dashboardStats?.see}</h3>
+                              {dashboardStats?.see_percent != 0 && <p className={`text-sm ${dashboardStats?.see_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d={dashboardStats?.see_percent > 0
+                                      ? "M5 10l7-7m0 0l7 7m-7-7v18"
+                                      : "M19 14l-7 7m0 0l-7-7m7 7V3"} />
+                                </svg>
+                                %{Math.abs(dashboardStats?.see_percent)} {dashboardStats?.see_percent > 0 ? "artış" : "azalma"}
+                              </p>}
                             </div>
+                            <div className="bg-blue-100 p-3 rounded-full shadow-sm">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 md:h-8 md:w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                            </div>
+                          </div>
+                          <div className="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-1 bg-blue-500 rounded-full" style={{ width: '70%' }}></div>
                           </div>
                         </CardContent>
                       </Card>
 
-                      <Card className="hover:shadow-md transition-all">
-                        <CardContent className="p-4">
-                          <div className="flex items-center space-x-3">
-                            <div className="bg-blue-100 p-2 rounded-lg">
-                              <PhoneCall className="h-5 w-5 text-blue-600" />
-                            </div>
+                      {/* Arama */}
+                      <Card className="hover:shadow-lg transition-shadow bg-gradient-to-br from-purple-50 to-white">
+                        <CardContent className="p-4 md:p-6">
+                          <div className="flex items-center justify-between">
                             <div>
-                              <p className="text-sm text-gray-500">Günlük Arama</p>
-                              <p className="text-lg font-semibold">124</p>
+                              <p className="text-sm text-gray-600 mb-1 font-medium">Arama</p>
+                              <h3 className="text-2xl md:text-3xl font-bold text-gray-800">{dashboardStats?.call}</h3>
+                              {dashboardStats?.call_percent != 0 && <p className={`text-sm ${dashboardStats?.call_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d={dashboardStats?.call_percent > 0
+                                      ? "M5 10l7-7m0 0l7 7m-7-7v18"
+                                      : "M19 14l-7 7m0 0l-7-7m7 7V3"} />
+                                </svg>
+                                %{Math.abs(dashboardStats?.call_percent)} {dashboardStats?.call_percent > 0 ? "artış" : "azalma"}
+                              </p>}
                             </div>
+                            <div className="bg-purple-100 p-3 rounded-full shadow-sm">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 md:h-8 md:w-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                              </svg>
+                            </div>
+                          </div>
+                          <div className="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-1 bg-purple-500 rounded-full" style={{ width: '60%' }}></div>
                           </div>
                         </CardContent>
                       </Card>
 
-                      <Card className="hover:shadow-md transition-all">
-                        <CardContent className="p-4">
-                          <div className="flex items-center space-x-3">
-                            <div className="bg-purple-100 p-2 rounded-lg">
-                              <Eye className="h-5 w-5 text-purple-600" />
-                            </div>
+                      {/* Toplam Profil Ziyareti */}
+                      <Card className="hover:shadow-lg transition-shadow bg-gradient-to-br from-green-50 to-white">
+                        <CardContent className="p-4 md:p-6">
+                          <div className="flex items-center justify-between">
                             <div>
-                              <p className="text-sm text-gray-500">Görüntülenme</p>
-                              <p className="text-lg font-semibold">2,845</p>
+                              <p className="text-sm text-gray-600 mb-1 font-medium">Profil Ziyareti</p>
+                              <h3 className="text-2xl md:text-3xl font-bold text-gray-800">{dashboardStats?.visit}</h3>
+                              {dashboardStats?.visit_percent != 0 && <p className={`text-sm ${dashboardStats?.visit_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d={dashboardStats?.visit_percent > 0
+                                      ? "M5 10l7-7m0 0l7 7m-7-7v18"
+                                      : "M19 14l-7 7m0 0l-7-7m7 7V3"} />
+                                </svg>
+                                %{Math.abs(dashboardStats?.visit_percent)} {dashboardStats?.visit_percent > 0 ? "artış" : "azalma"}
+                              </p>}
                             </div>
+                            <div className="bg-green-100 p-3 rounded-full shadow-sm">
+                              <Footprints className="h-6 w-6 md:h-8 md:w-8 text-green-600" />
+                            </div>
+                          </div>
+                          <div className="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-1 bg-green-500 rounded-full" style={{ width: '80%' }}></div>
                           </div>
                         </CardContent>
                       </Card>
+
+                      {/* Yorum */}
+                      <Card className="hover:shadow-lg transition-shadow bg-gradient-to-br from-amber-50 to-white">
+                        <CardContent className="p-4 md:p-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm text-gray-600 mb-1 font-medium">Yorum</p>
+                              <div className="flex items-center">
+                                <h3 className="text-2xl md:text-3xl font-bold text-gray-800">{dashboardStats?.review}</h3>
+                              </div>
+                              {dashboardStats?.review_percent !== 0 && <p className={`text-sm ${dashboardStats?.review_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d={dashboardStats?.review_percent > 0
+                                      ? "M5 10l7-7m0 0l7 7m-7-7v18"
+                                      : "M19 14l-7 7m0 0l-7-7m7 7V3"} />
+                                </svg>
+                                %{Math.abs(dashboardStats?.review_percent)} {dashboardStats?.review_percent > 0 ? "artış" : "azalma"}
+                              </p>}
+                            </div>
+                            <div className="bg-amber-100 p-3 rounded-full shadow-sm">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 md:h-8 md:w-8 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                              </svg>
+                            </div>
+                          </div>
+                          <div className="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-1 bg-amber-500 rounded-full" style={{ width: '95%' }}></div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Whatsapp */}
+                      <Card className="hover:shadow-lg transition-shadow bg-gradient-to-br from-teal-50 to-white">
+                        <CardContent className="p-4 md:p-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm text-gray-600 mb-1 font-medium">Whatsapp</p>
+                              <div className="flex items-center">
+                                <h3 className="text-2xl md:text-3xl font-bold text-gray-800">{dashboardStats?.whatsapp}</h3>
+                              </div>
+                              {dashboardStats?.whatsapp_percent != 0 && <p className={`text-sm ${dashboardStats?.whatsapp_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d={dashboardStats?.whatsapp_percent > 0
+                                      ? "M5 10l7-7m0 0l7 7m-7-7v18"
+                                      : "M19 14l-7 7m0 0l-7-7m7 7V3"} />
+                                </svg>
+                                %{Math.abs(dashboardStats?.whatsapp_percent)} {dashboardStats?.whatsapp_percent > 0 ? "artış" : "azalma"}
+                              </p>}
+                            </div>
+                            <div className="bg-teal-100 p-3 rounded-full shadow-sm">
+                              <MessageCircle className="h-6 w-6 md:h-8 md:w-8 text-teal-600" />
+                            </div>
+                          </div>
+                          <div className="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-1 bg-teal-500 rounded-full" style={{ width: '95%' }}></div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/*Website Ziyareti*/}
+                      <Card className="hover:shadow-lg transition-shadow bg-gradient-to-br from-purple-50 to-white">
+                        <CardContent className="p-4 md:p-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm text-gray-600 mb-1 font-medium">Website Ziyareti</p>
+                              <div className="flex items-center">
+                                <h3 className="text-2xl md:text-3xl font-bold text-gray-800">{dashboardStats?.website_visit}</h3>
+                              </div>
+                              {dashboardStats?.website_visit_percent != 0 && <p className={`text-sm ${dashboardStats?.website_visit_percent > 0 ? "text-green-600" : "text-red-600"} mt-2 flex items-center`}>
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d={dashboardStats?.website_visit_percent > 0
+                                      ? "M5 10l7-7m0 0l7 7m-7-7v18"
+                                      : "M19 14l-7 7m0 0l-7-7m7 7V3"} />
+                                </svg>
+                                %{Math.abs(dashboardStats?.website_visit_percent)} {dashboardStats?.website_visit_percent > 0 ? "artış" : "azalma"}
+                              </p>}
+                            </div>
+                            <div className="bg-purple-100 p-3 rounded-full shadow-sm">
+                              <Globe className="h-6 w-6 md:h-8 md:w-8 text-purple-600" />
+                            </div>
+                          </div>
+                          <div className="mt-4 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-1 bg-purple-500 rounded-full" style={{ width: '90%' }}></div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
                     </div>
 
                     <div className="mb-6">
@@ -807,71 +1009,175 @@ function AdminPanelContent() {
                         <Clock className="h-5 w-5 mr-2 text-blue-600" />
                         Son Aktiviteler
                       </h4>
-                      <div className="space-y-4">
-                        {[
-                          {
-                            title: "Yeni çilingir kaydoldu",
-                            description: "İstanbul, Kadıköy bölgesinde",
-                            time: "12 Mart 2024, 14:30",
-                            icon: <Key className="h-5 w-5" />,
-                            color: "blue"
-                          },
-                          {
-                            title: "Yeni değerlendirme",
-                            description: "5 yıldız - Hızlı ve güvenilir hizmet",
-                            time: "12 Mart 2024, 14:25",
-                            icon: <Star className="h-5 w-5" />,
-                            color: "yellow"
-                          },
-                          {
-                            title: "Acil çağrı bildirimi",
-                            description: "Beşiktaş bölgesinde kapı açma talebi",
-                            time: "12 Mart 2024, 14:20",
-                            icon: <AlertCircle className="h-5 w-5" />,
-                            color: "red"
-                          },
-                          {
-                            title: "Yeni kullanıcı kaydı",
-                            description: "Mobil uygulama üzerinden",
-                            time: "12 Mart 2024, 14:15",
-                            icon: <UserCheck className="h-5 w-5" />,
-                            color: "green"
-                          }
-                        ].map((activity, index) => (
-                          <Card key={index} className="hover:shadow-md transition-all">
-                            <CardContent className="p-4">
-                              <div className="flex items-center">
-                                <div className={`p-2 rounded-lg mr-4 
-                                  ${activity.color === "blue" ? "bg-blue-100 text-blue-600" :
-                                    activity.color === "yellow" ? "bg-yellow-100 text-yellow-600" :
-                                      activity.color === "red" ? "bg-red-100 text-red-600" :
-                                        "bg-green-100 text-green-600"}`}>
-                                  {activity.icon}
-                                </div>
-                                <div className="flex-grow">
-                                  <div className="flex justify-between items-start">
-                                    <div>
-                                      <p className="font-medium text-gray-900">{activity.title}</p>
-                                      <p className="text-sm text-gray-500">{activity.description}</p>
+                      {isActivitiesLoading ? (
+                        <div className="flex justify-center items-center p-12">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                        </div>
+                      ) : activityList?.length > 0 && activityList ? (
+                        <div className="space-y-4">
+                          {activityList.map((activity, index) => {
+                            // Aktivite türüne göre renkler ve simgeler
+                            const getActivityColor = (type) => {
+                              switch (type) {
+                                case "locksmith_list_view": return { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", icon: <Eye className="h-6 w-6 text-blue-500" /> };
+                                case "locksmith_detail_view": return { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", icon: <Footprints className="h-6 w-6 text-amber-500" /> };
+                                case "call_request": return { bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700", icon: <PhoneCall className="h-6 w-6 text-orange-500" /> };
+                                case "review_submit": return { bg: "bg-green-50", border: "border-green-200", text: "text-green-700", icon: <Star className="h-6 w-6 text-green-500" /> };
+                                case "whatsapp_message": return { bg: "bg-teal-50", border: "border-teal-200", text: "text-teal-700", icon: <MessageCircle className="h-6 w-6 text-teal-500" /> };
+                                case "website_visit": return { bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-700", icon: <Globe className="h-6 w-6 text-purple-500" /> };
+                                default: return { bg: "bg-gray-50", border: "border-gray-200", text: "text-gray-700", icon: <Info className="h-6 w-6 text-gray-500" /> };
+                              }
+                            };
+
+                            const activityStyle = getActivityColor(activity.activitytype);
+
+                            return (
+                              <div key={index} className={`rounded-xl shadow-sm border p-4 ${activityStyle.bg} ${activityStyle.border} hover:shadow-md transition-shadow`}>
+                                <div className="flex items-start gap-4">
+                                  <div className="p-3 rounded-full bg-white shadow-sm flex-shrink-0">
+                                    {activityStyle.icon}
+                                  </div>
+
+                                  <div className="flex-grow">
+                                    <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
+                                      <h5 className={`font-medium ${activityStyle.text}`}>
+                                        {activity.activitytype === "review_submit" ? "Yorum Aldınız" :
+                                          activity.activitytype === "call_request" ? "Arama Aldınız" :
+                                            activity.activitytype === "locksmith_list_view" ? "Aramada Listelendiniz" :
+                                              activity.activitytype === "locksmith_detail_view" ? "Profiliniz Görüntülendi" :
+                                                activity.activitytype === "whatsapp_message" ? "Whatsapp Mesajı Aldınız" :
+                                                  activity.activitytype === "website_visit" ? "Web siteniz ziyaret edildi" : "Bilinmeyen"}
+                                      </h5>
+
+                                      <div className="text-xs text-gray-500 flex items-center">
+                                        <Clock className="h-3.5 w-3.5 mr-1" />
+                                        {new Date(activity.createdat).toLocaleString('tr-TR', {
+                                          day: '2-digit',
+                                          month: '2-digit',
+                                          hour: '2-digit',
+                                          minute: '2-digit'
+                                        })}
+                                      </div>
                                     </div>
-                                    <span className="text-sm text-gray-400">{activity.time}</span>
+
+                                    <p className="text-sm text-gray-600 mt-1">
+                                      {activity.activitytype === "review_submit" ? (
+                                        <>5 üzerinden <span className="font-medium">{activity?.reviews?.rating}</span> yıldız aldınız {activity?.reviews?.comment && ' :"'}<span className="italic">{activity?.reviews?.comment}</span>{activity?.reviews?.comment && '"'}</>
+                                      ) : activity.activitytype === "call_request" ? (
+                                        <><span className="font-medium">{activity?.services?.name}</span> hizmeti için arama aldınız</>
+                                      ) : activity.activitytype === "locksmith_list_view" ? (
+                                        <><span className="font-medium">{activity?.services?.name}</span> hizmeti aramasında profiliniz görüntülendi</>
+                                      ) : activity.activitytype === "locksmith_detail_view" ? (
+                                        <>Bir müşteri profilinizi ziyaret etti</>
+                                      ) : activity.activitytype === "whatsapp_message" ? (
+                                        <><span className="font-medium">{activity?.services?.name}</span> hizmeti için whatsapp mesajı aldınız</>
+                                      ) : activity.activitytype === "website_visit" ? (
+                                        <>Bir müşteri web sitenizi ziyaret etti</>
+                                      ) : (
+                                        <>Bilinmeyen bir aktivite</>
+                                      )}
+                                    </p>
+
+                                    <div className="flex items-center mt-3 text-xs font-medium text-gray-500">
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                      </svg>
+                                      <span>{activity?.districts?.name} - {activity?.services?.name}</span>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
+                            );
+                          })}
+
+                          {totalPagesActivities > 1 && (
+                            <div className="flex justify-between items-center mt-6 p-4 bg-gray-50 rounded-xl">
+                              <p className="text-sm text-gray-500">10 aktivite gösteriliyor</p>
+                              <div className="flex items-center gap-4">
+                                <span className="text-sm">Sayfa {currentPageActivities} / {totalPagesActivities}</span>
+                                <div className="flex space-x-2">
+                                  <Button
+                                    disabled={(currentPageActivities == 1) || isActivitiesPreviousPageLoading || isActivitiesLoading || (totalPagesActivities == 1)}
+                                    variant="outline" size="sm"
+                                    className="rounded-full"
+                                    onClick={() => {
+                                      handleDashboardFilterChange(activeDashboardFilter, Number(currentPageActivities) - 1)
+                                    }}>
+                                    {isActivitiesPreviousPageLoading ? (
+                                      <div className="flex items-center">
+                                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
+                                        Yükleniyor
+                                      </div>
+                                    ) : 'Önceki'}
+                                  </Button>
+                                  <Button
+                                    disabled={(currentPageActivities == totalPagesActivities) || isActivitiesNextPageLoading || isActivitiesLoading || (totalPagesActivities == 1)}
+                                    variant="outline" size="sm"
+                                    className="rounded-full"
+                                    onClick={() => {
+                                      handleDashboardFilterChange(activeDashboardFilter, Number(currentPageActivities) + 1);
+                                    }}>
+                                    {isActivitiesNextPageLoading ? (
+                                      <div className="flex items-center">
+                                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
+                                        Yükleniyor
+                                      </div>
+                                    ) : 'Sonraki'}
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-12 bg-gray-50 rounded-xl">
+                          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                          </svg>
+                          <h3 className="mt-2 text-sm font-medium text-gray-900">Aktivite bulunamadı</h3>
+                          <p className="mt-1 text-sm text-gray-500">Bu tarih aralığında henüz bir aktivite bulunmuyor.</p>
+                        </div>
+                      )}
                       <div className="mt-4 text-center">
-                        <Button
-                          onClick={() => {
-                            handleTabChange("activities");
-                            setMobileMenuOpen(false);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
-                          variant="outline" className="text-blue-600 border-blue-600 hover:bg-blue-50">
-                          Tüm Aktiviteleri Görüntüle
-                        </Button>
+                        {totalPagesActivities == 1 && (
+                          <div className="flex justify-between items-center mt-6 p-4 bg-gray-50 rounded-xl">
+                            <p className="text-sm text-gray-500">10 aktivite gösteriliyor</p>
+                            <div className="flex items-center gap-4">
+                              <span className="text-sm">Sayfa {currentPageActivities} / {totalPagesActivities}</span>
+                              <div className="flex space-x-2">
+                                <Button
+                                  disabled={(currentPageActivities == 1) || isActivitiesPreviousPageLoading || isActivitiesLoading || (totalPagesActivities == 1)}
+                                  variant="outline" size="sm"
+                                  className="rounded-full"
+                                  onClick={() => {
+                                    handleDashboardFilterChange(activeDashboardFilter, Number(currentPageActivities) - 1)
+                                  }}>
+                                  {isActivitiesPreviousPageLoading ? (
+                                    <div className="flex items-center">
+                                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
+                                      Yükleniyor
+                                    </div>
+                                  ) : 'Önceki'}
+                                </Button>
+                                <Button
+                                  disabled={(currentPageActivities == totalPagesActivities) || isActivitiesNextPageLoading || isActivitiesLoading || (totalPagesActivities == 1)}
+                                  variant="outline" size="sm"
+                                  className="rounded-full"
+                                  onClick={() => {
+                                    handleDashboardFilterChange(activeDashboardFilter, Number(currentPageActivities) + 1);
+                                  }}>
+                                  {isActivitiesNextPageLoading ? (
+                                    <div className="flex items-center">
+                                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
+                                      Yükleniyor
+                                    </div>
+                                  ) : 'Sonraki'}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>

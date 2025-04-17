@@ -9,17 +9,17 @@ export const initUserSession = createAsyncThunk(
       // LocalStorage'dan sessionId'yi kontrol et
       let sessionId = localStorage.getItem('sessionId');
       let userId = localStorage.getItem('userId');
-      
+
       // Eğer sessionId yoksa yeni bir tane oluştur
       if (!sessionId) {
         sessionId = uuidv4();
         localStorage.setItem('sessionId', sessionId);
       }
-      
+
       // console.log('[UserSlice] Oturum başlatılıyor...');
       // console.log(`[UserSlice] SessionID: ${sessionId}`);
       // console.log(`[UserSlice] UserID: ${userId || 'Yeni kullanıcı'}`);
-      
+
       // Kullanıcı IP adresini al
       let userIp = '0.0.0.0'; // Varsayılan değer
       try {
@@ -34,7 +34,7 @@ export const initUserSession = createAsyncThunk(
       } catch (ipError) {
         console.error('[UserSlice] IP adresi alınırken hata:', ipError);
       }
-      
+
       // Kullanıcı bilgilerini kaydet/güncelle
       try {
         const trackResponse = await fetch('/api/public/user/track', {
@@ -49,17 +49,17 @@ export const initUserSession = createAsyncThunk(
             userAgent: navigator.userAgent
           }),
         });
-        
+
         if (trackResponse.ok) {
           const trackData = await trackResponse.json();
-          
+
           // Eğer yeni bir kullanıcı ID'si aldıysak kaydet
           if (trackData.userId) {
             localStorage.setItem('userId', trackData.userId);
             userId = trackData.userId;
             // console.log(`[UserSlice] Kullanıcı ID güncellendi: ${userId}`);
           }
-          
+
           // Eğer yeni bir kullanıcıysa, giriş aktivitesi kaydet
           if (trackData.isNewUser) {
             // console.log('[UserSlice] Yeni kullanıcı, giriş aktivitesi kaydediliyor');
@@ -71,7 +71,7 @@ export const initUserSession = createAsyncThunk(
       } catch (trackError) {
         console.error('[UserSlice] Kullanıcı izleme hatası:', trackError);
       }
-      
+
       return {
         sessionId,
         userId,
@@ -91,16 +91,16 @@ async function logActivity(userId, sessionId, action, details = null, entityId =
       console.error('[UserSlice] Aktivite kaydı için kullanıcı ID veya oturum ID eksik');
       return null;
     }
-    
+
     // Action'a göre level kontrolü (sunucu tarafında da yapılıyor ama burada da yapalım)
     let finalLevel = level;
-    
-    
+
+
     if (action === 'call_request' || action === 'locksmith_detail_view') {
       finalLevel = 1;
       // console.log(`[UserSlice] ${action} için level zorla 1 olarak ayarlandı`);
     }
-    
+
     const response = await fetch('/api/public/user/activity', {
       method: 'POST',
       headers: {
@@ -109,7 +109,7 @@ async function logActivity(userId, sessionId, action, details = null, entityId =
       body: JSON.stringify({
         userId,
         sessionId,
-        action,
+        activitytype: action,
         details,
         entityId,
         entityType,
@@ -117,12 +117,12 @@ async function logActivity(userId, sessionId, action, details = null, entityId =
         ...additionalData
       }),
     });
-    
+
     if (!response.ok) {
       console.error('[UserSlice] Aktivite kaydedilemedi:', await response.text());
       return null;
     }
-    
+
     const result = await response.json();
     return result;
   } catch (error) {
@@ -137,34 +137,34 @@ export const logUserActivity = createAsyncThunk(
   async ({ action, details, entityId, entityType, additionalData = {}, level = 1 }, { getState, rejectWithValue }) => {
     try {
       const { user, search } = getState();
-      
+
       // Eğer kullanıcı oturumu başlatılmadıysa hata ver
       if (!user.isInitialized || !user.userId || !user.sessionId) {
         console.warn('[UserSlice] Aktivite kaydı atlanıyor: Kullanıcı oturumu başlatılmamış');
         return rejectWithValue('Kullanıcı oturumu başlatılmamış');
       }
-      
+
       // console.log(`[UserSlice] Aktivite kaydediliyor: ${action}`);
 
       // Redux store'dan arama değerlerini ekle
       const enhancedAdditionalData = { ...additionalData };
-      
+
       // Eğer additionalData içinde zaten varsa, onları kullan
       // Yoksa ve Redux store'da varsa, store'dan al
       if (!enhancedAdditionalData.searchProvinceId && search.selectedValues.provinceId) {
         enhancedAdditionalData.searchProvinceId = search.selectedValues.provinceId;
       }
-      
+
       if (!enhancedAdditionalData.searchDistrictId && search.selectedValues.districtId) {
         enhancedAdditionalData.searchDistrictId = search.selectedValues.districtId;
       }
-      
+
       if (!enhancedAdditionalData.searchServiceId && search.selectedValues.serviceId) {
         enhancedAdditionalData.searchServiceId = search.selectedValues.serviceId;
       }
-      
+
       // console.log('[UserSlice] Aktivite kaydı ek verileri:', enhancedAdditionalData);
-      
+
       const result = await logActivity(
         user.userId,
         user.sessionId,
@@ -175,11 +175,11 @@ export const logUserActivity = createAsyncThunk(
         enhancedAdditionalData,
         level
       );
-      
+
       if (!result) {
         return rejectWithValue('Aktivite kaydedilemedi');
       }
-      
+
       return { action, activityId: result.activityId };
     } catch (error) {
       console.error('[UserSlice] Kullanıcı aktivitesi kaydedilemedi:', error);
@@ -219,7 +219,7 @@ const userSlice = createSlice({
         // Hata olsa bile, oturum aktif olarak işaretlenir (ama hata durumunu korur)
         state.isInitialized = true;
       })
-      
+
       // logUserActivity işleyicileri
       .addCase(logUserActivity.pending, (state) => {
         state.isLoading = true;

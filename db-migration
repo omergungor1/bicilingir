@@ -121,13 +121,13 @@ CREATE TABLE key_packages (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
     description TEXT,
-    key_amount INTEGER NOT NULL,
+    keyAmount INTEGER NOT NULL,
     price NUMERIC(10,2) NOT NULL,
-    is_unlimited BOOLEAN DEFAULT FALSE,
+    isUnlimited BOOLEAN DEFAULT FALSE,
     startDate DATE,
     endDate DATE,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    isActive BOOLEAN DEFAULT TRUE,
+    createdAt TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Çilingir Key Bakiyesi Tablosu
@@ -248,6 +248,7 @@ CREATE TABLE user_activity_logs (
 
     keyAmount INTEGER NOT NULL,
     usageTypeId UUID REFERENCES key_usage_types(id),
+    systemNote TEXT,
     
     createdAt TIMESTAMPTZ DEFAULT NOW() 
 );

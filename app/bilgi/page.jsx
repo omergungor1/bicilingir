@@ -95,6 +95,27 @@ const testimonials = [
   }
 ];
 
+const LoginSection = () => {
+  return (
+    <section className="w-full py-16 px-4 bg-blue-600 text-white">
+      <div className="container mx-auto text-center flex flex-col items-center">
+        <h2 className="text-3xl font-bold mb-4">Çilingir misiniz?</h2>
+        <p className="text-xl max-w-3xl mx-auto mb-8">
+          Kayıt ol veya giriş yap
+        </p>
+        <div className="flex space-x-3">
+          <Link href="/cilingir/auth/login" className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded transition-colors">
+            Giriş Yap
+          </Link>
+          <Link href="/cilingir/auth/register" className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors">
+            Kayıt Ol
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 export default function CilingirlerPage() {
   const [email, setEmail] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -137,7 +158,18 @@ export default function CilingirlerPage() {
       <Hero
         title="Çilingir Ağımıza Katılın"
         description="Türkiye'nin ilk ve tek çilingir arama platformuna katılarak işinizi büyütün, daha fazla müşteriye ulaşın ve kazancınızı artırın."
-      />
+      >
+        <div className="container mx-auto text-center flex flex-col items-center">
+          <div className="flex space-x-3">
+            <Link href="/cilingir/auth/login" className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded transition-colors">
+              Giriş Yap
+            </Link>
+            <Link href="/cilingir/auth/register" className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors">
+              Kayıt Ol
+            </Link>
+          </div>
+        </div>
+      </Hero>
 
       {/* Avantajlar Bölümü */}
       <section className="w-full py-16 px-4 bg-white">
@@ -155,24 +187,6 @@ export default function CilingirlerPage() {
         </div>
       </section>
 
-
-      {/* Login Section */}
-      <section className="w-full py-16 px-4 bg-blue-600 text-white">
-        <div className="container mx-auto text-center flex flex-col items-center">
-          <h2 className="text-3xl font-bold mb-4">Çilingir misiniz?</h2>
-          <p className="text-xl max-w-3xl mx-auto mb-8">
-            Kayıt ol veya giriş yap
-          </p>
-          <div className="flex space-x-3">
-            <Link href="/cilingir/auth/login" className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded transition-colors">
-              Giriş Yap
-            </Link>
-            <Link href="/cilingir/auth/register" className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors">
-              Kayıt Ol
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* Nasıl Çalışır Bölümü */}
       <section className="w-full py-16 px-4 bg-gray-50">
@@ -277,6 +291,8 @@ export default function CilingirlerPage() {
           </div>
         </div>
       </section>
+
+      <LoginSection />
 
 
       {/* Bülten Bölümü */}
