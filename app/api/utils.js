@@ -763,7 +763,7 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
           console.error('Çilingir bilgisi alınamadı:', locksmithError);
         } else if (!locksmithData || locksmithData.length === 0) {
           keyAmount = 0;
-          systemNote += '|Çilingir bu hizmeti vermiyor Çilingir ID: ' + additionalData.locksmithId + ' Hizmet ID: ' + additionalData.searchServiceId;
+          systemNote += '|Çilingir bu hizmeti vermiyor';
         }
       }
 
