@@ -70,6 +70,8 @@ export async function GET(request) {
             total_locksmiths_percent: 0,
             total_users_percent: 0,
             total_activity_logs_percent: 0,
+            total_key_usage: 0,
+            total_daily_key_usage: 0,
             see: 0,
             see_percent: 0,
             call: 0,
@@ -152,8 +154,6 @@ export async function GET(request) {
 
         const { count: UsersCount, error: UsersError } = await UsersQuery;
 
-        console.log(UsersCount, 'UsersCount');
-        console.log(UsersError, 'UsersError');
 
         if (UsersError) {
             console.error('Users error:', UsersError);
@@ -161,6 +161,55 @@ export async function GET(request) {
         }
 
         formattedStats.total_users = UsersCount;
+
+        let KeyUsageQuery = supabase
+            .from('user_activity_logs')
+            .select('keyamount')
+            .gte('keyamount', 1);
+
+        if (period != 'all') {
+            KeyUsageQuery = KeyUsageQuery.gte('createdat', startDateString);
+        }
+
+        const { data: KeyUsageData, error: KeyUsageError } = await KeyUsageQuery;
+
+
+        if (KeyUsageError) {
+            console.error('Key usage error:', KeyUsageError);
+            return NextResponse.json({ error: 'Key usage error' }, { status: 500 });
+        } else if (KeyUsageData.length > 0) {
+            formattedStats.total_key_usage = KeyUsageData?.reduce((acc, row) => acc + row.keyamount, 0) || 0;
+        }
+
+        let DailyKeyUsageQuery = supabase
+            .from('daily_key_preferences')
+            .select('keyamount')
+
+        if (period != 'all' && period != 'last7days' && period != 'last30days') {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            let dayOfWeekWanted = dayOfWeek;
+
+            if (period == 'yesterday') {
+                dayOfWeekWanted = dayOfWeek - 1;
+            }
+
+            DailyKeyUsageQuery = DailyKeyUsageQuery.eq('dayofweek', dayOfWeekWanted);
+        }
+
+        const { data: DailyKeyUsageData, error: DailyKeyUsageError } = await DailyKeyUsageQuery;
+
+        if (DailyKeyUsageError) {
+            console.error('Daily key usage error:', DailyKeyUsageError);
+        } else {
+            formattedStats.total_daily_key_usage = DailyKeyUsageData?.reduce((acc, row) => acc + row.keyamount, 0) || 0;
+
+            if (period == 'last30days') {
+                formattedStats.total_daily_key_usage *= 4;
+            }
+        }
+
+
 
         return NextResponse.json({
             success: true,

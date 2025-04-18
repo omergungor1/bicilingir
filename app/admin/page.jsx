@@ -107,6 +107,8 @@ function AdminPanelContent() {
     total_locksmiths_percent: 0,
     total_users_percent: 0,
     total_activity_logs_percent: 0,
+    total_key_usage: 0,
+    total_daily_key_usage: 0,
     see: 0,
     see_percent: 0,
     call: 0,
@@ -817,6 +819,9 @@ function AdminPanelContent() {
                                 <TrendingUp className="w-4 h-4 mr-1" />
                                 %{dashboardStats?.total_activity_logs_percent} artış
                               </p>}
+                              <p className="text-sm text-green-700 mt-2 flex items-center">
+                                Anahtar (Günlük/Kullanılan) : {dashboardStats?.total_daily_key_usage}/{dashboardStats?.total_key_usage}
+                              </p>
                             </div>
                             <div className="bg-green-500 p-3 rounded-full">
                               <Clock className="h-8 w-8 text-white" />
