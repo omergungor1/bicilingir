@@ -587,7 +587,7 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
 
     let keyAmount = 0;
     let usageTypeId = null;
-    let systemNote = null;
+    let systemNote = '';
 
     if (keyUsageData && keyUsageData.length > 0) {
       keyAmount = keyUsageData[0].keyamount;
@@ -597,7 +597,7 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
       // console.warn(`Key usage bilgisi bulunamadı: ${activitytype} (level: ${finalLevel}). Varsayılan değer kullanılıyor.`);
       // Varsayılan değer olarak 0 anahtar kullan
       keyAmount = 0;
-      systemNote = '|Key usage bilgisi bulunamadı';
+      systemNote += '|Key usage bilgisi bulunamadı';
     }
 
     try {
@@ -631,25 +631,25 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
     // Kullanıcının varlığını kontrol et, yoksa yeni bir kullanıcı oluştur
     // Bu adım, users tablosu boşaltıldığında foreign key hatası almanın önüne geçecek
     if (userId) {
-      try {
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('id,islocksmith,issuspicious')
-          .eq('id', userId)
-          .limit(1);
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('id,islocksmith,issuspicious')
+        .eq('id', userId)
+        .limit(1);
 
-        if (userError) {
-          console.error('Kullanıcı kontrolü sırasında hata:', userError);
-        }
+      if (userError) {
+        console.error('Kullanıcı kontrolü sırasında hata:', userError);
+      }
+      try {
 
         if (userData[0]?.islocksmith) {
           keyAmount = 0;
-          systemNote = systemNote + '|Çilingir kullanıcı';
+          systemNote += '|Çilingir kullanıcı';
         }
 
         if (userData[0]?.issuspicious) {
           keyAmount = 0;
-          systemNote = systemNote + '|Şüpheli kullanıcı';
+          systemNote += '|Şüpheli kullanıcı';
         }
 
       } catch (error) {
@@ -740,7 +740,7 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
         if (locksmithData && locksmithData.length > 0) {
           if (locksmithData[0].provinceid !== additionalData.searchProvinceId) {
             keyAmount = 0;
-            systemNote = systemNote + '|Çilingir bu ilde çalışmıyor';
+            systemNote += '|Çilingir bu ilde çalışmıyor';
           }
         }
       }
@@ -761,11 +761,9 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
 
         if (locksmithError) {
           console.error('Çilingir bilgisi alınamadı:', locksmithError);
-        }
-
-        if (locksmithData && locksmithData.length > 0) {
+        } else if (!locksmithData || locksmithData.length === 0) {
           keyAmount = 0;
-          systemNote = systemNote + '|Çilingir bu hizmeti vermiyor';
+          systemNote += '|Çilingir bu hizmeti vermiyor Çilingir ID: ' + additionalData.locksmithId + ' Hizmet ID: ' + additionalData.searchServiceId;
         }
       }
 
