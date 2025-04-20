@@ -108,7 +108,7 @@ export async function POST(request) {
       .insert([
         {
           locksmithid: locksmithId,
-          totalkeybalance: 0,
+          totalkeybalance: 300,
           lastupdated: new Date().toISOString()
         }
       ])
@@ -262,9 +262,18 @@ export async function POST(request) {
       createdat: new Date().toISOString()
     }
 
+    const welcomeBonusNotification = {
+      locksmithid: locksmithId,
+      title: 'Hoş Geldiniz Bonusu',
+      message: 'Hesabınıza hediye 300 anahtar bonusu eklendi.',
+      type: 'success',
+      link: '/cilingir?tab=advertising',
+      createdat: new Date().toISOString()
+    }
+
     const { data: welcomeNotificationData, error: welcomeNotificationError } = await supabase
       .from('notifications')
-      .insert([welcomeNotification, buyAndStartNotification])
+      .insert([welcomeNotification, buyAndStartNotification, welcomeBonusNotification])
       .select();
 
     if (welcomeNotificationError) {

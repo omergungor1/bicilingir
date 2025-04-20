@@ -1731,9 +1731,9 @@ function CilingirPanelContent() {
                     aria-label="Bildirimler"
                   >
                     <Bell className="h-5 w-5" />
-                    {notifications.filter(n => !n.isread && !n.isdismissed).length > 0 && (
+                    {notifications?.filter(n => !n.isread && !n.isdismissed).length > 0 && (
                       <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-xs font-bold text-white bg-red-500 rounded-full">
-                        {notifications.filter(n => !n.isread && !n.isdismissed).length}
+                        {notifications?.filter(n => !n.isread && !n.isdismissed).length}
                       </span>
                     )}
                   </button>
@@ -1742,19 +1742,19 @@ function CilingirPanelContent() {
                   <div className="p-3 border-b border-gray-200 flex justify-between items-center">
                     <h3 className="font-medium">Bildirimler</h3>
                     <span className="text-xs text-gray-500">
-                      {notifications.filter(n => !n.isdismissed).length} bildirim
+                      {notifications?.filter(n => !n.isdismissed).length} bildirim
                     </span>
                   </div>
                   <div className="space-y-1 p-1">
-                    {notifications.filter(n => !n.isdismissed).length === 0 ? (
+                    {notifications?.filter(n => !n.isdismissed).length === 0 ? (
                       <div className="text-center py-8 text-gray-500">
                         <Bell className="w-8 h-8 mx-auto mb-2 text-gray-300" />
                         <p className="text-sm">Hiç bildiriminiz bulunmuyor</p>
                       </div>
                     ) : (
                       notifications
-                        .filter(notification => !notification.isdismissed)
-                        .map(notification => (
+                        ?.filter(notification => !notification.isdismissed)
+                        ?.map(notification => (
                           <div
                             key={notification.id}
                             className={`flex items-start p-2 hover:bg-gray-50 rounded-md ${notification.isread ? '' : 'bg-blue-50'}`}
