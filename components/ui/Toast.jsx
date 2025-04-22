@@ -3,11 +3,11 @@
 import React from "react";
 
 export const Toast = ({ message, type, onClose }) => {
-  const bgColor = 
+  const bgColor =
     type === "success" ? "bg-green-500" :
-    type === "error" ? "bg-red-500" :
-    type === "warning" ? "bg-yellow-500" :
-    "bg-blue-500"; // info veya diğer durumlar için
+      type === "error" ? "bg-red-500" :
+        type === "warning" ? "bg-yellow-500" :
+          "bg-blue-500"; // info veya diğer durumlar için
 
   return (
     <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg flex items-center ${bgColor} text-white transition-all duration-300 animate-fadeIn`}>
@@ -32,12 +32,12 @@ export const Toast = ({ message, type, onClose }) => {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       )}
-      
+
       {/* Mesaj */}
       <span>{message}</span>
-      
+
       {/* Kapatma butonu */}
-      <button 
+      <button
         onClick={onClose}
         className="ml-3 text-white opacity-70 hover:opacity-100 transition-opacity"
         aria-label="Kapat"

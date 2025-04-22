@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32px" height="32px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <title>Çilingir Konum İşaretçisi</title>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <path d="M16,0 C23.732,0 30,6.268 30,14 C30,17.028 28.752,20.044 26.472,22.864 C24.224,25.644 21.112,28.204 18.232,30 L16,32 L13.768,30 C10.888,28.204 7.776,25.644 5.528,22.864 C3.248,20.044 2,17.028 2,14 C2,6.268 8.268,0 16,0 Z" fill="#3B82F6" fill-rule="nonzero"></path>
+        <circle fill="#FFFFFF" cx="16" cy="14" r="6"></circle>
+        <path d="M16,7 C12.686,7 10,9.686 10,13 C10,16.314 12.686,19 16,19 C19.314,19 22,16.314 22,13 C22,9.686 19.314,7 16,7 Z M16,9 C18.21,9 20,10.79 20,13 C20,15.21 18.21,17 16,17 C13.79,17 12,15.21 12,13 C12,10.79 13.79,9 16,9 Z" fill="#3B82F6" fill-rule="nonzero"></path>
+        <path d="M16,10 C14.343,10 13,11.343 13,13 C13,14.657 14.343,16 16,16 C17.657,16 19,14.657 19,13 C19,11.343 17.657,10 16,10 Z" fill="#3B82F6" fill-rule="nonzero"></path>
+    </g>
+</svg> 

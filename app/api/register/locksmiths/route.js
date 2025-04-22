@@ -73,6 +73,18 @@ export async function POST(request) {
       );
     }
 
+    //newsletter_subscribers tablosuna kayıt
+    const { data: newsletterSubscribersData, error: newsletterSubscribersError } = await supabase
+      .from('newsletter_subscribers')
+      .insert([
+        { email: locksmithInsertData.email }
+      ])
+      .select();
+
+    if (newsletterSubscribersError) {
+      console.error('Newsletter kayıt hatası:', newsletterSubscribersError);
+    }
+
     const locksmithId = data[0].id;
 
     // locksmith_details tablosuna kayıt
