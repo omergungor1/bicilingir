@@ -2,6 +2,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 import Image from 'next/image';
+import { Button } from '../components/ui/button';
+import { Phone } from 'lucide-react';
 
 const containerStyle = {
     width: '100%',
@@ -117,7 +119,7 @@ const Map = ({ center, zoom = 14, markers = [] }) => {
                     position={marker.position}
                     onClick={() => handleMarkerClick(marker)}
                     icon={{
-                        url: '/images/map-marker.svg',
+                        url: '/images/map-marker.png', // /images/map-marker.svg
                         scaledSize: new window.google.maps.Size(40, 40),
                     }}
                 />
@@ -128,11 +130,20 @@ const Map = ({ center, zoom = 14, markers = [] }) => {
                     position={selectedMarker.position}
                     onCloseClick={handleInfoWindowClose}
                 >
-                    <div className="p-2 max-w-xs">
-                        <h3 className="font-semibold text-gray-900">{selectedMarker.title}</h3>
-                        {selectedMarker.description && (
-                            <p className="text-sm text-gray-600 mt-1">{selectedMarker.description}</p>
-                        )}
+                    <div className="p-2 max-w-xs flex items-start gap-2">
+                        <Image src='/images/map-marker.png' alt='Çilingir logo' width={40} height={40} />
+                        <div>
+                            <h3 className="font-semibold text-gray-900">{selectedMarker.title}</h3>
+                            {selectedMarker.description && (
+                                <p className="text-sm text-gray-600 mt-1">{selectedMarker.description}</p>
+                            )}
+                            <div className="mt-2">
+                                <Button className="gap-2 flex items-center w-full bg-primary text-white animate-pulse" variant="outline" size="icon">
+                                    <Phone className="w-4 h-4 mr-2" />
+                                    <span className="text-sm">Hemen Ara</span>
+                                </Button>
+                            </div>
+                        </div>
                         {selectedMarker.image && (
                             <div className="mt-2">
                                 <Image

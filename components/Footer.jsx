@@ -34,8 +34,8 @@ export default function Footer() {
             <ul className="space-y-2 text-gray-300">
               <li><Link href="/hakkimizda" className="hover:text-white">Hakkımızda</Link></li>
               <li><Link href="/bilgi" className="hover:text-white">Çilingir Ol</Link></li>
-              <li><a href="#" className="hover:text-white">Gizlilik Politikası</a></li>
-              <li><a href="#" className="hover:text-white">İletişim</a></li>
+              <li><Link href="/privacy" className="hover:text-white">Gizlilik Politikası</Link></li>
+              <li><Link href="/iletisim" className="hover:text-white">İletişim</Link></li>
             </ul>
           </div>
           <div>

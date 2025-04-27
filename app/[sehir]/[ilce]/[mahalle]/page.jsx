@@ -1,6 +1,6 @@
 // http://localhost:3000/sehirler/bursa/osmangazi/kukurtlu
 
-import NeighborhoodPageClient from '../../../../../components/neighborhood/NeighborhoodPageClient';
+import NeighborhoodPageClient from '../../../../components/neighborhood/NeighborhoodPageClient';
 
 export async function generateMetadata({ params }) {
     // params kontrolü

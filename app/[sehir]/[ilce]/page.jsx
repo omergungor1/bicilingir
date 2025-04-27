@@ -1,6 +1,6 @@
 // http://localhost:3000/sehirler/bursa/nilufer
 
-import DistrictContent from '../../../../components/district/DistrictContent-old';
+import DistrictContent from '../../../components/district/DistrictContent';
 
 
 export async function generateMetadata({ params }) {

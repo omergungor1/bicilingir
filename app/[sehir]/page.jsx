@@ -1,7 +1,7 @@
 // http://localhost:3000/sehirler/bursa
 
 import { Suspense } from 'react';
-import CityContent from '../../../components/city/CityContent';
+import CityContent from '../../components/city/CityContent';
 
 export async function generateMetadata({ params }) {
     const sehir = params.sehir;

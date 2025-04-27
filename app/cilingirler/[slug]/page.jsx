@@ -4,12 +4,12 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { Button } from "../../components/ui/button";
-import { EmergencyCallButton } from "../../components/emergency-button";
-import { ImageGallery } from "../../components/image-gallery";
-import { logUserActivity } from '../../redux/features/userSlice';
-import { RatingModal } from "../../components/RatingModal";
-import { useToast } from "../../components/ToastContext";
+import { Button } from "../../../components/ui/button";
+import { EmergencyCallButton } from "../../../components/emergency-button";
+import { ImageGallery } from "../../../components/image-gallery";
+import { logUserActivity } from '../../../redux/features/userSlice';
+import { RatingModal } from "../../../components/RatingModal";
+import { useToast } from "../../../components/ToastContext";
 
 const styles = {
   header: {

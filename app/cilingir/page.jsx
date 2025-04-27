@@ -2350,10 +2350,10 @@ function CilingirPanelContent() {
                         <span>Önizle</span>
                       </button>
                     </Link>
-                    <button onClick={() => sendMailTest()} className="text-sm flex items-center space-x-1 text-blue-600 hover:text-blue-800">
+                    {/* <button onClick={() => sendMailTest()} className="text-sm flex items-center space-x-1 text-blue-600 hover:text-blue-800">
                       <Mail className="h-4 w-4" />
                       <span>Mail Test</span>
-                    </button>
+                    </button> */}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
