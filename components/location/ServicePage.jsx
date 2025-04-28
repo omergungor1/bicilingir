@@ -1,58 +1,11 @@
-// http://localhost:3000/sehirler/bursa/osmangazi/kukurtlu/acil-cilingir
-
 "use client";
 
 import React, { useEffect, useState, use } from "react";
-import { Button } from "../../../../../components/ui/button";
-import SideMenu from '../../../../../components/local/side-menu';
-import { services, mockLocksmiths } from "../../../../../lib/test-data";
-import MainContent from '../../../../../components/local/main-content';
-// Yıldız puanı gösterme bileşeni
-const StarRating = ({ rating }) => {
-    return (
-        <div className="flex items-center">
-            {[...Array(5)].map((_, i) => (
-                <span key={i} className="text-yellow-400 mr-0.5">
-                    {i < Math.floor(rating) ? "★" : (i < rating ? "★" : "☆")}
-                </span>
-            ))}
-            <span className="ml-1 text-gray-700">{rating}</span>
-        </div>
-    );
-};
+import { Button } from "../ui/button";
+import SideMenu from '../local/side-menu';
+import { services, mockLocksmiths } from "../../lib/test-data";
+import MainContent from '../local/main-content';
 
-// Örnek yorumlar
-const sampleReviews = [
-    {
-        id: 1,
-        username: "Mehmet Y.",
-        rating: 5,
-        comment: "Kapım kilitli kaldığında 15 dakika içinde geldi, çok profesyonel hizmet.",
-        date: "2023-05-15"
-    },
-    {
-        id: 2,
-        username: "Ayşe K.",
-        rating: 4.5,
-        comment: "Araç anahtarım kaybolmuştu, yeni anahtar yapımı için hızlı ve kaliteli hizmet aldım.",
-        date: "2023-06-20"
-    },
-    {
-        id: 3,
-        username: "Ahmet D.",
-        rating: 5,
-        comment: "Uygun fiyat ve güler yüzlü hizmet. Kesinlikle tavsiye ederim.",
-        date: "2023-07-08"
-    }
-];
-
-// Fiyat tablosu için örnek veri
-const samplePrices = [
-    { id: 1, service: "Kapı Açma", time: "15-30 dk", price: "200₺ - 350₺" },
-    { id: 2, service: "Kilit Değiştirme", time: "30-45 dk", price: "300₺ - 500₺" },
-    { id: 3, service: "Anahtar Kopyalama", time: "10-20 dk", price: "50₺ - 150₺" },
-    { id: 4, service: "Çelik Kapı Tamiri", time: "45-90 dk", price: "400₺ - 800₺" }
-];
 
 // Mahalle bilgileri
 const neighborhoods = {
@@ -111,12 +64,12 @@ const serviceCategories = {
     }
 };
 
-export default function NeighborhoodServicePage({ params }) {
+export default function ServicePage({ city, district, neighborhood, serviceType }) {
     // Promise olarak gelen params'ı use() ile çözümlüyoruz
-    const resolvedParams = use(params);
+    // const resolvedParams = use(params);
 
     // Artık çözümlenmiş params'tan özellikleri alabiliriz
-    const { sehir, ilce, mahalle, "hizmet-kategori": hizmetKategori } = resolvedParams;
+    // const { city, district, neighborhood, serviceType } = resolvedParams;
     const [loading, setLoading] = useState(true);
     const [locksmiths, setLocksmiths] = useState([]);
     const [serviceInfo, setServiceInfo] = useState(null);
@@ -129,16 +82,16 @@ export default function NeighborhoodServicePage({ params }) {
         try {
             setLoading(true);
             // API çağrısını simüle ediyoruz
-            // const response = await fetch(`/api/mahalle/${sehir}/${ilce}/${mahalle}/${hizmetKategori}`);
+            // const response = await fetch(`/api/neighborhood/${city}/${district}/${neighborhood}/${serviceType}`);
             // const data = await response.json();
 
             // Veri çekme simülasyonu
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            // Mahalle bilgilerini al veya varsayılanları kullan
-            const neighborhoodData = neighborhoods[mahalle] || {
-                name: mahalle.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-                description: `${sehir} ${ilce} bölgesindeki ${mahalle} mahallesi için çilingir hizmetleri.`,
+            // neighborhood bilgilerini al veya varsayılanları kullan
+            const neighborhoodData = neighborhoods[neighborhood] || {
+                name: neighborhood?.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') || '',
+                description: `${city} ${district} bölgesindeki ${neighborhood || ''} mahallesi için çilingir hizmetleri.`,
                 landmarks: [],
                 transportation: "",
                 mapUrl: "",
@@ -153,18 +106,18 @@ export default function NeighborhoodServicePage({ params }) {
             };
 
             // Hizmet kategorisi bilgilerini al veya varsayılanları kullan
-            const serviceCategoryData = serviceCategories[hizmetKategori] || {
-                title: hizmetKategori.replace(/-/g, " ").split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+            const serviceCategoryData = serviceType && serviceCategories[serviceType] ? serviceCategories[serviceType] : {
+                title: serviceType ? serviceType.replace(/-/g, " ").split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : "Çilingir Hizmetleri",
                 description: "Profesyonel çilingir hizmetleri",
                 image: "/images/default-service.jpg",
                 keywords: ["çilingir", "anahtar", "kilit"],
-                metaDescription: `${sehir} ${ilce} ${neighborhoodData.name} bölgesinde profesyonel çilingir hizmetleri.`
+                metaDescription: `${city || ''} ${district || ''} ${neighborhoodData.name} bölgesinde profesyonel çilingir hizmetleri.`
             };
 
             setNeighborhoodInfo({
                 ...neighborhoodData,
-                city: sehir.charAt(0).toUpperCase() + sehir.slice(1),
-                district: ilce.charAt(0).toUpperCase() + ilce.slice(1)
+                city: city ? city.charAt(0).toUpperCase() + city.slice(1) : '',
+                district: district ? district.charAt(0).toUpperCase() + district.slice(1) : ''
             });
 
             setServiceInfo(serviceCategoryData);
@@ -179,7 +132,7 @@ export default function NeighborhoodServicePage({ params }) {
     // Sayfa yüklendiğinde veri çek
     useEffect(() => {
         fetchData();
-    }, [sehir, ilce, mahalle, hizmetKategori]);
+    }, [city, district, neighborhood, serviceType]);
 
     // SideMenu parametrelerini hazırla
     useEffect(() => {
@@ -201,7 +154,7 @@ export default function NeighborhoodServicePage({ params }) {
                 data: (neighborhoodInfo.nearbyNeighborhoods || []).map(neighborhood => ({
                     id: neighborhood.id,
                     name: neighborhood.name,
-                    slug: `sehirler/${sehir}/${ilce}/${neighborhood.slug}`
+                    slug: `${city}/${district}/${neighborhood.slug}`
                 }))
             },
             locksmithPricing: {
@@ -220,92 +173,107 @@ export default function NeighborhoodServicePage({ params }) {
                 data: services.map(service => ({
                     id: service.id,
                     name: service.name,
-                    slug: `sehirler/${sehir}/${ilce}/${mahalle}/${service.slug}`
+                    slug: neighborhood ? `${city}/${district}/${neighborhood}/${service.slug}` :
+                        district ? `${city}/${district}/${service.slug}` :
+                            city ? `${city}/${service.slug}` : `/${service.slug}`
                 }))
             },
-            formattedName: `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name}`,
+            formattedName: neighborhood ?
+                `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name}` :
+                district ? `${neighborhoodInfo.city} ${neighborhoodInfo.district}` :
+                    city ? `${neighborhoodInfo.city}` : 'Türkiye',
             type: 'service',
             currentService: serviceInfo.title
         };
 
         setSideMenuParams(params);
-    }, [neighborhoodInfo, locksmiths, serviceInfo, sehir, ilce, mahalle, hizmetKategori]);
+    }, [neighborhoodInfo, locksmiths, serviceInfo, city, district, neighborhood, serviceType]);
 
     // MainContent parametrelerini hazırla
     useEffect(() => {
         if (!neighborhoodInfo || !locksmiths.length || !serviceInfo || !sideMenuParams) return;
 
+        // Breadcrumb için navigasyon listesi
+        const navbarItems = [
+            { id: 1, name: 'Ana Sayfa', slug: '/' },
+            // { id: 2, name: city, slug: `${city.toLowerCase().replace(/\s+/g, '-')}` },
+            // { id: 3, name: district, slug: `${city.toLowerCase().replace(/\s+/g, '-')}/${district.toLowerCase().replace(/\s+/g, '-')}` },
+            // { id: 4, name: neighborhood, slug: `${city.toLowerCase().replace(/\s+/g, '-')}/${district.toLowerCase().replace(/\s+/g, '-')}/${neighborhood.toLowerCase().replace(/\s+/g, '-')}` }
+        ];
+
+        if (city) navbarItems.push({ id: 2, name: neighborhoodInfo.city, slug: `/${city}` });
+        if (district) navbarItems.push({ id: 3, name: neighborhoodInfo.district, slug: `/${city}/${district}` });
+        if (neighborhood) navbarItems.push({ id: 4, name: neighborhoodInfo.name, slug: `/${city}/${district}/${neighborhood}` });
+        if (serviceType) navbarItems.push({ id: 5, name: serviceInfo.title, slug: '#' });
+
+        // Bölge adı oluşturma
+        const locationName = neighborhood ?
+            `${neighborhoodInfo.name} Mahallesi` :
+            district ? `${neighborhoodInfo.district}` :
+                city ? `${neighborhoodInfo.city}` : 'Türkiye';
+
+        // Başlık oluşturma
+        const titlePrefix = neighborhood ?
+            `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name}` :
+            district ? `${neighborhoodInfo.city} ${neighborhoodInfo.district}` :
+                city ? `${neighborhoodInfo.city}` : 'Türkiye';
+
         // MainContent için parametreleri ayarla
         const params = {
-            navbarList: [
-                { id: 1, name: 'Ana Sayfa', slug: '/' },
-                { id: 2, name: neighborhoodInfo.city, slug: `sehirler/${sehir}` },
-                { id: 3, name: neighborhoodInfo.district, slug: `sehirler/${sehir}/${ilce}` },
-                { id: 4, name: neighborhoodInfo.name, slug: `sehirler/${sehir}/${ilce}/${mahalle}` },
-                { id: 5, name: serviceInfo.title, slug: '#' }
-            ],
+            navbarList: navbarItems,
             mainCard: {
-                title: `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name} ${serviceInfo.title}`,
-                description: `${neighborhoodInfo.name} mahallesi için ${serviceInfo.title.toLowerCase()} hizmetleri. ${serviceInfo.description}`
+                title: `${titlePrefix} ${serviceInfo.title}`,
+                description: `${locationName} için ${serviceInfo.title.toLowerCase()} hizmetleri. ${serviceInfo.description}`
             },
             locksmitList: {
-                title: `${neighborhoodInfo.name} Mahallesi ${serviceInfo.title} Hizmeti Veren Çilingirler`,
+                title: `${locationName} ${serviceInfo.title} Hizmeti Veren Çilingirler`,
                 description: 'Size en yakın ve en uygun çilingirler aşağıda listelenmiştir. Hemen arayabilir veya mesaj gönderebilirsiniz.',
                 data: locksmiths
             },
             seconCard: {
                 title: `${serviceInfo.title} Hizmeti Hakkında`,
-                longDescription: `${serviceInfo.description}\n\n${neighborhoodInfo.name} mahallesi sakinleri için ${serviceInfo.title.toLowerCase()} hizmetleri en hızlı ve kaliteli şekilde sunulmaktadır. Profesyonel ekiplerimiz, en son teknoloji ekipmanlarla donatılmış olarak hizmetinizdedir.\n\nAcil durumlarda, kilitli kalan kapılarınız, kayıp anahtarlarınız veya güvenlik sistemleriniz için anında müdahale edebilecek çilingir ustalarımız 7/24 hizmetinizdedir. Makul fiyatlar ve güvenilir hizmet anlayışımızla ${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name} bölgesinin tamamında hizmet vermekteyiz.`
+                longDescription: `${serviceInfo.description}\n\n${locationName} sakinleri için ${serviceInfo.title.toLowerCase()} hizmetleri en hızlı ve kaliteli şekilde sunulmaktadır. Profesyonel ekiplerimiz, en son teknoloji ekipmanlarla donatılmış olarak hizmetinizdedir.\n\nAcil durumlarda, kilitli kalan kapılarınız, kayıp anahtarlarınız veya güvenlik sistemleriniz için anında müdahale edebilecek çilingir ustalarımız 7/24 hizmetinizdedir. Makul fiyatlar ve güvenilir hizmet anlayışımızla ${titlePrefix} bölgesinin tamamında hizmet vermekteyiz.`
             },
             serviceList: {
-                title: `${neighborhoodInfo.name} Mahallesi Çilingir Hizmetleri`,
-                description: 'Mahallenizde sunulan diğer çilingir hizmetleri',
-                data: services.filter(service => service.slug !== hizmetKategori),
-                name: neighborhoodInfo.name
+                title: `${locationName} Çilingir Hizmetleri`,
+                description: 'Bölgenizde sunulan diğer çilingir hizmetleri',
+                data: services.filter(service => service.slug !== serviceType),
+                name: locationName
             },
             sssList: {
-                title: `${neighborhoodInfo.name} ${serviceInfo.title} - Sık Sorulan Sorular`,
+                title: `${locationName} ${serviceInfo.title} - Sık Sorulan Sorular`,
                 description: `${serviceInfo.title} hizmeti hakkında merak edilenler`,
                 data: [
                     {
                         id: 1,
-                        question: `${neighborhoodInfo.name}'de ${serviceInfo.title} hizmeti ne kadar sürer?`,
-                        answer: `${neighborhoodInfo.name} mahallesinde ${serviceInfo.title.toLowerCase()} hizmeti genellikle 15-45 dakika içinde tamamlanmaktadır. Ancak bu süre, hizmetin karmaşıklığına ve aciliyetine göre değişebilir.`
+                        question: `${locationName}'de ${serviceInfo.title} hizmeti ne kadar sürer?`,
+                        answer: `${locationName}'de ${serviceInfo.title.toLowerCase()} hizmeti genellikle 15-45 dakika içinde tamamlanmaktadır. Ancak bu süre, hizmetin karmaşıklığına ve aciliyetine göre değişebilir.`
                     },
                     {
                         id: 2,
-                        question: `${neighborhoodInfo.name}'de ${serviceInfo.title} fiyatları ne kadar?`,
-                        answer: `${neighborhoodInfo.name} mahallesinde ${serviceInfo.title.toLowerCase()} hizmet fiyatları ortalama 200₺ ile 800₺ arasında değişmektedir. Hizmet türü, saat ve gerekli malzemelere göre fiyat değişiklik gösterebilir. Net fiyat bilgisi için çilingir ile iletişime geçmenizi öneririz.`
+                        question: `${locationName}'de ${serviceInfo.title} fiyatları ne kadar?`,
+                        answer: `${locationName}'de ${serviceInfo.title.toLowerCase()} hizmet fiyatları ortalama 200₺ ile 800₺ arasında değişmektedir. Hizmet türü, saat ve gerekli malzemelere göre fiyat değişiklik gösterebilir. Net fiyat bilgisi için çilingir ile iletişime geçmenizi öneririz.`
                     },
                     {
                         id: 3,
                         question: `${serviceInfo.title} hizmeti için ne kadar beklemem gerekir?`,
-                        answer: `${neighborhoodInfo.name} mahallesinde ${serviceInfo.title.toLowerCase()} hizmeti için bekleme süresi genellikle 15-30 dakikadır. Acil durumlarda, çilingir ekiplerimiz en kısa sürede yanınızda olacaktır.`
+                        answer: `${locationName}'de ${serviceInfo.title.toLowerCase()} hizmeti için bekleme süresi genellikle 15-30 dakikadır. Acil durumlarda, çilingir ekiplerimiz en kısa sürede yanınızda olacaktır.`
                     },
                     {
                         id: 4,
                         question: `${serviceInfo.title} hizmeti için hangi ödeme yöntemlerini kabul ediyorsunuz?`,
-                        answer: `${neighborhoodInfo.name} mahallesinde ${serviceInfo.title.toLowerCase()} hizmeti sunan çilingirlerimiz genellikle nakit, kredi kartı ve banka havalesi gibi çeşitli ödeme yöntemlerini kabul etmektedir. Ödeme yöntemi konusunda çilingir ustası ile önceden görüşmenizi öneririz.`
+                        answer: `${locationName}'de ${serviceInfo.title.toLowerCase()} hizmeti sunan çilingirlerimiz genellikle nakit, kredi kartı ve banka havalesi gibi çeşitli ödeme yöntemlerini kabul etmektedir. Ödeme yöntemi konusunda çilingir ustası ile önceden görüşmenizi öneririz.`
                     }
                 ]
             },
-            // detailedDistrictList: {
-            //     title: `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name} ${serviceInfo.title} Hizmeti`,
-            //     description: `${neighborhoodInfo.name} mahallesinde ${serviceInfo.title.toLowerCase()} hizmeti verilen yerler`,
-            //     data: samplePrices.map((price, idx) => ({
-            //         id: idx + 1,
-            //         name: `${price.service} (${price.price})`,
-            //         slug: `#${price.service.toLowerCase().replace(/\s+/g, '-')}`
-            //     }))
-            // },
             sideMenuParams: sideMenuParams,
-            formatedName: `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name}`,
+            formatedName: titlePrefix,
             type: 'service-detail',
             serviceInfo: serviceInfo
         };
 
         setMainContentParams(params);
-    }, [neighborhoodInfo, locksmiths, serviceInfo, sideMenuParams, sehir, ilce, mahalle, hizmetKategori]);
+    }, [neighborhoodInfo, locksmiths, serviceInfo, sideMenuParams, city, district, neighborhood, serviceType]);
 
     if (loading) {
         return (
@@ -330,19 +298,28 @@ export default function NeighborhoodServicePage({ params }) {
     }
 
     // Sayfa başlığı
-    const pageTitle = `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name} ${serviceInfo.title} - 7/24 Hizmet`;
+    const locationText = neighborhood ?
+        `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name}` :
+        district ? `${neighborhoodInfo.city} ${neighborhoodInfo.district}` :
+            city ? `${neighborhoodInfo.city}` : 'Türkiye';
+
+    const pageTitle = `${locationText} ${serviceInfo.title} - 7/24 Hizmet`;
 
     // Meta açıklama
     const metaDescription = serviceInfo.metaDescription ||
-        `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name} bölgesinde profesyonel ${serviceInfo.title.toLowerCase()} hizmetleri. 7/24 hizmet, uygun fiyat.`;
+        `${locationText} bölgesinde profesyonel ${serviceInfo.title.toLowerCase()} hizmetleri. 7/24 hizmet, uygun fiyat.`;
 
     // Canonical URL
-    const canonicalUrl = `https://bicilingir.com/${sehir}/${ilce}/${mahalle}/${hizmetKategori}`;
+    const canonicalUrl = neighborhood ?
+        `https://bicilingir.com/${city}/${district}/${neighborhood}/${serviceType || ''}` :
+        district ? `https://bicilingir.com/${city}/${district}/${serviceType || ''}` :
+            city ? `https://bicilingir.com/${city}/${serviceType || ''}` :
+                `https://bicilingir.com/${serviceType || ''}`;
 
     // Yerelleştirilmiş anahtar kelimeler
-    const localKeywords = serviceInfo.keywords.map(keyword =>
-        `${neighborhoodInfo.name} ${keyword}`
-    );
+    const localKeywords = serviceInfo.keywords ? serviceInfo.keywords.map(keyword =>
+        `${neighborhoodInfo.name || neighborhoodInfo.district || neighborhoodInfo.city || 'Türkiye'} ${keyword}`
+    ) : [];
 
     return (
         <>
@@ -357,9 +334,9 @@ export default function NeighborhoodServicePage({ params }) {
                             "name": `BiÇilingir - ${serviceInfo.title}`,
                             "address": {
                                 "@type": "PostalAddress",
-                                "addressLocality": neighborhoodInfo.district,
-                                "addressRegion": neighborhoodInfo.city,
-                                "streetAddress": neighborhoodInfo.name
+                                "addressLocality": neighborhoodInfo.district || '',
+                                "addressRegion": neighborhoodInfo.city || '',
+                                "streetAddress": neighborhoodInfo.name || ''
                             },
                             "telephone": "+905001234567",
                             "geo": {

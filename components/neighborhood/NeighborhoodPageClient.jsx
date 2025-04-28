@@ -11,11 +11,12 @@ import LocksmithCard from '../ui/locksmith-card';
 import SideMenu from '../local/side-menu';
 import MainContent from '../local/main-content';
 
-export default function NeighborhoodPageClient({ params }) {
+export default function NeighborhoodPageClient({ city, district, neighborhood }) {
     // params kontrolü 
-    const data = JSON.parse(params.value);
+    // const data = JSON.parse(params.value);
+    console.log(city, district, neighborhood);
 
-    if (!data || !data.sehir || !data.ilce || !data.mahalle) {
+    if (!city || !district || !neighborhood) {
         return (
             <div className="container mx-auto p-4 min-h-screen flex items-center justify-center">
                 <div className="text-center">
@@ -29,7 +30,7 @@ export default function NeighborhoodPageClient({ params }) {
         );
     }
 
-    const { sehir, ilce, mahalle } = data;
+    // const { city, district, neighborhood } = data;
     const [isLoading, setIsLoading] = useState(true);
     const [locksmiths, setLocksmiths] = useState([]);
     const [neighborhoodInfo, setNeighborhoodInfo] = useState(null);
@@ -41,15 +42,15 @@ export default function NeighborhoodPageClient({ params }) {
         try {
             setIsLoading(true);
             // Gerçek API çağrısını simüle ediyoruz
-            // const response = await fetch(`/api/mahalle/${sehir}/${ilce}/${mahalle}`);
+            // const response = await fetch(`/api/neighborhood/${city}/${district}/${neighborhood}`);
             // const data = await response.json();
 
             // API çağrısı yerine timeout ile simülasyon
             await new Promise(resolve => setTimeout(resolve, 1000));
 
-            const formattedMahalle = mahalle.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-            const formattedIlce = ilce.charAt(0).toUpperCase() + ilce.slice(1);
-            const formattedSehir = sehir.charAt(0).toUpperCase() + sehir.slice(1);
+            const formattedMahalle = neighborhood.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            const formattedIlce = district.charAt(0).toUpperCase() + district.slice(1);
+            const formattedSehir = city.charAt(0).toUpperCase() + city.slice(1);
 
             const neighborhoodData = {
                 id: 1,
@@ -91,7 +92,7 @@ export default function NeighborhoodPageClient({ params }) {
     // Sayfa yüklendiğinde veri çek
     useEffect(() => {
         fetchData();
-    }, [sehir, ilce, mahalle]);
+    }, [city, district, neighborhood]);
 
     // SideMenu parametrelerini hazırla
     useEffect(() => {
@@ -113,7 +114,7 @@ export default function NeighborhoodPageClient({ params }) {
                 data: neighborhoodInfo.nearbyNeighborhoods.map(neighborhood => ({
                     id: neighborhood.id,
                     name: neighborhood.name,
-                    slug: `sehirler/${sehir}/${ilce}/${neighborhood.slug}`
+                    slug: `sehirler/${city}/${district}/${neighborhood.slug}`
                 }))
             },
             locksmithPricing: {
@@ -132,7 +133,7 @@ export default function NeighborhoodPageClient({ params }) {
                 data: services.map(service => ({
                     id: service.id,
                     name: service.name,
-                    slug: `sehirler/${sehir}/${ilce}/${mahalle}/${service.slug}`
+                    slug: `sehirler/${city}/${district}/${neighborhood}/${service.slug}`
                 }))
             },
             formattedName: `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name}`,
@@ -140,7 +141,7 @@ export default function NeighborhoodPageClient({ params }) {
         };
 
         setSideMenuParams(params);
-    }, [neighborhoodInfo, locksmiths, sehir, ilce, mahalle]);
+    }, [neighborhoodInfo, locksmiths, city, district, neighborhood]);
 
     // MainContent parametrelerini hazırla
     useEffect(() => {
@@ -150,8 +151,8 @@ export default function NeighborhoodPageClient({ params }) {
         const params = {
             navbarList: [
                 { id: 1, name: 'Ana Sayfa', slug: '/' },
-                { id: 2, name: neighborhoodInfo.city, slug: `sehirler/${neighborhoodInfo.city.toLowerCase().replace(/\s+/g, '-')}` },
-                { id: 3, name: neighborhoodInfo.district, slug: `sehirler/${neighborhoodInfo.city.toLowerCase().replace(/\s+/g, '-')}/${neighborhoodInfo.district.toLowerCase().replace(/\s+/g, '-')}` },
+                { id: 2, name: neighborhoodInfo.city, slug: `${neighborhoodInfo.city.toLowerCase().replace(/\s+/g, '-')}` },
+                { id: 3, name: neighborhoodInfo.district, slug: `${neighborhoodInfo.city.toLowerCase().replace(/\s+/g, '-')}/${neighborhoodInfo.district.toLowerCase().replace(/\s+/g, '-')}` },
                 { id: 4, name: neighborhoodInfo.name, slug: '#' }
             ],
             mainCard: {
@@ -205,7 +206,7 @@ export default function NeighborhoodPageClient({ params }) {
                 data: neighborhoodInfo.nearbyStreets.map(street => ({
                     id: street.id,
                     name: street.name,
-                    slug: `sehirler/${sehir}/${ilce}/${mahalle}/${street.slug}`
+                    slug: `sehirler/${city}/${district}/${neighborhood}/${street.slug}`
                 }))
             },
             sideMenuParams: sideMenuParams,
@@ -215,7 +216,7 @@ export default function NeighborhoodPageClient({ params }) {
 
 
         setMainContentParams(params);
-    }, [neighborhoodInfo, locksmiths, sideMenuParams, sehir, ilce, mahalle]);
+    }, [neighborhoodInfo, locksmiths, sideMenuParams, city, district, neighborhood]);
 
     if (isLoading) {
         return (

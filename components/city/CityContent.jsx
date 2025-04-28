@@ -6,7 +6,7 @@ import MainContent from '../local/main-content';
 
 import { services, mockLocksmiths } from '../../lib/test-data';
 
-export default function CityContent({ sehir }) {
+export default function CityContent({ city }) {
     const [isLoading, setIsLoading] = useState(true);
     const [cityData, setCityData] = useState(null);
     const [locksmiths, setLocksmiths] = useState([]);
@@ -21,8 +21,8 @@ export default function CityContent({ sehir }) {
         setTimeout(() => {
             const mockData = {
                 id: 1,
-                name: sehir.charAt(0).toUpperCase() + sehir.slice(1),
-                description: `${sehir.charAt(0).toUpperCase() + sehir.slice(1)} ili için 7/24 çilingir hizmetleri. Kapınızda kaldığınızda, anahtarınızı kaybettiğinizde veya acil durumlar için profesyonel çilingirlerimiz hizmetinizdedir. Aşağıdaki listeden Bursa da aktif hizmet veren çilingir anahtarcıları bulabilirsiniz. Hemen arayarak detaylı bilgi alabilirsiniz.`,
+                name: city.charAt(0).toUpperCase() + city.slice(1),
+                description: `${city.charAt(0).toUpperCase() + city.slice(1)} ili için 7/24 çilingir hizmetleri. Kapınızda kaldığınızda, anahtarınızı kaybettiğinizde veya acil durumlar için profesyonel çilingirlerimiz hizmetinizdedir. Aşağıdaki listeden Bursa da aktif hizmet veren çilingir anahtarcıları bulabilirsiniz. Hemen arayarak detaylı bilgi alabilirsiniz.`,
                 longDescription: `Bursa, Türkiyenin en büyük illerinden biridir. Bölgede hizmet veren birçok çilingir bulunmaktadır.\n Bursa'da 7/24 çilingir, acil çilingir, otomobil çilingir, ev çilingiri, kasa çilingir hizmetleri alabilirsiniz.\n Bursada çilingir anahtarcı hizmetleri oldukça gelişmiş bir çilingir ağı ile sağlanmaktadır. Türkiyenin ilk ve tek çilingir ağı olan Bi Çilingir platformu sayesinde çilingir hizmetlerinizi kolayca bulabilirsiniz.`,
                 districts: [
                     { id: 1, name: 'Osmangazi', slug: 'osmangazi' },
@@ -46,7 +46,7 @@ export default function CityContent({ sehir }) {
                 mapLocation: { lat: 40.1885, lng: 29.0610 }, // Bursa için örnek koordinat
                 contactInfo: {
                     phone: '+90 850 123 4567',
-                    address: `${sehir.charAt(0).toUpperCase() + sehir.slice(1)} Merkez, Atatürk Cad. No: 123`,
+                    address: `${city.charAt(0).toUpperCase() + city.slice(1)} Merkez, Atatürk Cad. No: 123`,
                     workingHours: '7/24 Hizmet'
                 }
             };
@@ -54,7 +54,7 @@ export default function CityContent({ sehir }) {
             setCityData(mockData);
             setIsLoading(false);
         }, 1000);
-    }, [sehir]);
+    }, [city]);
 
     if (isLoading) {
         return (

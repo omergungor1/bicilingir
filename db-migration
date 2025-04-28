@@ -15,6 +15,7 @@ CREATE TABLE services (
 CREATE TABLE provinces (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
+    slug TEXT UNIQUE NOT NULL,
     code TEXT
 );
 
@@ -23,8 +24,20 @@ CREATE TABLE districts (
     id SERIAL PRIMARY KEY,
     province_id INTEGER NOT NULL REFERENCES provinces(id),
     name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
     UNIQUE(province_id, name)
 );
+
+-- Mahalle (Neighborhood) Tablosu
+CREATE TABLE neighborhoods (
+    id SERIAL PRIMARY KEY,
+    province_id INTEGER NOT NULL REFERENCES provinces(id),
+    district_id INTEGER NOT NULL REFERENCES districts(id),
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    UNIQUE(province_id, district_id, name)
+);
+
 
 -- Çilingirler Tablosu
 CREATE TABLE locksmiths (
@@ -69,7 +82,8 @@ CREATE TABLE locksmith_details (
     latitude DOUBLE PRECISION,
     longitude DOUBLE PRECISION,
     createdAt TIMESTAMPTZ DEFAULT NOW(),
-    lastLogin TIMESTAMPTZ
+    lastLogin TIMESTAMPTZ,
+    postal_code VARCHAR(10)
 );
 
 -- Çilingir Resimleri Tablosu

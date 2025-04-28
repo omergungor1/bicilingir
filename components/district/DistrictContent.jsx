@@ -1,33 +1,97 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { MapPin } from 'lucide-react';
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Badge } from '../ui/badge';
-import LocksmithCard from '../ui/locksmith-card';
-import Map from '../Map';
 import SideMenu from '../local/side-menu';
 import MainContent from '../local/main-content';
+import { createClient } from '@supabase/supabase-js';
+import Link from 'next/link';
+
+// Sunucu tarafında Supabase bağlantısı
+async function getSupabaseData() {
+    const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false
+            }
+        }
+    );
+
+    return supabase;
+}
 
 import { services, mockLocksmiths } from '../../lib/test-data';
 
-export default function DistrictContent({ params }) {
+export default async function DistrictContent({ params }) {
+    const { city: citySlug, district: districtSlug } = params;
     const [isLoading, setIsLoading] = useState(true);
     const [locksmiths, setLocksmiths] = useState([]);
     const [districtInfo, setDistrictInfo] = useState(null);
     const [sideMenuParams, setSideMenuParams] = useState(null);
     const [mainContentParams, setMainContentParams] = useState(null);
 
-    const { sehir, ilce } = params || {};
+    // Supabase veritabanına bağlan
+
+    const supabase = await getSupabaseData();
+
+    // Şehir bilgilerini çek
+    const { data: cityData, error: cityError } = await supabase
+        .from('provinces')
+        .select('id, name')
+        .eq('slug', citySlug)
+        .single();
+
+    if (cityError) {
+        console.error('Şehir bilgisi alınamadı:', cityError);
+        return <div>Şehir bulunamadı</div>;
+    }
+
+    // İlçe bilgilerini çek
+    const { data: districtData, error: districtError } = await supabase
+        .from('districts')
+        .select('id, name')
+        .eq('slug', districtSlug)
+        .eq('province_id', cityData.id)
+        .single();
+
+    if (districtError) {
+        console.error('İlçe bilgisi alınamadı:', districtError);
+        return <div>İlçe bulunamadı</div>;
+    }
+
+    // Mahalleleri çek
+    const { data: neighborhoods, error: neighborhoodError } = await supabase
+        .from('neighborhoods')
+        .select('id, name, slug')
+        .eq('district_id', districtData.id)
+        .order('name');
+
+    if (neighborhoodError) {
+        console.error('Mahalle bilgileri alınamadı:', neighborhoodError);
+    }
+
+    // Hizmet türlerini çek
+    const { data: services, error: serviceError } = await supabase
+        .from('services')
+        .select('id, name, slug')
+        .eq('is_active', true)
+        .order('name');
+
+    if (serviceError) {
+        console.error('Hizmet bilgileri alınamadı:', serviceError);
+    }
+
+
+    // Bitir
 
     // API'den veri çekme fonksiyonu
     const fetchData = async () => {
         try {
             setIsLoading(true);
             // Gerçek bir API çağrısı burada olacak
-            // Örnek: const response = await fetch(`/api/districts/${sehir}/${ilce}`);
+            // Örnek: const response = await fetch(`/api/districts/${city}/${district}`);
             // const data = await response.json();
 
             // Şimdilik mock veri kullanıyoruz
@@ -75,7 +139,7 @@ export default function DistrictContent({ params }) {
 
     useEffect(() => {
         fetchData();
-    }, [sehir, ilce]);
+    }, [city, district]);
 
     // SideMenu parametrelerini hazırla
     useEffect(() => {
@@ -99,7 +163,7 @@ export default function DistrictContent({ params }) {
                     .map((neighborhood, idx) => ({
                         id: idx + 1,
                         name: neighborhood,
-                        slug: `sehirler/${sehir}/${ilce}/${neighborhood.toLowerCase().replace(/\s+/g, '-')}`
+                        slug: `${city}/${district}/${neighborhood.toLowerCase().replace(/\s+/g, '-')}`
                     }))
             },
             locksmithPricing: {
@@ -118,7 +182,7 @@ export default function DistrictContent({ params }) {
                 data: services.map(service => ({
                     id: service.id,
                     name: service.name,
-                    slug: `sehirler/${sehir}/${ilce}/${service.slug}`
+                    slug: `${city}/${district}/${service.slug}`
                 }))
             },
             formattedName: `${districtInfo.city} ${districtInfo.name}`,
@@ -126,7 +190,7 @@ export default function DistrictContent({ params }) {
         };
 
         setSideMenuParams(params);
-    }, [districtInfo, locksmiths, sehir, ilce]);
+    }, [districtInfo, locksmiths, city, district]);
 
     // MainContent parametrelerini hazırla
     useEffect(() => {
@@ -136,7 +200,7 @@ export default function DistrictContent({ params }) {
         const params = {
             navbarList: [
                 { id: 1, name: 'Ana Sayfa', slug: '/' },
-                { id: 2, name: districtInfo.city, slug: `sehirler/bursa` },
+                { id: 2, name: districtInfo.city, slug: `${city}` },
                 { id: 3, name: districtInfo.name, slug: '#' }
             ],
             mainCard: {
@@ -191,7 +255,7 @@ export default function DistrictContent({ params }) {
                 data: districtInfo.neighborhoods.map((mahalle, idx) => ({
                     id: idx + 1,
                     name: `${mahalle}`,
-                    slug: `sehirler/${sehir}/${ilce}/${mahalle.toLowerCase().replace(/\s+/g, '-')}`
+                    slug: `${city}/${district}/${mahalle.toLowerCase().replace(/\s+/g, '-')}`
                 }))
             },
             sideMenuParams: sideMenuParams,
@@ -200,7 +264,7 @@ export default function DistrictContent({ params }) {
         };
 
         setMainContentParams(params);
-    }, [districtInfo, locksmiths, sideMenuParams, sehir, ilce]);
+    }, [districtInfo, locksmiths, sideMenuParams, city, district]);
 
     if (isLoading) {
         return (
