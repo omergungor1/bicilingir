@@ -1,15 +1,12 @@
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseServer } from '../../../../lib/supabase';
 import { NextResponse } from 'next/server';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // Admin yetkisi ile işlem yapabilmek için service role key kullanılır
-);
+const supabase = getSupabaseServer();
 
 export async function POST(request) {
   try {
     const { email, password, fullName, phone } = await request.json();
-    
+
     // Gerekli alanları kontrol et
     if (!email || !password || !fullName || !phone) {
       return NextResponse.json(
@@ -28,10 +25,10 @@ export async function POST(request) {
         phone: phone
       }
     });
-    
+
     if (authError) {
       console.error('Kullanıcı oluşturma hatası:', authError);
-      
+
       // E-posta zaten kullanılıyorsa
       if (authError.message.includes('email already in use')) {
         return NextResponse.json(
@@ -39,7 +36,7 @@ export async function POST(request) {
           { status: 400 }
         );
       }
-      
+
       return NextResponse.json(
         { error: authError.message },
         { status: 500 }
@@ -52,7 +49,7 @@ export async function POST(request) {
       .insert([
         {
           user_id: authData.user.id,
-          role:'cilingir',
+          role: 'cilingir',
           created_at: new Date().toISOString()
         }
       ])
@@ -64,7 +61,7 @@ export async function POST(request) {
 
     // Başarılı yanıt
     return NextResponse.json(
-      { 
+      {
         message: 'Kullanıcı başarıyla oluşturuldu',
         id: authData.user.id
       },

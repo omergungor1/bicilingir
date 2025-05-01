@@ -1,20 +1,18 @@
-import { createClient } from '@supabase/supabase-js';
+// import { getSupabaseClient } from '../../lib/supabase';
 
-/**
- * Supabase bağlantısı oluştur
- * @returns {Object} Supabase istemcisi
- */
+
+// /**
+//  * Supabase bağlantısı oluştur
+//  * @returns {Object} Supabase istemcisi
+//  */
+// function createSupabaseClient() {
+//     return getSupabaseClient();
+// }
+
+import { getSupabaseServer } from '../../lib/supabase';
+
 function createSupabaseClient() {
-    return createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        {
-            auth: {
-                autoRefreshToken: false,
-                persistSession: false
-            }
-        }
-    );
+    return getSupabaseServer();
 }
 
 /**
@@ -363,5 +361,122 @@ export async function getLocksmithsList({ citySlug, districtSlug, neighborhoodSl
     } catch (error) {
         console.error('Çilingir verileri çekilirken hata:', error);
         return [];
+    }
+}
+
+/**
+ * Şehir verilerini getiren yardımcı fonksiyon
+ * @param {string} citySlug - Şehir slug'ı
+ * @returns {Promise<Object>} Şehir verileri
+ */
+export async function getCityData(citySlug) {
+    if (!citySlug) return null;
+
+    try {
+        const supabase = createSupabaseClient();
+        const { data, error } = await supabase
+            .from('provinces')
+            .select('*')
+            .eq('slug', citySlug)
+            .single();
+
+        if (error) {
+            console.error('Şehir verisi getirilirken hata:', error);
+            return null;
+        }
+
+        return data;
+    } catch (error) {
+        console.error('Şehir verisi getirilirken hata:', error);
+        return null;
+    }
+}
+
+/**
+ * İlçe verilerini getiren yardımcı fonksiyon
+ * @param {string} districtSlug - İlçe slug'ı
+ * @param {number} cityId - Şehir ID'si
+ * @returns {Promise<Object>} İlçe verileri
+ */
+export async function getDistrictData(districtSlug, cityId) {
+    if (!districtSlug || !cityId) return null;
+
+    try {
+        const supabase = createSupabaseClient();
+        const { data, error } = await supabase
+            .from('districts')
+            .select('*')
+            .eq('slug', districtSlug)
+            .eq('province_id', cityId)
+            .single();
+
+        if (error) {
+            console.error('İlçe verisi getirilirken hata:', error);
+            return null;
+        }
+
+        return data;
+    } catch (error) {
+        console.error('İlçe verisi getirilirken hata:', error);
+        return null;
+    }
+}
+
+/**
+ * Mahalle verilerini getiren yardımcı fonksiyon
+ * @param {string} neighborhoodSlug - Mahalle slug'ı
+ * @param {number} districtId - İlçe ID'si
+ * @returns {Promise<Object>} Mahalle verileri
+ */
+export async function getNeighborhoodData(neighborhoodSlug, districtId) {
+    if (!neighborhoodSlug || !districtId) return null;
+
+    try {
+        const supabase = createSupabaseClient();
+        const { data, error } = await supabase
+            .from('neighborhoods')
+            .select('*')
+            .eq('slug', neighborhoodSlug)
+            .eq('district_id', districtId)
+            .single();
+
+        if (error) {
+            console.error('Mahalle verisi getirilirken hata:', error);
+            return null;
+        }
+
+        return data;
+    } catch (error) {
+        console.error('Mahalle verisi getirilirken hata:', error);
+        return null;
+    }
+}
+
+/**
+ * Hizmet türü verilerini getiren yardımcı fonksiyon
+ * @param {string} serviceSlug - Hizmet slug'ı
+ * @returns {Promise<Object>} Hizmet türü verileri
+ */
+export async function getServiceData(serviceSlug) {
+    if (!serviceSlug) return null;
+
+    try {
+        const supabase = createSupabaseClient();
+        const { data, error } = await supabase
+            .from('services')
+            .select('*')
+            .eq('slug', serviceSlug)
+            .eq('isActive', true)
+            .single();
+
+        if (error) {
+            console.error('Hizmet verisi getirilirken hata:', error);
+            return null;
+        }
+
+        return data;
+    } catch (error) {
+        console.error('Hizmet verisi getirilirken hata:', error);
+        return null;
     }
 }

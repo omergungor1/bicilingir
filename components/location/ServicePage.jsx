@@ -90,8 +90,8 @@ export default function ServicePage({ data }) {
             await new Promise(resolve => setTimeout(resolve, 500));
 
             // neighborhood bilgilerini al veya varsayılanları kullan
-            const neighborhoodData = neighborhoods[neighborhood] || {
-                name: neighborhood?.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') || '',
+            const neighborhoodData = neighborhoods[neighborhoodSlug] || {
+                name: neighborhoodSlug?.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') || '',
                 description: `${city} ${district} bölgesindeki ${neighborhood || ''} mahallesi için çilingir hizmetleri.`,
                 landmarks: [],
                 transportation: "",
@@ -107,8 +107,8 @@ export default function ServicePage({ data }) {
             };
 
             // Hizmet kategorisi bilgilerini al veya varsayılanları kullan
-            const serviceCategoryData = serviceType && serviceCategories[serviceType] ? serviceCategories[serviceType] : {
-                title: serviceType ? serviceType.replace(/-/g, " ").split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : "Çilingir Hizmetleri",
+            const serviceCategoryData = serviceTypeSlug && serviceCategories[serviceTypeSlug] ? serviceCategories[serviceTypeSlug] : {
+                title: serviceTypeSlug ? serviceTypeSlug.replace(/-/g, " ").split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : "Çilingir Hizmetleri",
                 description: "Profesyonel çilingir hizmetleri",
                 image: "/images/default-service.jpg",
                 keywords: ["çilingir", "anahtar", "kilit"],
@@ -188,7 +188,7 @@ export default function ServicePage({ data }) {
         };
 
         setSideMenuParams(params);
-    }, [neighborhoodInfo, locksmiths, serviceInfo, city, district, neighborhood, serviceType]);
+    }, [neighborhoodInfo, locksmiths, serviceInfo, citySlug, districtSlug, neighborhoodSlug, serviceTypeSlug]);
 
     // MainContent parametrelerini hazırla
     useEffect(() => {
@@ -274,7 +274,7 @@ export default function ServicePage({ data }) {
         };
 
         setMainContentParams(params);
-    }, [neighborhoodInfo, locksmiths, serviceInfo, sideMenuParams, city, district, neighborhood, serviceType]);
+    }, [neighborhoodInfo, locksmiths, serviceInfo, sideMenuParams, citySlug, districtSlug, neighborhoodSlug, serviceTypeSlug]);
 
     if (loading) {
         return (

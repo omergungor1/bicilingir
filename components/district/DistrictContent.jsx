@@ -3,21 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import SideMenu from '../local/side-menu';
 import MainContent from '../local/main-content';
-import { createClient } from '@supabase/supabase-js';
 import { services } from '../../lib/test-data';
+import { getSupabaseClient } from '../../lib/supabase';
+
 
 // Supabase client oluştur
 const createSupabaseClient = () => {
-    return createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        {
-            auth: {
-                autoRefreshToken: false,
-                persistSession: false
-            }
-        }
-    );
+    return getSupabaseClient();
 };
 
 export default function DistrictContent({ citySlug, districtSlug, locksmiths: initialLocksmiths = [] }) {
@@ -204,7 +196,7 @@ export default function DistrictContent({ citySlug, districtSlug, locksmiths: in
                     {
                         id: 1,
                         question: `${districtInfo.city} ${districtInfo.name}'de en yakın çilingir nerede?`,
-                        answer: `BiÇilingir platformu sayesinde ${districtInfo.city} ${districtInfo.name} ilçesinin tüm mahallelerinde hizmet veren en yakın çilingiri bulabilirsiniz. Arama formunu kullanarak konumunuza en yakın çilingiri tespit edebilir ve hemen iletişime geçebilirsiniz.`
+                        answer: `BiÇilingir platformu sayesinde ${districtInfo.city} ${districtInfo.name} ilçesinin tüm mahallelerinde hizmet veren en yakın çilingiri bulabilir, fiyatları görebilirsiniz. Arama formunu kullanarak konumunuza en yakın çilingiri tespit edebilir ve hemen iletişime geçebilirsiniz.`
                     },
                     {
                         id: 2,

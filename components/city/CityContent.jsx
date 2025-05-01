@@ -3,21 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import SideMenu from '../local/side-menu';
 import MainContent from '../local/main-content';
-import { createClient } from '@supabase/supabase-js';
 import { services } from '../../lib/test-data';
+import { getSupabaseClient } from '../../lib/supabase';
 
 // Supabase client oluştur
 const createSupabaseClient = () => {
-    return createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        {
-            auth: {
-                autoRefreshToken: false,
-                persistSession: false
-            }
-        }
-    );
+    return getSupabaseClient();
 };
 
 
@@ -174,7 +165,7 @@ export default function CityContent({ citySlug, locksmiths: locksmithsList }) {
     }
 
     const sssList = [
-        { id: 1, question: `${cityData.name}'de en yakın çilingir nerede?`, answer: `BiÇilingir platformu sayesinde ${cityData.name} ilçesinin tüm mahallelerinde hizmet veren en yakın çilingiri bulabilirsiniz. Arama formunu kullanarak konumunuza en yakın çilingiri tespit edebilir ve hemen iletişime geçebilirsiniz.` },
+        { id: 1, question: `${cityData.name}'de en yakın çilingir nerede?`, answer: `BiÇilingir platformu sayesinde ${cityData.name} ilçesinin tüm mahallelerinde hizmet veren en yakın çilingiri bulabilir, fiyatları görebilirsiniz. Arama formunu kullanarak konumunuza en yakın çilingiri tespit edebilir ve hemen iletişime geçebilirsiniz.` },
         { id: 2, question: `${cityData.name}'de çilingir ücretleri ne kadar?`, answer: `${cityData.name} ilçesinde çilingir ücretleri genellikle 200₺ ile 800₺ arasında değişmektedir. Kapı açma işlemleri ortalama 200₺-350₺, kilit değiştirme 300₺-500₺, çelik kapı tamiri ise 400₺-800₺ arasındadır. Fiyatlar mesafeye, zamana ve hizmet türüne göre farklılık gösterebilir.` },
         { id: 3, question: `${cityData.name}'de gece çilingir hizmeti alabilir miyim?`, answer: `Evet, ${cityData.name} ilçesinde 7/24 hizmet veren çilingir ekiplerimiz bulunmaktadır. Gece saatlerinde de kapınız kilitli kaldığında veya acil kilit değişimi gerektiğinde çilingir hizmetimize ulaşabilirsiniz.` },
         { id: 4, question: `${cityData.name}'de oto çilingir hizmeti var mı?`, answer: `Evet, ${cityData.name} ilçesinde uzman oto çilingir ekiplerimiz hizmet vermektedir. Araç anahtarı kopyalama, kayıp anahtar yerine yenisini yapma, immobilizer programlama ve araç kapısı açma gibi hizmetlerimiz bulunmaktadır.` },

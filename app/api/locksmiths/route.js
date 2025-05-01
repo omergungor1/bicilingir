@@ -1,21 +1,12 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseServer } from '../../../lib/supabase';
 
 /**
  * Supabase bağlantısı oluştur
  * @returns {Object} Supabase istemcisi
  */
 function createSupabaseClient() {
-    return createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        {
-            auth: {
-                autoRefreshToken: false,
-                persistSession: false
-            }
-        }
-    );
+    return getSupabaseServer();
 }
 
 /**

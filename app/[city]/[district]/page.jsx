@@ -8,7 +8,6 @@ import { getMetaData, getLocksmithsList } from '../../utils/seo';
 // Veriyi tek bir yerden çekmek için yardımcı fonksiyon
 async function getDistrictData(citySlug, districtSlug) {
     const locksmiths = await getLocksmithsList({ citySlug, districtSlug, count: 2 });
-    console.log('locksmiths2: ', locksmiths);
     const metadata = await getMetaData({
         citySlug,
         districtSlug,
@@ -29,12 +28,14 @@ export async function generateMetadata({ params }) {
 export default async function DistrictPage({ params }) {
     const resolvedParams = await params;
     const { city: citySlug, district: districtSlug } = resolvedParams;
+    const { locksmiths } = await getDistrictData(citySlug, districtSlug);
 
     // Eğer district bir hizmet türüyse, ServicePage komponentini göster
-    if (ServiceList.some(service => service.slug === districtSlug))
-        return <ServicePage citySlug={citySlug} servicetype={districtSlug} locksmiths={locksmiths} />;
+    const isService = ServiceList.some(service => service.slug === districtSlug);
 
-    const { locksmiths } = await getDistrictData(citySlug, districtSlug);
+    if (isService) {
+        return <ServicePage citySlug={citySlug} servicetype={districtSlug} locksmiths={locksmiths} />;
+    }
 
     // Normal ilçe sayfasını göster
     return <DistrictContent citySlug={citySlug} districtSlug={districtSlug} locksmiths={locksmiths} />;

@@ -175,7 +175,7 @@ export default function NeighborhoodPageClient({ city, district, neighborhood, l
                     {
                         id: 1,
                         question: `${neighborhoodInfo.name}'de en yakın çilingir nerede?`,
-                        answer: `BiÇilingir platformu sayesinde ${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name} mahallesinde hizmet veren en yakın çilingiri bulabilirsiniz. Konumunuza en yakın çilingiri tespit edebilir ve hemen iletişime geçebilirsiniz.`
+                        answer: `BiÇilingir platformu sayesinde ${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name} mahallesinde hizmet veren en yakın çilingiri bulabilir, fiyatları görebilirsiniz. Arama formunu kullanarak konumunuza en yakın çilingiri tespit edebilir ve hemen iletişime geçebilirsiniz.`
                     },
                     {
                         id: 2,

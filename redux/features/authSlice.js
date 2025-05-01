@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { supabase } from '../../lib/supabase';
+import { getSupabaseClient } from '../../lib/supabase';
 
 // Initial state
 const initialState = {
@@ -18,7 +18,8 @@ export const loginUser = createAsyncThunk(
   async ({ email, password }, { rejectWithValue }) => {
     try {
       console.log('Login başlatılıyor:', email);
-      
+      const supabase = getSupabaseClient();
+
       // Supabase login işlemi
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -28,15 +29,15 @@ export const loginUser = createAsyncThunk(
       // Eğer giriş hatası varsa
       if (error) {
         console.log('Login hatası:', error);
-        
+
         // Invalid login credentials hatasını kullanıcı dostu bir mesaja çeviriyoruz
         if (error.message && error.message.includes("Invalid login credentials")) {
           return rejectWithValue("E-posta veya şifre hatalı");
         }
-        
+
         // Diğer supabase hatalarını işleme
         let errorMessage = "Giriş yapılırken bir hata oluştu";
-        
+
         if (typeof error === 'string') {
           errorMessage = error;
         } else if (error.message) {
@@ -44,14 +45,14 @@ export const loginUser = createAsyncThunk(
         } else if (error.error_description) {
           errorMessage = error.error_description;
         }
-        
+
         return rejectWithValue(errorMessage);
       }
 
       console.log('Login başarılı:', data);
       const user = data.user;
 
-      console.log('user***',user);
+      console.log('user***', user);
 
       // Kullanıcı rolünü al
       const { data: roleData, error: roleError } = await supabase
@@ -64,7 +65,7 @@ export const loginUser = createAsyncThunk(
         console.log('Rol sorgusu hatası:', roleError);
         return rejectWithValue("Kullanıcı rolü alınamadı. Lütfen daha sonra tekrar deneyin.");
       }
-      
+
       // Eğer kullanıcı bir çilingir ise
       if (roleData.role === 'cilingir') {
         try {
@@ -75,21 +76,21 @@ export const loginUser = createAsyncThunk(
             .eq('authid', user.id)
             .single();
 
-          console.log('user.id***',user.id);
-          console.log('locksmithData***',locksmithData);
-          
+          console.log('user.id***', user.id);
+          console.log('locksmithData***', locksmithData);
+
           if (locksmithError) {
             console.error('Çilingir bilgisi alınamadı:', locksmithError);
           } else if (locksmithData && locksmithData.id) {
             console.log('Çilingir bilgisi alındı, users tablosu güncelleniyor...');
-            
+
             // User-Agent ve IP bilgilerini al
             const userAgent = navigator.userAgent;
             const userIp = await fetch('/api/public/user/get-ip')
               .then(res => res.json())
               .then(data => data.ip)
               .catch(() => '0.0.0.0');
-            
+
             // Mevcut kullanıcı kaydını ara
             const { data: userData, error: userError } = await supabase
               .from('users')
@@ -100,7 +101,7 @@ export const loginUser = createAsyncThunk(
               .limit(1);
 
             const userId = userData && userData.length > 0 ? userData[0].id : null;
-            
+
             if (userId) {
               // Mevcut kaydı güncelle
               const { error: updateError } = await supabase
@@ -111,7 +112,7 @@ export const loginUser = createAsyncThunk(
                   updatedat: new Date().toISOString()
                 })
                 .eq('id', userId);
-              
+
               if (updateError) {
                 console.error('Çilingir kullanıcı güncellenirken hata:', updateError);
               } else {
@@ -131,7 +132,7 @@ export const loginUser = createAsyncThunk(
                   createdat: new Date().toISOString(),
                   updatedat: new Date().toISOString()
                 });
-              
+
               if (newUserError) {
                 console.error('Çilingir kullanıcı oluşturulurken hata:', newUserError);
               } else {
@@ -156,16 +157,16 @@ export const loginUser = createAsyncThunk(
       };
     } catch (error) {
       console.log('Login thunk hatası:', error);
-      
+
       // Beklenmeyen hatalar için
       let errorMessage = "Giriş yapılırken bir hata oluştu. Lütfen daha sonra tekrar deneyin.";
-      
+
       if (typeof error === 'string') {
         errorMessage = error;
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       return rejectWithValue(errorMessage);
     }
   }
@@ -175,6 +176,7 @@ export const logoutUser = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {
     try {
+      const supabase = getSupabaseClient();
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       return null;
@@ -188,10 +190,11 @@ export const checkAuthState = createAsyncThunk(
   'auth/checkState',
   async (options = {}, { rejectWithValue }) => {
     try {
+      const supabase = getSupabaseClient();
       const { silent = false } = options;
-      
+
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) return null;
 
       // Eğer sessiz modda çalışıyorsak ve oturum varsa ek sorguları yapmaya gerek yok
@@ -200,7 +203,7 @@ export const checkAuthState = createAsyncThunk(
       }
 
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) return null;
 
       // Önce metadata'daki rol bilgisini kontrol et
@@ -234,16 +237,16 @@ export const checkAuthState = createAsyncThunk(
       };
     } catch (error) {
       console.log('Auth state kontrol hatası:', error);
-      
+
       // Hata objesini string'e dönüştürüyoruz
       let errorMessage = "Oturum kontrolü yapılırken bir hata oluştu";
-      
+
       if (typeof error === 'string') {
         errorMessage = error;
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       return rejectWithValue(errorMessage);
     }
   }
@@ -278,7 +281,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload || "Bilinmeyen bir hata oluştu";
       })
-      
+
       // Logout cases
       .addCase(logoutUser.pending, (state) => {
         state.loading = true;
@@ -296,7 +299,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      
+
       // Check auth state cases
       .addCase(checkAuthState.pending, (state) => {
         state.loading = true;
@@ -304,14 +307,14 @@ const authSlice = createSlice({
       })
       .addCase(checkAuthState.fulfilled, (state, action) => {
         state.loading = false;
-        
+
         // Sessiz mod kontrolü - eğer sadece sessionActive özelliği varsa
         // state'i güncelleme, bu sayede gereksiz render önlenmiş olur
         if (action.payload && action.payload.sessionActive === true) {
           // Sadece oturum kontrolü yapıldığında state'i değiştirmiyoruz
           return;
         }
-        
+
         if (!action.payload) {
           // Oturum yoksa tüm state'i sıfırla
           state.user = null;

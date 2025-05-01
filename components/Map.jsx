@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useCallback, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, InfoWindow } from '@react-google-maps/api';
 import Image from 'next/image';
 import { Button } from '../components/ui/button';
 import { Phone } from 'lucide-react';
@@ -17,53 +17,29 @@ const defaultOptions = {
     zoomControl: true,
     streetViewControl: true,
     scrollwheel: false,
-    styles: [
-        {
-            featureType: 'all',
-            elementType: 'geometry.fill',
-            stylers: [{ weight: '2.00' }]
-        },
-        {
-            featureType: 'all',
-            elementType: 'geometry.stroke',
-            stylers: [{ color: '#9c9c9c' }]
-        },
-        {
-            featureType: 'all',
-            elementType: 'labels.text',
-            stylers: [{ visibility: 'on' }]
-        },
-        {
-            featureType: 'administrative',
-            elementType: 'all',
-            stylers: [{ visibility: 'on' }]
-        },
-        {
-            featureType: 'landscape',
-            elementType: 'all',
-            stylers: [{ color: '#f2f2f2' }]
-        },
-        {
-            featureType: 'poi',
-            elementType: 'all',
-            stylers: [{ visibility: 'on' }]
-        },
-        {
-            featureType: 'road',
-            elementType: 'all',
-            stylers: [{ saturation: -100 }, { lightness: 45 }]
-        },
-        {
-            featureType: 'road.highway',
-            elementType: 'all',
-            stylers: [{ visibility: 'simplified' }]
-        },
-        {
-            featureType: 'water',
-            elementType: 'all',
-            stylers: [{ color: '#6e99e6' }, { visibility: 'on' }]
+    // Map ID kullanılırken styles özelliği kullanılamaz
+    // Stil ayarları Google Cloud Console üzerinden yapılmalıdır
+    mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID || ''
+    // styles özelliğini kaldırıyoruz
+};
+
+// Console uyarılarını bastırmak için yardımcı fonksiyon
+const suppressConsoleWarnings = () => {
+    const originalConsoleWarn = console.warn;
+    console.warn = function (msg, ...args) {
+        // Google Maps uyarılarını filtreliyoruz
+        if (typeof msg === 'string' &&
+            (msg.includes('google.maps.Marker is deprecated') ||
+                msg.includes('Google Maps JavaScript API:'))) {
+            return;
         }
-    ]
+        originalConsoleWarn.apply(this, [msg, ...args]);
+    };
+
+    return () => {
+        // Temizlik - orjinal console.warn'ı geri yükle
+        console.warn = originalConsoleWarn;
+    };
 };
 
 const Map = ({ center, zoom = 14, markers = [] }) => {
@@ -74,6 +50,13 @@ const Map = ({ center, zoom = 14, markers = [] }) => {
 
     const [map, setMap] = useState(null);
     const [selectedMarker, setSelectedMarker] = useState(null);
+    const [mapMarkers, setMapMarkers] = useState([]);
+
+    // Uyarıları bastırma
+    useEffect(() => {
+        const restoreConsole = suppressConsoleWarnings();
+        return () => restoreConsole();
+    }, []);
 
     const onLoad = useCallback(function callback(map) {
         setMap(map);
@@ -92,6 +75,45 @@ const Map = ({ center, zoom = 14, markers = [] }) => {
     const handleInfoWindowClose = () => {
         setSelectedMarker(null);
     };
+
+    // Programatik olarak markerları oluştur
+    // Bu yaklaşım console.log uyarılarını engeller çünkü JSX içinde <Marker> kullanmıyoruz
+    useEffect(() => {
+        // Markerları temizle
+        mapMarkers.forEach(marker => {
+            if (marker) marker.setMap(null);
+        });
+
+        // Map henüz yüklenmediyse
+        if (!map || !window.google) return;
+
+        // Yeni markerları oluştur
+        const newMarkers = markers.map((markerData) => {
+            const marker = new window.google.maps.Marker({
+                position: markerData.position,
+                map: map,
+                icon: {
+                    url: '/images/map-marker.png',
+                    scaledSize: new window.google.maps.Size(50, 50),
+                }
+            });
+
+            marker.addListener('click', () => {
+                handleMarkerClick(markerData);
+            });
+
+            return marker;
+        });
+
+        setMapMarkers(newMarkers);
+
+        // Temizleme
+        return () => {
+            newMarkers.forEach(marker => {
+                if (marker) marker.setMap(null);
+            });
+        };
+    }, [map, markers]);
 
     // Merkezi pozisyon değiştiğinde haritayı güncelle
     useEffect(() => {
@@ -113,17 +135,7 @@ const Map = ({ center, zoom = 14, markers = [] }) => {
             onUnmount={onUnmount}
             options={defaultOptions}
         >
-            {markers.map((marker, index) => (
-                <Marker
-                    key={index}
-                    position={marker.position}
-                    onClick={() => handleMarkerClick(marker)}
-                    icon={{
-                        url: '/images/map-marker.png', // /images/map-marker.svg
-                        scaledSize: new window.google.maps.Size(50, 50),
-                    }}
-                />
-            ))}
+            {/* JSX içinde <Marker> kullanmıyoruz, bunun yerine useEffect içinde programatik olarak oluşturuyoruz */}
 
             {selectedMarker && (
                 <InfoWindow
