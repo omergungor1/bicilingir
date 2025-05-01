@@ -71,27 +71,27 @@ const steps = [
 const testimonials = [
   {
     id: 1,
-    name: "Ahmet Yılmaz",
-    location: "İstanbul, Kadıköy",
-    quote: "Bi Çilingir'e katıldıktan sonra iş hacmim %60 arttı. Artık daha fazla müşteriye ulaşıyorum ve kazancım önemli ölçüde yükseldi.",
-    rating: 5,
-    image: "https://randomuser.me/api/portraits/men/1.jpg"
+    name: "Hüseyin Küçük",
+    location: "Bursa, Yıldırım",
+    quote: "Eskiden müşteri bulmak için ilanlara para harcıyordum. Şimdi Bi Çilingir'den gelen çağrılarla çalışıyorum, sabit bir gelirim oluştu.",
+    rating: 4.9,
+    image: "https://randomuser.me/api/portraits/men/32.jpg"
   },
   {
     id: 2,
-    name: "Mehmet Kaya",
-    location: "Ankara, Çankaya",
-    quote: "10 yıldır çilingirlik yapıyorum, ama Bi Çilingir platformuna katıldıktan sonra işlerim çok daha düzenli hale geldi. Müşteri bulmak için artık sokak sokak dolaşmama gerek yok.",
-    rating: 4.8,
-    image: "https://randomuser.me/api/portraits/men/2.jpg"
+    name: "Osman Dizdar",
+    location: "Bursa, Gemlik",
+    quote: "Bi Çilingir sayesinde artık daha geniş bir müşteri ağına sahibim. Özellikle gece gelen acil çağrılar sayesinde gelirim arttı.",
+    rating: 5,
+    image: "https://randomuser.me/api/portraits/men/31.jpg"
   },
   {
     id: 3,
-    name: "Ayşe Demir",
-    location: "İzmir, Karşıyaka",
-    quote: "Kadın bir çilingir olarak bazen müşteri bulmakta zorlanıyordum. Bi Çilingir sayesinde artık daha fazla müşteriye ulaşıyorum ve güvenilirliğimi kanıtlama şansı buluyorum.",
+    name: "Ayhan Çetindağ",
+    location: "Bursa, Gemlik",
+    quote: "İnternette görünür olmak zor. Bi Çilingir sayesinde Google'da öne çıktım. Günde en az 2-3 iş alıyorum. Tavsiye ederim.",
     rating: 5,
-    image: "https://randomuser.me/api/portraits/women/1.jpg"
+    image: "https://randomuser.me/api/portraits/men/34.jpg"
   }
 ];
 

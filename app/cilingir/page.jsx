@@ -426,7 +426,7 @@ function CilingirPanelContent() {
 
   const [activeTab, setActiveTab] = useState(tabParam || "dashboard");
   const [isCertificateDialogOpen, setIsCertificateDialogOpen] = useState(false);
-  const [reviews, setReviews] = useState([]);
+  // const [reviews, setReviews] = useState([]);
   const [activityList, setActivityList] = useState([]);
   const [activeReviewFilter, setActiveReviewFilter] = useState("all");
   const [reviewStats, setReviewStats] = useState({});
@@ -1998,7 +1998,7 @@ function CilingirPanelContent() {
           </div>
 
           {/* Main Content */}
-          <div className="col-span-12 md:col-span-9 mt-4">
+          <div className={`col-span-12 md:col-span-9 mt-4 ${mobileMenuOpen ? 'hidden md:block' : 'block'}`} >
             {activeTab === "dashboard" && (
               <Card>
                 <CardHeader>
@@ -3728,52 +3728,56 @@ function CilingirPanelContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Resmi Sil</h3>
-            <p className="text-gray-600 mb-6">Bu resmi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.</p>
-            <div className="flex justify-end space-x-3">
-              <Button
-                variant="outline"
-                onClick={cancelDeleteImage}
-              >
-                İptal
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={confirmDeleteImage}
-              >
-                Evet, Sil
-              </Button>
+      {
+        showDeleteModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Resmi Sil</h3>
+              <p className="text-gray-600 mb-6">Bu resmi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.</p>
+              <div className="flex justify-end space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={cancelDeleteImage}
+                >
+                  İptal
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={confirmDeleteImage}
+                >
+                  Evet, Sil
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
-      {isToggleStatusAccountModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Hesap Durumu {locksmith?.isactive == true ? 'Aktif' : 'Pasif'}</h3>
-            <p className="text-gray-600 mb-6">{locksmith?.isactive == true ? 'Hesabınızı devre dışı bırakırsanız, profiliniz ve hizmetleriniz platformda görünmeyecektir.' : 'Hesabınızı aktifleştirirseniz, profiliniz ve hizmetleriniz platformda görünür hale gelecektir.'}</p>
-            <div className="flex justify-end space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => setIsToggleStatusAccountModalOpen(false)}
-              >
-                İptal
-              </Button>
-              <Button
-                variant={locksmith?.isactive == true ? 'destructive' : 'default'}
-                onClick={handleToggleStatusAccount}
-                disabled={isToggleStatusAccountLoading}
-              >
-                {isToggleStatusAccountLoading ? 'İşleniyor...' : locksmith?.isactive == true ? 'Hesabımı Pasif Yap' : 'Hesabımı Aktifleştir'}
-              </Button>
+      {
+        isToggleStatusAccountModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Hesap Durumu {locksmith?.isactive == true ? 'Aktif' : 'Pasif'}</h3>
+              <p className="text-gray-600 mb-6">{locksmith?.isactive == true ? 'Hesabınızı devre dışı bırakırsanız, profiliniz ve hizmetleriniz platformda görünmeyecektir.' : 'Hesabınızı aktifleştirirseniz, profiliniz ve hizmetleriniz platformda görünür hale gelecektir.'}</p>
+              <div className="flex justify-end space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsToggleStatusAccountModalOpen(false)}
+                >
+                  İptal
+                </Button>
+                <Button
+                  variant={locksmith?.isactive == true ? 'destructive' : 'default'}
+                  onClick={handleToggleStatusAccount}
+                  disabled={isToggleStatusAccountLoading}
+                >
+                  {isToggleStatusAccountLoading ? 'İşleniyor...' : locksmith?.isactive == true ? 'Hesabımı Pasif Yap' : 'Hesabımı Aktifleştir'}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 } 

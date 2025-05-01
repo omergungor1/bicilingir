@@ -19,7 +19,7 @@ export default function SideMenu(params) {
                 <div className="h-[300px] rounded-lg overflow-hidden border">
                     <Map
                         center={mapCenter}
-                        zoom={15}
+                        zoom={type === 'city' ? 8 : type === 'district' ? 10 : 12}
                         markers={locksmithPositions.map(l => ({
                             position: l.position,
                             title: l.title,

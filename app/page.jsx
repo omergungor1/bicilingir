@@ -759,40 +759,6 @@ export default function Home() {
                   <p className="text-gray-600">Gerçek müşteri yorumları ve derecelendirmeleri ile en iyi çilingiri seçebilirsiniz. %98 müşteri memnuniyet oranıyla hizmet veriyoruz.</p>
                 </div>
               </div>
-
-              <div className="text-center mt-12">
-                <h3 className="text-2xl font-bold mb-4 text-gray-800">Nasıl Çalışır?</h3>
-                <div className="flex flex-col md:flex-row justify-center gap-4 mb-8">
-                  <div className="flex flex-col items-center">
-                    <div className="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold mb-3">1</div>
-                    <p className="text-gray-700">Konumunuzu ve ihtiyacınız olan hizmeti seçin</p>
-                  </div>
-                  <div className="flex items-center justify-center hidden md:block">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <div className="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold mb-3">2</div>
-                    <p className="text-gray-700">Size en yakın çilingirleri görüntüleyin</p>
-                  </div>
-                  <div className="flex items-center justify-center hidden md:block">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <div className="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold mb-3">3</div>
-                    <p className="text-gray-700">Dilediğiniz çilingiri seçin ve hemen arayın</p>
-                  </div>
-                </div>
-
-                <Button
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-4 text-lg rounded-lg shadow-lg"
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                > Hemen Çilingir Arayın
-                </Button>
-              </div>
             </div>
           </section>
 
@@ -810,6 +776,75 @@ export default function Home() {
                 Hemen Çilingir Çağır
               </Button>
             </div>
+          </section>
+
+          {/* Çilingirler İçin Bölüm */}
+          <section className="w-full py-16 px-4 bg-gray-100">
+            <div className="container mx-auto text-center">
+              <div className="max-w-4xl mx-auto">
+                <h2 className="text-3xl font-bold mb-4 text-gray-800">Çilingir misiniz?</h2>
+                <p className="text-xl mb-8 text-gray-700">
+                  BiÇilingir'e katılın ve daha fazla müşteriye ulaşın! Platformumuzda listelenip, hizmet kapsamınızı genişletin ve işlerinizi büyütün.
+                </p>
+                <div className="grid md:grid-cols-3 gap-6 mb-8">
+                  <div className="bg-white p-6 rounded-lg shadow-md">
+                    <div className="text-4xl mb-4 text-blue-600">👥</div>
+                    <h3 className="text-lg font-bold mb-2">Daha Fazla Müşteri</h3>
+                    <p className="text-gray-600">Binlerce potansiyel müşteri ile buluşun ve iş hacminizi artırın.</p>
+                  </div>
+                  <div className="bg-white p-6 rounded-lg shadow-md">
+                    <div className="text-4xl mb-4 text-blue-600">📱</div>
+                    <h3 className="text-lg font-bold mb-2">Kolay Yönetim</h3>
+                    <p className="text-gray-600">Hizmetlerinizi ve müşteri yorumlarınızı tek bir yerden yönetin.</p>
+                  </div>
+                  <div className="bg-white p-6 rounded-lg shadow-md">
+                    <div className="text-4xl mb-4 text-blue-600">🚀</div>
+                    <h3 className="text-lg font-bold mb-2">İşinizi Büyütün</h3>
+                    <p className="text-gray-600">Çevrimiçi varlığınızı güçlendirin ve marka bilinirliğinizi artırın.</p>
+                  </div>
+                </div>
+                <Link href="/bilgi">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg px-8 py-4 rounded-lg shadow-lg">
+                    Detaylar
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </section>
+
+          {/* Nasıl Çalışır? Bölümü */}
+          <section className="text-center py-12">
+            <h3 className="text-2xl font-bold mb-4 text-gray-800">Nasıl Çalışır?</h3>
+            <div className="flex flex-col md:flex-row justify-center gap-4 mb-8">
+              <div className="flex flex-col items-center">
+                <div className="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold mb-3">1</div>
+                <p className="text-gray-700">Konumunuzu ve ihtiyacınız olan hizmeti seçin</p>
+              </div>
+              <div className="flex items-center justify-center hidden md:block">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold mb-3">2</div>
+                <p className="text-gray-700">Size en yakın çilingirleri görüntüleyin</p>
+              </div>
+              <div className="flex items-center justify-center hidden md:block">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold mb-3">3</div>
+                <p className="text-gray-700">Dilediğiniz çilingiri seçin ve hemen arayın</p>
+              </div>
+            </div>
+
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-4 text-lg rounded-lg shadow-lg"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            > Hemen Çilingir Arayın
+            </Button>
           </section>
         </>
       )}

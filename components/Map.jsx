@@ -120,7 +120,7 @@ const Map = ({ center, zoom = 14, markers = [] }) => {
                     onClick={() => handleMarkerClick(marker)}
                     icon={{
                         url: '/images/map-marker.png', // /images/map-marker.svg
-                        scaledSize: new window.google.maps.Size(40, 40),
+                        scaledSize: new window.google.maps.Size(50, 50),
                     }}
                 />
             ))}

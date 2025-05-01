@@ -86,17 +86,17 @@ export default function MainContent(params) {
                                     {serviceList.neighborhoods.map((neighborhood, index) => (
                                         <Link
                                             key={index}
-                                            href={`/sehirler/test/${neighborhood.toLowerCase().replace(/\s+/g, '-')}`}
+                                            href={`/${neighborhood.slug}`}
                                             className="block text-blue-600 hover:text-blue-800 hover:underline py-1"
                                         >
-                                            {serviceList.name} {neighborhood} {service.name}
+                                            {serviceList.name} {neighborhood.name} {service.name}
                                         </Link>
                                     ))}
                                 </div>
                             </details>
                         ) : (
                             <Link
-                                href={`/sehirler/test/merkez/${service.slug}`}
+                                href={`/${service.slug}`}
                                 className="text-blue-600 hover:text-blue-800 font-medium"
                             >
                                 {formatedName} {service.name} Bul

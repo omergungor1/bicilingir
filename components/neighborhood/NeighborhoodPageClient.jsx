@@ -1,20 +1,15 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { MapPin, Phone, Mail, Clock, Star, ChevronRight } from "lucide-react";
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
-import Map from '../Map';
 import { Button } from '../ui/button';
-import { mockLocksmiths, services } from '../../lib/test-data';
-import LocksmithCard from '../ui/locksmith-card';
+import { services } from '../../lib/test-data';
 import SideMenu from '../local/side-menu';
 import MainContent from '../local/main-content';
 
-export default function NeighborhoodPageClient({ city, district, neighborhood }) {
+export default function NeighborhoodPageClient({ city, district, neighborhood, locksmiths: initialLocksmiths = [] }) {
     // params kontrolü 
     // const data = JSON.parse(params.value);
-    console.log(city, district, neighborhood);
 
     if (!city || !district || !neighborhood) {
         return (
@@ -32,7 +27,7 @@ export default function NeighborhoodPageClient({ city, district, neighborhood })
 
     // const { city, district, neighborhood } = data;
     const [isLoading, setIsLoading] = useState(true);
-    const [locksmiths, setLocksmiths] = useState([]);
+    const [locksmiths, setLocksmiths] = useState(initialLocksmiths);
     const [neighborhoodInfo, setNeighborhoodInfo] = useState(null);
     const [sideMenuParams, setSideMenuParams] = useState(null);
     const [mainContentParams, setMainContentParams] = useState(null);
@@ -81,7 +76,6 @@ export default function NeighborhoodPageClient({ city, district, neighborhood })
             };
 
             setNeighborhoodInfo(neighborhoodData);
-            setLocksmiths(mockLocksmiths);
             setIsLoading(false);
         } catch (error) {
             console.error('Veri yüklenirken hata oluştu:', error);

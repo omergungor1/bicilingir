@@ -2,33 +2,12 @@
 
 import { Suspense } from 'react';
 import CityContent from '../../components/city/CityContent';
-import { getMetaData } from '../utils/seo';
+import { getMetaData, getLocksmithsList } from '../utils/seo';
 
-// API'den çilingir verilerini çek
-async function getLocksmithsData(citySlug) {
-    try {
-        const params = new URLSearchParams();
-        if (citySlug) params.append('citySlug', citySlug);
-
-        const response = await fetch(`/api/locksmiths?${params.toString()}`, {
-            cache: 'no-store' // Gerçek verileri almak için önbelleği devre dışı bırak
-        });
-
-        if (!response.ok) {
-            throw new Error('API yanıt vermedi');
-        }
-
-        const data = await response.json();
-        return data.locksmiths || [];
-    } catch (error) {
-        console.error('Çilingir verileri çekilirken hata:', error);
-        return [];
-    }
-}
 
 // Veriyi tek bir yerden çekmek için yardımcı fonksiyon
 async function getCityData(citySlug) {
-    const locksmiths = await getLocksmithsData(citySlug);
+    const locksmiths = await getLocksmithsList({ citySlug, count: 2 });
     const metadata = await getMetaData({
         citySlug,
         districtSlug: null,
@@ -41,12 +20,14 @@ async function getCityData(citySlug) {
 }
 
 export async function generateMetadata({ params }) {
-    const { metadata } = await getCityData(params.city);
+    const resolvedParams = await params;
+    const { metadata } = await getCityData(resolvedParams.city);
     return metadata;
 }
 
 export default async function CityPage({ params }) {
-    const { city: citySlug } = params;
+    const resolvedParams = await params;
+    const { city: citySlug } = resolvedParams;
     const { locksmiths } = await getCityData(citySlug);
 
     return (
@@ -58,7 +39,7 @@ export default async function CityPage({ params }) {
                 </div>
             </div>
         }>
-            <CityContent city={citySlug} locksmiths={locksmiths} />
+            <CityContent citySlug={citySlug} locksmiths={locksmiths} />
         </Suspense>
     );
 } 

@@ -64,14 +64,15 @@ const serviceCategories = {
     }
 };
 
-export default function ServicePage({ city, district, neighborhood, serviceType }) {
+export default function ServicePage({ data }) {
+    const { citySlug, districtSlug, neighborhoodSlug, serviceTypeSlug, locksmiths: locksmithsList } = data;
     // Promise olarak gelen params'ı use() ile çözümlüyoruz
     // const resolvedParams = use(params);
 
     // Artık çözümlenmiş params'tan özellikleri alabiliriz
     // const { city, district, neighborhood, serviceType } = resolvedParams;
     const [loading, setLoading] = useState(true);
-    const [locksmiths, setLocksmiths] = useState([]);
+    const [locksmiths, setLocksmiths] = useState(locksmithsList);
     const [serviceInfo, setServiceInfo] = useState(null);
     const [neighborhoodInfo, setNeighborhoodInfo] = useState(null);
     const [sideMenuParams, setSideMenuParams] = useState(null);
@@ -121,7 +122,7 @@ export default function ServicePage({ city, district, neighborhood, serviceType 
             });
 
             setServiceInfo(serviceCategoryData);
-            setLocksmiths(mockLocksmiths);
+            setLocksmiths(locksmithsList);
             setLoading(false);
         } catch (error) {
             console.error('Veri yüklenirken hata oluştu:', error);
@@ -132,7 +133,7 @@ export default function ServicePage({ city, district, neighborhood, serviceType 
     // Sayfa yüklendiğinde veri çek
     useEffect(() => {
         fetchData();
-    }, [city, district, neighborhood, serviceType]);
+    }, [citySlug, districtSlug, neighborhoodSlug, serviceTypeSlug]);
 
     // SideMenu parametrelerini hazırla
     useEffect(() => {

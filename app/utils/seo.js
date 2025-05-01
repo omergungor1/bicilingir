@@ -75,6 +75,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
 
         // Mahalle bilgisini çek
         if (neighborhoodSlug && city && district) {
+
             const { data: neighborhoodData, error: neighborhoodError } = await supabase
                 .from('neighborhoods')
                 .select('id, name')
@@ -92,14 +93,11 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
 
         // Hizmet bilgisini çek
         if (serviceTypeSlug) {
-            // services tablosundaki slug formatına uygun hale getir
-            // Örneğin: "acil-cilingir" -> "Acil Çilingir" için sorgu yap
-            const serviceSlug = serviceTypeSlug.replace(/-/g, ' ');
 
             const { data: serviceData, error: serviceError } = await supabase
                 .from('services')
                 .select('id, name, description')
-                .ilike('name', `%${serviceSlug}%`)
+                .eq('slug', serviceTypeSlug)
                 .eq('isActive', true)
                 .single();
 
@@ -265,64 +263,7 @@ async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, serviceType
             listTitle = `${serviceType.name} Listesi`;
         }
 
-        // Eğer önceden çekilmiş çilingirler varsa onları kullan
-        if (locksmiths && locksmiths.length > 0) {
-            locksmithsList = locksmiths;
-        } else {
-            // Yoksa kendi çek
-            // Supabase bağlantısı oluştur
-            const supabase = createSupabaseClient();
-
-            // Çilingir listesini çek
-            let locksmithQuery = supabase
-                .from('locksmiths')
-                .select(`
-                    id, 
-                    businessName,
-                    fullName,
-                    email,
-                    phoneNumber,
-                    whatsappNumber,
-                    avgRating,
-                    totalReviewCount,
-                    profileimageurl,
-                    provinces:provinceId(name),
-                    districts:districtId(name)
-                `)
-                .eq('isActive', true)
-                .order('avgRating', { ascending: false })
-                .limit(2);
-
-            // Filtreleme
-            if (city) {
-                locksmithQuery = locksmithQuery.eq('provinceId', city.id);
-            }
-            if (district) {
-                locksmithQuery = locksmithQuery.eq('districtId', district.id);
-            }
-
-            const { data: locksmithData, error: locksmithError } = await locksmithQuery;
-
-            if (locksmithError || !locksmithData || locksmithData.length === 0) {
-                console.error('Çilingir bilgileri alınamadı:', locksmithError);
-            } else if (locksmithData && locksmithData.length > 0) {
-                locksmithsList = locksmithData.map(item => ({
-                    name: item.businessName || item.fullName,
-                    description: `${item.provinces?.name || ''} ${item.districts?.name || ''} bölgesinde profesyonel çilingir hizmeti.`,
-                    phone: item.phoneNumber,
-                    whatsapp: item.whatsappNumber,
-                    website: `https://bicilingir.com/cilingir/${item.id}`,
-                    logoUrl: item.profileimageurl || 'https://bicilingir.com/images/logo.png',
-                    city: item.provinces?.name,
-                    district: item.districts?.name,
-                    ratingValue: item.avgRating,
-                    ratingCount: item.totalReviewCount,
-                    priceRange: "₺₺",
-                    openingHours: "Mo-Su 00:00-23:59",
-                    serviceType: serviceType ? serviceType.name : "Çilingir Hizmeti"
-                }));
-            }
-        }
+        locksmithsList = locksmiths;
     } catch (error) {
         console.error('Yapılandırılmış veri oluşturulurken hata:', error);
     }
@@ -344,11 +285,11 @@ async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, serviceType
             })
             : undefined;
 
-        const geo = locksmith.latitude && locksmith.longitude
+        const geo = locksmith.lat && locksmith.lng
             ? cleanObject({
                 "@type": "GeoCoordinates",
-                "latitude": locksmith.latitude,
-                "longitude": locksmith.longitude
+                "latitude": locksmith.lat,
+                "longitude": locksmith.lng
             })
             : undefined;
 
@@ -394,4 +335,33 @@ async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, serviceType
     };
 
     return structuredData;
+}
+
+export async function getLocksmithsList({ citySlug, districtSlug, neighborhoodSlug, serviceTypeSlug, count = 2 }) {
+    try {
+        const params = new URLSearchParams();
+        if (citySlug) params.append('citySlug', citySlug);
+        if (districtSlug) params.append('districtSlug', districtSlug);
+        if (neighborhoodSlug) params.append('neighborhoodSlug', neighborhoodSlug);
+        if (serviceTypeSlug) params.append('serviceTypeSlug', serviceTypeSlug);
+        params.append('count', count);
+
+        // Tam URL belirt (protokol ve ana bilgisayarı dahil et)
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const url = `${baseUrl}/api/locksmiths?${params.toString()}`;
+
+        const response = await fetch(url, {
+            cache: 'no-store' // Gerçek verileri almak için önbelleği devre dışı bırak
+        });
+
+        if (!response.ok) {
+            throw new Error('API yanıt vermedi');
+        }
+
+        const data = await response.json();
+        return data.locksmiths || [];
+    } catch (error) {
+        console.error('Çilingir verileri çekilirken hata:', error);
+        return [];
+    }
 }

@@ -13,6 +13,19 @@ import { useRouter } from "next/navigation";
 
 export default function LocksmithCard({ locksmith, index }) {
     const [loadingLocksmithIds, setLoadingLocksmithIds] = useState({});
+    // Mevcut mesai dilimini belirle
+    const [currentTimeFrame, setCurrentTimeFrame] = useState(() => {
+        const now = new Date();
+        const hours = now.getHours();
+
+        if (hours >= 9 && hours < 17) {
+            return { type: 'normal', label: 'Normal Mesai (09:00-17:00)', priceKey: 'price1' };
+        } else if (hours >= 17 && hours < 24) {
+            return { type: 'evening', label: 'Akşam Mesaisi (17:00-00:00)', priceKey: 'price2' };
+        } else {
+            return { type: 'night', label: 'Gece Mesaisi (00:00-09:00)', priceKey: 'price3' };
+        }
+    });
 
     const styles = {
         accentButton: {
@@ -84,9 +97,9 @@ export default function LocksmithCard({ locksmith, index }) {
                     level: 1,
                     data: JSON.stringify({
                         locksmithId: id,
-                        searchProvinceId: reduxSelectedValues.provinceId,
-                        searchDistrictId: reduxSelectedValues.districtId,
-                        searchServiceId: reduxSelectedValues.serviceId
+                        searchProvinceId: reduxSelectedValues?.provinceId ? reduxSelectedValues?.provinceId : null,
+                        searchDistrictId: reduxSelectedValues?.districtId ? reduxSelectedValues?.districtId : null,
+                        searchServiceId: reduxSelectedValues?.serviceId ? reduxSelectedValues?.serviceId : null
                     }),
                     userId: localStorage.getItem('userId'),
                     sessionId: localStorage.getItem('sessionId'),
@@ -103,8 +116,12 @@ export default function LocksmithCard({ locksmith, index }) {
             console.error('Aktivite log hatası:', error);
         }
 
+        console.log('slug: ', slug);
+        const formattedSlug = `/cilingirler/${slug}?fromDetail=true`;
+        console.log('formattedSlug: ', formattedSlug);
+
         // Detay sayfasına yönlendir, scroll davranışını engellemek için scroll=false
-        router.push(`/${slug}?fromDetail=true`, undefined, { scroll: false });
+        router.push(formattedSlug, undefined, { scroll: false });
     };
 
 
@@ -122,18 +139,20 @@ export default function LocksmithCard({ locksmith, index }) {
                             <span>{locksmith.name.substring(0, 2)}</span>
                         </div>
                         <div>
-                            <div className="flex flex-col md:flex-row md:items-center mt-1 gap-2">
+                            <div className="flex flex-col gap-2">
                                 <h3 className={`text-xl font-bold ${index === 0 ? 'text-blue-800' : 'text-gray-800'}`}>{locksmith.name}</h3>
-                                {index === 0 && (
-                                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        Onaylı Çilingir
-                                    </span>
-                                )}
-                                <div className="w-1 h-1 bg-gray-400 rounded-full hidden md:block" />
-                                <p className="text-gray-600">{locksmith.city} - {locksmith.district}</p>
+                                <div className="flex flex-row items-center gap-2">
+                                    {index === 0 && (
+                                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            Onaylı Çilingir
+                                        </span>
+                                    )}
+                                    <div className="w-1 h-1 bg-gray-400 rounded-full hidden md:block" />
+                                    <p className="text-gray-600">{locksmith.city} - {locksmith.district}</p>
+                                </div>
                             </div>
                             <div className="flex flex-col md:flex-row md:items-center mt-1">
                                 <RatingStars rating={locksmith?.rating?.toFixed(1)} />
@@ -145,22 +164,93 @@ export default function LocksmithCard({ locksmith, index }) {
                     <p className="text-gray-700 mb-4">{locksmith?.description}</p>
 
                     <div className="flex flex-wrap gap-2">
-                        {locksmith?.serviceNames?.map((serviceName, index) => (
-                            <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{serviceName}</span>
+                        {locksmith?.serviceList?.map((service, idx) => (
+                            <span key={idx} className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded flex items-center gap-1 cursor-default">
+                                {service.name}
+                            </span>
                         ))}
                         <Popover>
                             <PopoverTrigger asChild>
-                                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded flex items-center gap-1"><Info className="w-4 h-4" />{locksmith?.price?.min}₺ - {locksmith?.price?.max}₺ (Tahmini Fiyat)</span>
+                                <span className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded flex items-center gap-1 cursor-pointer hover:bg-green-200 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Fiyat Bilgisi
+                                </span>
                             </PopoverTrigger>
                             <PopoverContent className="w-80 p-3 text-sm text-gray-700 max-h-[300px] overflow-y-auto">
                                 <div>
-                                    <p className="text-gray-600">Bu fiyat, çilingir hizmet için fiyatıdır. Fiyatlar; yol ücreti, değişmesi gereken parçalar, kilitlerin markası gibi faktörlere göre değişebilir. Net ücreti çilingir ile görüşerek öğrenebilirsiniz.</p>
+                                    <h4 className="font-medium text-gray-800 mb-2">Yaklaşık Fiyat Bilgisi</h4>
+
+                                    {/* Aktif mesai bilgisi */}
+                                    <div className={`p-2 rounded mb-3 text-xs ${currentTimeFrame.type === 'normal' ? 'bg-green-50' :
+                                        currentTimeFrame.type === 'evening' ? 'bg-yellow-50' : 'bg-red-50'
+                                        }`}>
+                                        <div className={`font-medium mb-1 ${currentTimeFrame.type === 'normal' ? 'text-green-800' :
+                                            currentTimeFrame.type === 'evening' ? 'text-yellow-800' : 'text-red-800'
+                                            }`}>
+                                            <span className="inline-block w-3 h-3 rounded-full mr-1 align-middle ${
+                                                currentTimeFrame.type === 'normal' ? 'bg-green-500' : 
+                                                currentTimeFrame.type === 'evening' ? 'bg-yellow-500' : 'bg-red-500'
+                                            }"></span>
+                                            Şu anda: {currentTimeFrame.label}
+                                        </div>
+                                        <p className="text-gray-600">Gösterilen fiyatlar geçerli mesai saatine göre ayarlanmıştır.</p>
+                                    </div>
+
+                                    {/* Servis fiyatları tablosu */}
+                                    <div className="mb-4 overflow-hidden rounded-md border border-gray-200">
+                                        <table className="w-full text-left text-xs">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th className="px-3 py-2 font-medium text-gray-700">Hizmet</th>
+                                                    <th className="px-3 py-2 font-medium text-gray-700 text-right">
+                                                        Fiyat Aralığı (₺)
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-200">
+                                                {locksmith?.serviceList?.map((service, idx) => {
+                                                    // Mevcut mesai saatine göre fiyatı belirle
+                                                    let price;
+                                                    if (currentTimeFrame.type === 'normal') {
+                                                        price = service.price1;
+                                                    } else if (currentTimeFrame.type === 'evening') {
+                                                        price = service.price2 || service.price1;
+                                                    } else { // night
+                                                        price = service.price3 || service.price2 || service.price1;
+                                                    }
+
+                                                    return (
+                                                        <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                                            <td className="px-3 py-2 text-gray-700">{service.name}</td>
+                                                            <td className={`px-3 py-2 text-right font-medium ${currentTimeFrame.type === 'normal' ? 'text-green-700' :
+                                                                currentTimeFrame.type === 'evening' ? 'text-yellow-700' : 'text-red-700'
+                                                                }`}>
+                                                                {price.min}-{price.max}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <h4 className="font-medium text-gray-800 mb-2">Fiyatlandırma Hakkında</h4>
+                                    <p className="text-gray-600">Gösterilen fiyatlar yaklaşık aralıklardır. Kesin fiyat çilingiri aradığınızda belirlenecektir. Fiyatlar şunlara göre değişiklik gösterebilir:</p>
+                                    <ul className="list-disc mt-2 pl-5 space-y-1 text-gray-600 text-xs">
+                                        <li>Mekanın konumu ve uzaklığı</li>
+                                        <li>Kilit tipi ve markası</li>
+                                        <li>Gerekli olabilecek yedek parçalar</li>
+                                        <li>Hizmetin verildiği saat (gece/acil servis ücreti)</li>
+                                    </ul>
                                 </div>
                             </PopoverContent>
                         </Popover>
                     </div>
                 </div>
 
+                {/* Call Buttons */}
                 <div className="p-6 flex flex-col justify-center md:w-64">
                     <div className="space-y-3">
                         <Button

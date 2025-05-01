@@ -11,96 +11,121 @@ const services = [
     id: 1,
     title: "Kapı Açma",
     icon: "🔑",
-    description: "Anahtarınızı kaybettiyseniz veya içeride unuttaysanız, profesyonel çilingirlerimiz kapınızı hasarsız bir şekilde açar.",
+    description: "Anahtarınızı kaybettiniz mi? Kilitli kalan kapınız mı var? 7/24 hizmet veren çilingirlerimiz kapınızı hızlı ve hasarsız açar.",
     details: [
-      "Ev, ofis ve araç kapıları için acil açma hizmeti",
-      "Hasarsız açma teknikleri",
-      "Ortalama 15-30 dakika içinde hizmet",
-      "7/24 acil servis"
+      "Ev, iş yeri, apartman kapısı açma",
+      "Acil durumlarda 15-30 dakikada müdahale",
+      "Hasarsız açma yöntemleri",
+      "Gizli kilit sistemlerine özel çözümler",
+      "Anahtar içeride kaldıysa hızlı destek"
     ]
   },
   {
     id: 2,
-    title: "Kilit Değişimi",
-    icon: "🔒",
-    description: "Güvenliğiniz için kilit değişimi ve yükseltme hizmetleri. En son teknoloji kilitler ile evinizi ve iş yerinizi güvende tutun.",
+    title: "Acil Çilingir Hizmeti",
+    icon: "🚨",
+    description: "Gece gündüz fark etmeden kapıda mı kaldınız? Acil çilingir ihtiyaçlarınızda en yakın çilingiri hemen bulun.",
     details: [
-      "Tüm kilit tipleri için değişim hizmeti",
-      "Yüksek güvenlikli kilit sistemleri",
-      "Çelik kapı kilitleri",
-      "Sigorta onaylı kilitler"
+      "7/24 çilingir hizmeti",
+      "Mobil ekiplerle hızlı ulaşım",
+      "Tüm mahallelerde hızlı hizmet",
+      "Bayram ve tatil günlerinde aktif"
     ]
   },
   {
     id: 3,
-    title: "Oto Çilingir",
-    icon: "🚗",
-    description: "Araç anahtarınızı kaybettiyseniz veya arabanızda unuttaysanız, uzman oto çilingirlerimiz yardımcı olur.",
+    title: "Kilit Değişimi ve Yenileme",
+    icon: "🛠️",
+    description: "Evinizde veya iş yerinizde güvenliği artırmak için kilitlerinizi değiştiriyoruz.",
     details: [
-      "Tüm araç markaları için anahtar yapımı",
-      "İmmobilizer programlama",
-      "Araç kapı açma",
-      "Yedek anahtar yapımı"
+      "Kırılan veya arızalı kilitlerin değişimi",
+      "Yüksek güvenlikli kilit sistemleri",
+      "Çelik kapı kilit değişimi",
+      "Hırsızlığa karşı özel kilit sistemleri"
     ]
   },
   {
     id: 4,
-    title: "Kasa Çilingir",
-    icon: "💰",
-    description: "Kasa şifrenizi unuttunuz mu? Kasanızı açamıyor musunuz? Uzman kasa çilingirlerimiz yardımcı olur.",
+    title: "Anahtar Kopyalama",
+    icon: "🗝️",
+    description: "Yedek anahtara mı ihtiyacınız var? Anahtar kopyalama hizmetimizle dakikalar içinde çözüm sunuyoruz.",
     details: [
-      "Ev ve ofis kasaları için açma hizmeti",
-      "Kasa şifre sıfırlama",
-      "Kasa tamir ve bakım",
-      "Yeni kasa kurulumu"
+      "Ev, ofis, çelik kapı anahtarı çoğaltma",
+      "Otomobil anahtarı yedekleme",
+      "İmmobilizerli anahtar kopyalama",
+      "Garantili ve hızlı anahtar çoğaltma"
     ]
   },
   {
     id: 5,
-    title: "Anahtar Kopyalama",
-    icon: "🗝️",
-    description: "Her türlü anahtar için hızlı ve doğru kopyalama hizmeti. Yedek anahtarlarınızı hazırlayın.",
+    title: "Otomobil Çilingir Hizmeti",
+    icon: "🚗",
+    description: "Aracınızın kapısı mı kilitlendi? Anahtarınızı içeride mi unuttunuz? Otomobil çilingirleri hizmetinizde.",
     details: [
-      "Ev, ofis ve araç anahtarları",
-      "Çip anahtarlar",
-      "Yüksek güvenlikli anahtarlar",
-      "Uzaktan kumandalar"
+      "Araç kapısı açma (hasarsız)",
+      "Otomobil anahtar kopyalama ve yedekleme",
+      "Kayıp oto anahtarı yapımı",
+      "Çipli ve uzaktan kumandalı anahtar çözümleri"
     ]
   },
   {
     id: 6,
-    title: "Çelik Kapı Servisi",
-    icon: "🚪",
-    description: "Çelik kapı montajı, tamiri ve bakımı için profesyonel hizmet.",
+    title: "Kasa Açma Hizmeti",
+    icon: "🧰",
+    description: "Şifreli veya anahtarlı kasanızı açamıyor musunuz? Uzman çilingirler kasanızı zarar vermeden açar.",
     details: [
-      "Çelik kapı montajı",
-      "Kilit değişimi",
-      "Kapı tamiri",
-      "Kapı kolu değişimi"
+      "Ev tipi, ofis tipi ve dijital kasa açma",
+      "Şifreli kasa çözümleri",
+      "Kilitli kalan kasalara özel müdahale",
+      "Şifre sıfırlama ve kilit değişimi"
     ]
   },
   {
     id: 7,
-    title: "Elektronik Kilit Sistemleri",
+    title: "Elektronik Kilit ve Kartlı Giriş Sistemleri",
     icon: "🔐",
-    description: "Modern ve güvenli elektronik kilit sistemleri kurulumu ve bakımı.",
+    description: "Modern güvenlik çözümleri için elektronik kilit ve kartlı sistem kurulumları yapıyoruz.",
     details: [
-      "Parmak izi okuyuculu kilitler",
-      "Şifreli kilitler",
-      "Kart okuyuculu kilitler",
-      "Akıllı ev entegrasyonu"
+      "Otel tipi kartlı kilit sistemleri",
+      "Apartmanlara ve iş yerlerine parmak izi kilidi",
+      "Şifreli kapı kilidi kurulumu",
+      "Akıllı ev güvenlik sistemleri entegrasyonu"
     ]
   },
   {
     id: 8,
-    title: "Acil Çilingir",
-    icon: "⚡",
-    description: "7/24 acil çilingir hizmeti. Kapınız kilitli kaldığında, anahtarınızı kaybettiğinizde veya kırıldığında hemen yanınızdayız.",
+    title: "Elektronik Otopark Sistemi Kurulumu ve Kumanda Hizmetleri",
+    icon: "🅿️",
+    description: "Apartman ve sitelere özel otopark kumandası sistemleri kurulumu, tamiri ve kumanda kopyalama hizmeti.",
     details: [
-      "15 dakika içinde kapınızda",
-      "7/24 hizmet",
-      "Tüm acil durumlar için çözüm",
-      "Hasarsız açma teknikleri"
+      "Otopark bariyer sistemi kurulumu",
+      "Uzaktan kumanda kopyalama",
+      "Bozulan otopark sistemlerinin tamiri",
+      "Site giriş sistemleri için teknik destek"
+    ]
+  },
+  {
+    id: 9,
+    title: "Apartman Hırsız Kilidi Montajı",
+    icon: "🛡️",
+    description: "Apartman giriş kapılarına özel, hırsızlara karşı koruma sağlayan yüksek güvenlikli kilit montajı.",
+    details: [
+      "Çelik destekli kilit montajı",
+      "Anti-hırsız sistemler",
+      "Hırsızların açamayacağı kilit sistemleri",
+      "Toplu konutlara uygun çözümler"
+    ]
+  },
+  {
+    id: 10,
+    title: "İmmobilizer Anahtar Hizmetleri",
+    icon: "📡",
+    description: "Çipli araç anahtarlarınızın tamiri, kopyalanması veya yeniden programlanması için hizmet veriyoruz.",
+    details: [
+      "İmmobilizer çip kopyalama",
+      "Otomobil kumandası tamiri",
+      "Kayıp çipli anahtarların yeniden üretimi",
+      "Yedek oto anahtarı programlama"
     ]
   }
 ];
@@ -119,8 +144,8 @@ export default function HizmetlerPage() {
         <div className="container mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {services.map((service) => (
-              <div key={service.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="p-6">
+              <div key={service.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
+                <div className="p-6 flex-grow">
                   <div className="text-4xl mb-4">{service.icon}</div>
                   <h3 className="text-2xl font-bold mb-2 text-blue-600">{service.title}</h3>
                   <p className="text-gray-600 mb-4">{service.description}</p>
@@ -133,10 +158,12 @@ export default function HizmetlerPage() {
                     ))}
                   </ul>
                 </div>
-                <div className="px-6 py-4 bg-gray-50 border-t">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                    <Link href="/" className="text-white">Çilingir Bul</Link>
-                  </Button>
+                <div className="px-6 py-4 bg-gray-50 border-t mt-auto">
+                  <Link href="/" className="text-white">
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                      Çilingir Bul
+                    </Button>
+                  </Link>
                 </div>
               </div>
             ))}

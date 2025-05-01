@@ -1,60 +1,125 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import SideMenu from '../local/side-menu';
 import MainContent from '../local/main-content';
+import { createClient } from '@supabase/supabase-js';
+import { services } from '../../lib/test-data';
 
-import { services, mockLocksmiths } from '../../lib/test-data';
+// Supabase client oluştur
+const createSupabaseClient = () => {
+    return createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false
+            }
+        }
+    );
+};
 
-export default function CityContent({ city }) {
+
+export default function CityContent({ citySlug, locksmiths: locksmithsList }) {
     const [isLoading, setIsLoading] = useState(true);
     const [cityData, setCityData] = useState(null);
-    const [locksmiths, setLocksmiths] = useState([]);
+    const [locksmiths, setLocksmiths] = useState(locksmithsList);
 
-
+    // Verileri çek
     useEffect(() => {
-        setLocksmiths(mockLocksmiths);
+        const fetchData = async () => {
+            try {
+                setIsLoading(true);
+
+                // Supabase client
+                const supabase = createSupabaseClient();
+
+                // Şehir bilgilerini çek
+                const { data: cityData, error: cityError } = await supabase
+                    .from('provinces')
+                    .select('id, name, lat, lng')
+                    .eq('slug', citySlug)
+                    .single();
+
+                if (cityError || !cityData) {
+                    console.error('Şehir bilgisi alınamadı:', cityError);
+                    setError('Şehir bulunamadı');
+                    setIsLoading(false);
+                    return;
+                }
+
+                const { data: districtsData, error: districtsError } = await supabase
+                    .from('districts')
+                    .select('id, name, slug')
+                    .eq('province_id', cityData.id);
+
+
+                if (districtsError || !districtsData) {
+                    console.error('İlçe bilgisi alınamadı:', districtsError);
+                    setError('İlçeler bulunamadı');
+                    setIsLoading(false);
+                    return;
+                }
+
+                const cityInfoData = {
+                    id: 1,
+                    name: cityData.name,
+                    description: `${cityData.name} ilinde çilingir hizmetine mi ihtiyacınız var? ${cityData.name} ilindeki tüm çilingir hizmetleri geniş hizmet yelpazesi ile uzman çilingirler tarafından sunulmaktadır. Aşağıda listelenen çilingirlerin hepsi ${cityData.name} ilinde hizmet vermektedir.`,
+                    longDescription: `${cityData.name} ${cityData.name} ilindeki çilingir hizmetleri geniş bir ağla sunulmaktadır. Bir çok çilingir bölgede aktif olarak hizmet vermektedir.\n${cityData.name} ilindeki çilingir fiyatları, ilçe ve hizmete göre değişkenlikler göstermektedir. ${cityData.name} ilinde ev çilingiri, otomobil çilingiri, acil çilingir, 724 çilingir hizmetleri bulmak oldukça kolaydır.\nBiÇilingir ile en yakın çilingiri saniyeler içinde bulabilir ve hemen arayabilirsiniz. Hizmetlere göre güncel yaklaşık fiyat bilgilerini görebilirsiniz. Net fiyat bilgisi için çilingir ile telefonda görüşebilirsiniz.`,
+                    districts: districtsData,
+                    neighborhoods: [],
+                    location: { lat: cityData.lat, lng: cityData.lng }
+                };
+
+                setCityData(cityInfoData);
+                setIsLoading(false);
+            } catch (error) {
+                console.error('Veri yüklenirken hata oluştu:', error);
+                setError('Veri yüklenirken bir hata oluştu');
+                setIsLoading(false);
+            }
+        };
+
+        fetchData();
     }, []);
 
-    useEffect(() => {
-        // Gerçek uygulamada API'den veri çekilecek
-        setTimeout(() => {
-            const mockData = {
-                id: 1,
-                name: city.charAt(0).toUpperCase() + city.slice(1),
-                description: `${city.charAt(0).toUpperCase() + city.slice(1)} ili için 7/24 çilingir hizmetleri. Kapınızda kaldığınızda, anahtarınızı kaybettiğinizde veya acil durumlar için profesyonel çilingirlerimiz hizmetinizdedir. Aşağıdaki listeden Bursa da aktif hizmet veren çilingir anahtarcıları bulabilirsiniz. Hemen arayarak detaylı bilgi alabilirsiniz.`,
-                longDescription: `Bursa, Türkiyenin en büyük illerinden biridir. Bölgede hizmet veren birçok çilingir bulunmaktadır.\n Bursa'da 7/24 çilingir, acil çilingir, otomobil çilingir, ev çilingiri, kasa çilingir hizmetleri alabilirsiniz.\n Bursada çilingir anahtarcı hizmetleri oldukça gelişmiş bir çilingir ağı ile sağlanmaktadır. Türkiyenin ilk ve tek çilingir ağı olan Bi Çilingir platformu sayesinde çilingir hizmetlerinizi kolayca bulabilirsiniz.`,
-                districts: [
-                    { id: 1, name: 'Osmangazi', slug: 'osmangazi' },
-                    { id: 2, name: 'Yıldırım', slug: 'yildirim' },
-                    { id: 3, name: 'Nilüfer', slug: 'nilufer' },
-                    { id: 4, name: 'Gürsu', slug: 'gursu' },
-                    { id: 5, name: 'Kestel', slug: 'kestel' },
-                    { id: 6, name: 'Mudanya', slug: 'mudanya' },
-                    { id: 7, name: 'Gemlik', slug: 'gemlik' },
-                    { id: 8, name: 'İnegöl', slug: 'inegol' },
-                    { id: 9, name: 'Karacabey', slug: 'karacabey' },
-                    { id: 10, name: 'Mustafakemalpaşa', slug: 'mustafakemalpasa' },
-                    { id: 11, name: 'Orhangazi', slug: 'orhangazi' },
-                    { id: 12, name: 'İznik', slug: 'iznik' },
-                    { id: 13, name: 'Yenişehir', slug: 'yenisehir' },
-                    { id: 14, name: 'Orhaneli', slug: 'orhaneli' },
-                    { id: 15, name: 'Büyükorhan', slug: 'buyukorhan' },
-                    { id: 16, name: 'Harmancık', slug: 'harmanci' },
-                    { id: 17, name: 'Keles', slug: 'keles' },
-                ],
-                mapLocation: { lat: 40.1885, lng: 29.0610 }, // Bursa için örnek koordinat
-                contactInfo: {
-                    phone: '+90 850 123 4567',
-                    address: `${city.charAt(0).toUpperCase() + city.slice(1)} Merkez, Atatürk Cad. No: 123`,
-                    workingHours: '7/24 Hizmet'
-                }
-            };
 
-            setCityData(mockData);
-            setIsLoading(false);
-        }, 1000);
-    }, [city]);
+
+    // useEffect(() => {
+    //     // Gerçek uygulamada API'den veri çekilecek
+    //     setTimeout(() => {
+    //         const mockData = {
+    //             id: 1,
+    //             name: city.charAt(0).toUpperCase() + city.slice(1),
+    //             description: `${city.charAt(0).toUpperCase() + city.slice(1)} ili için 7/24 çilingir hizmetleri. Kapınızda kaldığınızda, anahtarınızı kaybettiğinizde veya acil durumlar için profesyonel çilingirlerimiz hizmetinizdedir. Aşağıdaki listeden Bursa da aktif hizmet veren çilingir anahtarcıları bulabilirsiniz. Hemen arayarak detaylı bilgi alabilirsiniz.`,
+    //             longDescription: `Bursa, Türkiyenin en büyük illerinden biridir. Bölgede hizmet veren birçok çilingir bulunmaktadır.\n Bursa'da 7/24 çilingir, acil çilingir, otomobil çilingir, ev çilingiri, kasa çilingir hizmetleri alabilirsiniz.\n Bursada çilingir anahtarcı hizmetleri oldukça gelişmiş bir çilingir ağı ile sağlanmaktadır. Türkiyenin ilk ve tek çilingir ağı olan Bi Çilingir platformu sayesinde çilingir hizmetlerinizi kolayca bulabilirsiniz.`,
+    //             districts: [
+    //                 { id: 1, name: 'Osmangazi', slug: 'osmangazi' },
+    //                 { id: 2, name: 'Yıldırım', slug: 'yildirim' },
+    //                 { id: 3, name: 'Nilüfer', slug: 'nilufer' },
+    //                 { id: 4, name: 'Gürsu', slug: 'gursu' },
+    //                 { id: 5, name: 'Kestel', slug: 'kestel' },
+    //                 { id: 6, name: 'Mudanya', slug: 'mudanya' },
+    //                 { id: 7, name: 'Gemlik', slug: 'gemlik' },
+    //                 { id: 8, name: 'İnegöl', slug: 'inegol' },
+    //                 { id: 9, name: 'Karacabey', slug: 'karacabey' },
+    //                 { id: 10, name: 'Mustafakemalpaşa', slug: 'mustafakemalpasa' },
+    //                 { id: 11, name: 'Orhangazi', slug: 'orhangazi' },
+    //                 { id: 12, name: 'İznik', slug: 'iznik' },
+    //                 { id: 13, name: 'Yenişehir', slug: 'yenisehir' },
+    //                 { id: 14, name: 'Orhaneli', slug: 'orhaneli' },
+    //                 { id: 15, name: 'Büyükorhan', slug: 'buyukorhan' },
+    //                 { id: 16, name: 'Harmancık', slug: 'harmanci' },
+    //                 { id: 17, name: 'Keles', slug: 'keles' },
+    //             ],
+    //             mapLocation: { lat: 40.1885, lng: 29.0610 }, // Bursa için örnek koordinat
+    //         };
+
+    //         setCityData(mockData);
+    //         setIsLoading(false);
+    //     }, 1000);
+    // }, [citySlug]);
 
     if (isLoading) {
         return (
@@ -74,7 +139,7 @@ export default function CityContent({ city }) {
                 title: locksmith.name,
                 description: locksmith.description,
             })),
-            mapCenter: cityData.mapLocation
+            mapCenter: cityData.location
         },
         nearbySection: {
             title: 'Yakındaki Mahalleler',

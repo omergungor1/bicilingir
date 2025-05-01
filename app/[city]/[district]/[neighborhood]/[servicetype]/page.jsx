@@ -1,55 +1,38 @@
 // http://localhost:3000/sehirler/bursa/osmangazi/kukurtlu/acil-cilingir
 
 import ServicePage from '../../../../../components/location/ServicePage';
-import { getMetaData } from '../../../../utils/seo';
+import { getMetaData, getLocksmithsList } from '../../../../utils/seo';
 
-// API'den çilingir verilerini çek
-async function getLocksmithsData(citySlug, districtSlug, neighborhoodSlug, serviceTypeSlug) {
-    try {
-        const params = new URLSearchParams();
-        if (citySlug) params.append('citySlug', citySlug);
-        if (districtSlug) params.append('districtSlug', districtSlug);
-        if (neighborhoodSlug) params.append('neighborhoodSlug', neighborhoodSlug);
-        if (serviceTypeSlug) params.append('serviceTypeSlug', serviceTypeSlug);
+// Veriyi tek bir yerden çekmek için yardımcı fonksiyon
+async function getServiceData(citySlug, districtSlug, neighborhoodSlug, serviceTypeSlug) {
+    const locksmiths = await getLocksmithsList({ citySlug, districtSlug, neighborhoodSlug, serviceTypeSlug, count: 2 });
+    const metadata = await getMetaData({
+        citySlug,
+        districtSlug,
+        neighborhoodSlug,
+        serviceTypeSlug,
+        locksmiths
+    });
 
-        const response = await fetch(`/api/locksmiths?${params.toString()}`, {
-            cache: 'no-store' // Gerçek verileri almak için önbelleği devre dışı bırak
-        });
-
-        if (!response.ok) {
-            throw new Error('API yanıt vermedi');
-        }
-
-        const data = await response.json();
-        return data.locksmiths || [];
-    } catch (error) {
-        console.error('Çilingir verileri çekilirken hata:', error);
-        return [];
-    }
+    return { locksmiths, metadata };
 }
 
 export async function generateMetadata({ params }) {
-    const locksmiths = await getLocksmithsData(
-        params.city,
-        params.district,
-        params.neighborhood,
-        params.servicetype
+    const resolvedParams = await params;
+    const { metadata } = await getServiceData(
+        resolvedParams.city,
+        resolvedParams.district,
+        resolvedParams.neighborhood,
+        resolvedParams.servicetype
     );
-
-    return await getMetaData({
-        citySlug: params.city,
-        districtSlug: params.district,
-        neighborhoodSlug: params.neighborhood,
-        serviceTypeSlug: params.servicetype,
-        locksmiths
-    });
+    return metadata;
 }
 
 export default async function NeighborhoodServicePage({ params }) {
-    const { city, district, neighborhood, servicetype } = params;
+    const resolvedParams = await params;
+    const { city, district, neighborhood, servicetype } = resolvedParams;
 
-    // Çilingir verilerini çek
-    const locksmiths = await getLocksmithsData(city, district, neighborhood, servicetype);
+    const { locksmiths } = await getServiceData(city, district, neighborhood, servicetype);
 
     const data = {
         city,

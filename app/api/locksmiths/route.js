@@ -24,10 +24,13 @@ function createSupabaseClient() {
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
+
         const citySlug = searchParams.get('citySlug');
         const districtSlug = searchParams.get('districtSlug');
         const neighborhoodSlug = searchParams.get('neighborhoodSlug');
         const serviceTypeSlug = searchParams.get('serviceTypeSlug');
+        const count = searchParams.get('count') > 5 ? 2 : searchParams.get('count') || 2;
+
 
         // Supabase bağlantısı oluştur
         const supabase = createSupabaseClient();
@@ -47,6 +50,7 @@ export async function GET(request) {
             }
         }
 
+
         if (districtSlug && cityId) {
             const { data: districtData } = await supabase
                 .from('districts')
@@ -60,35 +64,39 @@ export async function GET(request) {
             }
         }
 
+
         // Çilingir listesini çek
         let locksmithQuery = supabase
             .from('locksmiths')
             .select(`
                 id, 
-                businessName,
-                fullName,
-                email,
-                phoneNumber,
-                whatsappNumber,
-                avgRating,
-                totalReviewCount,
+                businessname,
+                fullname,
+                phonenumber,
+                whatsappnumber,
+                avgrating,
+                totalreviewcount,
                 profileimageurl,
-                provinces:provinceId(name),
-                districts:districtId(name)
+                slug,
+                provinces:provinceid(name),
+                districts:districtid(name),
+                lat:locksmith_details(lat),
+                lng:locksmith_details(lng),
+                locksmith_services: services(name,minPriceMesai,maxPriceMesai,minPriceAksam,maxPriceAksam,minPriceGece,maxPriceGece)
             `)
-            .eq('isActive', true)
-            .order('avgRating', { ascending: false })
+            .eq('isactive', true)
             .limit(2);
 
         // Filtreleme
         if (cityId) {
-            locksmithQuery = locksmithQuery.eq('provinceId', cityId);
+            locksmithQuery = locksmithQuery.eq('provinceid', cityId);
         }
-        if (districtId) {
-            locksmithQuery = locksmithQuery.eq('districtId', districtId);
-        }
+        // if (districtId) {
+        //     locksmithQuery = locksmithQuery.eq('districtid', districtId);
+        // }
 
         const { data: locksmiths, error } = await locksmithQuery;
+
 
         if (error) {
             console.error('Çilingir verileri çekilirken hata:', error);
@@ -98,19 +106,38 @@ export async function GET(request) {
         // Çilingir verilerini formatlama
         const formattedLocksmiths = locksmiths.map(item => ({
             id: item.id,
-            name: item.businessName || item.fullName,
+            name: item.businessname || item.fullname,
             description: `${item.provinces?.name || ''} ${item.districts?.name || ''} bölgesinde profesyonel çilingir hizmeti.`,
-            phone: item.phoneNumber,
-            whatsapp: item.whatsappNumber,
+            phone: item.phonenumber,
+            whatsapp: item.whatsappnumber,
             website: `https://bicilingir.com/cilingir/${item.id}`,
-            logoUrl: item.profileimageurl || 'https://bicilingir.com/images/logo.png',
+            profileimageurl: item.profileimageurl || 'https://bicilingir.com/images/logo.png',
             city: item.provinces?.name,
             district: item.districts?.name,
-            ratingValue: item.avgRating,
-            ratingCount: item.totalReviewCount,
-            priceRange: "₺₺",
+            rating: item.avgrating,
+            reviewCount: item.totalreviewcount,
+            serviceList: item.locksmith_services?.map(service => ({
+                name: service.name,
+                price1: {
+                    min: service.minPriceMesai,
+                    max: service.maxPriceMesai
+                },
+                price2: {
+                    min: service.minPriceAksam,
+                    max: service.maxPriceAksam
+                },
+                price3: {
+                    min: service.minPriceGece,
+                    max: service.maxPriceGece
+                }
+            })),
+            slug: item.slug,
             openingHours: "Mo-Su 00:00-23:59",
-            serviceType: serviceTypeSlug ? serviceTypeSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : "Çilingir Hizmeti"
+            serviceType: serviceTypeSlug ? serviceTypeSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : "Çilingir Hizmeti",
+            location: {
+                lat: item.lat.lat,
+                lng: item.lng.lng
+            }
         }));
 
         return NextResponse.json({ locksmiths: formattedLocksmiths });

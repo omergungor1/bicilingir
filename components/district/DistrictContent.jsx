@@ -4,11 +4,11 @@ import React, { useState, useEffect } from 'react';
 import SideMenu from '../local/side-menu';
 import MainContent from '../local/main-content';
 import { createClient } from '@supabase/supabase-js';
-import Link from 'next/link';
+import { services } from '../../lib/test-data';
 
-// Sunucu tarafında Supabase bağlantısı
-async function getSupabaseData() {
-    const supabase = createClient(
+// Supabase client oluştur
+const createSupabaseClient = () => {
+    return createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
         {
@@ -18,132 +18,106 @@ async function getSupabaseData() {
             }
         }
     );
+};
 
-    return supabase;
-}
-
-import { services, mockLocksmiths } from '../../lib/test-data';
-
-export default async function DistrictContent({ params }) {
-    const { city: citySlug, district: districtSlug } = params;
+export default function DistrictContent({ citySlug, districtSlug, locksmiths: initialLocksmiths = [] }) {
     const [isLoading, setIsLoading] = useState(true);
-    const [locksmiths, setLocksmiths] = useState([]);
+    const [locksmiths, setLocksmiths] = useState(initialLocksmiths);
     const [districtInfo, setDistrictInfo] = useState(null);
     const [sideMenuParams, setSideMenuParams] = useState(null);
     const [mainContentParams, setMainContentParams] = useState(null);
+    const [neighborhoods, setNeighborhoods] = useState([]);
+    const [servicesList, setServicesList] = useState([]);
+    const [error, setError] = useState(null);
 
-    // Supabase veritabanına bağlan
-
-    const supabase = await getSupabaseData();
-
-    // Şehir bilgilerini çek
-    const { data: cityData, error: cityError } = await supabase
-        .from('provinces')
-        .select('id, name')
-        .eq('slug', citySlug)
-        .single();
-
-    if (cityError) {
-        console.error('Şehir bilgisi alınamadı:', cityError);
-        return <div>Şehir bulunamadı</div>;
-    }
-
-    // İlçe bilgilerini çek
-    const { data: districtData, error: districtError } = await supabase
-        .from('districts')
-        .select('id, name')
-        .eq('slug', districtSlug)
-        .eq('province_id', cityData.id)
-        .single();
-
-    if (districtError) {
-        console.error('İlçe bilgisi alınamadı:', districtError);
-        return <div>İlçe bulunamadı</div>;
-    }
-
-    // Mahalleleri çek
-    const { data: neighborhoods, error: neighborhoodError } = await supabase
-        .from('neighborhoods')
-        .select('id, name, slug')
-        .eq('district_id', districtData.id)
-        .order('name');
-
-    if (neighborhoodError) {
-        console.error('Mahalle bilgileri alınamadı:', neighborhoodError);
-    }
-
-    // Hizmet türlerini çek
-    const { data: services, error: serviceError } = await supabase
-        .from('services')
-        .select('id, name, slug')
-        .eq('is_active', true)
-        .order('name');
-
-    if (serviceError) {
-        console.error('Hizmet bilgileri alınamadı:', serviceError);
-    }
-
-
-    // Bitir
-
-    // API'den veri çekme fonksiyonu
-    const fetchData = async () => {
-        try {
-            setIsLoading(true);
-            // Gerçek bir API çağrısı burada olacak
-            // Örnek: const response = await fetch(`/api/districts/${city}/${district}`);
-            // const data = await response.json();
-
-            // Şimdilik mock veri kullanıyoruz
-            await new Promise(resolve => setTimeout(resolve, 800));
-
-            // Örnek ilçe bilgileri
-            const mockDistrictInfo = {
-                name: 'Osmangazi',
-                city: 'Bursa',
-                description: `Bursa Osmangazi de çilingir hizmetine mi ihtiyacınız var? Osmangazi ilçesinde biçok çilingir hizmetleri geniş bir ağla sunulmaktadır. Aşağıda listelenen çilingirlerin hepsi Bursa Osmangazi ilçesinde hizmet vermektedir.`,
-                longDescription: `Bursa Osmangazi de çilingir hizmetleri geniş bir ağla sunulmaktadır. Biçok çilingir bölgede aktif olarak hizmet vermektedir.\nBursa Osmangazi de çilingir fiyatı, ilçe ve hizmete göre değişkenlikler göstermektedir. Bursa Osmangazi de ev çilingiri, otomobil çilingiri, acil çilingir, 724 çilingir hizmetleri bulmak oldukça kolaydır.\nBiÇilingir ile en yakın çilingiri saniyeler içinde bulabilir ve hemen arayabilirsiniz. Hizmetlere göre güncel yaklaşık fiyat bilgilerini görebilirsiniz. Net fiyat bilgisi için çilingir ile telefonda görüşebilirsiniz.`,
-                neighborhoods: ['Adalet', 'Ahmetbey', 'Ahmetpaşa', 'Akpınar', 'Aksungur', 'Aktarhüssam', 'Alaaddin', 'Alacahırka', 'Alacamescit', 'Alaşarköy', 'Alemdar', 'Alipaşa', 'Altınova', 'Altıparmak', 'Armutköy', 'Atıcılar', 'Avdancık', 'Bağlarbaşı', 'Bağlı', 'Bahar', 'Başaran', 'Büyükdeliller', 'Çağlayan', 'Çaybaşı', 'Çekirge', 'Çeltikköy', 'Çırpan', 'Çiftehavuzlar', 'Çirişhane', 'Çukurcaköy', 'Dağakça', 'Demirkapı', 'Demirtaş Barbaros', 'Demirtaş Cumhuriyet', 'Demirtaş Dumlupınar', 'Demirtaş Sakarya', 'Demirtaşpaşa', 'Dereçavuş', 'Dikkaldırım', 'Dobruca', 'Doğanbey', 'Doğancı', 'Doğanevler', 'Dumlupınar', 'Dürdane', 'Ebu İshak', 'Elmasbahçeler', 'Emek', 'Emek Adnan Menderes', 'Emek Fatih Sultan Mehmet', 'Emek Zekai Gümüşdiş', 'Fatih', 'Gaziakdemir', 'Geçit', 'Gökçeören', 'Gülbahçe', 'Gündoğdu', 'Güneştepe', 'Güneybayırı', 'Güneybudaklar', 'Hacıilyas', 'Hamitler', 'Hamzabey', 'Hocaalizade', 'Hocahasan', 'Hüdavendigar', 'Hürriyet', 'Hüseyinalanı', 'İbrahimpaşa', 'İnkaya', 'İntizam', 'İsmetiye', 'İstiklal', 'İvazpaşa', 'Karabalçık', 'Karaislah', 'Kavaklı', 'Kayhan', 'Kemerçeşme', 'Kirazlı', 'Kırcaali', 'Kiremitçi', 'Kocanaip', 'Koğukçınar', 'Kuruçeşme', 'Küçükbalıklı', 'Küçükdeliller', 'Kükürtlü', 'Küplüpınar', 'Maksem', 'Mehmet Akif', 'Mollafenari', 'Mollagürani', 'Muradiye', 'Mürseller', 'Nalbantoğlu', 'Namıkkemal', 'Nilüfer', 'Orhanbey', 'Osmangazi', 'Ovaakça Çeşmebaşı', 'Ovaakça Eğitim', 'Ovaakça Merkez', 'Ovaakça Santral', 'Panayır', 'Pınarbaşı', 'Reyhan', 'Sakarya', 'Santralgaraj', 'Selamet', 'Selçukgazi', 'Selimiye', 'Sırameşeler', 'Soğanlı', 'Soğukkuyu', 'Soğukpınar', 'Süleymaniye', 'Tahtakale', 'Tayakadın', 'Tuna', 'Tuzaklı', 'Tuzpazarı', 'Ulu', 'Uluçam', 'Veyselkarani', 'Yahşibey', 'Yenibağlar', 'Yeniceabat', 'Yenikaraman', 'Yenikent', 'Yeşilova', 'Yiğitali', 'Yunuseli', 'Zafer', 'Santral Garaj'],
-                location: { lat: 40.1883, lng: 29.0612 },
-                nearbyStreets: [{
-                    id: 1,
-                    name: 'Bağlarbaşı',
-                    slug: 'baglarbasi'
-                }, {
-                    id: 2,
-                    name: 'Yunuseli',
-                    slug: 'yunuseli'
-                }, {
-                    id: 3,
-                    name: 'Emek',
-                    slug: 'emek'
-                }, {
-                    id: 4,
-                    name: 'Hamitler',
-                    slug: 'hamitler'
-                }, {
-                    id: 5,
-                    name: 'Alemdar',
-                    slug: 'alemdar'
-                }]
-            };
-
-            setDistrictInfo(mockDistrictInfo);
-            setLocksmiths(mockLocksmiths);
-            setIsLoading(false);
-        } catch (error) {
-            console.error('Veri yüklenirken hata oluştu:', error);
-            setIsLoading(false);
-        }
-    };
-
+    // Verileri çek
     useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setIsLoading(true);
+
+                // Supabase client
+                const supabase = createSupabaseClient();
+
+                // Şehir bilgilerini çek
+                const { data: cityData, error: cityError } = await supabase
+                    .from('provinces')
+                    .select('id, name')
+                    .eq('slug', citySlug)
+                    .single();
+
+                if (cityError) {
+                    console.error('Şehir bilgisi alınamadı:', cityError);
+                    setError('Şehir bulunamadı');
+                    setIsLoading(false);
+                    return;
+                }
+
+                // İlçe bilgilerini çek
+                const { data: districtData, error: districtError } = await supabase
+                    .from('districts')
+                    .select('id, name, lat, lng')
+                    .eq('slug', districtSlug)
+                    .eq('province_id', cityData.id)
+                    .single();
+
+
+                if (districtError) {
+                    console.error('İlçe bilgisi alınamadı:', districtError);
+                    setError('İlçe bulunamadı');
+                    setIsLoading(false);
+                    return;
+                }
+
+                // Mahalleleri çek
+                const { data: neighborhoodsData, error: neighborhoodError } = await supabase
+                    .from('neighborhoods')
+                    .select('id, name, slug')
+                    .eq('district_id', districtData.id)
+                    .order('name');
+
+                if (neighborhoodError) {
+                    console.error('Mahalle bilgileri alınamadı:', neighborhoodError);
+                }
+
+                // Hizmet türlerini çek
+                const { data: servicesData, error: serviceError } = await supabase
+                    .from('services')
+                    .select('id, name, slug')
+                    .eq('isActive', true)
+                    .order('name');
+
+                if (serviceError) {
+                    console.error('Hizmet bilgileri alınamadı:', serviceError);
+                }
+
+                setNeighborhoods(neighborhoodsData || []);
+                setServicesList(servicesData || []);
+
+                const districtInfoData = {
+                    name: districtData.name,
+                    city: cityData.name,
+                    description: `${cityData.name} ${districtData.name} de çilingir hizmetine mi ihtiyacınız var? ${districtData.name} ilçesinde biçok çilingir hizmetleri geniş bir ağla sunulmaktadır. Aşağıda listelenen çilingirlerin hepsi ${cityData.name} ${districtData.name} ilçesinde hizmet vermektedir.`,
+                    longDescription: `${cityData.name} ${districtData.name} de çilingir hizmetleri geniş bir ağla sunulmaktadır. Biçok çilingir bölgede aktif olarak hizmet vermektedir.\n${cityData.name} ${districtData.name} de çilingir fiyatı, ilçe ve hizmete göre değişkenlikler göstermektedir. ${cityData.name} ${districtData.name} de ev çilingiri, otomobil çilingiri, acil çilingir, 724 çilingir hizmetleri bulmak oldukça kolaydır.\nBiÇilingir ile en yakın çilingiri saniyeler içinde bulabilir ve hemen arayabilirsiniz. Hizmetlere göre güncel yaklaşık fiyat bilgilerini görebilirsiniz. Net fiyat bilgisi için çilingir ile telefonda görüşebilirsiniz.`,
+                    neighborhoods: neighborhoodsData ? neighborhoodsData : [],
+                    location: { lat: districtData.lat, lng: districtData.lng }
+                };
+
+                setDistrictInfo(districtInfoData);
+                setIsLoading(false);
+            } catch (error) {
+                console.error('Veri yüklenirken hata oluştu:', error);
+                setError('Veri yüklenirken bir hata oluştu');
+                setIsLoading(false);
+            }
+        };
+
         fetchData();
-    }, [city, district]);
+    }, [citySlug, districtSlug, locksmiths.length]);
 
     // SideMenu parametrelerini hazırla
     useEffect(() => {
-        if (!districtInfo || !locksmiths.length) return;
+        if (!districtInfo || locksmiths.length === 0) return;
 
         // SideMenu için parametreleri ayarla
         const params = {
@@ -162,8 +136,8 @@ export default async function DistrictContent({ params }) {
                     .slice(0, 20) // Sayfa performansı için ilk 20 mahalleyi göster
                     .map((neighborhood, idx) => ({
                         id: idx + 1,
-                        name: neighborhood,
-                        slug: `${city}/${district}/${neighborhood.toLowerCase().replace(/\s+/g, '-')}`
+                        name: neighborhood.name + ' Mahallesi',
+                        slug: `${citySlug}/${districtSlug}/${neighborhood.slug}`
                     }))
             },
             locksmithPricing: {
@@ -182,7 +156,7 @@ export default async function DistrictContent({ params }) {
                 data: services.map(service => ({
                     id: service.id,
                     name: service.name,
-                    slug: `${city}/${district}/${service.slug}`
+                    slug: `${citySlug}/${districtSlug}/${service.slug}`
                 }))
             },
             formattedName: `${districtInfo.city} ${districtInfo.name}`,
@@ -190,17 +164,17 @@ export default async function DistrictContent({ params }) {
         };
 
         setSideMenuParams(params);
-    }, [districtInfo, locksmiths, city, district]);
+    }, [districtInfo, locksmiths, citySlug, districtSlug]);
 
     // MainContent parametrelerini hazırla
     useEffect(() => {
-        if (!districtInfo || !locksmiths.length) return;
+        if (!districtInfo || locksmiths.length === 0) return;
 
         // MainContent için parametreleri ayarla
         const params = {
             navbarList: [
                 { id: 1, name: 'Ana Sayfa', slug: '/' },
-                { id: 2, name: districtInfo.city, slug: `${city}` },
+                { id: 2, name: districtInfo.city, slug: `/${citySlug}` },
                 { id: 3, name: districtInfo.name, slug: '#' }
             ],
             mainCard: {
@@ -252,10 +226,10 @@ export default async function DistrictContent({ params }) {
             detailedDistrictList: {
                 title: `${districtInfo.city} ${districtInfo.name} Mahalleleri`,
                 description: `${districtInfo.city} ${districtInfo.name} de çilingir hizmetleri verilen mahalleler`,
-                data: districtInfo.neighborhoods.map((mahalle, idx) => ({
+                data: districtInfo.neighborhoods.map((neighborhood, idx) => ({
                     id: idx + 1,
-                    name: `${mahalle}`,
-                    slug: `${city}/${district}/${mahalle.toLowerCase().replace(/\s+/g, '-')}`
+                    name: `${neighborhood.name} Mahallesi`,
+                    slug: `${citySlug}/${districtSlug}/${neighborhood.slug}`
                 }))
             },
             sideMenuParams: sideMenuParams,
@@ -264,7 +238,7 @@ export default async function DistrictContent({ params }) {
         };
 
         setMainContentParams(params);
-    }, [districtInfo, locksmiths, sideMenuParams, city, district]);
+    }, [districtInfo, locksmiths, sideMenuParams, citySlug, districtSlug]);
 
     if (isLoading) {
         return (
@@ -272,6 +246,22 @@ export default async function DistrictContent({ params }) {
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
                     <p className="mt-4 text-xl">Yükleniyor...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="container mx-auto p-4">
+                <div className="text-center">
+                    <p className="text-xl text-red-500">{error}</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                        Sayfayı Yenile
+                    </button>
                 </div>
             </div>
         );

@@ -16,6 +16,8 @@ CREATE TABLE provinces (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
     slug TEXT UNIQUE NOT NULL,
+    lat DOUBLE PRECISION,
+    lng DOUBLE PRECISION,
     code TEXT
 );
 
@@ -25,6 +27,8 @@ CREATE TABLE districts (
     province_id INTEGER NOT NULL REFERENCES provinces(id),
     name TEXT NOT NULL,
     slug TEXT UNIQUE NOT NULL,
+    lat DOUBLE PRECISION,
+    lng DOUBLE PRECISION,
     UNIQUE(province_id, name)
 );
 
@@ -35,6 +39,8 @@ CREATE TABLE neighborhoods (
     district_id INTEGER NOT NULL REFERENCES districts(id),
     name TEXT NOT NULL,
     slug TEXT UNIQUE NOT NULL,
+    lat DOUBLE PRECISION,
+    lng DOUBLE PRECISION,
     UNIQUE(province_id, district_id, name)
 );
 
@@ -79,8 +85,8 @@ CREATE TABLE locksmith_details (
     isPhoneVerified BOOLEAN DEFAULT FALSE,
     totalReviewsCount INTEGER DEFAULT 0,
     avgRating NUMERIC(3,2) DEFAULT 0,
-    latitude DOUBLE PRECISION,
-    longitude DOUBLE PRECISION,
+    lat DOUBLE PRECISION,
+    lng DOUBLE PRECISION,
     createdAt TIMESTAMPTZ DEFAULT NOW(),
     lastLogin TIMESTAMPTZ,
     postal_code VARCHAR(10)
