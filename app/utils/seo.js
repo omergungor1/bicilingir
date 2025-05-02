@@ -21,11 +21,11 @@ function createSupabaseClient() {
  * @param {string} params.citySlug - Şehir slug
  * @param {string} params.districtSlug - İlçe slug
  * @param {string} params.neighborhoodSlug - Mahalle slug
- * @param {string} params.serviceTypeSlug - Hizmet türü slug
+ * @param {string} params.servicetypeSlug - Hizmet türü slug
  * @param {Array} [params.locksmiths] - Önceden çekilmiş çilingirler
  * @returns {Promise<Object>} Meta verileri objesi
  */
-export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, serviceTypeSlug, locksmiths = null }) {
+export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, servicetypeSlug, locksmiths = null }) {
     // Varsayılan meta veriler
     const defaultMetadata = {
         title: 'Bi Çilingir | 7/24 Çilingir ve Anahtarcı Hizmeti',
@@ -90,12 +90,12 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
         }
 
         // Hizmet bilgisini çek
-        if (serviceTypeSlug) {
+        if (servicetypeSlug) {
 
             const { data: serviceData, error: serviceError } = await supabase
                 .from('services')
                 .select('id, name, description')
-                .eq('slug', serviceTypeSlug)
+                .eq('slug', servicetypeSlug)
                 .eq('isActive', true)
                 .single();
 
@@ -103,7 +103,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
                 console.error('Hizmet bilgisi alınamadı:', serviceError);
                 // Eğer veritabanında bulunamazsa, slug'dan oluştur
                 serviceType = {
-                    name: serviceTypeSlug
+                    name: servicetypeSlug
                         .split('-')
                         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                         .join(' ')
@@ -130,27 +130,27 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
             const districtName = district.name;
             const cityName = city.name;
 
-            title = `${neighborhoodName} mahallesi ${serviceTypeName} | ${cityName} ${districtName} Çilingir Anahtarcı`;
-            description = `${neighborhoodName} mahallesi ${serviceTypeName} ihtiyaçlarınız için Bi Çilingir ile 7/24 hizmet veren profesyonel çilingirlere hemen ulaşın. ${cityName} ${districtName} çilingir fiyarlarını kıyaslayın, dilediğiniz çilingiri anında çağırın.`;
-            keywords = `${neighborhoodName} mahallesi ${serviceTypeName.toLowerCase()}, ${districtName} çilingir, ${cityName} çilingir anahtarcı, acil çilingir, çilingir fiyatları, ekonomik çilingir`;
+            title = `${neighborhoodName} ${serviceTypeName} - ${cityName} ${districtName} | 7/24 En Yakın Çilingirler | Biçilingir`;
+            description = `${neighborhoodName} ${serviceTypeName} ihtiyaçlarınız için Bi Çilingir ile 7/24 hizmet veren profesyonel çilingirlere hemen ulaşın. ${cityName} ${districtName} çilingir fiyarlarını kıyaslayın, dilediğiniz çilingiri anında çağırın.`;
+            keywords = `${neighborhoodName} ${serviceTypeName.toLowerCase()}, ${districtName} çilingir, ${cityName} çilingir anahtarcı, acil çilingir, çilingir fiyatları, ekonomik çilingir`;
         }
         else if (district) {
             const districtName = district.name;
             const cityName = city.name;
 
-            title = `${districtName} ${serviceTypeName} | ${cityName} Çilingir Anahtarcı`;
+            title = `${districtName} ${serviceTypeName} - ${cityName} | 7/24 En Yakın Çilingirler | Biçilingir`;
             description = `${districtName} ${serviceTypeName} ihtiyaçlarınız için Bi Çilingir ile 7/24 hizmet veren profesyonel çilingirlere hemen ulaşın. ${cityName} ${districtName} çilingir fiyarlarını kıyaslayın, dilediğiniz çilingiri anında çağırın.`;
             keywords = `${districtName} ${serviceTypeName.toLowerCase()}, ${districtName} çilingir, ${cityName} çilingir anahtarcı, acil çilingir`;
         }
         else if (city) {
             const cityName = city.name;
 
-            title = `${cityName} ${serviceTypeName} | Çilingir Anahtarcı`;
+            title = `${cityName} ${serviceTypeName} | 7/24 En Yakın Çilingirler | Biçilingir`;
             description = `${cityName} ${serviceTypeName} ihtiyaçlarınız için Bi Çilingir ile 7/24 hizmet veren profesyonel çilingirlere hemen ulaşın. ${cityName} çilingir fiyarlarını kıyaslayın, dilediğiniz çilingiri anında çağırın.`;
             keywords = `${cityName} ${serviceTypeName.toLowerCase()}, ${cityName} çilingir, ${cityName} çilingir anahtarcı, acil çilingir`;
         }
         else {
-            title = `${serviceTypeName} | Çilingir Anahtarcı`;
+            title = `${serviceTypeName} | 7/24 En Yakın Çilingirler | Biçilingir`;
             description = `${serviceTypeName} ihtiyaçlarınız için Bi Çilingir ile 7/24 hizmet veren profesyonel çilingirlere hemen ulaşın. Çilingir fiyarlarını kıyaslayın, dilediğiniz çilingiri anında çağırın.`;
             keywords = `${serviceTypeName.toLowerCase()}, çilingir, anahtarcı, acil çilingir`;
         }
@@ -160,7 +160,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
         const districtName = district.name;
         const cityName = city.name;
 
-        title = `${neighborhoodName} Çilingir | ${districtName} ${cityName} Çilingir Hizmeti`;
+        title = `${neighborhoodName} Çilingir - ${cityName} ${districtName} | 7/24 En Yakın Çilingirler | Biçilingir`;
         description = `${neighborhoodName} çilingir ihtiyaçlarınız için Bi Çilingir ile 7/24 hizmet veren profesyonel çilingirlere hemen ulaşın. ${districtName} ${cityName} bölgesinde profesyonel çilingir hizmetleri için hemen arayın.`;
         keywords = `${neighborhoodName} çilingir, ${districtName} çilingir, ${cityName} anahtarcı, kapı açma`;
     }
@@ -168,14 +168,14 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
         const districtName = district.name;
         const cityName = city.name;
 
-        title = `${districtName} Çilingir | ${cityName} Çilingir Hizmeti`;
+        title = `${districtName} Çilingir - ${cityName} | 7/24 En Yakın Çilingirler | Biçilingir`;
         description = `${districtName} çilingir ihtiyaçlarınız için Bi Çilingir ile 7/24 hizmet veren profesyonel çilingirlere hemen ulaşın. ${cityName} bölgesinde profesyonel çilingir hizmetleri için hemen arayın.`;
         keywords = `${districtName} çilingir, ${cityName} anahtarcı, kapı açma, kilit değiştirme`;
     }
     else if (city) {
         const cityName = city.name;
 
-        title = `${cityName} Çilingir | 7/24 Çilingir Hizmeti`;
+        title = `${cityName} Çilingir | 7/24 En Yakın Çilingirler | Biçilingir`;
         description = `${cityName} çilingir ihtiyaçlarınız için Bi Çilingir ile 7/24 hizmet veren profesyonel çilingirlere hemen ulaşın. Profesyonel çilingir hizmetleri için hemen arayın.`;
         keywords = `${cityName} çilingir, ${cityName} anahtarcı, kapı açma, kilit değiştirme`;
     }
@@ -185,7 +185,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
         citySlug,
         districtSlug,
         neighborhoodSlug,
-        serviceTypeSlug,
+        servicetypeSlug,
         city,
         district,
         neighborhood,
@@ -239,7 +239,7 @@ function cleanObject(obj) {
  * @param {Array} [params.locksmiths] - Önceden çekilmiş çilingirler
  * @returns {Promise<Object>} JSON-LD yapılandırılmış veri objesi
  */
-async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, serviceTypeSlug, city, district, neighborhood, serviceType, locksmiths = null }) {
+async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, servicetypeSlug, city, district, neighborhood, serviceType, locksmiths = null }) {
     let listTitle = "Çilingir Hizmeti";
     let locksmithsList = [];
 
@@ -335,13 +335,13 @@ async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, serviceType
     return structuredData;
 }
 
-export async function getLocksmithsList({ citySlug, districtSlug, neighborhoodSlug, serviceTypeSlug, count = 2 }) {
+export async function getLocksmithsList({ citySlug, districtSlug, neighborhoodSlug, servicetypeSlug, count = 2 }) {
     try {
         const params = new URLSearchParams();
         if (citySlug) params.append('citySlug', citySlug);
         if (districtSlug) params.append('districtSlug', districtSlug);
         if (neighborhoodSlug) params.append('neighborhoodSlug', neighborhoodSlug);
-        if (serviceTypeSlug) params.append('serviceTypeSlug', serviceTypeSlug);
+        if (servicetypeSlug) params.append('servicetypeSlug', servicetypeSlug);
         params.append('count', count);
 
         // Tam URL belirt (protokol ve ana bilgisayarı dahil et)

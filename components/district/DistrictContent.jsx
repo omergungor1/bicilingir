@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import SideMenu from '../local/side-menu';
 import MainContent from '../local/main-content';
-import { services } from '../../lib/test-data';
 import { getSupabaseClient } from '../../lib/supabase';
 
 
@@ -75,7 +74,7 @@ export default function DistrictContent({ citySlug, districtSlug, locksmiths: in
                 // Hizmet türlerini çek
                 const { data: servicesData, error: serviceError } = await supabase
                     .from('services')
-                    .select('id, name, slug')
+                    .select('id, name, description, slug, minPriceMesai, maxPriceMesai, minPriceAksam, maxPriceAksam, minPriceGece, maxPriceGece')
                     .eq('isActive', true)
                     .order('name');
 
@@ -107,18 +106,18 @@ export default function DistrictContent({ citySlug, districtSlug, locksmiths: in
         fetchData();
     }, [citySlug, districtSlug, locksmiths.length]);
 
-    // SideMenu parametrelerini hazırla
+    // SideMenu ve MainContent parametrelerini hazırla
     useEffect(() => {
-        if (!districtInfo || locksmiths.length === 0) return;
+        if (!districtInfo) return;
 
         // SideMenu için parametreleri ayarla
-        const params = {
+        const sideMenuParamsData = {
             map: {
-                locksmithPositions: locksmiths.map(locksmith => ({
+                locksmithPositions: locksmiths.length > 0 ? locksmiths.map(locksmith => ({
                     position: locksmith.location,
                     title: locksmith.name,
                     description: locksmith.description,
-                })),
+                })) : [],
                 mapCenter: districtInfo.location
             },
             nearbySection: {
@@ -129,44 +128,40 @@ export default function DistrictContent({ citySlug, districtSlug, locksmiths: in
                     .map((neighborhood, idx) => ({
                         id: idx + 1,
                         name: neighborhood.name + ' Mahallesi',
-                        slug: `${citySlug}/${districtSlug}/${neighborhood.slug}`
+                        slug: neighborhood.slug
                     }))
             },
             locksmithPricing: {
                 title: 'Çilingir Hizmetleri Fiyatları',
                 description: 'Çilingir hizmetleri fiyatları çeşitli faktörlere göre değişebilir',
-                data: services.map(service => ({
-                    id: service.id,
+                data: servicesList.map(service => ({
                     name: service.name,
-                    minPrice: service.price.min,
-                    maxPrice: service.price.max
+                    description: service.description,
+                    price1: { min: service.minPriceMesai, max: service.maxPriceMesai },
+                    price2: { min: service.minPriceAksam, max: service.maxPriceAksam },
+                    price3: { min: service.minPriceGece, max: service.maxPriceGece }
                 }))
             },
             categorySection: {
                 title: 'Çilingir Hizmetleri Kategorileri',
                 description: '',
-                data: services.map(service => ({
+                data: servicesList.map(service => ({
                     id: service.id,
                     name: service.name,
-                    slug: `${citySlug}/${districtSlug}/${service.slug}`
+                    slug: service.slug
                 }))
             },
             formattedName: `${districtInfo.city} ${districtInfo.name}`,
             type: 'district'
         };
 
-        setSideMenuParams(params);
-    }, [districtInfo, locksmiths, citySlug, districtSlug]);
-
-    // MainContent parametrelerini hazırla
-    useEffect(() => {
-        if (!districtInfo || locksmiths.length === 0) return;
+        setSideMenuParams(sideMenuParamsData);
 
         // MainContent için parametreleri ayarla
-        const params = {
+        const mainContentParamsData = {
             navbarList: [
                 { id: 1, name: 'Ana Sayfa', slug: '/' },
-                { id: 2, name: districtInfo.city, slug: `/${citySlug}` },
+                { id: 2, name: districtInfo.city, slug: `${citySlug}` },
                 { id: 3, name: districtInfo.name, slug: '#' }
             ],
             mainCard: {
@@ -185,7 +180,7 @@ export default function DistrictContent({ citySlug, districtSlug, locksmiths: in
             serviceList: {
                 title: `${districtInfo.name} Çilingir Hizmetleri`,
                 description: 'Aşağıdaki hizmetler bölgenizdeki çilingirler tarafından verilmektedir.',
-                data: services,
+                data: servicesList,
                 neighborhoods: districtInfo.neighborhoods.slice(0, 8),
                 name: districtInfo.name
             },
@@ -218,19 +213,20 @@ export default function DistrictContent({ citySlug, districtSlug, locksmiths: in
             detailedDistrictList: {
                 title: `${districtInfo.city} ${districtInfo.name} Mahalleleri`,
                 description: `${districtInfo.city} ${districtInfo.name} de çilingir hizmetleri verilen mahalleler`,
+                secondTitle: 'Mahalleler',
                 data: districtInfo.neighborhoods.map((neighborhood, idx) => ({
                     id: idx + 1,
                     name: `${neighborhood.name} Mahallesi`,
                     slug: `${citySlug}/${districtSlug}/${neighborhood.slug}`
                 }))
             },
-            sideMenuParams: sideMenuParams,
+            sideMenuParams: sideMenuParamsData,
             formatedName: `${districtInfo.city} ${districtInfo.name}`,
             type: 'district'
         };
 
-        setMainContentParams(params);
-    }, [districtInfo, locksmiths, sideMenuParams, citySlug, districtSlug]);
+        setMainContentParams(mainContentParamsData);
+    }, [districtInfo, locksmiths, citySlug, districtSlug, servicesList]);
 
     if (isLoading) {
         return (

@@ -21,7 +21,7 @@ export default function MainContent(params) {
         seconCard = { title: '', longDescription: '' },
         serviceList = { title: '', description: '', data: [{ id: 1, name: '', description: '', icon: '', slug: '' }] },
         sssList = { title: '', description: '', data: [{ id: 1, question: '', answer: '' }] },
-        detailedDistrictList = { title: '', description: '', data: [{ id: 1, name: '', slug: '' }] },
+        detailedDistrictList = { title: '', description: '', secondTitle: '', data: [{ id: 1, name: '', slug: '' }] },
         sideMenuParams,
         formatedName,
         type = 'city' } = params;
@@ -66,9 +66,9 @@ export default function MainContent(params) {
                 ))}
             </div>
 
-
             <h2 className="text-2xl font-semibold mb-4">{serviceList.title}</h2>
             <p className="text-gray-600 mb-6">{serviceList.description}</p>
+
             {/**Service List */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                 {serviceList.data.map((service) => (
@@ -143,7 +143,7 @@ export default function MainContent(params) {
                 </CardHeader>
                 <CardContent>
 
-                    <h3 className="font-semibold text-lg mt-4 mb-2">Mahalleler</h3>
+                    <h3 className="font-semibold text-lg mt-4 mb-2">{detailedDistrictList.secondTitle}</h3>
                     <div className="flex flex-wrap gap-2">
                         {detailedDistrictList.data.map((mahalle, index) => (
                             <Link href={`/${mahalle.slug}`} key={index}>

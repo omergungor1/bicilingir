@@ -12,7 +12,7 @@ async function getCityData(citySlug) {
         citySlug,
         districtSlug: null,
         neighborhoodSlug: null,
-        serviceTypeSlug: null,
+        servicetypeSlug: null,
         locksmiths
     });
 

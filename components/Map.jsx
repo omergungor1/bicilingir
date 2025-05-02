@@ -52,6 +52,7 @@ const Map = ({ center, zoom = 14, markers = [] }) => {
     const [selectedMarker, setSelectedMarker] = useState(null);
     const [mapMarkers, setMapMarkers] = useState([]);
 
+
     // Uyarıları bastırma
     useEffect(() => {
         const restoreConsole = suppressConsoleWarnings();

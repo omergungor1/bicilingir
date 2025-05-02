@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "..//ui/button";
 import { ChevronRight, Info } from "lucide-react";
+import { RatingModal } from "../RatingModal";
 import {
     Popover,
     PopoverContent,
@@ -13,6 +14,7 @@ import { useRouter } from "next/navigation";
 
 export default function LocksmithCard({ locksmith, index }) {
     const [loadingLocksmithIds, setLoadingLocksmithIds] = useState({});
+    const [searchValues, setSearchValues] = useState(null);
     // Mevcut mesai dilimini belirle
     const [currentTimeFrame, setCurrentTimeFrame] = useState(() => {
         const now = new Date();
@@ -26,6 +28,60 @@ export default function LocksmithCard({ locksmith, index }) {
             return { type: 'night', label: 'Gece Mesaisi (00:00-09:00)', priceKey: 'price3' };
         }
     });
+
+    // localStorage'dan arama verilerini getir
+    useEffect(() => {
+        try {
+            const searchValuesStr = localStorage.getItem('searchValues');
+            if (searchValuesStr) {
+                const parsedValues = JSON.parse(searchValuesStr);
+                setSearchValues(parsedValues);
+            }
+        } catch (error) {
+            console.error('Arama değerleri yüklenemedi:', error);
+        }
+    }, []);
+
+    // Çilingir kartı göründüğünde aktivite logunu kaydet
+    useEffect(() => {
+        const logLocksmithView = async () => {
+            try {
+                // API üzerinden aktivite kaydı oluştur
+                const response = await fetch('/api/public/user/activity', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        activitytype: 'locksmith_list_view',
+                        level: 1,
+                        data: JSON.stringify({
+                            locksmithId: locksmith.id,
+                            locksmithName: locksmith.name,
+                            locksmithIndex: index,
+                            searchProvinceId: searchValues?.provinceId || null,
+                            searchDistrictId: searchValues?.districtId || null,
+                            searchServiceId: searchValues?.serviceId || null
+                        }),
+                        userId: localStorage.getItem('userId'),
+                        sessionId: localStorage.getItem('sessionId'),
+                        userAgent: navigator.userAgent || ''
+                    }),
+                });
+
+                if (!response.ok) {
+                    console.error('Liste görüntüleme log hatası:', await response.text());
+                }
+            } catch (error) {
+                console.error('Liste görüntüleme log hatası:', error);
+            }
+        };
+
+        // Çilingir verisi yüklendiğinde loglama işlemini gerçekleştir
+        if (locksmith && locksmith.id) {
+            logLocksmithView();
+        }
+    }, [locksmith.id, index, searchValues]); // locksmith.id veya searchValues değiştiğinde tekrar çalıştır
 
     const styles = {
         accentButton: {
@@ -97,9 +153,9 @@ export default function LocksmithCard({ locksmith, index }) {
                     level: 1,
                     data: JSON.stringify({
                         locksmithId: id,
-                        searchProvinceId: reduxSelectedValues?.provinceId ? reduxSelectedValues?.provinceId : null,
-                        searchDistrictId: reduxSelectedValues?.districtId ? reduxSelectedValues?.districtId : null,
-                        searchServiceId: reduxSelectedValues?.serviceId ? reduxSelectedValues?.serviceId : null
+                        searchProvinceId: searchValues?.provinceId || null,
+                        searchDistrictId: searchValues?.districtId || null,
+                        searchServiceId: searchValues?.serviceId || null
                     }),
                     userId: localStorage.getItem('userId'),
                     sessionId: localStorage.getItem('sessionId'),
@@ -109,19 +165,100 @@ export default function LocksmithCard({ locksmith, index }) {
 
             if (!response.ok) {
                 console.error('Aktivite log hatası:', await response.text());
-            } else {
-                console.log('Çilingir detay görüntüleme aktivitesi kaydedildi.');
             }
         } catch (error) {
             console.error('Aktivite log hatası:', error);
         }
 
-        console.log('slug: ', slug);
-        const formattedSlug = `/cilingirler/${slug}?fromDetail=true`;
-        console.log('formattedSlug: ', formattedSlug);
+        // Mevcut URL'yi al ve referrer olarak ekle
+        const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+        const referrer = encodeURIComponent(currentUrl);
+
+        // Çilingir detay sayfasına yönlendir
+        const formattedSlug = `/cilingirler/${slug}?fromDetail=true&referrer=${referrer}`;
 
         // Detay sayfasına yönlendir, scroll davranışını engellemek için scroll=false
         router.push(formattedSlug, undefined, { scroll: false });
+    };
+
+    const handleCallLocksmith = async (locksmith, index) => {
+        try {
+            // Aktivite loglaması
+            const response = await fetch('/api/public/user/activity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    activitytype: 'call_request',
+                    level: 1,
+                    data: JSON.stringify({
+                        locksmithId: locksmith.id,
+                        locksmithName: locksmith.name,
+                        locksmithPhone: locksmith.phone,
+                        searchProvinceId: searchValues?.provinceId || null,
+                        searchDistrictId: searchValues?.districtId || null,
+                        searchServiceId: searchValues?.serviceId || null
+                    }),
+                    userId: localStorage.getItem('userId'),
+                    sessionId: localStorage.getItem('sessionId'),
+                    userAgent: navigator.userAgent || ''
+                }),
+            });
+
+            if (!response.ok) {
+                console.error('Arama aktivitesi log hatası:', await response.text());
+            } else {
+                console.log('Çilingir arama aktivitesi kaydedildi.');
+            }
+        } catch (error) {
+            console.error('Aktivite log hatası:', error);
+        }
+
+        // Telefon araması yap
+        const phoneNumber = locksmith.phone.replace(/\D/g, ''); // Sadece rakamları al
+        window.location.href = `tel:${phoneNumber}`;
+    };
+
+    const handleWhatsappMessage = async (locksmith, index) => {
+        try {
+            // Aktivite loglaması
+            const response = await fetch('/api/public/user/activity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    activitytype: 'whatsapp_message',
+                    level: 1,
+                    data: JSON.stringify({
+                        locksmithId: locksmith.id,
+                        locksmithName: locksmith.name,
+                        locksmithWhatsapp: locksmith.whatsapp,
+                        searchProvinceId: searchValues?.provinceId || null,
+                        searchDistrictId: searchValues?.districtId || null,
+                        searchServiceId: searchValues?.serviceId || null
+                    }),
+                    userId: localStorage.getItem('userId'),
+                    sessionId: localStorage.getItem('sessionId'),
+                    userAgent: navigator.userAgent || ''
+                }),
+            });
+
+            if (!response.ok) {
+                console.error('WhatsApp aktivitesi log hatası:', await response.text());
+            } else {
+                console.log('Çilingir WhatsApp aktivitesi kaydedildi.');
+            }
+        } catch (error) {
+            console.error('Aktivite log hatası:', error);
+        }
+
+        // Whatsapp mesajı oluştur
+        const whatsappNumber = locksmith.whatsapp.replace(/\D/g, ''); // Sadece rakamları al
+        const message = `Merhaba, BiÇilingir.com üzerinden size ulaşıyorum. ${locksmith.serviceType || 'Çilingir'} hizmetiniz hakkında bilgi almak istiyorum.`;
+        const encodedMessage = encodeURIComponent(message);
+        window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
     };
 
 
@@ -141,7 +278,7 @@ export default function LocksmithCard({ locksmith, index }) {
                         <div>
                             <div className="flex flex-col gap-2">
                                 <h3 className={`text-xl font-bold ${index === 0 ? 'text-blue-800' : 'text-gray-800'}`}>{locksmith.name}</h3>
-                                <div className="flex flex-row items-center gap-2">
+                                <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
                                     {index === 0 && (
                                         <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">

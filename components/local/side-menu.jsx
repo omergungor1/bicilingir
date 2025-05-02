@@ -6,10 +6,15 @@ import Link from "next/link";
 import Map from "../Map";
 import { services } from "../../lib/test-data";
 
+import PriceDisplay from "../ui/price-display";
+
 
 export default function SideMenu(params) {
 
-    const { map: { locksmithPositions = [], mapCenter = { lat: 0, lng: 0 } }, nearbySection = { title: 'Yakındaki Mahalleler', description: '', data: [{ id: 1, name: '', slug: '' }] }, locksmithPricing = { title: '', description: '', data: [{ id: 1, name: '', minPrice: 0, maxPrice: 0 }] }, categorySection = { title: '', description: '', data: [{ id: 1, name: '', slug: '' }] }, formattedName = '', type = 'city' } = params;
+    const { map = { locksmithPositions: [], mapCenter: { lat: 0, lng: 0 } }, nearbySection = { title: 'Yakındaki Mahalleler', description: '', data: [{ id: 1, name: '', slug: '' }] }, locksmithPricing = { title: '', description: '', data: [{ id: 1, name: '', minPrice: 0, maxPrice: 0 }] }, categorySection = { title: '', description: '', data: [{ id: 1, name: '', slug: '' }] }, formattedName = '', type = 'city' } = params || {};
+
+    const locksmithPositions = map.locksmithPositions
+    const mapCenter = map.mapCenter
 
     return (
         <div>
@@ -19,7 +24,7 @@ export default function SideMenu(params) {
                 <div className="h-[300px] rounded-lg overflow-hidden border">
                     <Map
                         center={mapCenter}
-                        zoom={type === 'city' ? 8 : type === 'district' ? 12 : 14}
+                        zoom={type === 'city' ? 8 : type === 'district' ? 12 : 13}
                         markers={locksmithPositions.map(l => ({
                             position: l.position,
                             title: l.title,
@@ -67,7 +72,7 @@ export default function SideMenu(params) {
                         {locksmithPricing.data.map((service, index) => (
                             <div key={index} className="flex justify-between items-center text-sm">
                                 <span>{service.name}</span>
-                                <span className="font-medium">₺{service.minPrice} - ₺{service.maxPrice}</span>
+                                <PriceDisplay prices={{ mesai: service.price1, aksam: service.price2, gece: service.price3 }} />
                             </div>
                         ))}
                     </div>
@@ -82,6 +87,8 @@ export default function SideMenu(params) {
                     </div>
                 </CardContent>
             </Card>}
+
+
 
             {/* Daha fazla kategori */}
             {categorySection && <Card className="mb-6">

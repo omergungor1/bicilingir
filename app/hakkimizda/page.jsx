@@ -177,7 +177,7 @@ export default function HakkimizdaPage() {
               <div>
                 <h3 className="text-xl font-bold mb-2 text-gray-800">7/24 Müşteri Desteği</h3>
                 <p className="text-gray-600">
-                  Bi Çilingir olarak, müşterilerimize 7/24 destek sunuyoruz. Herhangi bir sorun veya soru olduğunda, müşteri destek ekibimiz her zaman yardıma hazırdır.
+                  Bi Çilingir olarak, müşterilerimize 7/24 destek sunuyoruz. Herhangi bir sorun veya sorunuz olduğunda, müşteri destek ekibimiz her zaman yardımınıza hazır.
                 </p>
               </div>
             </div>

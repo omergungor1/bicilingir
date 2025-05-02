@@ -4,13 +4,13 @@ import ServicePage from '../../../../../components/location/ServicePage';
 import { getMetaData, getLocksmithsList } from '../../../../utils/seo';
 
 // Veriyi tek bir yerden çekmek için yardımcı fonksiyon
-async function getServiceData(citySlug, districtSlug, neighborhoodSlug, serviceTypeSlug) {
-    const locksmiths = await getLocksmithsList({ citySlug, districtSlug, neighborhoodSlug, serviceTypeSlug, count: 2 });
+async function getServiceData(citySlug, districtSlug, neighborhoodSlug, servicetypeSlug) {
+    const locksmiths = await getLocksmithsList({ citySlug, districtSlug, neighborhoodSlug, servicetypeSlug, count: 2 });
     const metadata = await getMetaData({
         citySlug,
         districtSlug,
         neighborhoodSlug,
-        serviceTypeSlug,
+        servicetypeSlug,
         locksmiths
     });
 
@@ -35,10 +35,10 @@ export default async function NeighborhoodServicePage({ params }) {
     const { locksmiths } = await getServiceData(city, district, neighborhood, servicetype);
 
     const data = {
-        city,
-        district,
-        neighborhood,
-        servicetype,
+        citySlug: city,
+        districtSlug: district,
+        neighborhoodSlug: neighborhood,
+        servicetypeSlug: servicetype,
         locksmiths
     };
 

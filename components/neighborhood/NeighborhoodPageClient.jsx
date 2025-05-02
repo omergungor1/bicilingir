@@ -3,15 +3,13 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '../ui/button';
-import { services } from '../../lib/test-data';
 import SideMenu from '../local/side-menu';
 import MainContent from '../local/main-content';
+import { getSupabaseClient } from '../../lib/supabase';
 
-export default function NeighborhoodPageClient({ city, district, neighborhood, locksmiths: initialLocksmiths = [] }) {
+export default function NeighborhoodPageClient({ citySlug, districtSlug, neighborhoodSlug, locksmiths: initialLocksmiths = [] }) {
     // params kontrolü 
-    // const data = JSON.parse(params.value);
-
-    if (!city || !district || !neighborhood) {
+    if (!citySlug || !districtSlug || !neighborhoodSlug) {
         return (
             <div className="container mx-auto p-4 min-h-screen flex items-center justify-center">
                 <div className="text-center">
@@ -25,60 +23,118 @@ export default function NeighborhoodPageClient({ city, district, neighborhood, l
         );
     }
 
-    // const { city, district, neighborhood } = data;
     const [isLoading, setIsLoading] = useState(true);
     const [locksmiths, setLocksmiths] = useState(initialLocksmiths);
     const [neighborhoodInfo, setNeighborhoodInfo] = useState(null);
     const [sideMenuParams, setSideMenuParams] = useState(null);
     const [mainContentParams, setMainContentParams] = useState(null);
+    const [servicesList, setServicesList] = useState([]);
+    const [error, setError] = useState(null);
 
-    // API'den veri çekme işlemi (simüle edilmiş)
+    // API'den veri çekme işlemi
     const fetchData = async () => {
         try {
             setIsLoading(true);
-            // Gerçek API çağrısını simüle ediyoruz
-            // const response = await fetch(`/api/neighborhood/${city}/${district}/${neighborhood}`);
-            // const data = await response.json();
+            setError(null);
 
-            // API çağrısı yerine timeout ile simülasyon
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Supabase client
+            const supabase = getSupabaseClient();
 
-            const formattedMahalle = neighborhood.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-            const formattedIlce = district.charAt(0).toUpperCase() + district.slice(1);
-            const formattedSehir = city.charAt(0).toUpperCase() + city.slice(1);
+            // Şehir bilgilerini çek
+            const { data: cityData, error: cityError } = await supabase
+                .from('provinces')
+                .select('id, name')
+                .eq('slug', citySlug)
+                .single();
 
-            const neighborhoodData = {
-                id: 1,
-                name: formattedMahalle,
-                district: formattedIlce,
-                city: formattedSehir,
-                description: `${formattedMahalle} mahallesi, ${formattedIlce}, ${formattedSehir} bölgesinde 7/24 çilingir hizmetleri. Kapı açma, çilingir, anahtar kopyalama ve diğer çilingir hizmetleri için hemen arayın.`,
-                longDescription: `Bi Çilingir olarak, ${formattedMahalle} mahallesi sakinlerini güvenilir, ekonomik ve hızlı çilingir hizmeti sunan profesyonellerle buluşturuyoruz. Kendimiz doğrudan çilingir hizmeti vermiyoruz; bunun yerine, bulunduğunuz bölgedeki en yakın ve en güvenilir çilingirleri tek bir platformda sizin için listeliyoruz. Böylece acil bir durumda zaman kaybetmeden iletişime geçebileceğiniz uzmanlara kolayca ulaşmanızı sağlıyoruz.\n\n
-                Kapınız kilitli kaldıysa, anahtarınızı kaybettiyseniz ya da kilit değişimi yaptırmak istiyorsanız, ${formattedMahalle}'ndeki çilingirleri hemen inceleyebilir, size en uygun olanla doğrudan iletişime geçebilirsiniz. Tüm çilingirler, kullanıcı yorumları ve hizmet detaylarıyla birlikte sayfamızda yer alır; bu sayede güvenli ve bilinçli bir seçim yapabilirsiniz.\n\n
+            if (cityError) {
+                console.error('Şehir bilgisi alınamadı:', cityError);
+                setError('Şehir bulunamadı');
+                setIsLoading(false);
+                return;
+            }
+
+            // İlçe bilgilerini çek
+            const { data: districtData, error: districtError } = await supabase
+                .from('districts')
+                .select('id, name, lat, lng')
+                .eq('slug', districtSlug)
+                .eq('province_id', cityData.id)
+                .single();
+
+            if (districtError) {
+                console.error('İlçe bilgisi alınamadı:', districtError);
+                setError('İlçe bulunamadı');
+                setIsLoading(false);
+                return;
+            }
+
+            // Mahalle bilgilerini çek
+            //mahalle lat, lng sonra eklenecek! Gerekli mi?
+            const { data: neighborhoodData, error: neighborhoodError } = await supabase
+                .from('neighborhoods')
+                .select('id, name')
+                .eq('slug', neighborhoodSlug)
+                .eq('district_id', districtData.id)
+                .single();
+
+            if (neighborhoodError) {
+                console.error('Mahalle bilgisi alınamadı:', neighborhoodError);
+                setError('Mahalle bulunamadı');
+                setIsLoading(false);
+                return;
+            }
+
+            // Yakın mahalleleri çek (aynı ilçedeki diğer mahalleler)
+            const { data: nearbyNeighborhoods, error: nearbyError } = await supabase
+                .from('neighborhoods')
+                .select('id, name, slug')
+                .eq('district_id', districtData.id)
+                .neq('id', neighborhoodData.id)
+                .order('name')
+                .limit(10);
+
+            if (nearbyError) {
+                console.error('Yakındaki mahalle bilgileri alınamadı:', nearbyError);
+            }
+
+            // Hizmet türlerini çek
+            const { data: servicesData, error: serviceError } = await supabase
+                .from('services')
+                .select('id, name, slug, minPriceMesai, maxPriceMesai, minPriceAksam, maxPriceAksam, minPriceGece, maxPriceGece')
+                .eq('isActive', true)
+                .order('name');
+
+            if (serviceError) {
+                console.error('Hizmet bilgileri alınamadı:', serviceError);
+            }
+
+
+            setServicesList(servicesData);
+
+            // Mahalle bilgisini hazırla
+            const neighborhoodInfoData = {
+                id: neighborhoodData.id,
+                name: neighborhoodData.name,
+                district: districtData.name,
+                city: cityData.name,
+                description: `${neighborhoodData.name} mahallesi, ${districtData.name}, ${cityData.name} bölgesinde 7/24 çilingir hizmetleri. Kapı açma, çilingir, anahtar kopyalama ve diğer çilingir hizmetleri için hemen arayın.`,
+                longDescription: `Bi Çilingir olarak, ${neighborhoodData.name} mahallesi sakinlerini güvenilir, ekonomik ve hızlı çilingir hizmeti sunan profesyonellerle buluşturuyoruz. Kendimiz doğrudan çilingir hizmeti vermiyoruz; bunun yerine, bulunduğunuz bölgedeki en yakın ve en güvenilir çilingirleri tek bir platformda sizin için listeliyoruz. Böylece acil bir durumda zaman kaybetmeden iletişime geçebileceğiniz uzmanlara kolayca ulaşmanızı sağlıyoruz.\n\n
+                Kapınız kilitli kaldıysa, anahtarınızı kaybettiyseniz ya da kilit değişimi yaptırmak istiyorsanız, ${neighborhoodData.name}'ndeki çilingirleri hemen inceleyebilir, size en uygun olanla doğrudan iletişime geçebilirsiniz. Tüm çilingirler, kullanıcı yorumları ve hizmet detaylarıyla birlikte sayfamızda yer alır; bu sayede güvenli ve bilinçli bir seçim yapabilirsiniz.\n\n
                 Platformumuzda listelenen çilingirlerin çoğu 7/24 hizmet sunmaktadır. Gece ya da gündüz fark etmeksizin, dakikalar içinde destek alabileceğiniz profesyonellere ulaşmak artık çok kolay. Bi Çilingir, kaliteli hizmete erişimi kolaylaştırır; uygun fiyatlı ve güvenilir çözümler sunan çilingirleri bir araya getirir.\n\n
-                ${formattedMahalle} için en yakın çilingirleri şimdi keşfedin ve ihtiyacınıza en uygun ustayla hemen iletişime geçin!`,
-                location: { lat: 40.1880, lng: 29.0610 }, // Mahalle için örnek koordinat
-                emergencyPhone: "+90 850 123 4567",
-                nearbyStreets: [
-                    { id: 1, name: 'Atatürk Caddesi', slug: 'ataturk-caddesi' },
-                    { id: 2, name: 'İstiklal Sokak', slug: 'istiklal-sokak' },
-                    { id: 3, name: 'Cumhuriyet Bulvarı', slug: 'cumhuriyet-bulvari' },
-                    { id: 4, name: 'Kurtuluş Caddesi', slug: 'kurtulus-caddesi' },
-                    { id: 5, name: 'Fatih Sokak', slug: 'fatih-sokak' }
-                ],
-                nearbyNeighborhoods: [
-                    { id: 1, name: 'Merkez', slug: 'merkez' },
-                    { id: 2, name: 'Yenimahalle', slug: 'yenimahalle' },
-                    { id: 3, name: 'Atatürk', slug: 'ataturk' },
-                    { id: 4, name: 'Cumhuriyet', slug: 'cumhuriyet' },
-                    { id: 5, name: 'Fatih', slug: 'fatih' }
-                ]
+                ${neighborhoodData.name} için en yakın çilingirleri şimdi keşfedin ve ihtiyacınıza en uygun ustayla hemen iletişime geçin!`,
+                location: {
+                    lat: districtData.lat,
+                    lng: districtData.lng
+                },
+                nearbyNeighborhoods: nearbyNeighborhoods || []
             };
 
-            setNeighborhoodInfo(neighborhoodData);
+            setNeighborhoodInfo(neighborhoodInfoData);
             setIsLoading(false);
         } catch (error) {
             console.error('Veri yüklenirken hata oluştu:', error);
+            setError('Veri yüklenirken bir hata oluştu');
             setIsLoading(false);
         }
     };
@@ -86,20 +142,20 @@ export default function NeighborhoodPageClient({ city, district, neighborhood, l
     // Sayfa yüklendiğinde veri çek
     useEffect(() => {
         fetchData();
-    }, [city, district, neighborhood]);
+    }, [citySlug, districtSlug, neighborhoodSlug]);
 
     // SideMenu parametrelerini hazırla
     useEffect(() => {
-        if (!neighborhoodInfo || !locksmiths.length) return;
+        if (!neighborhoodInfo) return;
 
         // SideMenu için parametreleri ayarla
-        const params = {
+        const sideMenuParamsData = {
             map: {
-                locksmithPositions: locksmiths.map(locksmith => ({
+                locksmithPositions: locksmiths.length > 0 ? locksmiths.map(locksmith => ({
                     position: locksmith.location,
                     title: locksmith.name,
                     description: locksmith.description,
-                })),
+                })) : [],
                 mapCenter: neighborhoodInfo.location
             },
             nearbySection: {
@@ -108,49 +164,46 @@ export default function NeighborhoodPageClient({ city, district, neighborhood, l
                 data: neighborhoodInfo.nearbyNeighborhoods.map(neighborhood => ({
                     id: neighborhood.id,
                     name: neighborhood.name,
-                    slug: `sehirler/${city}/${district}/${neighborhood.slug}`
+                    slug: `${citySlug}/${districtSlug}/${neighborhood.slug}`
                 }))
             },
             locksmithPricing: {
                 title: 'Çilingir Hizmetleri Fiyatları',
                 description: 'Çilingir hizmetleri fiyatları çeşitli faktörlere göre değişebilir',
-                data: services.map(service => ({
+                data: servicesList.map(service => ({
                     id: service.id,
                     name: service.name,
-                    minPrice: service.price.min,
-                    maxPrice: service.price.max
+                    description: service.description,
+                    price1: { min: service.minPriceMesai, max: service.maxPriceMesai },
+                    price2: { min: service.minPriceAksam, max: service.maxPriceAksam },
+                    price3: { min: service.minPriceGece, max: service.maxPriceGece }
                 }))
             },
             categorySection: {
                 title: `${neighborhoodInfo.name} Çilingir Hizmetleri`,
                 description: '',
-                data: services.map(service => ({
+                data: servicesList.map(service => ({
                     id: service.id,
                     name: service.name,
-                    slug: `sehirler/${city}/${district}/${neighborhood}/${service.slug}`
+                    slug: service.slug
                 }))
             },
             formattedName: `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name}`,
             type: 'neighborhood'
         };
 
-        setSideMenuParams(params);
-    }, [neighborhoodInfo, locksmiths, city, district, neighborhood]);
-
-    // MainContent parametrelerini hazırla
-    useEffect(() => {
-        if (!neighborhoodInfo || !locksmiths.length || !sideMenuParams) return;
+        setSideMenuParams(sideMenuParamsData);
 
         // MainContent için parametreleri ayarla
-        const params = {
+        const mainContentParams = {
             navbarList: [
                 { id: 1, name: 'Ana Sayfa', slug: '/' },
-                { id: 2, name: neighborhoodInfo.city, slug: `${neighborhoodInfo.city.toLowerCase().replace(/\s+/g, '-')}` },
-                { id: 3, name: neighborhoodInfo.district, slug: `${neighborhoodInfo.city.toLowerCase().replace(/\s+/g, '-')}/${neighborhoodInfo.district.toLowerCase().replace(/\s+/g, '-')}` },
-                { id: 4, name: neighborhoodInfo.name, slug: '#' }
+                { id: 2, name: neighborhoodInfo.city, slug: `${citySlug}` },
+                { id: 3, name: neighborhoodInfo.district, slug: `${citySlug}/${districtSlug}` },
+                { id: 4, name: neighborhoodInfo.name + ' Mahallesi', slug: '#' }
             ],
             mainCard: {
-                title: `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name} Çilingir`,
+                title: `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name} Mahallesi Çilingir`,
                 description: neighborhoodInfo.description
             },
             locksmitList: {
@@ -165,7 +218,8 @@ export default function NeighborhoodPageClient({ city, district, neighborhood, l
             serviceList: {
                 title: `${neighborhoodInfo.name} Çilingir Hizmetleri`,
                 description: 'Mahallenizde sunulan çilingir hizmetleri',
-                data: services,
+                data: servicesList,
+                neighborhoods: neighborhoodInfo.nearbyNeighborhoods.slice(0, 8),
                 name: neighborhoodInfo.name
             },
             sssList: {
@@ -195,22 +249,22 @@ export default function NeighborhoodPageClient({ city, district, neighborhood, l
                 ]
             },
             detailedDistrictList: {
-                title: `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name} Çevresindeki Sokaklar`,
+                title: `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name} Çevresindeki Mahalleler`,
                 description: `${neighborhoodInfo.name} mahallesinde çilingir hizmeti verilen yakın bölgeler`,
-                data: neighborhoodInfo.nearbyStreets.map(street => ({
-                    id: street.id,
-                    name: street.name,
-                    slug: `sehirler/${city}/${district}/${neighborhood}/${street.slug}`
+                secondTitle: 'Mahalleler',
+                data: neighborhoodInfo.nearbyNeighborhoods.map(neighborhood => ({
+                    id: neighborhood.id,
+                    name: neighborhood.name + ' Mahallesi',
+                    slug: `${citySlug}/${districtSlug}/${neighborhood.slug}`
                 }))
             },
-            sideMenuParams: sideMenuParams,
+            sideMenuParams: sideMenuParamsData,
             formatedName: `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name}`,
             type: 'neighborhood'
         };
 
-
-        setMainContentParams(params);
-    }, [neighborhoodInfo, locksmiths, sideMenuParams, city, district, neighborhood]);
+        setMainContentParams(mainContentParams);
+    }, [neighborhoodInfo, locksmiths, citySlug, districtSlug, neighborhoodSlug, servicesList]);
 
     if (isLoading) {
         return (
@@ -218,6 +272,19 @@ export default function NeighborhoodPageClient({ city, district, neighborhood, l
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
                     <p className="mt-4 text-xl">Yükleniyor...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="container mx-auto p-4 min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-xl text-red-500">{error}</p>
+                    <Button className="mt-4" onClick={fetchData} variant="outline">
+                        Tekrar Dene
+                    </Button>
                 </div>
             </div>
         );

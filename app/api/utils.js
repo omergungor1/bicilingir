@@ -828,6 +828,131 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
       .insert(insertData)
       .select();
 
+
+    console.log('activitytype:', activitytype)
+    if (additionalData.locksmithId && activitytype === 'call_request') {
+      try {
+        // 1. Adım: mevcut call_count değerini alıyoruz
+        const { data: locksmithTrafficData, error: locksmithTrafficError } = await supabase
+          .from('locksmith_traffic')
+          .select('call_count,multiplier')
+          .eq('locksmith_id', additionalData.locksmithId)
+          .single();
+
+        if (locksmithTrafficError) {
+          console.error('Error fetching call_count:', locksmithTrafficError);
+          return;
+        }
+
+        // 2. Adım: call_count'ı 1 artırıp, priority hesaplıyoruz
+        const updatedCallCount = locksmithTrafficData.call_count + 1;
+        const updatedPriority = locksmithTrafficData.multiplier / updatedCallCount;
+
+        // 3. Adım: call_count ve priority'yi güncelliyoruz
+        const { error: updateError } = await supabase
+          .from('locksmith_traffic')
+          .update({ call_count: updatedCallCount, priority: updatedPriority })
+          .eq('locksmith_id', additionalData.locksmithId);
+
+        if (updateError) {
+          console.error('Error updating call_count and priority:', updateError);
+        }
+
+      } catch (error) {
+        console.error('Locksmith traffic güncellenemedi:', error);
+      }
+    } else if (additionalData.locksmithId && activitytype === 'whatsapp_message') {
+      try {
+        // 1. Adım: mevcut call_count değerini alıyoruz
+        const { data: locksmithTrafficData, error: locksmithTrafficError } = await supabase
+          .from('locksmith_traffic')
+          .select('wp_count')
+          .eq('locksmith_id', additionalData.locksmithId)
+          .single();
+
+        if (locksmithTrafficError) {
+          console.error('Error fetching wp_count:', locksmithTrafficError);
+          return;
+        }
+
+        // 2. Adım: call_count'ı 1 artırıp, priority hesaplıyoruz
+        const updatedWpCount = locksmithTrafficData.wp_count + 1;
+
+        // 3. Adım: call_count ve priority'yi güncelliyoruz
+        const { error: updateError } = await supabase
+          .from('locksmith_traffic')
+          .update({ wp_count: updatedWpCount })
+          .eq('locksmith_id', additionalData.locksmithId);
+
+        if (updateError) {
+          console.error('Error updating wp_count:', updateError);
+        }
+
+      } catch (error) {
+        console.error('Locksmith traffic güncellenemedi:', error);
+      }
+    } else if (additionalData.locksmithId && activitytype === 'locksmith_list_view') {
+      try {
+        // 1. Adım: mevcut call_count değerini alıyoruz
+        const { data: locksmithTrafficData, error: locksmithTrafficError } = await supabase
+          .from('locksmith_traffic')
+          .select('list_count')
+          .eq('locksmith_id', additionalData.locksmithId)
+          .single();
+
+        if (locksmithTrafficError) {
+          console.error('Error fetching list_count:', locksmithTrafficError);
+          return;
+        }
+
+        // 2. Adım: call_count'ı 1 artırıp, priority hesaplıyoruz
+        const updatedListCount = locksmithTrafficData.list_count + 1;
+
+        // 3. Adım: call_count ve priority'yi güncelliyoruz
+        const { error: updateError } = await supabase
+          .from('locksmith_traffic')
+          .update({ list_count: updatedListCount })
+          .eq('locksmith_id', additionalData.locksmithId);
+
+        if (updateError) {
+          console.error('Error updating list_count:', updateError);
+        }
+
+      } catch (error) {
+        console.error('Locksmith traffic güncellenemedi:', error);
+      }
+    } else if (additionalData.locksmithId && activitytype === 'locksmith_detail_view') {
+      try {
+        // 1. Adım: mevcut call_count değerini alıyoruz
+        const { data: locksmithTrafficData, error: locksmithTrafficError } = await supabase
+          .from('locksmith_traffic')
+          .select('visit_count')
+          .eq('locksmith_id', additionalData.locksmithId)
+          .single();
+
+        if (locksmithTrafficError) {
+          console.error('Error fetching visit_count:', locksmithTrafficError);
+          return;
+        }
+
+        // 2. Adım: call_count'ı 1 artırıp, priority hesaplıyoruz
+        const updatedVisitCount = locksmithTrafficData.visit_count + 1;
+
+        // 3. Adım: call_count ve priority'yi güncelliyoruz
+        const { error: updateError } = await supabase
+          .from('locksmith_traffic')
+          .update({ visit_count: updatedVisitCount })
+          .eq('locksmith_id', additionalData.locksmithId);
+
+        if (updateError) {
+          console.error('Error updating visit_count:', updateError);
+        }
+
+      } catch (error) {
+        console.error('Locksmith traffic güncellenemedi:', error);
+      }
+    }
+
     if (error) {
       console.error('Aktivite ekleme SQL hatası:', error);
       throw error;

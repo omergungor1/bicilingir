@@ -6,13 +6,14 @@ import ServicePage from '../../../../components/location/ServicePage';
 import { getMetaData, getLocksmithsList } from '../../../utils/seo';
 
 // Veriyi tek bir yerden çekmek için yardımcı fonksiyon
-async function getNeighborhoodData(citySlug, districtSlug, neighborhoodSlug) {
-    const locksmiths = await getLocksmithsList({ citySlug, districtSlug, neighborhoodSlug, count: 2 });
+async function getNeighborhoodData(citySlug, districtSlug, neighborhoodSlug, servicetypeSlug) {
+
+    const locksmiths = await getLocksmithsList({ citySlug, districtSlug, neighborhoodSlug, servicetypeSlug, count: 2 });
     const metadata = await getMetaData({
         citySlug,
         districtSlug,
         neighborhoodSlug,
-        serviceTypeSlug: null,
+        servicetypeSlug,
         locksmiths
     });
 
@@ -21,29 +22,56 @@ async function getNeighborhoodData(citySlug, districtSlug, neighborhoodSlug) {
 
 export async function generateMetadata({ params }) {
     const resolvedParams = await params;
-    const { metadata } = await getNeighborhoodData(
-        resolvedParams.city,
-        resolvedParams.district,
-        resolvedParams.neighborhood
-    );
-    return metadata;
+    const { city: citySlug, district: districtSlug, neighborhood: neighborhoodSlug, servicetype: servicetypeSlug } = resolvedParams;
+
+    // Eğer neighborhood bir hizmet türüyse, ServicePage komponentini göster
+    const isService = ServiceList.some(service => service.slug === neighborhoodSlug);
+
+    if (isService) {
+        const { metadata } = await getNeighborhoodData(
+            citySlug,
+            districtSlug,
+            null,
+            servicetypeSlug
+        );
+        return metadata;
+    } else {
+        const { metadata } = await getNeighborhoodData(
+            citySlug,
+            districtSlug,
+            neighborhoodSlug,
+            null
+        );
+        return metadata;
+    }
 }
 
 export default async function NeighborhoodPage({ params }) {
     const resolvedParams = await params;
-    const { city, district, neighborhood } = resolvedParams;
+    const { city: citySlug, district: districtSlug, neighborhood: neighborhoodSlug } = resolvedParams;
 
     // Eğer neighborhood bir hizmet türüyse, ServicePage komponentini göster
-    if (ServiceList.some(service => service.slug === neighborhood))
-        return <ServicePage city={city} district={district} servicetype={neighborhood} locksmiths={locksmiths} />;
+    const isService = ServiceList.some(service => service.slug === neighborhoodSlug);
 
-    const { locksmiths } = await getNeighborhoodData(city, district, neighborhood);
+    if (isService) {
+        const { locksmiths } = await getNeighborhoodData(citySlug, districtSlug, null, neighborhoodSlug);
+        const data = {
+            citySlug,
+            districtSlug,
+            neighborhoodSlug: null,
+            servicetypeSlug: neighborhoodSlug,
+            locksmiths
+        };
+        return <ServicePage data={data} />;
+    }
+
+    const { locksmiths } = await getNeighborhoodData(citySlug, districtSlug, neighborhoodSlug, null);
 
     // Normal mahalle sayfasını göster
     return <NeighborhoodPageClient
-        city={city}
-        district={district}
-        neighborhood={neighborhood}
+        citySlug={citySlug}
+        districtSlug={districtSlug}
+        neighborhoodSlug={neighborhoodSlug}
         locksmiths={locksmiths}
     />;
 } 

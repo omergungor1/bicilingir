@@ -11,7 +11,6 @@ import SearchForm from "../components/SearchForm";
 import { useToast } from "../components/ToastContext";
 import { ChevronRight, Info } from "lucide-react";
 import { useDispatch, useSelector } from 'react-redux'
-import { logUserActivity } from '../redux/features/userSlice'
 import { searchLocksmiths, setSelectedValues as setReduxSelectedValues } from '../redux/features/searchSlice';
 import Image from 'next/image';
 import { useRouter } from "next/navigation";
@@ -499,7 +498,7 @@ export default function Home() {
     }
 
     // Detay sayfasına yönlendir, scroll davranışını engellemek için scroll=false
-    router.push(`/${slug}?fromDetail=true`, undefined, { scroll: false });
+    router.push(`/cilingirler/${slug}?fromDetail=true`, undefined, { scroll: false });
   };
 
   return (
