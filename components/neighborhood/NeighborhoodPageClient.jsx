@@ -43,7 +43,7 @@ export default function NeighborhoodPageClient({ citySlug, districtSlug, neighbo
             // Şehir bilgilerini çek
             const { data: cityData, error: cityError } = await supabase
                 .from('provinces')
-                .select('id, name')
+                .select('id, name, slug')
                 .eq('slug', citySlug)
                 .single();
 
@@ -57,7 +57,7 @@ export default function NeighborhoodPageClient({ citySlug, districtSlug, neighbo
             // İlçe bilgilerini çek
             const { data: districtData, error: districtError } = await supabase
                 .from('districts')
-                .select('id, name, lat, lng')
+                .select('id, name, slug, lat, lng')
                 .eq('slug', districtSlug)
                 .eq('province_id', cityData.id)
                 .single();
@@ -69,11 +69,14 @@ export default function NeighborhoodPageClient({ citySlug, districtSlug, neighbo
                 return;
             }
 
+            districtData.slug = citySlug + '/' + districtSlug;
+
+
             // Mahalle bilgilerini çek
             //mahalle lat, lng sonra eklenecek! Gerekli mi?
             const { data: neighborhoodData, error: neighborhoodError } = await supabase
                 .from('neighborhoods')
-                .select('id, name')
+                .select('id, name, slug')
                 .eq('slug', neighborhoodSlug)
                 .eq('district_id', districtData.id)
                 .single();
@@ -84,6 +87,8 @@ export default function NeighborhoodPageClient({ citySlug, districtSlug, neighbo
                 setIsLoading(false);
                 return;
             }
+
+            neighborhoodData.slug = citySlug + '/' + districtSlug + '/' + neighborhoodSlug;
 
             // Yakın mahalleleri çek (aynı ilçedeki diğer mahalleler)
             const { data: nearbyNeighborhoods, error: nearbyError } = await supabase
@@ -98,6 +103,10 @@ export default function NeighborhoodPageClient({ citySlug, districtSlug, neighbo
                 console.error('Yakındaki mahalle bilgileri alınamadı:', nearbyError);
             }
 
+            nearbyNeighborhoods.forEach(neighborhood => {
+                neighborhood.slug = citySlug + '/' + districtSlug + '/' + neighborhood.slug;
+            });
+
             // Hizmet türlerini çek
             const { data: servicesData, error: serviceError } = await supabase
                 .from('services')
@@ -109,6 +118,9 @@ export default function NeighborhoodPageClient({ citySlug, districtSlug, neighbo
                 console.error('Hizmet bilgileri alınamadı:', serviceError);
             }
 
+            servicesData.forEach(service => {
+                service.slug = citySlug + '/' + districtSlug + '/' + service.slug;
+            });
 
             setServicesList(servicesData);
 
@@ -161,11 +173,12 @@ export default function NeighborhoodPageClient({ citySlug, districtSlug, neighbo
             nearbySection: {
                 title: 'Yakındaki Mahalleler',
                 description: `${neighborhoodInfo.city} ${neighborhoodInfo.district} yakınındaki mahalleler`,
-                data: neighborhoodInfo.nearbyNeighborhoods.map(neighborhood => ({
-                    id: neighborhood.id,
-                    name: neighborhood.name,
-                    slug: `${citySlug}/${districtSlug}/${neighborhood.slug}`
-                }))
+                data: neighborhoodInfo.nearbyNeighborhoods.map(neighborhood => (
+                    {
+                        id: neighborhood.id,
+                        name: neighborhood.name + ' Mahallesi',
+                        slug: neighborhood.slug
+                    }))
             },
             locksmithPricing: {
                 title: 'Çilingir Hizmetleri Fiyatları',
@@ -219,7 +232,7 @@ export default function NeighborhoodPageClient({ citySlug, districtSlug, neighbo
                 title: `${neighborhoodInfo.name} Çilingir Hizmetleri`,
                 description: 'Mahallenizde sunulan çilingir hizmetleri',
                 data: servicesList,
-                neighborhoods: neighborhoodInfo.nearbyNeighborhoods.slice(0, 8),
+                neighborhoods: neighborhoodInfo.nearbyNeighborhoods,
                 name: neighborhoodInfo.name
             },
             sssList: {
@@ -255,7 +268,7 @@ export default function NeighborhoodPageClient({ citySlug, districtSlug, neighbo
                 data: neighborhoodInfo.nearbyNeighborhoods.map(neighborhood => ({
                     id: neighborhood.id,
                     name: neighborhood.name + ' Mahallesi',
-                    slug: `${citySlug}/${districtSlug}/${neighborhood.slug}`
+                    slug: neighborhood.slug
                 }))
             },
             sideMenuParams: sideMenuParamsData,

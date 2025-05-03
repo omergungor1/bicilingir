@@ -86,7 +86,7 @@ export default function MainContent(params) {
                                     {serviceList.neighborhoods.map((neighborhood, index) => (
                                         <Link
                                             key={index}
-                                            href={`/${neighborhood.slug}`}
+                                            href={`/${neighborhood.slug}/${service.slug.split("/").pop()}`}
                                             className="block text-blue-600 hover:text-blue-800 hover:underline py-1"
                                         >
                                             {serviceList.name} {neighborhood.name} {service.name}

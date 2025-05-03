@@ -53,9 +53,13 @@ export default function CityContent({ citySlug, locksmiths: locksmithsList }) {
                     return;
                 }
 
+                districtsData.forEach(district => {
+                    district.slug = citySlug + '/' + district.slug;
+                });
+
                 const { data: servicesData, error: servicesError } = await supabase
                     .from('services')
-                    .select('id, name, description, minPriceMesai, maxPriceMesai, minPriceAksam, maxPriceAksam, minPriceGece, maxPriceGece')
+                    .select('id, name, slug, description, minPriceMesai, maxPriceMesai, minPriceAksam, maxPriceAksam, minPriceGece, maxPriceGece')
                     .eq('isActive', true);
 
                 if (servicesError || !servicesData) {
@@ -63,6 +67,10 @@ export default function CityContent({ citySlug, locksmiths: locksmithsList }) {
                     setError('Hizmet bulunamadı');
                     setIsLoading(false);
                 }
+
+                servicesData.forEach(service => {
+                    service.slug = citySlug + '/' + service.slug;
+                });
 
                 const sideMenuParamsData = {
                     map: {
@@ -138,8 +146,8 @@ export default function CityContent({ citySlug, locksmiths: locksmithsList }) {
                     ],
                     mainCard: { title: `${cityData.name} Çilingir Anahtarcı`, description: cityData.description },
                     locksmitList: { title: `${cityData.name} Çilingirler`, description: `${cityData.name} ilinde hizmet veren çilingirler`, data: locksmiths },
-                    seconCard: { title: `${cityData.name} Hakkında`, longDescription: cityData.longDescription },
-                    serviceList: { title: 'Çilingir Hizmetleri Kategorileri', description: '', data: servicesData },
+                    seconCard: { title: `${cityData.name} Hakkında`, longDescription: cityInfoData.longDescription },
+                    serviceList: { title: 'Çilingir Hizmetleri Kategorileri', description: '', data: servicesData, neighborhoods: districtsData },
                     sssList: { title: `${cityData.name} Çilingir Sık Sorulan Sorular`, description: `${cityData.name} da bir çok kişi çilingirler hakkında bazı soruların cevabını merak ediyor. Sık sorulan soruların cevaplarını aşağıdaki listede bulabilirsiniz.`, data: sssList },
                     detailedDistrictList: { title: `${cityData.name} Tüm İlçelerindeki Çilingirler`, description: `${cityData.name} da çilingir hizmetleri verilen ilçeler`, secondTitle: 'İlçeler', data: districtsData },
                     sideMenuParams: sideMenuParamsData,

@@ -33,7 +33,7 @@ export default function DistrictContent({ citySlug, districtSlug, locksmiths: in
                 // Şehir bilgilerini çek
                 const { data: cityData, error: cityError } = await supabase
                     .from('provinces')
-                    .select('id, name')
+                    .select('id, name, slug')
                     .eq('slug', citySlug)
                     .single();
 
@@ -47,7 +47,7 @@ export default function DistrictContent({ citySlug, districtSlug, locksmiths: in
                 // İlçe bilgilerini çek
                 const { data: districtData, error: districtError } = await supabase
                     .from('districts')
-                    .select('id, name, lat, lng')
+                    .select('id, name, slug, lat, lng')
                     .eq('slug', districtSlug)
                     .eq('province_id', cityData.id)
                     .single();
@@ -60,6 +60,8 @@ export default function DistrictContent({ citySlug, districtSlug, locksmiths: in
                     return;
                 }
 
+                districtData.slug = citySlug + '/' + districtSlug;
+
                 // Mahalleleri çek
                 const { data: neighborhoodsData, error: neighborhoodError } = await supabase
                     .from('neighborhoods')
@@ -71,6 +73,10 @@ export default function DistrictContent({ citySlug, districtSlug, locksmiths: in
                     console.error('Mahalle bilgileri alınamadı:', neighborhoodError);
                 }
 
+                neighborhoodsData.forEach(neighborhood => {
+                    neighborhood.slug = citySlug + '/' + districtSlug + '/' + neighborhood.slug;
+                });
+
                 // Hizmet türlerini çek
                 const { data: servicesData, error: serviceError } = await supabase
                     .from('services')
@@ -81,6 +87,10 @@ export default function DistrictContent({ citySlug, districtSlug, locksmiths: in
                 if (serviceError) {
                     console.error('Hizmet bilgileri alınamadı:', serviceError);
                 }
+
+                servicesData.forEach(service => {
+                    service.slug = citySlug + '/' + districtSlug + '/' + service.slug;
+                });
 
                 setNeighborhoods(neighborhoodsData || []);
                 setServicesList(servicesData || []);
@@ -178,10 +188,10 @@ export default function DistrictContent({ citySlug, districtSlug, locksmiths: in
                 longDescription: districtInfo.longDescription
             },
             serviceList: {
-                title: `${districtInfo.name} Çilingir Hizmetleri`,
+                title: `${districtInfo.name} Çilingir Anahtarcı`,
                 description: 'Aşağıdaki hizmetler bölgenizdeki çilingirler tarafından verilmektedir.',
                 data: servicesList,
-                neighborhoods: districtInfo.neighborhoods.slice(0, 8),
+                neighborhoods: districtInfo.neighborhoods,
                 name: districtInfo.name
             },
             sssList: {
@@ -217,7 +227,7 @@ export default function DistrictContent({ citySlug, districtSlug, locksmiths: in
                 data: districtInfo.neighborhoods.map((neighborhood, idx) => ({
                     id: idx + 1,
                     name: `${neighborhood.name} Mahallesi`,
-                    slug: `${citySlug}/${districtSlug}/${neighborhood.slug}`
+                    slug: neighborhood.slug
                 }))
             },
             sideMenuParams: sideMenuParamsData,

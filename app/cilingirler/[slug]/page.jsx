@@ -774,8 +774,8 @@ const LocksmithDetailPage = () => {
                           </div>
 
                           <div className="mt-4 md:mt-0 md:ml-4">
-                            <Link href={`/${item.slug}`} className="text-blue-600 hover:text-blue-800 flex items-center">
-                              Detaylar
+                            <Link href={`/cilingirler/${item.slug}`} className="text-blue-600 hover:text-blue-800 flex items-center">
+                              Çilingir Profili
                               <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
                               </svg>

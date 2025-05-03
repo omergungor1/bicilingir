@@ -49,7 +49,7 @@ export default function SideMenu(params) {
                                     className="flex items-center text-sm hover:text-primary"
                                 >
                                     <MapPin size={14} className="mr-2" />
-                                    {formattedName} {street.name} Çilingir Anahtarcı
+                                    {type != 'neighborhood' && formattedName} {street.name} Çilingir Anahtarcı
                                 </Link>
                             </li>
                         ))}

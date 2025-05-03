@@ -56,10 +56,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useToast } from "../../components/ToastContext";
 import { Checkbox } from "../../components/ui/checkbox";
 import { useSelector } from "react-redux";
-import { supabase } from "../../lib/supabase";
+import { getSupabaseClient } from "../../lib/supabase";
 import { Textarea } from "../../components/ui/textarea";
 
 function AdminPanelContent() {
+  const supabase = getSupabaseClient();
   const { showToast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
