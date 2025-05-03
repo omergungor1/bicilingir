@@ -35,7 +35,7 @@ export async function POST(request) {
   const { data: keyPackage, error } = await supabase
     .from('key_packages')
     .insert(insertData);
-    
+
   if (error) {
     throw error;
   }
@@ -46,7 +46,6 @@ export async function PUT(request) {
   const { id, name, description, price, startdate, enddate, keyAmount, isUnlimited, isActive } = await request.json();
   const { supabase } = await checkAdminAuth(request);
 
-  console.log(startdate, enddate);
   if (!id) {
     throw new Error('ID is required');
   }
@@ -66,8 +65,6 @@ export async function PUT(request) {
     .from('key_packages')
     .update(updateData)
     .eq('id', id);
-
-    console.log(keyPackage);
 
   if (error) {
     throw error;

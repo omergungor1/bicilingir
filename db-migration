@@ -64,7 +64,8 @@ CREATE TABLE locksmiths (
     authid UUID REFERENCES auth.users(id),
     isVerified BOOLEAN DEFAULT FALSE,
     isActive BOOLEAN DEFAULT FALSE,
-    createdat TIMESTAMPTZ DEFAULT NOW()
+    createdat TIMESTAMPTZ DEFAULT NOW(),
+    password TEXT
 );
 
 -- Çilingir Detayları Tablosu

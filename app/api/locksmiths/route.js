@@ -121,10 +121,8 @@ export async function GET(request) {
         if (locksmithIds && locksmithIds.length > 0) {
             // Bugünün haftanın kaçıncı günü olduğunu bul (JavaScript'te 0: Pazar, 1: Pazartesi, ...)
             const today = new Date().getDay();
-            // Supabase'de 1: Pazartesi, ... 7: Pazar formatına çevir
-            const dayOfWeek = today === 0 ? 7 : today;
-
-            console.log(dayOfWeek);
+            // Supabase'de 0: Pazartesi, ... 6: Pazar formatına çevir
+            const dayOfWeek = today === 0 ? 6 : today - 1;
 
             // 1. Önce 24 saat açık olan çilingirleri çek
             const { data: open24HoursData } = await supabase

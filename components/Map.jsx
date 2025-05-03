@@ -150,12 +150,12 @@ const Map = ({ center, zoom = 14, markers = [] }) => {
                             {selectedMarker.description && (
                                 <p className="text-sm text-gray-600 mt-1">{selectedMarker.description}</p>
                             )}
-                            <div className="mt-2">
+                            {/* <div className="mt-2">
                                 <Button className="gap-2 flex items-center w-full bg-primary text-white animate-pulse" variant="outline" size="icon">
                                     <Phone className="w-4 h-4 mr-2" />
                                     <span className="text-sm">Hemen Ara</span>
                                 </Button>
-                            </div>
+                            </div> */}
                         </div>
                         {selectedMarker.image && (
                             <div className="mt-2">

@@ -280,8 +280,6 @@ export default function Home() {
 
       if (!response.ok) {
         console.error('Aktivite log hatası:', await response.text());
-      } else {
-        console.log('Çilingir arama aktivitesi kaydedildi.');
       }
     } catch (error) {
       console.error('Aktivite log hatası:', error);
@@ -337,8 +335,6 @@ export default function Home() {
 
       if (!response.ok) {
         console.error('Aktivite log hatası:', await response.text());
-      } else {
-        console.log('Whatsapp mesaj aktivitesi kaydedildi.');
       }
 
       // WhatsApp numarasını formatlama ve yönlendirme
@@ -490,8 +486,6 @@ export default function Home() {
 
       if (!response.ok) {
         console.error('Aktivite log hatası:', await response.text());
-      } else {
-        console.log('Çilingir detay görüntüleme aktivitesi kaydedildi.');
       }
     } catch (error) {
       console.error('Aktivite log hatası:', error);
