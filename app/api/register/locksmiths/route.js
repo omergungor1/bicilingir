@@ -131,7 +131,21 @@ export async function POST(request) {
       );
     }
 
+    //locksmith_traffic insert
+    const { data: locksmithTrafficData, error: locksmithTrafficError } = await supabase
+      .from('locksmith_traffic')
+      .insert([
+        { locksmith_id: locksmithId }
+      ])
+      .select();
 
+    if (locksmithTrafficError) {
+      console.error('Çilingir trafiği kaydı hatası:', locksmithTrafficError);
+      return NextResponse.json(
+        { error: locksmithTrafficError.message },
+        { status: 500 }
+      );
+    }
 
     const serviceObjects = locksmithServicesInsertData.services.map(serviceId => ({
       locksmithid: locksmithId,

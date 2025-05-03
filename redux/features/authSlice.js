@@ -17,7 +17,6 @@ export const loginUser = createAsyncThunk(
   'auth/login',
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      console.log('Login başlatılıyor:', email);
       const supabase = getSupabaseClient();
 
       // Supabase login işlemi

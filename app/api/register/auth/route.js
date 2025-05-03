@@ -1,9 +1,23 @@
 import { getSupabaseServer } from '../../../../lib/supabase';
 import { NextResponse } from 'next/server';
-
-const supabase = getSupabaseServer();
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request) {
+  // Service role ile Supabase istemcisi oluştur
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  );
+
+  // Normal Supabase istemcisi
+  const supabase = getSupabaseServer();
+
   try {
     const { email, password, fullName, phone } = await request.json();
 
@@ -15,11 +29,11 @@ export async function POST(request) {
       );
     }
 
-    // Supabase Auth ile kullanıcı oluştur
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    // Service role ile kullanıcı oluştur (e-posta doğrulaması olmadan)
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // E-posta onayını otomatik yap (daha sonra kaldırabilirsiniz)
+      email_confirm: true,
       user_metadata: {
         full_name: fullName,
         phone: phone
