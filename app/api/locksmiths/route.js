@@ -45,10 +45,17 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
 
+        // Slug tabanlı parametreler
         const citySlug = searchParams.get('citySlug');
         const districtSlug = searchParams.get('districtSlug');
         const neighborhoodSlug = searchParams.get('neighborhoodSlug');
         const servicetypeSlug = searchParams.get('servicetypeSlug');
+
+        // Doğrudan ID tabanlı parametreler
+        const provinceParamId = searchParams.get('provinceId');
+        const districtParamId = searchParams.get('districtId');
+        const serviceParamId = searchParams.get('serviceId');
+
         const count = searchParams.get('count') > 5 ? 2 : searchParams.get('count') || 2;
 
         // Şu anki saate göre gündüz/gece durumunu kontrol et
@@ -59,9 +66,9 @@ export async function GET(request) {
         const supabase = createSupabaseClient();
 
         // Şehir, ilçe bilgilerini çek (gerekirse)
-        let cityId, districtId;
+        let cityId = provinceParamId, districtId = districtParamId;
 
-        if (citySlug) {
+        if (citySlug && !cityId) {
             const { data: cityData } = await supabase
                 .from('provinces')
                 .select('id')
@@ -74,7 +81,7 @@ export async function GET(request) {
         }
 
 
-        if (districtSlug && cityId) {
+        if (districtSlug && cityId && !districtId) {
             const { data: districtData } = await supabase
                 .from('districts')
                 .select('id')
@@ -175,22 +182,25 @@ export async function GET(request) {
         }
 
         //Bu hizmeti veriyor mu? locksmith_services tablosunda var mı?
-        let activeWorkingLocksmithIds2 = [];
         if (servicetypeSlug) {
             //get serviceid 
-            const { data: serviceData } = await supabase
-                .from('services')
-                .select('id')
-                .eq('slug', servicetypeSlug)
-                .single();
+            let serviceId = serviceParamId;
 
-            console.log('servicetypeSlug:', servicetypeSlug);
+            if (!serviceId) {
+                const { data: serviceData } = await supabase
+                    .from('services')
+                    .select('id')
+                    .eq('slug', servicetypeSlug)
+                    .single();
+
+                serviceId = serviceData.id;
+            }
 
             const { data: locksmithServicesData } = await supabase
                 .from('locksmith_services')
                 .select('locksmithid')
                 .eq('isactive', true)
-                .eq('serviceid', serviceData.id)
+                .eq('serviceid', serviceId)
                 .in('locksmithid', locksmithIds);
 
             if (locksmithServicesData) {
@@ -206,7 +216,7 @@ export async function GET(request) {
                 .select('locksmith_id')
                 .in('locksmith_id', locksmithIds)
                 .order('priority', { ascending: false })
-                .limit(2);
+                .limit(count);
 
             if (priorityLocksmithsData) {
                 priorityLocksmithIds = priorityLocksmithsData.map(item => item.locksmith_id);
@@ -264,7 +274,7 @@ export async function GET(request) {
             description: `${item.provinces?.name || ''} ${item.districts?.name || ''} bölgesinde profesyonel çilingir hizmeti.`,
             phone: item.phonenumber,
             whatsapp: item.whatsappnumber,
-            profileimageurl: item.profileimageurl || 'https://bicilingir.com/images/logo.png',
+            profileimageurl: item.profileimageurl,
             city: item.provinces?.name,
             district: item.districts?.name,
             rating: item.avgrating,

@@ -287,7 +287,7 @@ export default function LocksmithCard({ locksmith, index }) {
                                             Onaylı Çilingir
                                         </span>
                                     )}
-                                    <div className="w-1 h-1 bg-gray-400 rounded-full hidden md:block" />
+                                    {index === 0 && <div className="w-1 h-1 bg-gray-400 rounded-full hidden md:block" />}
                                     <p className="text-gray-600">{locksmith.city} - {locksmith.district}</p>
                                 </div>
                             </div>

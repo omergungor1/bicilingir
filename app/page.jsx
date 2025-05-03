@@ -15,6 +15,7 @@ import { searchLocksmiths, setSelectedValues as setReduxSelectedValues } from '.
 import Image from 'next/image';
 import { useRouter } from "next/navigation";
 import { RatingModal } from "../components/RatingModal";
+import LocksmithCard from "../components/ui/locksmith-card";
 import { initUserSession } from '../redux/features/userSlice'
 import {
   Popover,
@@ -97,7 +98,15 @@ export default function Home() {
   const [showFilters, setShowFilters] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedLocksmith, setSelectedLocksmith] = useState(null);
-  const [hoverRating, setHoverRating] = useState(0);
+
+  // Arama sonuçları için state
+  const [searchResults, setSearchResults] = useState({
+    locksmiths: [],
+    isLoading: false,
+    error: null,
+    showResults: false,
+    hasSearched: false
+  });
 
   // Form değerleri için local state - Redux store ile senkronize çalışacak
   const [selectedValues, setSelectedValues] = useState({
@@ -156,52 +165,84 @@ export default function Home() {
       return;
     }
 
+    // Redux durumunu güncelle (isLoading = true, showResults = true)
+    dispatch({ type: 'search/searchLocksmiths/pending' });
     setLoadingLocksmithIds({});
 
     try {
-      // Kullanıcı oturumu başlat
-      await dispatch(initUserSession());
+      const searchParams = new URLSearchParams();
+      searchParams.append('provinceId', selectedValues.provinceId);
+      searchParams.append('districtId', selectedValues.districtId);
+      searchParams.append('serviceId', selectedValues.serviceId);
+      searchParams.append('count', 3);
 
-      // Kullanıcı agent bilgisini al
-      const userAgent = navigator.userAgent;
+      // Arama parametrelerini Redux'a kaydet
+      dispatch(setReduxSelectedValues(selectedValues));
 
-      // Çilingir araması yap
-      const result = await dispatch(searchLocksmiths({
-        selectedValues,
-        userAgent
-      })).unwrap();
+      // localStorage'a arama değerlerini kaydet
+      try {
+        localStorage.setItem('searchValues', JSON.stringify(selectedValues));
+      } catch (error) {
+        console.error('Arama değerleri kaydedilemedi:', error);
+      }
 
-      // Sonuç kontrol ve gösterme
-      if (result.locksmiths && result.locksmiths.length > 0) {
-        // Başarılı arama, sonuçları göster
-        setLoadingLocksmithIds({});
-        setSelectedValues({
-          serviceId: result.selectedValues.serviceId,
-          districtId: result.selectedValues.districtId,
-          provinceId: result.selectedValues.provinceId
+      // Doğrudan API çağrısı yap (/api/locksmiths)
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      const url = `${baseUrl}/api/locksmiths?${searchParams.toString()}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Çilingir verilerini alırken bir hata oluştu');
+      }
+
+      // Redux store güncelleme
+      if (data.locksmiths && data.locksmiths.length > 0) {
+        // Çilingir sonuçları için ek veri hazırlığı
+        const formattedLocksmiths = data.locksmiths.map(locksmith => {
+          return {
+            ...locksmith,
+            serviceNames: locksmith.serviceList?.map(service => service.name) || [],
+            price: {
+              min: locksmith.serviceList && locksmith.serviceList.length > 0 ?
+                Math.min(...locksmith.serviceList.map(s => s.price1.min)) : 0,
+              max: locksmith.serviceList && locksmith.serviceList.length > 0 ?
+                Math.max(...locksmith.serviceList.map(s => s.price1.max)) : 0
+            }
+          };
         });
-        setSelectedLocksmith(result.locksmiths[0]);
 
-        // Sonuçlar bölümüne smooth scroll
-        document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Redux store'u başarılı sonuçla güncelle
+        dispatch({
+          type: 'search/searchLocksmiths/fulfilled',
+          payload: {
+            locksmiths: formattedLocksmiths,
+            selectedValues: selectedValues
+          }
+        });
       } else {
-        // Sonuç bulunamadı
         showToast('Seçilen kriterlere uygun çilingir bulunamadı', 'info', 3000);
-        setLoadingLocksmithIds({});
-        setSelectedValues({
-          serviceId: reduxSelectedValues.serviceId,
-          districtId: reduxSelectedValues.districtId,
-          provinceId: reduxSelectedValues.provinceId
+        dispatch({
+          type: 'search/searchLocksmiths/fulfilled',
+          payload: {
+            locksmiths: [],
+            selectedValues: selectedValues
+          }
         });
       }
+
+      // Sonuçlar bölümüne scroll yap
+      document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
     } catch (error) {
       console.error("Arama hatası:", error);
       showToast('Arama sırasında bir hata oluştu. Lütfen tekrar deneyin.', 'error', 3000);
       setLoadingLocksmithIds({});
-      setSelectedValues({
-        serviceId: reduxSelectedValues.serviceId,
-        districtId: reduxSelectedValues.districtId,
-        provinceId: reduxSelectedValues.provinceId
+
+      // Redux store'u hata ile güncelle
+      dispatch({
+        type: 'search/searchLocksmiths/rejected',
+        payload: error.message
       });
     }
   };
@@ -229,20 +270,85 @@ export default function Home() {
         // Eğer değerler zaten seçiliyse ve detay sayfasından geliyorsa,
         // sadece arama sonuçlarını göster ama loglama yapma
         if (isFromDetailPage && currentProvinceId && currentDistrictId && currentServiceId) {
-          dispatch(searchLocksmiths({
-            selectedValues: {
-              provinceId: currentProvinceId,
-              districtId: currentDistrictId,
-              serviceId: currentServiceId
-            },
-            userAgent: navigator.userAgent,
-            shouldLog: false // Detay sayfasından geliyorsa loglama yapma
-          })).then(() => {
-            // Detay sayfasından dönüşte de sonuçlar bölümüne kaydır
-            setTimeout(() => {
-              document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
-          });
+          // Redux loading durumunu güncelle
+          dispatch({ type: 'search/searchLocksmiths/pending' });
+
+          // API çağrısı yaparak çilingir verilerini getir
+          const fetchData = async () => {
+            try {
+              const searchParams = new URLSearchParams();
+              searchParams.append('provinceId', currentProvinceId);
+              searchParams.append('districtId', currentDistrictId);
+              searchParams.append('serviceId', currentServiceId);
+              searchParams.append('count', 3);
+
+              // Doğrudan API çağrısı yap
+              const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+              const url = `${baseUrl}/api/locksmiths?${searchParams.toString()}`;
+              const response = await fetch(url);
+              const data = await response.json();
+
+              if (!response.ok) {
+                throw new Error(data.error || 'Çilingir verilerini alırken bir hata oluştu');
+              }
+
+              // Redux store güncelleme
+              if (data.locksmiths && data.locksmiths.length > 0) {
+                // Çilingir sonuçları için ek veri hazırlığı
+                const formattedLocksmiths = data.locksmiths.map(locksmith => {
+                  return {
+                    ...locksmith,
+                    serviceNames: locksmith.serviceList?.map(service => service.name) || [],
+                    price: {
+                      min: locksmith.serviceList && locksmith.serviceList.length > 0 ?
+                        Math.min(...locksmith.serviceList.map(s => s.price1.min)) : 0,
+                      max: locksmith.serviceList && locksmith.serviceList.length > 0 ?
+                        Math.max(...locksmith.serviceList.map(s => s.price1.max)) : 0
+                    }
+                  };
+                });
+
+                // Redux store'u başarılı sonuçla güncelle
+                dispatch({
+                  type: 'search/searchLocksmiths/fulfilled',
+                  payload: {
+                    locksmiths: formattedLocksmiths,
+                    selectedValues: {
+                      provinceId: currentProvinceId,
+                      districtId: currentDistrictId,
+                      serviceId: currentServiceId
+                    }
+                  }
+                });
+              } else {
+                dispatch({
+                  type: 'search/searchLocksmiths/fulfilled',
+                  payload: {
+                    locksmiths: [],
+                    selectedValues: {
+                      provinceId: currentProvinceId,
+                      districtId: currentDistrictId,
+                      serviceId: currentServiceId
+                    }
+                  }
+                });
+              }
+
+              // Detay sayfasından dönüşte de sonuçlar bölümüne kaydır
+              setTimeout(() => {
+                document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 100);
+            } catch (error) {
+              console.error("Arama hatası:", error);
+              // Redux store'u hata ile güncelle
+              dispatch({
+                type: 'search/searchLocksmiths/rejected',
+                payload: error.message
+              });
+            }
+          };
+
+          fetchData();
         } else if (searchParams.has('location') || searchParams.has('service')) {
           // Normal arama
           handleSearch();
@@ -523,7 +629,7 @@ export default function Home() {
       </Hero>
 
       {/* Çilingir Sonuçları */}
-      {showResults && (
+      {reduxShowResults && (
         <div className="w-full max-w-6xl mx-auto px-4 my-12" id="results-section">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl md:text-2xl font-bold text-gray-800">En Yakın Çilingirler</h2>
@@ -539,11 +645,11 @@ export default function Home() {
           </div>
 
           {/* Yüklenirken spinner göster */}
-          {isLoading ? (
+          {reduxIsLoading ? (
             <LoadingSpinner />
-          ) : error ? (
+          ) : reduxError ? (
             <div className="text-center py-12">
-              <p className="text-red-500 mb-4">{error}</p>
+              <p className="text-red-500 mb-4">{reduxError}</p>
               <Button onClick={() => window.location.reload()}>Tekrar Dene</Button>
             </div>
           ) : (
@@ -600,109 +706,15 @@ export default function Home() {
 
               {/* Çilingir Listesi */}
               <div className="space-y-6">
-                {locksmiths.length === 0 ? (
+                {reduxLocksmiths.length === 0 ? (
                   <p className="text-center py-12 text-gray-500">Bu bölgede hiç çilingir bulunamadı.</p>
                 ) : (
-                  locksmiths.map((locksmith, index) => (
-                    <div key={locksmith.id} className={`border ${index === 0 ? 'border-blue-400 border-2 shadow-lg relative transform transition hover:scale-[1.02]' : 'border-gray-200 hover:shadow-md transition'} rounded-lg overflow-hidden ${index === 0 ? 'bg-blue-50' : ''}`}>
-                      {index === 0 && (
-                        <div className="bg-blue-600 text-white py-1 px-4 absolute top-0 left-0 rounded-br-lg font-medium text-sm shadow-md z-10">
-                          En İyi Eşleşme
-                        </div>
-                      )}
-                      <div className="flex flex-col md:flex-row">
-                        <div className={`p-6 flex-1 ${index === 0 ? 'pt-10' : ''}`}>
-                          <div className="flex items-start mb-4">
-                            <div style={styles.companyLogo} className={`mr-4 flex-shrink-0 ${index === 0 ? 'bg-blue-600 text-white shadow-md' : ''}`}>
-                              <span>{locksmith.name.substring(0, 2)}</span>
-                            </div>
-                            <div>
-                              <div className="flex flex-col md:flex-row md:items-center mt-1 gap-2">
-                                <h3 className={`text-xl font-bold ${index === 0 ? 'text-blue-800' : 'text-gray-800'}`}>{locksmith.name}</h3>
-                                {index === 0 && (
-                                  <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Onaylı Çilingir
-                                  </span>
-                                )}
-                                <div className="w-1 h-1 bg-gray-400 rounded-full hidden md:block" />
-                                <p className="text-gray-600">{locksmith.city} - {locksmith.district}</p>
-                              </div>
-                              <div className="flex flex-col md:flex-row md:items-center mt-1">
-                                <RatingStars rating={locksmith.rating.toFixed(1)} />
-                                <span className="md:ml-2 text-sm text-gray-500">({locksmith.reviewCount} değerlendirme)</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <p className="text-gray-700 mb-4">{locksmith.description}</p>
-
-                          <div className="flex flex-wrap gap-2">
-                            {locksmith.serviceNames.map((serviceName, index) => (
-                              <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{serviceName}</span>
-                            ))}
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded flex items-center gap-1"><Info className="w-4 h-4" />{locksmith.price.min}₺ - {locksmith.price.max}₺ (Tahmini Fiyat)</span>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-80 p-3 text-sm text-gray-700 max-h-[300px] overflow-y-auto">
-                                <div>
-                                  <p className="text-gray-600">Bu fiyat, çilingir hizmet için fiyatıdır. Fiyatlar; yol ücreti, değişmesi gereken parçalar, kilitlerin markası gibi faktörlere göre değişebilir. Net ücreti çilingir ile görüşerek öğrenebilirsiniz.</p>
-                                </div>
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                        </div>
-
-                        <div className="p-6 flex flex-col justify-center md:w-64">
-                          <div className="space-y-3">
-                            <Button
-                              onClick={() => handleCallLocksmith(locksmith, index)}
-                              className={`w-full ${index === 0 ? 'bg-blue-600 hover:bg-blue-700 text-white font-bold animate-pulse shadow-md' : 'bg-[#4169E1]'}`}
-                            >
-                              {index === 0 ? 'Hemen Ara' : 'Ara'}
-                              {index === 0 && (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                </svg>
-                              )}
-                            </Button>
-                            {/* Whatsapp Butonu */}
-                            <Button
-                              variant="outline"
-                              className={`w-full text-white! flex items-center justify-center gap-2 ${index === 0 ? 'bg-green-600 hover:bg-green-700 font-bold shadow-md' : 'bg-green-500 hover:bg-green-600'}`}
-                              onClick={() => handleWhatsappMessage(locksmith, index)}
-                            >
-                              WhatsApp
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5"
-                                fill="currentColor"
-                                viewBox="0 0 24 24">
-                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
-                              </svg>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              className="w-full"
-                              disabled={loadingLocksmithIds[locksmith.id]}
-                              onClick={() => handleViewDetails(locksmith.id, locksmith.slug)}
-                            >
-                              {loadingLocksmithIds[locksmith.id] ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <>
-                                  Çilingir Profili
-                                  <ChevronRight className="w-4 h-4" />
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  reduxLocksmiths.map((locksmith, index) => (
+                    <LocksmithCard
+                      key={locksmith.id}
+                      locksmith={locksmith}
+                      index={index}
+                    />
                   ))
                 )}
               </div>
@@ -711,7 +723,7 @@ export default function Home() {
         </div>
       )}
 
-      {locksmiths.length === 0 && (
+      {reduxLocksmiths.length === 0 && !reduxShowResults && (
         <>
           {/* Bi Çilingir Hakkında Bölümü */}
           <section className="w-full bg-white py-16 px-4">
