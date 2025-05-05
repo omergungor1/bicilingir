@@ -224,6 +224,8 @@ export async function GET(request) {
         }
 
 
+        //select locksmithid, districtid,provinceid from locksmith_districts where isdayactive='true'
+
         // Çilingir listesini çek
         let locksmithQuery = supabase
             .from('locksmiths')
@@ -231,6 +233,8 @@ export async function GET(request) {
                 id, 
                 businessname,
                 fullname,
+                locksmith_details: locksmith_details(fulladdress,postal_code,facebook_url,instagram_url,youtube_url,tiktok_url,lat,lng,startdate),
+                locksmith_working_hours: locksmith_working_hours(dayofweek,is24hopen,isworking,opentime,closetime),
                 phonenumber,
                 whatsappnumber,
                 avgrating,
@@ -239,8 +243,7 @@ export async function GET(request) {
                 slug,
                 provinces:provinceid(name),
                 districts:districtid(name),
-                lat:locksmith_details(lat),
-                lng:locksmith_details(lng),
+                locksmith_districts: locksmith_districts(districts(name),provinces(name)),
                 locksmith_services: services(name,minPriceMesai,maxPriceMesai,minPriceAksam,maxPriceAksam,minPriceGece,maxPriceGece)
             `)
             .eq('isactive', true)
@@ -271,7 +274,10 @@ export async function GET(request) {
         const formattedLocksmiths = locksmiths.map(item => ({
             id: item.id,
             name: item.businessname || item.fullname,
+            fullname: item.fullname,
             description: `${item.provinces?.name || ''} ${item.districts?.name || ''} bölgesinde profesyonel çilingir hizmeti.`,
+            address: item.locksmith_details.fulladdress,
+            postalCode: item.locksmith_details.postal_code,
             phone: item.phonenumber,
             whatsapp: item.whatsappnumber,
             profileimageurl: item.profileimageurl,
@@ -279,6 +285,15 @@ export async function GET(request) {
             district: item.districts?.name,
             rating: item.avgrating,
             reviewCount: item.totalreviewcount,
+            locksmith_districts: item.locksmith_districts,
+            workingHours: item.locksmith_working_hours,
+            foundingDate: item.locksmith_details.startdate,
+            socialProfiles: {
+                facebook: item.locksmith_details.facebook_url,
+                instagram: item.locksmith_details.instagram_url,
+                youtube: item.locksmith_details.youtube_url,
+                tiktok: item.locksmith_details.tiktok_url
+            },
             serviceList: item.locksmith_services?.map(service => ({
                 name: service.name,
                 price1: {
@@ -298,8 +313,8 @@ export async function GET(request) {
             openingHours: "Mo-Su 00:00-23:59",
             serviceType: servicetypeSlug ? servicetypeSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : "Çilingir Hizmeti",
             location: {
-                lat: item.lat.lat,
-                lng: item.lng.lng
+                lat: item.locksmith_details.lat,
+                lng: item.locksmith_details.lng
             }
         }));
 

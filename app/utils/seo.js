@@ -204,7 +204,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
             siteName: 'BiÇilingir',
             images: [
                 {
-                    url: 'https://bicilingir.com/images/og-image.jpg',
+                    url: 'https://bicilingir.com/images/infocard.png',
                     width: 1200,
                     height: 630,
                     alt: 'BiÇilingir - 7/24 Profesyonel Çilingirleri hemen bulun',
@@ -275,21 +275,37 @@ async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, servicetype
             postalCode: locksmith.postalCode
         });
 
-        const aggregateRating = locksmith.ratingValue && locksmith.ratingCount
+        const aggregateRating = locksmith.rating && locksmith.reviewCount
             ? cleanObject({
                 "@type": "AggregateRating",
-                "ratingValue": locksmith.ratingValue.toString(),
-                "reviewCount": locksmith.ratingCount.toString()
+                "ratingValue": locksmith.rating.toString(),
+                "reviewCount": locksmith.reviewCount.toString()
             })
             : undefined;
 
-        const geo = locksmith.lat && locksmith.lng
+
+        const geo = locksmith.location.lat && locksmith.location.lng
             ? cleanObject({
                 "@type": "GeoCoordinates",
-                "latitude": locksmith.lat,
-                "longitude": locksmith.lng
+                "latitude": locksmith.location.lat,
+                "longitude": locksmith.location.lng
             })
             : undefined;
+
+        const social = Object.values(locksmith.socialProfiles).filter(url => url !== null);
+
+        const days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+        const openingHours = [];
+
+        locksmith.workingHours.forEach(day => {
+            if (day.isworking) {
+                if (day.is24hopen) {
+                    openingHours.push(`${days[day.dayofweek]} 00:00-23:59`);
+                } else {
+                    openingHours.push(`${days[day.dayofweek]} ${day.opentime}-${day.closetime}`);
+                }
+            }
+        });
 
         const business = cleanObject({
             "@type": "LocalBusiness",
@@ -297,24 +313,21 @@ async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, servicetype
             "description": locksmith.description,
             "address": Object.keys(address).length > 0 ? address : undefined,
             "telephone": locksmith.phone,
-            "email": locksmith.email,
             "url": locksmith.website,
-            "image": locksmith.logoUrl,
-            "priceRange": locksmith.priceRange,
-            "areaServed": locksmith.neighbourhood && locksmith.district && locksmith.city
-                ? `${locksmith.neighbourhood}, ${locksmith.district}, ${locksmith.city}`
-                : locksmith.district && locksmith.city
-                    ? `${locksmith.district}, ${locksmith.city}`
-                    : locksmith.city,
-            "openingHours": locksmith.openingHours || "Mo-Su 00:00-23:59",
-            "serviceType": locksmith.serviceType || "Çilingir Hizmeti",
+            "image": locksmith.profileimageurl,
+            "priceRange": "300-1000", //static price range
+            "areaServed": locksmith.locksmith_districts.map(district => district.districts.name)
+                ? locksmith.locksmith_districts.map(district => district.districts.name + ", " + district.provinces.name)
+                : locksmith.locksmith_districts.map(district => district.provinces.name),
+            "openingHours": openingHours || "Mo-Su 00:00-23:59",
+            "serviceType": "Çilingir Hizmeti",
             "aggregateRating": aggregateRating,
             "geo": geo,
-            "sameAs": locksmith.socialProfiles?.length > 0 ? locksmith.socialProfiles : undefined, // Sosyal medya
-            "hasMap": locksmith.mapUrl,
-            "founder": locksmith.founderName,
+            "sameAs": social, // Sosyal medya
+            "hasMap": null, //Eksik, sonra eklenecek
+            "founder": locksmith.fullname,
             "foundingDate": locksmith.foundingDate,
-            "paymentAccepted": locksmith.paymentAccepted?.length > 0 ? locksmith.paymentAccepted : undefined,
+            "paymentAccepted": ["Cash", "Credit Card", "Debit Card"],
             "currenciesAccepted": "TRY"
         });
 
