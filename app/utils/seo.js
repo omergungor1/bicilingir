@@ -342,8 +342,19 @@ async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, servicetype
         "@context": "https://schema.org",
         "@type": "ItemList",
         "name": listTitle,
-        "itemListElement": itemList
+        "itemListElement": itemList.map((item, index) => ({
+            "@type": "ListItem",
+            "position": index + 1,
+            "item": {
+                "@type": "Thing",
+                "name": item.name,
+                "url": item.url
+            }
+        }))
     };
+
+
+
 
     return structuredData;
 }
