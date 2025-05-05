@@ -88,6 +88,7 @@ export default function NeighborhoodPageClient({ citySlug, districtSlug, neighbo
                 return;
             }
 
+            neighborhoodData.name = neighborhoodData.name + ' Mahallesi';
             neighborhoodData.slug = citySlug + '/' + districtSlug + '/' + neighborhoodSlug;
 
             // Yakın mahalleleri çek (aynı ilçedeki diğer mahalleler)
@@ -119,7 +120,7 @@ export default function NeighborhoodPageClient({ citySlug, districtSlug, neighbo
             }
 
             servicesData.forEach(service => {
-                service.slug = citySlug + '/' + districtSlug + '/' + service.slug;
+                service.slug = citySlug + '/' + districtSlug + '/' + neighborhoodSlug + '/' + service.slug;
             });
 
             setServicesList(servicesData);
@@ -130,8 +131,8 @@ export default function NeighborhoodPageClient({ citySlug, districtSlug, neighbo
                 name: neighborhoodData.name,
                 district: districtData.name,
                 city: cityData.name,
-                description: `${neighborhoodData.name} mahallesi, ${districtData.name}, ${cityData.name} bölgesinde 7/24 çilingir hizmetleri. Kapı açma, çilingir, anahtar kopyalama ve diğer çilingir hizmetleri için hemen arayın.`,
-                longDescription: `Bi Çilingir olarak, ${neighborhoodData.name} mahallesi sakinlerini güvenilir, ekonomik ve hızlı çilingir hizmeti sunan profesyonellerle buluşturuyoruz. Kendimiz doğrudan çilingir hizmeti vermiyoruz; bunun yerine, bulunduğunuz bölgedeki en yakın ve en güvenilir çilingirleri tek bir platformda sizin için listeliyoruz. Böylece acil bir durumda zaman kaybetmeden iletişime geçebileceğiniz uzmanlara kolayca ulaşmanızı sağlıyoruz.\n\n
+                description: `${neighborhoodData.name}, ${districtData.name}, ${cityData.name} bölgesinde 7/24 çilingir hizmetleri. Kapı açma, çilingir, anahtar kopyalama ve diğer çilingir hizmetleri için hemen arayın.`,
+                longDescription: `Bi Çilingir olarak, ${neighborhoodData.name} sakinlerini güvenilir, ekonomik ve hızlı çilingir hizmeti sunan profesyonellerle buluşturuyoruz. Kendimiz doğrudan çilingir hizmeti vermiyoruz; bunun yerine, bulunduğunuz bölgedeki en yakın ve en güvenilir çilingirleri tek bir platformda sizin için listeliyoruz. Böylece acil bir durumda zaman kaybetmeden iletişime geçebileceğiniz uzmanlara kolayca ulaşmanızı sağlıyoruz.\n\n
                 Kapınız kilitli kaldıysa, anahtarınızı kaybettiyseniz ya da kilit değişimi yaptırmak istiyorsanız, ${neighborhoodData.name}'ndeki çilingirleri hemen inceleyebilir, size en uygun olanla doğrudan iletişime geçebilirsiniz. Tüm çilingirler, kullanıcı yorumları ve hizmet detaylarıyla birlikte sayfamızda yer alır; bu sayede güvenli ve bilinçli bir seçim yapabilirsiniz.\n\n
                 Platformumuzda listelenen çilingirlerin çoğu 7/24 hizmet sunmaktadır. Gece ya da gündüz fark etmeksizin, dakikalar içinde destek alabileceğiniz profesyonellere ulaşmak artık çok kolay. Bi Çilingir, kaliteli hizmete erişimi kolaylaştırır; uygun fiyatlı ve güvenilir çözümler sunan çilingirleri bir araya getirir.\n\n
                 ${neighborhoodData.name} için en yakın çilingirleri şimdi keşfedin ve ihtiyacınıza en uygun ustayla hemen iletişime geçin!`,
@@ -172,7 +173,7 @@ export default function NeighborhoodPageClient({ citySlug, districtSlug, neighbo
             },
             nearbySection: {
                 title: 'Yakındaki Mahalleler',
-                description: `${neighborhoodInfo.city} ${neighborhoodInfo.district} yakınındaki mahalleler`,
+                description: `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name} yakınındaki mahalleler`,
                 data: neighborhoodInfo.nearbyNeighborhoods.map(neighborhood => (
                     {
                         id: neighborhood.id,
@@ -194,7 +195,7 @@ export default function NeighborhoodPageClient({ citySlug, districtSlug, neighbo
             },
             categorySection: {
                 title: `${neighborhoodInfo.name} Çilingir Hizmetleri`,
-                description: '',
+                description: 'Mahallenizde sunulan çilingir hizmetleri',
                 data: servicesList.map(service => ({
                     id: service.id,
                     name: service.name,
@@ -213,19 +214,19 @@ export default function NeighborhoodPageClient({ citySlug, districtSlug, neighbo
                 { id: 1, name: 'Ana Sayfa', slug: '/' },
                 { id: 2, name: neighborhoodInfo.city, slug: `${citySlug}` },
                 { id: 3, name: neighborhoodInfo.district, slug: `${citySlug}/${districtSlug}` },
-                { id: 4, name: neighborhoodInfo.name + ' Mahallesi', slug: '#' }
+                { id: 4, name: neighborhoodInfo.name, slug: '#' }
             ],
             mainCard: {
-                title: `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name} Mahallesi Çilingir`,
+                title: `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name} Çilingir`,
                 description: neighborhoodInfo.description
             },
             locksmitList: {
-                title: `${neighborhoodInfo.name} Mahallesi Çilingirler`,
+                title: `${neighborhoodInfo.name} Çilingirler`,
                 description: 'Size en yakın ve en uygun çilingirler aşağıda listelenmiştir. Hemen arayabilir veya mesaj gönderebilirsiniz.',
                 data: locksmiths
             },
             seconCard: {
-                title: `${neighborhoodInfo.name} Mahallesi Hakkında`,
+                title: `${neighborhoodInfo.name} Hakkında`,
                 longDescription: neighborhoodInfo.longDescription
             },
             serviceList: {
@@ -236,34 +237,34 @@ export default function NeighborhoodPageClient({ citySlug, districtSlug, neighbo
                 name: neighborhoodInfo.name
             },
             sssList: {
-                title: `${neighborhoodInfo.name} Mahallesi Çilingir - Sık Sorulan Sorular`,
+                title: `${neighborhoodInfo.name} Çilingir - Sık Sorulan Sorular`,
                 description: 'Çilingir hizmetleri hakkında merak edilenler',
                 data: [
                     {
                         id: 1,
                         question: `${neighborhoodInfo.name}'de en yakın çilingir nerede?`,
-                        answer: `BiÇilingir platformu sayesinde ${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name} mahallesinde hizmet veren en yakın çilingiri bulabilir, fiyatları görebilirsiniz. Arama formunu kullanarak konumunuza en yakın çilingiri tespit edebilir ve hemen iletişime geçebilirsiniz.`
+                        answer: `BiÇilingir platformu sayesinde ${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name} hizmet veren en yakın çilingiri bulabilir, fiyatları görebilirsiniz. Arama formunu kullanarak konumunuza en yakın çilingiri tespit edebilir ve hemen iletişime geçebilirsiniz.`
                     },
                     {
                         id: 2,
                         question: `${neighborhoodInfo.name}'de çilingir ücretleri ne kadar?`,
-                        answer: `${neighborhoodInfo.name} mahallesinde çilingir ücretleri genellikle hizmet türüne göre değişiklik gösterir. Kapı açma işlemleri ortalama 200₺-350₺, kilit değiştirme 300₺-500₺, çelik kapı tamiri ise 400₺-800₺ arasındadır. Fiyatlar mesafeye, zamana ve hizmet türüne göre farklılık gösterebilir.`
+                        answer: `${neighborhoodInfo.name} çilingir ücretleri genellikle hizmet türüne göre değişiklik gösterir. Kapı açma işlemleri ortalama 300₺-500₺, kilit değiştirme 500₺-1000₺, çelik kapı tamiri ise 500₺-1500₺ arasındadır. Fiyatlar mesafeye, zamana ve hizmet türüne göre farklılık gösterebilir.`
                     },
                     {
                         id: 3,
                         question: `${neighborhoodInfo.name}'de gece çilingir hizmeti alabilir miyim?`,
-                        answer: `Evet, ${neighborhoodInfo.name} mahallesinde 7/24 hizmet veren çilingir ekiplerimiz bulunmaktadır. Gece saatlerinde de kapınız kilitli kaldığında veya acil kilit değişimi gerektiğinde çilingir hizmetimize ulaşabilirsiniz.`
+                        answer: `Evet, ${neighborhoodInfo.name} 7/24 hizmet veren çilingir ekiplerimiz bulunmaktadır. Gece saatlerinde de kapınız kilitli kaldığında veya acil kilit değişimi gerektiğinde çilingir hizmetimize ulaşabilirsiniz.`
                     },
                     {
                         id: 4,
                         question: `${neighborhoodInfo.name}'de hangi çilingir hizmetleri verilmektedir?`,
-                        answer: `${neighborhoodInfo.name} mahallesinde kapı açma, kilit değiştirme, anahtar kopyalama, çelik kapı tamiri, kasa açma, oto çilingir ve daha birçok çilingir hizmeti verilmektedir. Platformumuzda listelenen çilingirler ile ihtiyacınız olan tüm hizmetlere ulaşabilirsiniz.`
+                        answer: `${neighborhoodInfo.name} kapı açma, kilit değiştirme, anahtar kopyalama, çelik kapı tamiri, kasa açma, oto çilingir ve daha birçok çilingir hizmeti verilmektedir. Platformumuzda listelenen çilingirler ile ihtiyacınız olan tüm hizmetlere ulaşabilirsiniz.`
                     }
                 ]
             },
             detailedDistrictList: {
                 title: `${neighborhoodInfo.city} ${neighborhoodInfo.district} ${neighborhoodInfo.name} Çevresindeki Mahalleler`,
-                description: `${neighborhoodInfo.name} mahallesinde çilingir hizmeti verilen yakın bölgeler`,
+                description: `${neighborhoodInfo.name} çilingir hizmeti verilen yakın bölgeler`,
                 secondTitle: 'Mahalleler',
                 data: neighborhoodInfo.nearbyNeighborhoods.map(neighborhood => ({
                     id: neighborhood.id,

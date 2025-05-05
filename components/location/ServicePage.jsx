@@ -11,62 +11,6 @@ const createSupabaseClient = () => {
     return getSupabaseClient();
 };
 
-// Mahalle bilgileri
-const neighborhoods = {
-    "kuplupinar": {
-        name: "Küplüpınar",
-        description: "Bursa'nın Osmangazi ilçesine bağlı Küplüpınar mahallesi, merkeze yakın konumu ve gelişmiş altyapısıyla dikkat çekiyor. Bölgede çoğunlukla apartmanlar ve siteler bulunmaktadır.",
-        landmarks: ["Küplüpınar Camii", "Küplüpınar Parkı", "Osmangazi Belediyesi Küplüpınar Şubesi"],
-        transportation: "Merkeze 10 dakika mesafede bulunan mahalle, 12, 16 ve 35 numaralı otobüs hatlarıyla şehrin her noktasına ulaşım sağlar.",
-        mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12129.455419439366!2d29.06061455!3d40.21390765!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14ca3e57b168a8c7%3A0x5d3a23f2486a0fcc!2sK%C3%BCpl%C3%BCp%C4%B1nar%2C%20Osmangazi%2FBursa!5e0!3m2!1str!2str!4v1651321284774!5m2!1str!2str"
-    }
-};
-
-// Hizmet kategorileri bilgileri
-const serviceCategories = {
-    "acil-cilingir": {
-        title: "Acil Çilingir",
-        description: "7/24 hizmet veren çilingirler, kapınız kilitli kaldığında veya tüm acil durumlarda en hızlı şekilde yanınızda.",
-        image: "/images/acil-cilingir.jpg",
-        keywords: ["acil çilingir", "24 saat çilingir", "kapı açma", "kilit açma"],
-        metaDescription: "Bursa Osmangazi Küplüpınar'da 7/24 acil çilingir hizmeti. Kapı açma, kilit değiştirme ve tüm anahtar işleriniz için hızlı ve güvenilir çözüm."
-    },
-    "oto-cilingir": {
-        title: "Oto Çilingir",
-        description: "Araç anahtar ve kilit sorunlarınıza profesyonel çözümler sunan oto çilingir hizmetimiz.",
-        image: "/images/oto-cilingir.jpg",
-        keywords: ["oto çilingir", "araba anahtarı", "immobilizer", "oto anahtar kopyalama"],
-        metaDescription: "Bursa Osmangazi Küplüpınar'da profesyonel oto çilingir hizmeti. Araç anahtar kopyalama, immobilizer ve kilit sorunları için uzman destek."
-    },
-    "ev-cilingir": {
-        title: "Ev Çilingir",
-        description: "Ev ve işyerleriniz için özel çilingir hizmetleri, kilit değişimi ve güvenlik danışmanlığı.",
-        image: "/images/ev-cilingir.jpg",
-        keywords: ["ev çilingir", "konut çilingir", "ev kilit değişimi", "kapı kilidi"],
-        metaDescription: "Bursa Osmangazi Küplüpınar'da ev ve konutlar için özel çilingir hizmeti. Kilit değişimi, güvenlik sistemleri ve danışmanlık hizmetleri."
-    },
-    "kasa-cilingir": {
-        title: "Kasa Çilingir",
-        description: "Unutulan şifreler veya arızalanan kasa kilitlerinde profesyonel müdahale ve çözüm.",
-        image: "/images/kasa-cilingir.jpg",
-        keywords: ["kasa çilingir", "kasa açma", "şifre unutma", "çelik kasa"],
-        metaDescription: "Bursa Osmangazi Küplüpınar'da kasa açma ve tamir hizmetleri. Unutulan şifreler, arızalanan kilitler için profesyonel müdahale."
-    },
-    "724-cilingir": {
-        title: "7/24 Çilingir",
-        description: "Gece gündüz, tatil veya bayram demeden her an ulaşabileceğiniz çilingir hizmeti.",
-        image: "/images/724-cilingir.jpg",
-        keywords: ["7/24 çilingir", "gece çilingir", "kesintisiz çilingir", "her saat çilingir"],
-        metaDescription: "Bursa Osmangazi Küplüpınar'da 7/24 kesintisiz çilingir hizmeti. Gece gündüz, tatil bayram demeden yanınızdayız."
-    },
-    "cilingir-hizmeti": {
-        title: "Çilingir Hizmeti",
-        description: "Her türlü anahtar, kilit ve güvenlik sistemi için genel çilingir hizmetleri.",
-        image: "/images/cilingir-hizmeti.jpg",
-        keywords: ["çilingir hizmeti", "anahtar yapımı", "çilingir ustası", "profesyonel çilingir"],
-        metaDescription: "Bursa Osmangazi Küplüpınar'da genel çilingir hizmetleri. Anahtar yapımı, kilit değişimi, kapı açma ve daha fazlası için bizi arayın."
-    }
-};
 
 export default function ServicePage({ data }) {
     const { citySlug, districtSlug, neighborhoodSlug, servicetypeSlug, locksmiths: locksmithsList } = data;
@@ -172,6 +116,7 @@ export default function ServicePage({ data }) {
                         if (neighborhoodError) {
                             console.error('Mahalle bilgisi alınamadı:', neighborhoodError);
                         } else {
+                            neighborhood.name = neighborhood.name + ' Mahallesi';
                             neighborhoodInfo = neighborhood;
                             formattedName = `${cityInfo.name} ${districtInfo.name} ${neighborhood.name}`;
                             setNeighborhoodData(neighborhood);
@@ -242,7 +187,7 @@ export default function ServicePage({ data }) {
 
         // Detaylı konum stringi oluştur
         const locationName = neighborhoodInfo.name ?
-            `${neighborhoodInfo.name} Mahallesi` :
+            `${neighborhoodInfo.name}` :
             neighborhoodInfo.district ? neighborhoodInfo.district :
                 neighborhoodInfo.city ? neighborhoodInfo.city : 'Türkiye';
 
@@ -268,7 +213,7 @@ export default function ServicePage({ data }) {
                 data: neighborhoodInfo.nearbyNeighborhoods.map(neighborhood => ({
                     id: neighborhood.id,
                     name: neighborhood.name,
-                    slug: `${citySlug}/${districtSlug}/${neighborhood.slug}/${servicetypeSlug}`
+                    slug: `${citySlug}/${districtSlug}/${neighborhood.slug}` ///${servicetypeSlug}
                 }))
             },
             locksmithPricing: {

@@ -130,7 +130,7 @@ export async function middleware(req) {
 
     // Diğer public API'ler için daha düşük limitler
     else {
-      const publicLimit = checkIPRateLimit(ip + '-public', 50, 60 * 1000);
+      const publicLimit = checkIPRateLimit(ip + '-public', 50, 60 * 1000 * 2);
       if (publicLimit.limited) {
         return NextResponse.json(
           { error: 'Public API istek limiti aşıldı. Lütfen daha sonra tekrar deneyin.' },

@@ -74,6 +74,7 @@ export default function DistrictContent({ citySlug, districtSlug, locksmiths: in
                 }
 
                 neighborhoodsData.forEach(neighborhood => {
+                    neighborhood.name = neighborhood.name + ' Mahallesi';
                     neighborhood.slug = citySlug + '/' + districtSlug + '/' + neighborhood.slug;
                 });
 
@@ -206,7 +207,7 @@ export default function DistrictContent({ citySlug, districtSlug, locksmiths: in
                     {
                         id: 2,
                         question: `${districtInfo.city} ${districtInfo.name}'de çilingir ücretleri ne kadar?`,
-                        answer: `${districtInfo.city} ${districtInfo.name} ilçesinde çilingir ücretleri genellikle 200₺ ile 800₺ arasında değişmektedir. Kapı açma işlemleri ortalama 200₺-350₺, kilit değiştirme 300₺-500₺, çelik kapı tamiri ise 400₺-800₺ arasındadır. Fiyatlar mesafeye, zamana ve hizmet türüne göre farklılık gösterebilir.`
+                        answer: `${districtInfo.city} ${districtInfo.name} ilçesinde çilingir ücretleri genellikle 200₺ ile 800₺ arasında değişmektedir. Kapı açma işlemleri ortalama 300₺-500₺, kilit değiştirme 500₺-1000₺, çelik kapı tamiri ise 500₺-1500₺ arasındadır. Fiyatlar mesafeye, zamana ve hizmet türüne göre farklılık gösterebilir.`
                     },
                     {
                         id: 3,
