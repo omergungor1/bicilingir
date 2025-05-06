@@ -35,6 +35,7 @@ export default function Footer() {
               <li><Link href="/hakkimizda" className="hover:text-white">Hakkımızda</Link></li>
               <li><Link href="/bilgi" className="hover:text-white">Çilingir Ol</Link></li>
               <li><Link href="/privacy" className="hover:text-white">Gizlilik Politikası</Link></li>
+              <li><Link href="/terms" className="hover:text-white">Kullanım Şartları</Link></li>
               <li><Link href="/iletisim" className="hover:text-white">İletişim</Link></li>
             </ul>
           </div>
@@ -42,8 +43,8 @@ export default function Footer() {
             <h3 className="text-xl font-bold mb-4">İletişim</h3>
             <ul className="space-y-2 text-gray-300">
               <li>info@bicilingir.com</li>
-              {/* <li>+90 850 123 45 67</li> */}
-              <li>İstanbul, Türkiye</li>
+              <li>+90 542 821 22 05</li>
+              <li>Bursa, Türkiye</li>
             </ul>
             <div className="flex space-x-4 mt-4">
               <a href="https://www.facebook.com/people/BiÇilingir/61575247862332" target="_blank" className="text-white hover:text-blue-600">

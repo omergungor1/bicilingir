@@ -3,7 +3,7 @@ import { getSupabaseServer } from '../lib/supabase';
 // Next.js App Router için dinamik sitemap oluşturma
 export default async function sitemap() {
     // Baz URL - kesin URL kullan
-    const baseUrl = 'https://www.bicilingir.com';
+    const baseUrl = 'https://bicilingir.com';
 
     try {
         // Supabase client
@@ -232,6 +232,7 @@ export default async function sitemap() {
             });
         }
 
+
         // Çilingir detay sayfaları URL'leri
         const locksmithUrls = [];
         if (locksmiths && locksmiths.length > 0) {
@@ -264,25 +265,25 @@ export default async function sitemap() {
         // Hata durumunda en azından statik sayfaları döndür
         return [
             {
-                url: 'https://www.bicilingir.com',
+                url: 'https://bicilingir.com',
                 lastModified: new Date().toISOString(),
                 changeFrequency: 'daily',
                 priority: 1,
             },
             {
-                url: 'https://www.bicilingir.com/hakkimizda',
+                url: 'https://bicilingir.com/hakkimizda',
                 lastModified: new Date().toISOString(),
                 changeFrequency: 'monthly',
                 priority: 0.8,
             },
             {
-                url: 'https://www.bicilingir.com/iletisim',
+                url: 'https://bicilingir.com/iletisim',
                 lastModified: new Date().toISOString(),
                 changeFrequency: 'monthly',
                 priority: 0.8,
             },
             {
-                url: 'https://www.bicilingir.com/bilgi',
+                url: 'https://bicilingir.com/bilgi',
                 lastModified: new Date().toISOString(),
                 changeFrequency: 'weekly',
                 priority: 0.8,

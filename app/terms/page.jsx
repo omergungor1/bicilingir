@@ -18,13 +18,13 @@ export default function TermsPage() {
         </Breadcrumb>
 
         <div className="bg-white p-8 rounded-lg shadow-md">
-          <h1 className="text-3xl font-bold mb-8 text-gray-800 text-center">Hizmet Şartları</h1>
-          
+          <h1 className="text-3xl font-bold mb-8 text-gray-800 text-center">Kullanım Şartları</h1>
+
           <div className="prose max-w-none">
             <p className="text-gray-600 mb-6">
-              Son güncelleme: {new Date().toLocaleDateString('tr-TR', {year: 'numeric', month: 'long', day: 'numeric'})}
+              Son güncelleme: {new Date().toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
-            
+
             <h2 className="text-xl font-semibold mb-4 text-gray-800">1. Giriş</h2>
             <p className="mb-4">
               Bi Çilingir platformuna hoş geldiniz. Bu Hizmet Şartları, Bi Çilingir web sitesini, mobil uygulamasını ve platformla ilgili tüm hizmetleri (toplu olarak "Hizmet") kullanımınızı düzenlemektedir. Platformumuzu kullanarak, bu şartları kabul etmiş olursunuz.
@@ -115,7 +115,7 @@ export default function TermsPage() {
               Hizmet Şartları hakkında sorularınız veya endişeleriniz varsa, lütfen bizimle <Link href="/iletisim" className="text-blue-600 hover:underline">iletişime geçin</Link>.
             </p>
           </div>
-          
+
           <div className="mt-10 pt-6 border-t border-gray-200">
             <Link href="/" className="text-blue-600 hover:underline">← Ana Sayfa'ya Dön</Link>
           </div>
