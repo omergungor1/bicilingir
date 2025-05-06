@@ -6,8 +6,38 @@ const ipRateLimitStore = new Map();
 // Token'lara göre istekleri izleyecek obje
 const tokenRateLimitStore = new Map();
 
+// Arama motoru botlarını tanımlayan fonksiyon
+function isSearchBot(userAgent) {
+  if (!userAgent) return false;
+
+  // Bilinen arama motoru bot user-agent dizileri
+  const botPatterns = [
+    /googlebot/i,
+    /bingbot/i,
+    /yandexbot/i,
+    /duckduckbot/i,
+    /baiduspider/i,
+    /yahoo.*slurp/i,
+    /facebookexternalhit/i,
+    /twitterbot/i,
+    /rogerbot/i,
+    /msnbot/i,
+    /applebot/i
+  ];
+
+  return botPatterns.some(pattern => pattern.test(userAgent));
+}
+
 // IP bazlı rate limiting fonksiyonu
-function checkIPRateLimit(ip, limit = 100, windowMs = 60 * 1000) {
+function checkIPRateLimit(ip, limit = 100, windowMs = 60 * 1000, userAgent = '') {
+  // Arama motoru botlarını limit dışı tut
+  return { limited: false, remaining: limit };
+
+  //Bunu daha sonra kaldır
+  if (isSearchBot(userAgent)) {
+    return { limited: false, remaining: limit };
+  }
+
   const now = Date.now();
   const windowStart = now - windowMs;
 
@@ -32,7 +62,12 @@ function checkIPRateLimit(ip, limit = 100, windowMs = 60 * 1000) {
 }
 
 // Token bazlı rate limiting fonksiyonu (API anahtarları, oturum, vb için)
-function checkTokenRateLimit(token, limit = 50, windowMs = 60 * 1000) {
+function checkTokenRateLimit(token, limit = 50, windowMs = 60 * 1000, userAgent = '') {
+  // Arama motoru botlarını limit dışı tut
+  if (isSearchBot(userAgent)) {
+    return { limited: false, remaining: limit };
+  }
+
   if (!token) return { limited: false, remaining: limit }; // Token yoksa limit uygulanmaz
 
   const now = Date.now();
@@ -83,12 +118,18 @@ setInterval(() => {
 export async function middleware(req) {
   // Gerçek IP adresini alın (varsa proxy arkasından)
   const ip = req.headers.get('x-forwarded-for') || req.ip || 'unknown';
+  const userAgent = req.headers.get('user-agent') || '';
   const pathname = req.nextUrl.pathname;
+
+  // Arama motoru botlarını doğrudan geçir
+  if (isSearchBot(userAgent)) {
+    return NextResponse.next();
+  }
 
   // API istekleri için daha sıkı limitler uygula
   if (pathname.startsWith('/api/')) {
     // Genel API limiti (dakikada 100 istek)
-    const { limited, remaining } = checkIPRateLimit(ip, 100, 60 * 1000);
+    const { limited, remaining } = checkIPRateLimit(ip, 100, 60 * 1000, userAgent);
 
     if (limited) {
       return NextResponse.json(
@@ -108,7 +149,7 @@ export async function middleware(req) {
     // Özel API limitleri
     // Admin API'leri için daha yüksek limitler
     if (pathname.startsWith('/api/admin/')) {
-      const adminLimit = checkIPRateLimit(ip + '-admin', 200, 60 * 1000);
+      const adminLimit = checkIPRateLimit(ip + '-admin', 200, 60 * 1000, userAgent);
       if (adminLimit.limited) {
         return NextResponse.json(
           { error: 'Admin API istek limiti aşıldı. Lütfen daha sonra tekrar deneyin.' },
@@ -119,7 +160,7 @@ export async function middleware(req) {
 
     // Locksmith API'leri için normal limitler
     else if (pathname.startsWith('/api/locksmith/')) {
-      const locksmithLimit = checkIPRateLimit(ip + '-locksmith', 150, 60 * 1000);
+      const locksmithLimit = checkIPRateLimit(ip + '-locksmith', 150, 60 * 1000, userAgent);
       if (locksmithLimit.limited) {
         return NextResponse.json(
           { error: 'Çilingir API istek limiti aşıldı. Lütfen daha sonra tekrar deneyin.' },
@@ -130,7 +171,7 @@ export async function middleware(req) {
 
     // Diğer public API'ler için daha düşük limitler
     else {
-      const publicLimit = checkIPRateLimit(ip + '-public', 50, 60 * 1000 * 2);
+      const publicLimit = checkIPRateLimit(ip + '-public', 50, 60 * 1000 * 2, userAgent);
       if (publicLimit.limited) {
         return NextResponse.json(
           { error: 'Public API istek limiti aşıldı. Lütfen daha sonra tekrar deneyin.' },
@@ -142,7 +183,7 @@ export async function middleware(req) {
 
   // Normal sayfa istekleri için daha gevşek limitler (dakikada 200 istek)
   else {
-    const { limited } = checkIPRateLimit(ip + '-pages', 200, 60 * 1000);
+    const { limited } = checkIPRateLimit(ip + '-pages', 200, 60 * 1000, userAgent);
     if (limited) {
       return NextResponse.json(
         { error: 'Çok fazla istek gönderdiniz. Lütfen daha sonra tekrar deneyin.' },
@@ -169,7 +210,7 @@ export async function middleware(req) {
     // Session varsa token bazlı rate limiting uygula (kullanıcı bazlı)
     if (session) {
       const userId = session.user.id;
-      const { limited } = checkTokenRateLimit(userId, 300, 60 * 1000); // Oturum açmış kullanıcılar için daha yüksek limit
+      const { limited } = checkTokenRateLimit(userId, 300, 60 * 1000, userAgent); // Oturum açmış kullanıcılar için daha yüksek limit
 
       if (limited) {
         return NextResponse.json(
@@ -284,7 +325,7 @@ export async function middleware(req) {
 
     return res;
   } catch (error) {
-    console.error("Middleware hatası:", error);
+    console.error('Middleware hatası:', error);
 
     // API hata durumları için
     if (req.nextUrl.pathname.startsWith('/api/')) {
