@@ -23,6 +23,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="tr">
       <head>
+        {/* Schema.org yapıları bu alanda olacak - Next.js tarafından otomatik eklenir */}
       </head>
       <body className={inter.className}>
         <Script

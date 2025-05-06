@@ -215,12 +215,15 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
         },
         alternates: {
             canonical: 'https://bicilingir.com',
-        },
-        // JSON-LD yapılandırılmış verisi
-        scripts: structuredData ? [{
-            type: 'application/ld+json',
-            text: JSON.stringify(structuredData)
-        }] : undefined
+        },        // JSON-LD yapılandırılmış verisi
+        // scripts: structuredData ? [{
+        //     type: 'application/ld+json',
+        //     text: JSON.stringify(structuredData)
+        // }] : undefined
+        other: {
+            // Structured data'yı string olarak gönderiyoruz ki Next.js bunu anlaşılır bir şekilde meta tag'e dönüştürebilsin
+            structuredData: structuredData ? JSON.stringify(structuredData) : undefined
+        }
     };
 }
 
@@ -353,9 +356,7 @@ async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, servicetype
         }))
     };
 
-
-
-
+    // İlçe + Hizmet sayfaları URL'leri (Sadece Bursa'nın ilçeleri)
     return structuredData;
 }
 
