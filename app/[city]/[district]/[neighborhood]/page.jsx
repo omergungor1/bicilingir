@@ -514,9 +514,9 @@ export default async function NeighborhoodPage({ params }) {
     const resolvedParams = await params;
     const { city: citySlug, district: districtSlug, neighborhood: neighborhoodSlug } = resolvedParams;
 
-    // Eğer neighborhood bir hizmet türüyse, ServicePage komponentini göster
     const isService = ServiceList.some(service => service.slug === neighborhoodSlug);
 
+    // İlgili verileri ve metadata'yı çek - bunu sayfa render edilmeden önce tamamla
     if (isService) {
         // Hizmet sayfası durumu
         const result = await getNeighborhoodData(citySlug, districtSlug, null, neighborhoodSlug);
@@ -534,7 +534,7 @@ export default async function NeighborhoodPage({ params }) {
             <>
                 {structuredData && (
                     <Script id="schema-data" type="application/ld+json" strategy="beforeInteractive">
-                        {structuredData}
+                        {JSON.stringify(structuredData)}
                     </Script>
                 )}
                 <ServicePage
@@ -556,7 +556,7 @@ export default async function NeighborhoodPage({ params }) {
         <>
             {structuredData && (
                 <Script id="schema-data" type="application/ld+json" strategy="beforeInteractive">
-                    {structuredData}
+                    {JSON.stringify(structuredData)}
                 </Script>
             )}
             <NeighborhoodPageClient

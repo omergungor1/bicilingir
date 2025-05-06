@@ -173,14 +173,11 @@ export default async function CityPage({ params }) {
 
     return (
         <>
-            {/* Schema.org verisi için script etiketi - doğrudan sayfa HTML'ine eklenir */}
             {structuredData && (
                 <Script id="schema-data" type="application/ld+json" strategy="beforeInteractive">
-                    {structuredData}
+                    {JSON.stringify(structuredData)}
                 </Script>
             )}
-
-            {/* Ana içerik - Tüm verilerle birlikte render edilir */}
             <CityContent
                 citySlug={citySlug}
                 locksmiths={locksmiths}

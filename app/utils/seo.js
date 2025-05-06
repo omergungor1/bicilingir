@@ -246,6 +246,7 @@ function cleanObject(obj) {
 async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, servicetypeSlug, city, district, neighborhood, serviceType, locksmiths = null }) {
     let listTitle = "Çilingir Hizmeti";
     let locksmithsList = [];
+    let jsonLd = null;
 
     try {
         // Liste başlığını oluştur
@@ -270,94 +271,110 @@ async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, servicetype
         console.error('Yapılandırılmış veri oluşturulurken hata:', error);
     }
 
-    const itemList = locksmithsList.map((locksmith, index) => {
-        const address = cleanObject({
-            "@type": "PostalAddress",
-            "addressLocality": locksmith.district || (district ? district.name : ""),
-            "addressRegion": locksmith.city || (city ? city.name : ""),
-            "addressCountry": "TR",
-        });
+    // Çilingir listesi için ItemList Schema
+    if (locksmithsList && locksmithsList.length > 0) {
+        const itemListElements = locksmithsList.map((locksmith, index) => {
+            const address = cleanObject({
+                "@type": "PostalAddress",
+                "addressLocality": locksmith.district || (district ? district.name : ""),
+                "addressRegion": locksmith.city || (city ? city.name : ""),
+                "addressCountry": "TR",
+            });
 
-        const aggregateRating = locksmith.rating && locksmith.reviewCount
-            ? cleanObject({
-                "@type": "AggregateRating",
-                "ratingValue": locksmith.rating.toString(),
-                "reviewCount": locksmith.reviewCount.toString()
-            })
-            : undefined;
+            // Çalışma saatleri
+            const workingHoursArray = [];
+            if (locksmith.workingHours && locksmith.workingHours.length > 0) {
+                // Her bir güne göre çalışma saatlerini ekle
+                const daysOfWeek = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+                locksmith.workingHours.forEach(wh => {
+                    if (wh.isworking) {
+                        if (wh.is24hopen) {
+                            workingHoursArray.push(`${daysOfWeek[wh.dayofweek]} 00:00-23:59`);
+                        } else {
+                            const openTime = wh.opentime ? wh.opentime.substring(0, 5) : "09:00";
+                            const closeTime = wh.closetime ? wh.closetime.substring(0, 5) : "18:00";
+                            workingHoursArray.push(`${daysOfWeek[wh.dayofweek]} ${openTime}-${closeTime}`);
+                        }
+                    }
+                });
+            }
 
+            // Hizmet verilen bölgeler
+            const areaServed = [];
+            if (locksmith.locksmith_districts && locksmith.locksmith_districts.length > 0) {
+                locksmith.locksmith_districts.forEach(ld => {
+                    const districtName = ld.districts?.name;
+                    const provinceName = ld.provinces?.name;
+                    if (districtName && provinceName) {
+                        areaServed.push(`${districtName}, ${provinceName}`);
+                    }
+                });
+            }
 
-        const geo = locksmith.location.lat && locksmith.location.lng
-            ? cleanObject({
+            // Sosyal medya linkleri
+            const sameAs = [];
+            if (locksmith.socialProfiles) {
+                if (locksmith.socialProfiles.facebook) sameAs.push(locksmith.socialProfiles.facebook);
+                if (locksmith.socialProfiles.instagram) sameAs.push(locksmith.socialProfiles.instagram);
+                if (locksmith.socialProfiles.youtube) sameAs.push(locksmith.socialProfiles.youtube);
+                if (locksmith.socialProfiles.tiktok) sameAs.push(locksmith.socialProfiles.tiktok);
+            }
+
+            // Ödeme seçenekleri
+            const paymentAccepted = ["Cash", "Credit Card", "Debit Card"];
+
+            // Coğrafi konum
+            const geo = locksmith.location ? {
                 "@type": "GeoCoordinates",
                 "latitude": locksmith.location.lat,
                 "longitude": locksmith.location.lng
-            })
-            : undefined;
+            } : undefined;
 
-        const social = Object.values(locksmith.socialProfiles).filter(url => url !== null);
+            // Rating bilgisi 
+            const aggregateRating = (locksmith.rating && locksmith.reviewCount) ? {
+                "@type": "AggregateRating",
+                "ratingValue": locksmith.rating.toString(),
+                "reviewCount": locksmith.reviewCount.toString()
+            } : undefined;
 
-        const days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
-        const openingHours = [];
+            // LocalBusiness şeması
+            const business = cleanObject({
+                "@type": "LocalBusiness",
+                "name": locksmith.name,
+                "description": locksmith.description,
+                "address": Object.keys(address).length > 0 ? address : undefined,
+                "telephone": locksmith.phone,
+                "image": locksmith.profileimageurl,
+                "priceRange": "300-1000",
+                "areaServed": areaServed.length > 0 ? areaServed : undefined,
+                "openingHours": workingHoursArray.length > 0 ? workingHoursArray : undefined,
+                "serviceType": "Çilingir Hizmeti",
+                "aggregateRating": aggregateRating,
+                "geo": geo,
+                "sameAs": sameAs.length > 0 ? sameAs : undefined,
+                "founder": locksmith.fullname,
+                "foundingDate": locksmith.foundingDate || "2019-01-01",
+                "paymentAccepted": paymentAccepted,
+                "currenciesAccepted": "TRY"
+            });
 
-        locksmith.workingHours.forEach(day => {
-            if (day.isworking) {
-                if (day.is24hopen) {
-                    openingHours.push(`${days[day.dayofweek]} 00:00-23:59`);
-                } else {
-                    openingHours.push(`${days[day.dayofweek]} ${day.opentime}-${day.closetime}`);
-                }
-            }
+            // ListItem olarak dön
+            return {
+                "@type": "ListItem",
+                "position": index + 1,
+                "item": business
+            };
         });
 
-        const business = cleanObject({
-            "@type": "LocalBusiness",
-            "name": locksmith.name,
-            "description": locksmith.description,
-            "address": Object.keys(address).length > 0 ? address : undefined,
-            "telephone": locksmith.phone,
-            "url": locksmith.website,
-            "image": locksmith.profileimageurl,
-            "priceRange": "300-1000", //static price range
-            "areaServed": locksmith.locksmith_districts.map(district => district.districts.name)
-                ? locksmith.locksmith_districts.map(district => district.districts.name + ", " + district.provinces.name)
-                : locksmith.locksmith_districts.map(district => district.provinces.name),
-            "openingHours": openingHours || "Mo-Su 00:00-23:59",
-            "serviceType": "Çilingir Hizmeti",
-            "aggregateRating": aggregateRating,
-            "geo": geo,
-            "sameAs": social, // Sosyal medya
-            "hasMap": null, //Eksik, sonra eklenecek
-            "founder": locksmith.fullname,
-            "foundingDate": locksmith.foundingDate,
-            "paymentAccepted": ["Cash", "Credit Card", "Debit Card"],
-            "currenciesAccepted": "TRY"
-        });
-
-        return {
-            "@type": "ListItem",
-            "position": index + 1,
-            "item": business
+        jsonLd = {
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "name": `${city ? city.name : ""} ${district ? district.name : ""} Çilingir Listesi`,
+            "itemListElement": itemListElements
         };
-    });
+    }
 
-    const structuredData = {
-        "@context": "https://schema.org",
-        "@type": "ItemList",
-        "name": listTitle,
-        "itemListElement": itemList.map((item, index) => ({
-            "@type": "ListItem",
-            "position": index + 1,
-            "item": {
-                "@type": "Thing",
-                "name": item.name,
-                "url": item.url
-            }
-        }))
-    };
-
-    // İlçe + Hizmet sayfaları URL'leri (Sadece Bursa'nın ilçeleri)
-    return structuredData;
+    return jsonLd;
 }
 
 export async function getLocksmithsList({ citySlug, districtSlug, neighborhoodSlug, servicetypeSlug, count = 2 }) {

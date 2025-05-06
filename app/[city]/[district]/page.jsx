@@ -496,7 +496,7 @@ export default async function DistrictPage({ params }) {
             <>
                 {structuredData && (
                     <Script id="schema-data" type="application/ld+json" strategy="beforeInteractive">
-                        {structuredData}
+                        {JSON.stringify(structuredData)}
                     </Script>
                 )}
                 <ServicePage
@@ -518,7 +518,7 @@ export default async function DistrictPage({ params }) {
         <>
             {structuredData && (
                 <Script id="schema-data" type="application/ld+json" strategy="beforeInteractive">
-                    {structuredData}
+                    {JSON.stringify(structuredData)}
                 </Script>
             )}
             <DistrictContent
