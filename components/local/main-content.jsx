@@ -37,7 +37,7 @@ export default function MainContent(params) {
                             <span className="text-gray-900 font-medium">{item.name}</span>
                         ) : (
                             <>
-                                <Link href={`/${item.slug}`} className="hover:text-blue-600">
+                                <Link href={`${item.slug}`} className="hover:text-blue-600">
                                     {item.name}
                                 </Link>
                                 <span className="mx-2">/</span>

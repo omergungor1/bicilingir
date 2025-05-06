@@ -215,7 +215,8 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
         },
         alternates: {
             canonical: 'https://bicilingir.com',
-        },        // JSON-LD yapılandırılmış verisi
+        },
+        // JSON-LD yapılandırılmış verisi
         // scripts: structuredData ? [{
         //     type: 'application/ld+json',
         //     text: JSON.stringify(structuredData)
@@ -272,10 +273,9 @@ async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, servicetype
     const itemList = locksmithsList.map((locksmith, index) => {
         const address = cleanObject({
             "@type": "PostalAddress",
-            addressLocality: locksmith.district,
-            addressRegion: locksmith.city,
-            streetAddress: locksmith.address,
-            postalCode: locksmith.postalCode
+            "addressLocality": locksmith.district || (district ? district.name : ""),
+            "addressRegion": locksmith.city || (city ? city.name : ""),
+            "addressCountry": "TR",
         });
 
         const aggregateRating = locksmith.rating && locksmith.reviewCount
