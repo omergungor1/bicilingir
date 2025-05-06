@@ -279,6 +279,8 @@ async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, servicetype
                 "addressLocality": locksmith.district || (district ? district.name : ""),
                 "addressRegion": locksmith.city || (city ? city.name : ""),
                 "addressCountry": "TR",
+                "postalCode": locksmith.postalCode,
+                "streetAddress": locksmith.address,
             });
 
             // Çalışma saatleri
