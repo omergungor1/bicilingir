@@ -3,7 +3,7 @@
 import NeighborhoodPageClient from '../../../../components/neighborhood/NeighborhoodPageClient';
 import { ServiceList } from '../../../../lib/service-list';
 import ServicePage from '../../../../components/location/ServicePage';
-import { getMetaData, getLocksmithsList } from '../../../utils/seo';
+import { getMetaData, getLocksmithsList, prepareStructuredData } from '../../../utils/seo';
 import { getSupabaseServer } from '../../../../lib/supabase';
 import Script from 'next/script';
 
@@ -534,7 +534,7 @@ export default async function NeighborhoodPage({ params }) {
             <>
                 {structuredData && (
                     <Script id="schema-data" type="application/ld+json" strategy="beforeInteractive">
-                        {JSON.stringify(structuredData)}
+                        {structuredData}
                     </Script>
                 )}
                 <ServicePage
@@ -556,7 +556,7 @@ export default async function NeighborhoodPage({ params }) {
         <>
             {structuredData && (
                 <Script id="schema-data" type="application/ld+json" strategy="beforeInteractive">
-                    {JSON.stringify(structuredData)}
+                    {structuredData}
                 </Script>
             )}
             <NeighborhoodPageClient

@@ -1,7 +1,7 @@
 // http://localhost:3000/sehirler/bursa
 
 import CityContent from '../../components/city/CityContent';
-import { getMetaData, getLocksmithsList } from '../utils/seo';
+import { getMetaData, getLocksmithsList, prepareStructuredData } from '../utils/seo';
 import Script from 'next/script';
 import { getSupabaseServer } from '../../lib/supabase';
 
@@ -175,7 +175,7 @@ export default async function CityPage({ params }) {
         <>
             {structuredData && (
                 <Script id="schema-data" type="application/ld+json" strategy="beforeInteractive">
-                    {JSON.stringify(structuredData)}
+                    {structuredData}
                 </Script>
             )}
             <CityContent
