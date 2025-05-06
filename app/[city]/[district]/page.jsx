@@ -3,7 +3,7 @@
 import DistrictContent from '../../../components/district/DistrictContent';
 import { ServiceList } from '../../../lib/service-list';
 import ServicePage from '../../../components/location/ServicePage';
-import { getMetaData, getLocksmithsList, prepareStructuredData } from '../../utils/seo';
+import { getMetaData, getLocksmithsList } from '../../utils/seo';
 import { getSupabaseServer } from '../../../lib/supabase';
 import Script from 'next/script';
 

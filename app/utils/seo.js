@@ -350,6 +350,7 @@ async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, servicetype
                 "openingHours": workingHoursArray.length > 0 ? workingHoursArray : undefined,
                 "serviceType": "Çilingir Hizmeti",
                 "aggregateRating": aggregateRating,
+                "url": locksmith.url,
                 "geo": geo,
                 "sameAs": sameAs.length > 0 ? sameAs : undefined,
                 "founder": locksmith.fullname,
@@ -522,12 +523,4 @@ export async function getServiceData(serviceSlug) {
         console.error('Hizmet verisi getirilirken hata:', error);
         return null;
     }
-}
-
-// structuredData'nın düzgün bir şekilde kullanılması için yardımcı fonksiyon
-export function prepareStructuredData(structuredData) {
-    if (!structuredData) return null;
-
-    // Eğer structuredData bir string değilse ve bir nesne ise JSON olarak kullanılabilir
-    return typeof structuredData === 'string' ? structuredData : structuredData;
 }

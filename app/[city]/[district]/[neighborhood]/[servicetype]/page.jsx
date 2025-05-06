@@ -1,7 +1,7 @@
 // http://localhost:3000/sehirler/bursa/osmangazi/kukurtlu/acil-cilingir
 
 import ServicePage from '../../../../../components/location/ServicePage';
-import { getMetaData, getLocksmithsList, prepareStructuredData } from '../../../../utils/seo';
+import { getMetaData, getLocksmithsList } from '../../../../utils/seo';
 import { getSupabaseServer } from '../../../../../lib/supabase';
 import Script from 'next/script';
 
