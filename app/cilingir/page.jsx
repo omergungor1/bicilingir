@@ -26,7 +26,8 @@ import {
 } from "../../components/ui/popover"
 import { useSelector, useDispatch } from "react-redux";
 import { getSupabaseClient } from "../../lib/supabase";
-import { formatPhoneNumber, ColorPicker, EmojiPicker, TiptapToolbar } from "../../lib/utils";
+import { formatPhoneNumber } from "../../lib/utils";
+// import { formatPhoneNumber, ColorPicker, EmojiPicker, TiptapToolbar } from "../../lib/utils";
 import { checkAuthState } from "../../redux/features/authSlice";
 import { AiAssistButton } from "../../components/ui/ai-assist-button";
 import { TiptapEditor } from "../../components/ui/tiptap-editor";
