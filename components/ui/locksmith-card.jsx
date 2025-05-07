@@ -11,8 +11,11 @@ import {
     PopoverTrigger,
 } from "../ui/popover"
 import { useRouter } from "next/navigation";
+import { useToast } from "../ToastContext";
+import { getUserId, getSessionId } from '../../lib/utils';
 
 export default function LocksmithCard({ locksmith, index }) {
+    const { showToast } = useToast();
     const [loadingLocksmithIds, setLoadingLocksmithIds] = useState({});
     const [searchValues, setSearchValues] = useState(null);
     // Mevcut mesai dilimini belirle
@@ -63,8 +66,8 @@ export default function LocksmithCard({ locksmith, index }) {
                             searchDistrictId: searchValues?.districtId || null,
                             searchServiceId: searchValues?.serviceId || null
                         }),
-                        userId: localStorage.getItem('userId'),
-                        sessionId: localStorage.getItem('sessionId'),
+                        userId: getUserId(),
+                        sessionId: getSessionId(),
                         userAgent: navigator.userAgent || ''
                     }),
                 });
@@ -157,8 +160,8 @@ export default function LocksmithCard({ locksmith, index }) {
                         searchDistrictId: searchValues?.districtId || null,
                         searchServiceId: searchValues?.serviceId || null
                     }),
-                    userId: localStorage.getItem('userId'),
-                    sessionId: localStorage.getItem('sessionId'),
+                    userId: getUserId(),
+                    sessionId: getSessionId(),
                     userAgent: navigator.userAgent || ''
                 }),
             });
@@ -200,8 +203,8 @@ export default function LocksmithCard({ locksmith, index }) {
                         searchDistrictId: searchValues?.districtId || null,
                         searchServiceId: searchValues?.serviceId || null
                     }),
-                    userId: localStorage.getItem('userId'),
-                    sessionId: localStorage.getItem('sessionId'),
+                    userId: getUserId(),
+                    sessionId: getSessionId(),
                     userAgent: navigator.userAgent || ''
                 }),
             });
@@ -220,10 +223,10 @@ export default function LocksmithCard({ locksmith, index }) {
         window.location.href = `tel:${phoneNumber}`;
     };
 
-    const handleWhatsappMessage = async (locksmith, index) => {
+    const handleWhatsappMessage = (locksmith, index) => {
+
         try {
-            // Aktivite loglaması
-            const response = await fetch('/api/public/user/activity', {
+            fetch('/api/public/user/activity', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -233,32 +236,66 @@ export default function LocksmithCard({ locksmith, index }) {
                     level: 1,
                     data: JSON.stringify({
                         locksmithId: locksmith.id,
-                        locksmithName: locksmith.name,
-                        locksmithWhatsapp: locksmith.whatsapp,
-                        searchProvinceId: searchValues?.provinceId || null,
-                        searchDistrictId: searchValues?.districtId || null,
-                        searchServiceId: searchValues?.serviceId || null
+                        details: `${locksmith.businessname || locksmith.fullname}`
                     }),
-                    userId: localStorage.getItem('userId'),
-                    sessionId: localStorage.getItem('sessionId'),
+                    userId: getUserId(),
+                    sessionId: getSessionId(),
                     userAgent: navigator.userAgent || ''
                 }),
-            });
-
-            if (!response.ok) {
-                console.error('WhatsApp aktivitesi log hatası:', await response.text());
-            } else {
-                console.log('Çilingir WhatsApp aktivitesi kaydedildi.');
-            }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        console.error('Aktivite log hatası:', response.statusText);
+                    } else {
+                        console.log('Çilingir whatsapp mesajı aktivitesi kaydedildi.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Aktivite log hatası:', error);
+                });
         } catch (error) {
             console.error('Aktivite log hatası:', error);
         }
 
-        // Whatsapp mesajı oluştur
-        const whatsappNumber = locksmith.whatsapp.replace(/\D/g, ''); // Sadece rakamları al
-        const message = `Merhaba, BiÇilingir.com üzerinden size ulaşıyorum. ${locksmith.serviceType || 'Çilingir'} hizmetiniz hakkında bilgi almak istiyorum.`;
-        const encodedMessage = encodeURIComponent(message);
-        window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
+        try {
+            // WhatsApp numarasını formatlama ve yönlendirme
+            if (locksmith.whatsapp) {
+                let formattedNumber = locksmith.whatsapp.replace(/\s+/g, '');
+                if (formattedNumber.startsWith('+')) {
+                    formattedNumber = formattedNumber.substring(1);
+                }
+
+                if (!formattedNumber.startsWith('90') && !formattedNumber.startsWith('0')) {
+                    formattedNumber = '90' + formattedNumber;
+                } else if (formattedNumber.startsWith('0')) {
+                    formattedNumber = '90' + formattedNumber.substring(1);
+                }
+
+                const defaultMessage = encodeURIComponent("Merhaba, Bi Çilingir uygulamasından ulaşıyorum. Çilingir hizmetine ihtiyacım var.");
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                const whatsappUrl = `https://wa.me/${formattedNumber}?text=${defaultMessage}`;
+                const iosWhatsappUrl = `whatsapp://send?phone=${formattedNumber}&text=${defaultMessage}`;
+
+                try {
+                    if (isMobile) {
+                        window.location = iosWhatsappUrl;
+                    } else {
+                        window.open(whatsappUrl, '_blank');
+                    }
+                } catch (e) {
+                    const linkElement = document.createElement('a');
+                    linkElement.setAttribute('href', whatsappUrl);
+                    linkElement.setAttribute('target', '_blank');
+                    linkElement.setAttribute('rel', 'noopener noreferrer');
+                    linkElement.click();
+                }
+            } else {
+                showToast("Bu çilingirin WhatsApp numarası bulunamadı", "error", 3000);
+            }
+        } catch (error) {
+            console.error('WhatsApp mesaj gönderme hatası:', error);
+            showToast("WhatsApp mesajı gönderilirken bir hata oluştu", "error", 3000);
+        }
     };
 
 

@@ -276,27 +276,18 @@ export async function POST(request) {
       createdat: new Date().toISOString()
     }
 
-    const buyAndStartNotification = {
-      locksmithid: locksmithId,
-      title: 'Anahtar Paketlerini Gözden Geçirin',
-      message: 'Anahtar paketlerini gözden geçirin ve başlamak için satın alın. Anahtar paketleri ile 10 kata kadar fazla görünürlük elde edebilirsin.',
-      type: 'success',
-      link: '/cilingir?tab=advertising',
-      createdat: new Date().toISOString()
-    }
-
-    const welcomeBonusNotification = {
-      locksmithid: locksmithId,
-      title: 'Hoş Geldiniz Bonusu',
-      message: 'Hesabınıza hediye 300 anahtar bonusu eklendi.',
-      type: 'success',
-      link: '/cilingir?tab=advertising',
-      createdat: new Date().toISOString()
-    }
+    // const buyAndStartNotification = {
+    //   locksmithid: locksmithId,
+    //   title: 'Anahtar Paketlerini Gözden Geçirin',
+    //   message: 'Anahtar paketlerini gözden geçirin ve başlamak için satın alın. Anahtar paketleri ile 10 kata kadar fazla görünürlük elde edebilirsin.',
+    //   type: 'success',
+    //   link: '/cilingir?tab=advertising',
+    //   createdat: new Date().toISOString()
+    // }
 
     const { data: welcomeNotificationData, error: welcomeNotificationError } = await supabase
       .from('notifications')
-      .insert([welcomeNotification, buyAndStartNotification, welcomeBonusNotification])
+      .insert([welcomeNotification])
       .select();
 
     if (welcomeNotificationError) {

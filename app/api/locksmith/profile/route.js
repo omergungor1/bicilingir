@@ -27,14 +27,14 @@ export async function GET(request) {
       .select('*')
       .eq('locksmithid', locksmithId)
       .single();
-    
+
     if (detailError && detailError.code !== 'PGRST116') { // PGRST116: Kayıt bulunamadı hatası
       console.error('Çilingir detayları getirilirken bir hata oluştu:', detailError);
       return NextResponse.json({ error: 'Çilingir detayları yüklenirken bir hata oluştu' }, { status: 500 });
     }
 
-    return NextResponse.json({ 
-      locksmith: {...locksmith, ...locksmithDetail} || null
+    return NextResponse.json({
+      locksmith: { ...locksmith, ...locksmithDetail } || null
     });
   } catch (error) {
     console.error('Çilingir profili getirilirken bir hata oluştu:', error);
@@ -56,8 +56,9 @@ export async function PUT(request) {
     ];
 
     const detailFields = [
-      'abouttext', 'taxnumber', 'fulladdress', 'websiteurl', 
-      'instagram_url', 'facebook_url', 'tiktok_url', 'youtube_url'
+      'abouttext', 'taxnumber', 'fulladdress', 'websiteurl',
+      'instagram_url', 'facebook_url', 'tiktok_url', 'youtube_url',
+      'lat', 'lng'
     ];
 
     // locksmiths tablosu için güncelleme verileri
@@ -86,7 +87,7 @@ export async function PUT(request) {
         .from('locksmiths')
         .update(locksmithUpdateData)
         .eq('id', locksmithId);
-      
+
       if (error) {
         console.error('Çilingir bilgileri güncellenirken hata:', error);
         locksmithUpdateError = error;
@@ -101,15 +102,15 @@ export async function PUT(request) {
         .select('locksmithid')
         .eq('locksmithid', locksmithId)
         .single();
-      
+
       let updateError = null;
-      
+
       if (checkError && checkError.code === 'PGRST116') {
         // Kayıt bulunamadı, insert yapalım
         const { error } = await supabase
           .from('locksmith_details')
           .insert({ locksmithid: locksmithId, ...detailUpdateData });
-        
+
         updateError = error;
       } else {
         // Kayıt bulundu, update yapalım
@@ -117,10 +118,10 @@ export async function PUT(request) {
           .from('locksmith_details')
           .update(detailUpdateData)
           .eq('locksmithid', locksmithId);
-        
+
         updateError = error;
       }
-      
+
       if (updateError) {
         console.error('Çilingir detayları güncellenirken hata:', updateError);
         detailUpdateError = updateError;
@@ -129,7 +130,7 @@ export async function PUT(request) {
 
     // Hatalar varsa bildir
     if (locksmithUpdateError || detailUpdateError) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Profil güncellenirken bir hata oluştu',
         locksmithError: locksmithUpdateError ? locksmithUpdateError.message : null,
         detailError: detailUpdateError ? detailUpdateError.message : null
@@ -137,7 +138,7 @@ export async function PUT(request) {
     }
 
     // Başarılı yanıt döndür
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       message: 'Profil başarıyla güncellendi'
     });

@@ -47,7 +47,7 @@ export default function Footer() {
               <li>Bursa, Türkiye</li>
             </ul>
             <div className="flex space-x-4 mt-4">
-              <a href="https://www.facebook.com/people/BiÇilingir/61575247862332" target="_blank" className="text-white hover:text-blue-600">
+              <a href="https://www.facebook.com/people/bicilingir/61575247862332" target="_blank" className="text-white hover:text-blue-600">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"></path></svg>
               </a>
               <a href="https://www.instagram.com/bi_cilingir" target="_blank" className="text-white hover:text-pink-600">

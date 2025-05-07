@@ -39,6 +39,28 @@ export default function RootLayout({ children }) {
           `}
         </Script>
 
+        {/* Kullanıcı ID ve Oturum Yönetimi */}
+        <Script id="user-tracking" strategy="beforeInteractive">
+          {`
+            // UUID oluşturma fonksiyonu
+            function generateUUID() {
+              return 'xxxx-xxxx-xxxx-xxxx'.replace(/[x]/g, function (c) {
+                const r = Math.random() * 16 | 0;
+                return r.toString(16);
+              });
+            }
+            
+            // Kullanıcı ID'si varsa al, yoksa oluştur
+            if (!localStorage.getItem('userId')) {
+              localStorage.setItem('userId', generateUUID());
+            }
+            
+            // Oturum ID'si - her sayfa yüklemesinde veya belirli aralıklarla yenilenir
+            const sessionId = localStorage.getItem('sessionId') || generateUUID();
+            localStorage.setItem('sessionId', sessionId);
+          `}
+        </Script>
+
         <Providers>
           <ToastProvider>
             <Header />

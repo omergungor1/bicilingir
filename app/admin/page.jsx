@@ -2329,11 +2329,11 @@ function AdminPanelContent() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm mb-1">Facebook</label>
-                            <Input defaultValue="https://facebook.com/bicilingir" />
+                            <Input defaultValue="https://www.facebook.com/people/bicilingir/61575247862332" />
                           </div>
                           <div>
                             <label className="block text-sm mb-1">Instagram</label>
-                            <Input defaultValue="https://instagram.com/bicilingir" />
+                            <Input defaultValue="https://instagram.com/bi_cilingir" />
                           </div>
                         </div>
                       </div>

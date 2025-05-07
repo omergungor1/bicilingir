@@ -343,7 +343,7 @@ export default function Iletisim() {
                 <div className="mt-8">
                   <h3 className="text-gray-700 font-medium mb-4">Bizi Takip Edin</h3>
                   <div className="flex space-x-4">
-                    <a href="https://www.facebook.com/people/BiÇilingir/61575247862332" target="_blank" className="bg-blue-100 p-3 rounded-full text-blue-600 hover:bg-blue-200 transition-colors">
+                    <a href="https://www.facebook.com/people/bicilingir/61575247862332" target="_blank" className="bg-blue-100 p-3 rounded-full text-blue-600 hover:bg-blue-200 transition-colors">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z" />
                       </svg>

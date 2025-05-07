@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -26,308 +26,13 @@ import {
 } from "../../components/ui/popover"
 import { useSelector, useDispatch } from "react-redux";
 import { getSupabaseClient } from "../../lib/supabase";
-import { Textarea } from "../../components/ui/textarea";
-import { formatPhoneNumber } from "../../lib/utils";
+import { formatPhoneNumber, ColorPicker, EmojiPicker, TiptapToolbar } from "../../lib/utils";
 import { checkAuthState } from "../../redux/features/authSlice";
 import { AiAssistButton } from "../../components/ui/ai-assist-button";
 import { TiptapEditor } from "../../components/ui/tiptap-editor";
+import SubscriptionPackages from "../../components/ui/subscription-packages";
+import { useJsApiLoader, GoogleMap, Marker, Autocomplete } from '@react-google-maps/api';
 
-
-// Renk seçimi için bir bileşen oluşturalım
-const ColorPicker = ({ title, colors, onColorSelect, buttonClass }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={buttonClass}
-        title={title}
-      >
-        {title}
-      </button>
-
-      {isOpen && (
-        <div className="absolute z-10 top-full left-0 mt-1 bg-white rounded shadow-lg p-2 border border-gray-200 flex flex-wrap gap-1 w-[200px]">
-          {colors.map((color) => (
-            <button
-              key={color}
-              type="button"
-              title={color}
-              onClick={() => {
-                onColorSelect(color);
-                setIsOpen(false);
-              }}
-              className="w-6 h-6 rounded-sm border border-gray-300"
-              style={{ backgroundColor: color }}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Emoji seçimi için bir bileşen
-const EmojiPicker = ({ onEmojiSelect }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const emojis = [
-    '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊',
-    '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗',
-    '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐',
-    '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟',
-    '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢',
-    '😭', '😤', '😠', '😡', '🤬', '😈', '👿', '💀', '☠️',
-    '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖', '🎃',
-    '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾',
-    '👍', '👎', '👏', '🙌', '👐', '🤲', '🤝', '🙏', '✌️',
-    '🌟', '⭐', '🔥', '💯', '❤️', '🧡', '💛', '💚', '💙', '💜'
-  ];
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="px-2 py-1 rounded text-sm bg-gray-100 text-gray-700"
-        title="Emoji Ekle"
-      >
-        Emoji 😊
-      </button>
-
-      {isOpen && (
-        <div className="absolute z-10 top-full left-0 mt-1 bg-white rounded shadow-lg p-2 border border-gray-200 flex flex-wrap gap-1 w-[240px] max-h-[200px] overflow-y-auto">
-          {emojis.map((emoji) => (
-            <button
-              key={emoji}
-              type="button"
-              onClick={() => {
-                onEmojiSelect(emoji);
-                setIsOpen(false);
-              }}
-              className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded"
-              title={emoji}
-            >
-              {emoji}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Basit bir toolbar bileşeni oluşturalım
-const TiptapToolbar = ({ editor }) => {
-  if (!editor) {
-    return null;
-  }
-
-  const [moreToolsOpen, setMoreToolsOpen] = useState(false);
-
-  const textColors = [
-    '#000000', '#434343', '#666666', '#999999', '#cccccc',
-    '#ff0000', '#ff4d00', '#ffff00', '#00ff00', '#00ffff',
-    '#0000ff', '#9900ff', '#ff00ff', '#663300', '#336600'
-  ];
-
-  const bgColors = [
-    '#ffffff', '#f5f5f5', '#ffe0e0', '#fff0e0', '#fffde0',
-    '#e0ffe0', '#e0ffff', '#e0e0ff', '#ffe0ff', '#ffd6d6',
-    '#ffebd6', '#fffbd6', '#d6ffd6', '#d6ffff', '#d6d6ff'
-  ];
-
-  // Resim yükleme işlevi
-  const addImage = () => {
-    const url = window.prompt('Resim URL\'i girin:');
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
-  };
-
-  return (
-    <div className="border-b border-gray-200 flex flex-wrap gap-1 bg-gray-50">
-      {/* Ana Araç Çubuğu */}
-      <div className="p-1 flex flex-wrap gap-1 w-full">
-        {/* Temel Biçimlendirme Araçları */}
-        <div className="flex gap-1 mr-2 flex-wrap">
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            className={`px-2 py-1 rounded text-sm ${editor.isActive('bold') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
-            title="Kalın"
-          >
-            B
-          </button>
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={`px-2 py-1 rounded text-sm ${editor.isActive('italic') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
-            title="İtalik"
-          >
-            I
-          </button>
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
-            className={`px-2 py-1 rounded text-sm ${editor.isActive('underline') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
-            title="Altı Çizili"
-          >
-            U
-          </button>
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().toggleStrike().run()}
-            className={`px-2 py-1 rounded text-sm ${editor.isActive('strike') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
-            title="Üstü Çizili"
-          >
-            S
-          </button>
-        </div>
-
-        {/* Hizalama Araçları */}
-        <div className="flex gap-1 mr-2 flex-wrap">
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().setTextAlign('left').run()}
-            className={`px-2 py-1 rounded text-sm ${editor.isActive({ textAlign: 'left' }) ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
-            title="Sola Hizala"
-          >
-            ⟮
-          </button>
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().setTextAlign('center').run()}
-            className={`px-2 py-1 rounded text-sm ${editor.isActive({ textAlign: 'center' }) ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
-            title="Ortala"
-          >
-            ≡
-          </button>
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().setTextAlign('right').run()}
-            className={`px-2 py-1 rounded text-sm ${editor.isActive({ textAlign: 'right' }) ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
-            title="Sağa Hizala"
-          >
-            ⟯
-          </button>
-        </div>
-
-        {/* Liste Araçları */}
-        <div className="flex gap-1 mr-2 flex-wrap">
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-            className={`px-2 py-1 rounded text-sm ${editor.isActive('bulletList') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
-            title="Madde İşaretli Liste"
-          >
-            • Liste
-          </button>
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-            className={`px-2 py-1 rounded text-sm ${editor.isActive('orderedList') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
-            title="Numaralı Liste"
-          >
-            1. Liste
-          </button>
-        </div>
-
-        {/* Ek Araçlar Butonu (Mobil uyumlu) */}
-        <div className="ml-auto">
-          <button
-            type="button"
-            onClick={() => setMoreToolsOpen(!moreToolsOpen)}
-            className="px-2 py-1 rounded text-sm bg-blue-50 text-blue-600 flex items-center"
-          >
-            {moreToolsOpen ? 'Araçları Gizle' : 'Daha Fazla Araç'}
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={moreToolsOpen ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"} />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Genişletilmiş Araçlar */}
-      {moreToolsOpen && (
-        <div className="w-full p-1 border-t border-gray-200 flex flex-wrap gap-2">
-          {/* Başlıklar */}
-          <div className="flex gap-1 mr-2 mb-1">
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-              className={`px-2 py-1 rounded text-sm ${editor.isActive('heading', { level: 2 }) ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
-              title="Büyük Başlık"
-            >
-              H2
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-              className={`px-2 py-1 rounded text-sm ${editor.isActive('heading', { level: 3 }) ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
-              title="Orta Başlık"
-            >
-              H3
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().setParagraph().run()}
-              className={`px-2 py-1 rounded text-sm ${editor.isActive('paragraph') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
-              title="Paragraf"
-            >
-              P
-            </button>
-            <button
-              type="button"
-              onClick={() => editor.chain().focus().toggleBlockquote().run()}
-              className={`px-2 py-1 rounded text-sm ${editor.isActive('blockquote') ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-700'}`}
-              title="Alıntı"
-            >
-              Alıntı
-            </button>
-          </div>
-
-          {/* Renk ve Görsel Araçları */}
-          <div className="flex gap-1 mr-2 mb-1 flex-wrap">
-            <ColorPicker
-              title="Metin Rengi"
-              colors={textColors}
-              onColorSelect={(color) => {
-                editor.chain().focus().setColor(color).run();
-              }}
-              buttonClass={`px-2 py-1 rounded text-sm bg-gray-100 text-gray-700`}
-            />
-
-            <ColorPicker
-              title="Arka Plan"
-              colors={bgColors}
-              onColorSelect={(color) => {
-                editor.chain().focus().setHighlight({ color }).run();
-              }}
-              buttonClass={`px-2 py-1 rounded text-sm bg-gray-100 text-gray-700`}
-            />
-
-            <button
-              type="button"
-              onClick={addImage}
-              className={`px-2 py-1 rounded text-sm bg-gray-100 text-gray-700`}
-              title="Resim Ekle"
-            >
-              Resim
-            </button>
-
-            <EmojiPicker
-              onEmojiSelect={(emoji) => {
-                editor.chain().focus().insertContent(emoji).run();
-              }}
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
 
 export default function CilingirPanel() {
   const router = useRouter();
@@ -392,7 +97,6 @@ function CilingirPanelContent() {
   const [districts, setDistricts] = useState([]);
   const [provinces, setProvinces] = useState([]);
   // Anahtar paketleri için state
-  const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [purchaseNote, setPurchaseNote] = useState("");
   const [isPurchasePending, setIsPurchasePending] = useState(false);
@@ -405,9 +109,6 @@ function CilingirPanelContent() {
 
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isWorkingHoursUpdating, setIsWorkingHoursUpdating] = useState(false);
-  const [isSavingDailyKeys, setIsSavingDailyKeys] = useState(false);
-  const [isKeyUsageNextPageLoading, setIsKeyUsageNextPageLoading] = useState(false);
-  const [isKeyUsagePreviousPageLoading, setIsKeyUsagePreviousPageLoading] = useState(false);
   const [isToggleStatusAccountLoading, setIsToggleStatusAccountLoading] = useState(false);
   const [isToggleStatusAccountModalOpen, setIsToggleStatusAccountModalOpen] = useState(false);
   const [isActivitiesLoading, setIsActivitiesLoading] = useState(false);
@@ -439,11 +140,6 @@ function CilingirPanelContent() {
 
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [keyBalance, setKeyBalance] = useState({
-    totalkeybalance: 0,
-    lastupdated: ""
-  });
-  const [estimatedendday, setEstimatedendday] = useState(null);
 
   const [locksmith, setLocksmith] = useState({
     abouttext: "",
@@ -473,7 +169,9 @@ function CilingirPanelContent() {
     taxnumber: "",
     totalreviewcount: 0,
     averageRating: 0,
-    websiteurl: ""
+    websiteurl: "",
+    lat: null,
+    lng: null
   });
 
   const [dailyHours, setDailyHours] = useState([]);
@@ -573,34 +271,6 @@ function CilingirPanelContent() {
     setIsLogoutLoading(false);
   };
 
-  const [dailyKeys, setDailyKeys] = useState([]);
-
-  const fetchDailyKeys = async () => {
-    try {
-      const response = await fetch('/api/locksmith/ads/usage-preferences', {
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        showToast("Günlük anahtar tercihleri alınırken bir hata oluştu", "error");
-        return;
-      }
-
-      const result = await response.json();
-
-      if (!result.success || !result.data) {
-        showToast("Günlük anahtar tercihleri alınırken bir hata oluştu", "error");
-        return;
-      }
-
-      // State'i güncelle
-      setDailyKeys(result.data);
-
-    } catch (error) {
-      console.error("Günlük anahtar tercihleri alınırken bir hata oluştu:", error);
-      showToast("Günlük anahtar tercihleri alınırken bir hata oluştu", "error");
-    }
-  };
 
   const handleToggleStatusAccount = async () => {
     setIsToggleStatusAccountLoading(true);
@@ -624,110 +294,7 @@ function CilingirPanelContent() {
     setIsToggleStatusAccountLoading(false);
   };
 
-
-  useEffect(() => {
-    estimateEndDate();
-  }, [keyBalance, dailyKeys]);
-
-
-  const estimateEndDate = () => {
-
-    if (keyBalance.totalkeybalance == 0 || dailyKeys.length == 0) {
-      setEstimatedendday(null);
-      return;
-    }
-
-    //eğer tüm günler isactive=false ise null döndür
-    if (dailyKeys.every(item => !item.isactive)) {
-      setEstimatedendday(null);
-      return;
-    }
-
-    const today = new Date(); // Bugünün tarihi
-    const todayDayOfWeek = today.getDay(); // 0: Pazar, 1: Pazartesi, ..., 6: Cumartesi
-
-    const sortedSchedule = [...dailyKeys].sort((a, b) => a.dayofweek - b.dayofweek);
-
-    let remainingKeys = keyBalance.totalkeybalance;
-    let daysPassed = 0;
-    let currentDayIndex = todayDayOfWeek;
-
-    // Kaç gün yeterli olduğunu hesapla
-    while (remainingKeys > 0) {
-      const currentDay = sortedSchedule.find(d => d.dayofweek === currentDayIndex);
-      const dailyUsage = currentDay && currentDay.isactive ? currentDay.keyamount : 0;
-      remainingKeys -= dailyUsage;
-      daysPassed++;
-
-      // Haftayı döngüye al
-      currentDayIndex = (currentDayIndex + 1) % 7;
-    }
-
-    // Bugünden itibaren gün sayısını ekleyerek biter tarihi hesapla
-    const endDate = new Date(today);
-    endDate.setDate(today.getDate() + daysPassed);
-
-    setEstimatedendday(endDate.toLocaleDateString()); // Formatlı olarak döndür
-  };
-
-
-  const [keyUsageHistory, setKeyUsageHistory] = useState([]);
-  const [currentPageKeyUsageHistory, setCurrentPageKeyUsageHistory] = useState(1); // Sayfa numarası
-  const [totalKeyUsageHistory, setTotalKeyUsageHistory] = useState(0); // Toplam kayıt sayısı
-  const [totalPagesKeyUsageHistory, setTotalPagesKeyUsageHistory] = useState(0); // Toplam sayfa sayısı
-
-  const fetchKeyUsageHistory = async (page = 1) => {
-    if (currentPageKeyUsageHistory > page) {
-      setIsKeyUsagePreviousPageLoading(true);
-    } else {
-      setIsKeyUsageNextPageLoading(true);
-    }
-
-    const response = await fetch(`/api/locksmith/ads/usage?page=${page}`, {
-      credentials: 'include'
-    });
-
-    const data = await response.json();
-    setKeyUsageHistory(data.data);
-    setTotalKeyUsageHistory(data.total);
-    setTotalPagesKeyUsageHistory(data.totalPages);
-    setCurrentPageKeyUsageHistory(data.currentPage);
-
-    setIsKeyUsagePreviousPageLoading(false);
-    setIsKeyUsageNextPageLoading(false);
-  };
-
-  const handleChangePageKeyUsageHistory = (page) => {
-    setCurrentPageKeyUsageHistory(page);
-    fetchKeyUsageHistory(page);
-  };
-
-
-  const fetchKeyBalance = async () => {
-    try {
-      const response = await fetch('/api/locksmith/ads/balance', {
-        method: 'GET',
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        console.error("Key balance alınamadı:", response.statusText);
-        setKeyBalance({ totalkeybalance: 0, lastupdated: new Date().toISOString() });
-        return;
-      }
-
-      const data = await response.json();
-      setKeyBalance(data.data || { totalkeybalance: 0, lastupdated: new Date().toISOString() });
-    } catch (error) {
-      console.error("Key balance alınamadı:", error);
-      setKeyBalance({ totalkeybalance: 0, lastupdated: new Date().toISOString() });
-    }
-  };
-
-
   const [serviceList, setServiceList] = useState([]);
-
-
 
   const fetchServices = async () => {
     try {
@@ -840,20 +407,17 @@ function CilingirPanelContent() {
 
   useEffect(() => {
     Promise.all([
-      fetchKeyBalance(),
       fetchLocksmith(),
       fetchDailyHours(),
       fetchActivities(),
       fetchReviews(),
       fetchNotifications(),
-      fetchKeyPackages(),
       fetchServices(),
       fetchProvinces(),
       fetchDistricts(),
       fetchBusinessImages(),
-      fetchDailyKeys(),
-      fetchKeyUsageHistory(),
       fetchServiceDistricts(),
+      fetchCertificates(), // Sertifikaları getir
     ]);
   }, []);
 
@@ -864,16 +428,13 @@ function CilingirPanelContent() {
   const [deleteImageId, setDeleteImageId] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const [keyPackages, setKeyPackages] = useState([]);
 
 
-  const [certificates, setCertificates] = useState([
-    { name: "TSE Belgesi", url: "https://www.tse.gov.tr/images/belge/tse-belgesi.pdf" },
-    { name: "Mesleki Yeterlilik Belgesi", url: "https://www.tse.gov.tr/images/belge/mesleki-yeterlilik-belgesi.pdf" },
-    { name: "Ustalık Belgesi", url: "https://www.tse.gov.tr/images/belge/ustalik-belgesi.pdf" },
-  ]);
-
-
+  const [certificates, setCertificates] = useState([]);
+  const [certificateToDelete, setCertificateToDelete] = useState(null);
+  const [isDeleteCertificateModalOpen, setIsDeleteCertificateModalOpen] = useState(false);
+  const [isUploadingCertificate, setIsUploadingCertificate] = useState(false);
+  const [isDeletingCertificate, setIsDeletingCertificate] = useState(false);
   const [newCertificate, setNewCertificate] = useState({ name: '', file: null, fileSize: 0, fileType: '' });
 
   useEffect(() => {
@@ -891,13 +452,6 @@ function CilingirPanelContent() {
     const params = new URLSearchParams(searchParams);
     params.set('tab', tab);
     router.push(`?${params.toString()}`);
-  };
-
-  const handleDailyKeyChange = (index, keyAmount, ischecked) => {
-    // Direkt olarak state güncellemesi yap, herhangi bir kontrol olmadan
-    setDailyKeys(prev => prev.map((item, i) =>
-      i === index ? { ...item, keyamount: parseInt(keyAmount) || 0, isactive: ischecked } : item
-    ));
   };
 
   const handleServiceActiveChange = async (serviceId, isActive) => {
@@ -1108,86 +662,124 @@ function CilingirPanelContent() {
     handleImageUpload({ target: { files } });
   };
 
-  const handlePackagePurchase = (id) => {
-    // Seçilen paketi bul
-    const selectedPkg = keyPackages.find(pkg => pkg.id === id);
-    if (selectedPkg) {
-      setSelectedPackage(selectedPkg);
-      setIsPackageModalOpen(true);
-    } else {
-      showToast("Paket bulunamadı", "error");
+
+
+
+  const handleAddCertificate = async () => {
+    if (!newCertificate.name || !newCertificate.file) {
+      showToast('Lütfen sertifika adı ve dosyasını seçin', 'warning');
+      return;
     }
-  };
 
+    setIsUploadingCertificate(true);
 
-  const handleAddCertificate = () => {
-    if (!newCertificate.name || !newCertificate.file) return;
+    try {
+      // Dosya boyutunu kontrol et (5MB)
+      if (newCertificate.file.size > 5 * 1024 * 1024) {
+        showToast('Dosya boyutu 5MB\'dan büyük olamaz', 'error');
+        setIsUploadingCertificate(false);
+        return;
+      }
 
-    if (certificates.length < 5) {
-      setCertificates([...certificates, newCertificate]);
+      // Dosya türünü kontrol et
+      if (!newCertificate.file.type.startsWith('image/') && !newCertificate.file.type.startsWith('application/pdf')) {
+        showToast('Yalnızca resim veya PDF formatında sertifika yükleyebilirsiniz', 'error');
+        setIsUploadingCertificate(false);
+        return;
+      }
+
+      // Sertifika sayısı kontrolü
+      if (certificates.length >= 5) {
+        showToast('En fazla 5 sertifika yükleyebilirsiniz', 'error');
+        setIsUploadingCertificate(false);
+        return;
+      }
+
+      // FormData hazırla
+      const formData = new FormData();
+      formData.append('file', newCertificate.file);
+      formData.append('name', newCertificate.name);
+
+      // API'ye istek gönder
+      const response = await fetch('/api/locksmith/certificates', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Sertifika yüklenirken bir hata oluştu');
+      }
+
+      const data = await response.json();
+
       // Formu temizle
       setNewCertificate({ name: '', file: null, fileSize: 0, fileType: '' });
-      showToast('Sertifika başarıyla eklendi.', "success");
-    } else {
-      showToast('En fazla 5 sertifika ekleyebilirsiniz.', "error");
+      setIsCertificateDialogOpen(false);
+
+      // Sertifikaları yeniden yükle
+      fetchCertificates();
+
+      showToast('Sertifika başarıyla yüklendi', 'success');
+    } catch (error) {
+      console.error('Sertifika yükleme hatası:', error);
+      showToast(error.message || 'Sertifika yüklenirken bir hata oluştu', 'error');
+    } finally {
+      setIsUploadingCertificate(false);
     }
-    setIsCertificateDialogOpen(false);
   };
 
-  const handleRemoveCertificate = (index) => {
-    const updatedCertificates = [...certificates];
-    updatedCertificates.splice(index, 1);
-    setCertificates(updatedCertificates);
-    showToast("Sertifika başarıyla kaldırıldı.", "success");
+  // Sertifika silme modalını açma
+  const handleRemoveCertificate = (certificate) => {
+    setCertificateToDelete(certificate);
+    setIsDeleteCertificateModalOpen(true);
+  };
+
+  // Sertifika silme onaylama
+  const confirmDeleteCertificate = async () => {
+    if (!certificateToDelete) return;
+
+    setIsDeletingCertificate(true);
+
+    try {
+      const response = await fetch(`/api/locksmith/certificates?id=${certificateToDelete.id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Sertifika silinirken bir hata oluştu');
+      }
+
+      // Sertifikaları yeniden yükle
+      fetchCertificates();
+
+      // Modal'ı kapat
+      setIsDeleteCertificateModalOpen(false);
+      setCertificateToDelete(null);
+
+      showToast('Sertifika başarıyla silindi', 'success');
+    } catch (error) {
+      console.error('Sertifika silme hatası:', error);
+      showToast(error.message || 'Sertifika silinirken bir hata oluştu', 'error');
+    } finally {
+      setIsDeletingCertificate(false);
+    }
+  };
+
+  const cancelDeleteCertificate = () => {
+    setIsDeleteCertificateModalOpen(false);
+    setCertificateToDelete(null);
   };
 
   // Sertifika görüntüleme
   const handleViewCertificate = (cert) => {
-    if (cert.file) {
-      if (cert.file instanceof File) {
-        // Dosya henüz yüklendi ve bir File objesi
-        showToast(`${cert.name} sertifikası başarıyla yüklendi, kaydedildikten sonra görüntülenebilecek.`, "success");
-      } else {
-        // Dosya zaten sunucuda ve bir URL
-        window.open(cert.file, '_blank');
-      }
+    if (cert.fileurl) {
+      window.open(cert.fileurl, '_blank');
     }
   };
-
-  // Satın alma işlemini gerçekleştir
-  const handlePurchaseSubmit = async () => {
-    try {
-      setIsPurchasePending(true);
-
-      // API isteği simülasyonu - gerçek uygulamada burası API çağrısı olacak
-      const response = await fetch('/api/locksmith/ads/buy-package', {
-        method: 'POST',
-        body: JSON.stringify({
-          packageId: selectedPackage.id,
-          purchaseNote: purchaseNote,
-        }),
-        credentials: 'include',
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Anahtar paketi satın alma hatası');
-      }
-
-      // İstek başarılı oldu
-      showToast("Anahtar paketi satın alma isteğiniz yöneticiye iletildi", "success");
-      setIsPackageModalOpen(false);
-      setPurchaseNote("");
-      setSelectedPackage(null);
-      setIsPurchasePending(false);
-    } catch (error) {
-      console.error("Satın alma hatası:", error);
-      showToast("Satın alma işlemi sırasında bir hata oluştu", "error");
-      setIsPurchasePending(false);
-    }
-  };
-
 
   // Çalışma saatleri güncelleme fonksiyonu
   const handleWorkingHoursUpdate = async () => {
@@ -1497,11 +1089,6 @@ function CilingirPanelContent() {
     }
   };
 
-  const fetchKeyPackages = async () => {
-    const response = await fetch('/api/locksmith/ads/packages');
-    const data = await response.json();
-    setKeyPackages(data.packages);
-  };
 
 
   const handleImageUpload = async (e) => {
@@ -1604,21 +1191,6 @@ function CilingirPanelContent() {
     }
   }, [locksmith?.provinceid]);
 
-  // Yeni state ekleyelim: seçilen paket için
-  const [selectedKeyPackage, setSelectedKeyPackage] = useState(null);
-
-  useEffect(() => {
-    if (keyPackages.length > 0) {
-      // Varsayılan olarak "isRecommended" olanı seç
-      const recommendedPackage = keyPackages.find(pkg => pkg.isRecommended);
-      setSelectedKeyPackage(recommendedPackage || keyPackages[0]);
-    }
-  }, [keyPackages]);
-
-  // Anahtar paketi seçme fonksiyonu
-  const handleSelectPackage = (pkg) => {
-    setSelectedKeyPackage(pkg);
-  };
 
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
@@ -1678,41 +1250,161 @@ function CilingirPanelContent() {
     }
   };
 
-  // Günlük anahtar tercihlerini kaydetme fonksiyonu
-  const handleSaveDailyKeys = async () => {
-    try {
-      setIsSavingDailyKeys(true);
-
-      const response = await fetch('/api/locksmith/ads/usage-preferences', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          dailyKeys: dailyKeys
-        }),
-        credentials: 'include'
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        showToast("Günlük anahtar tercihleri başarıyla kaydedildi", "success");
-      } else {
-        showToast(result.error || "Günlük anahtar tercihleri kaydedilirken bir hata oluştu", "error");
-      }
-    } catch (error) {
-      console.error("Günlük anahtar tercihleri kaydedilirken bir hata oluştu:", error);
-      showToast("Günlük anahtar tercihleri kaydedilirken bir hata oluştu", "error");
-    } finally {
-      setIsSavingDailyKeys(false);
-    }
-  };
-
   const sendMailTest = () => {
     console.log("Mail testi gönderiliyor");
   };
 
+  // Mevcut sertifikaları yükleme
+  const fetchCertificates = async () => {
+    try {
+      const response = await fetch('/api/locksmith/certificates', {
+        method: 'GET',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Sertifikalar yüklenirken bir hata oluştu');
+      }
+
+      const data = await response.json();
+      setCertificates(data.certificates || []);
+    } catch (error) {
+      console.error('Sertifikalar yüklenirken bir hata oluştu:', error);
+      showToast('Sertifikalar yüklenirken bir hata oluştu', 'error');
+    }
+  };
+
+  // Debounce için kullanılacak ref
+  const debounceTimeout = useRef(null);
+
+  // useMemo ile newCertificate değerini optimize edelim
+  const memoizedHandleCertificateChange = useMemo(() => {
+    return {
+      nameChange: (value) => {
+        setNewCertificate(prev => ({ ...prev, name: value }));
+
+        // Debounce işlemi
+        if (debounceTimeout.current) {
+          clearTimeout(debounceTimeout.current);
+        }
+
+        debounceTimeout.current = setTimeout(() => {
+          // İsim girişinden sonraki ağır işlemler burada yapılabilir
+        }, 100);
+      },
+
+      fileChange: (file) => {
+        if (file) {
+          setNewCertificate(prev => ({
+            ...prev,
+            file: file,
+            fileSize: file.size,
+            fileType: file.type
+          }));
+        }
+      }
+    };
+  }, []); // Boş dependency array ile sadece bir kere oluşturulacak
+
+  // Google Maps API yükleme durumu
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'GOOGLE_MAPS_API_KEY',
+    libraries: ['places'],
+  });
+
+  // Google Maps için state
+  const [map, setMap] = useState(null);
+  const [mapCenter, setMapCenter] = useState({ lat: 40.9912, lng: 29.0211 }); // Default İstanbul koordinatları
+  const mapRef = useRef(null);
+  const autocompleteRef = useRef(null);
+  const [isMapLoading, setIsMapLoading] = useState(false);
+
+  // Harita yüklendiğinde çağrılır
+  const onMapLoad = (map) => {
+    mapRef.current = map;
+    setMap(map);
+
+    // Eğer locksmith'in latitude ve longitude değerleri varsa, haritayı o konuma merkezle
+    if (locksmith.lat && locksmith.lng) {
+      setMapCenter({ lat: parseFloat(locksmith.lat), lng: parseFloat(locksmith.lng) });
+    }
+  };
+
+  // Marker sürüklendiğinde konum güncelleme
+  const onMarkerDragEnd = (e) => {
+    const lat = e.latLng.lat();
+    const lng = e.latLng.lng();
+    setMapCenter({ lat, lng });
+    updateAddressFromLatLng(lat, lng);
+    handleLocksmithDataChange('lat', lat);
+    handleLocksmithDataChange('lng', lng);
+  };
+
+  // Haritada herhangi bir yere tıklandığında
+  const onMapClick = (e) => {
+    const lat = e.latLng.lat();
+    const lng = e.latLng.lng();
+    setMapCenter({ lat, lng });
+    updateAddressFromLatLng(lat, lng);
+    handleLocksmithDataChange('lat', lat);
+    handleLocksmithDataChange('lng', lng);
+  };
+
+  // Autocomplete yer seçildiğinde
+  const onPlaceChanged = () => {
+    if (autocompleteRef.current) {
+      const place = autocompleteRef.current.getPlace();
+
+      if (place && place.geometry && place.geometry.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+
+        setMapCenter({ lat, lng });
+        handleLocksmithDataChange('lat', lat);
+        handleLocksmithDataChange('lng', lng);
+
+        if (place.formatted_address) {
+          handleLocksmithDataChange('fulladdress', place.formatted_address);
+        }
+
+        // Haritayı yeni konuma merkezle
+        if (mapRef.current) {
+          mapRef.current.panTo({ lat, lng });
+          mapRef.current.setZoom(16);
+        }
+      }
+    }
+  };
+
+  // Koordinatlar kullanarak adres bilgisini güncelleme
+  const updateAddressFromLatLng = async (lat, lng) => {
+    if (!isLoaded) return;
+
+    try {
+      setIsMapLoading(true);
+      const geocoder = new window.google.maps.Geocoder();
+
+      geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+        if (status === "OK" && results[0]) {
+          handleLocksmithDataChange('fulladdress', results[0].formatted_address);
+        }
+        setIsMapLoading(false);
+      });
+    } catch (error) {
+      console.error("Adres alınırken hata oluştu:", error);
+      setIsMapLoading(false);
+    }
+  };
+
+  // Locksmith verisi yüklendiğinde harita konumunu güncelle
+  useEffect(() => {
+    if (isLoaded && locksmith && locksmith.lat && locksmith.lng) {
+      setMapCenter({
+        lat: parseFloat(locksmith.lat),
+        lng: parseFloat(locksmith.lng)
+      });
+    }
+  }, [isLoaded, locksmith?.lat, locksmith?.lng]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -1720,9 +1412,9 @@ function CilingirPanelContent() {
       <header className="bg-white border-b border-gray-200 py-4 px-4 md:px-6 sticky top-0 z-20 shadow-sm">
         <div className="container mx-auto">
           <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <span className="font-bold text-lg text-blue-600">bi-<span className="text-gray-800">çilingir</span></span>
-              <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded">Panel</span>
+            <div className="flex items-center space-x-1">
+              <Image src="/logo.png" alt="bi-çilingir" width={32} height={32} />
+              <span className="font-bold text-lg text-gray-800">BiÇilingir</span>
             </div>
             <div className="flex items-center space-x-4">
               <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
@@ -1856,10 +1548,6 @@ function CilingirPanelContent() {
               </button>
 
               <div className="hidden md:flex items-center space-x-4">
-                <div className="flex items-center space-x-1">
-                  <span className="text-sm text-gray-500">Anahtar Bakiye:</span>
-                  <span className="text-sm font-medium">{keyBalance && keyBalance.totalkeybalance}</span>
-                </div>
                 <div className="h-5 w-px bg-gray-300"></div>
                 <div className="flex items-center space-x-1">
                   <span className="text-sm text-gray-500">Durum:</span>
@@ -1921,6 +1609,14 @@ function CilingirPanelContent() {
                   </button>
 
                   <button
+                    onClick={() => handleTabChange("subscriptions")}
+                    className={`flex items-center space-x-3 p-3 rounded-lg text-left cursor-pointer transition-colors ${activeTab === "subscriptions" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
+                  >
+                    <ShoppingCart className="h-5 w-5" />
+                    <span>Abonelik</span>
+                  </button>
+
+                  <button
                     onClick={() => handleTabChange("profile")}
                     className={`flex items-center space-x-3 p-3 rounded-lg text-left cursor-pointer transition-colors ${activeTab === "profile" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                   >
@@ -1956,16 +1652,6 @@ function CilingirPanelContent() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                     </svg>
                     <span>Değerlendirmeler</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleTabChange("advertising")}
-                    className={`flex items-center space-x-3 p-3 rounded-lg text-left cursor-pointer transition-colors ${activeTab === "advertising" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                    </svg>
-                    <span>Reklam Yönetimi</span>
                   </button>
 
                   <button
@@ -2007,6 +1693,7 @@ function CilingirPanelContent() {
                   <CardDescription>Hesap genel bakış</CardDescription>
                 </CardHeader>
                 <CardContent>
+
                   {/* Bildirimler kısmını kaldırıyoruz */}
                   <div className="mb-8">
                     <h4 className="font-medium mb-4 flex items-center">
@@ -2339,6 +2026,25 @@ function CilingirPanelContent() {
               </Card>
             )}
 
+            {activeTab === "subscriptions" && (
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Abonelik</CardTitle>
+                      <CardDescription>BiÇilingir platformunda öne çıkmak için paket seçin</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {/* Paket Abonelikleri */}
+                  <div className="overflow-hidden">
+                    <SubscriptionPackages />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {activeTab === "profile" && (
               <Card>
                 <CardHeader>
@@ -2456,11 +2162,68 @@ function CilingirPanelContent() {
 
                       {/* Tam Adres */}
                       <div className="md:col-span-2">
-                        <label className="block text-sm mb-1">Tam Adres</label>
+                        <label className="block text-sm mb-1">Konum ve Adres</label>
+                        {isLoaded ? (
+                          <div className="w-full mb-2">
+                            <Autocomplete
+                              onLoad={(autocomplete) => { autocompleteRef.current = autocomplete; }}
+                              onPlaceChanged={onPlaceChanged}
+                            >
+                              <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                <input
+                                  type="text"
+                                  className="w-full pl-10 p-2 border rounded-md mb-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                  placeholder="Adres ara..."
+                                  defaultValue=""
+                                />
+                              </div>
+                            </Autocomplete>
+
+                            <div className="h-[300px] w-full rounded-md overflow-hidden border">
+                              <GoogleMap
+                                mapContainerStyle={{ width: '100%', height: '100%' }}
+                                center={mapCenter}
+                                zoom={15}
+                                onLoad={onMapLoad}
+                                onClick={onMapClick}
+                              >
+                                <Marker
+                                  position={mapCenter}
+                                  draggable={true}
+                                  onDragEnd={onMarkerDragEnd}
+                                />
+                              </GoogleMap>
+                            </div>
+
+                            <div className="mt-2 text-sm text-gray-500 flex items-center space-x-2">
+                              {isMapLoading ? (
+                                <div className="flex items-center">
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
+                                  <span>Adres yükleniyor...</span>
+                                </div>
+                              ) : (
+                                <>
+                                  <MapPin className="h-4 w-4 text-blue-500" />
+                                  <span>Adres aramak için yukarıdaki kutuyu kullanın veya haritada bir konuma tıklayın</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center h-[300px] bg-gray-100 rounded-md">
+                            <div className="text-center">
+                              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                              <p className="text-gray-500">Google Haritalar yükleniyor...</p>
+                            </div>
+                          </div>
+                        )}
+                        <label className="block text-sm mb-1">Açık Adres</label>
                         <textarea
                           className="w-full min-h-[100px] p-2 border rounded-md"
                           value={locksmith?.fulladdress || ""}
                           onChange={(e) => handleLocksmithDataChange('fulladdress', e.target.value)}
+                          placeholder="Adres haritada görüntülenmiyorsa manuel olarak yazabilirsiniz"
                         ></textarea>
                       </div>
 
@@ -2594,55 +2357,127 @@ function CilingirPanelContent() {
                     <div className="mt-6">
                       <h4 className="font-medium mb-4">Sertifikalar</h4>
                       <div className="space-y-4">
-                        {/* Sertifika Yükleme Alanı */}
-
-                        <Dialog
-                          open={isCertificateDialogOpen}
-                          onOpenChange={setIsCertificateDialogOpen}
+                        {/* Sertifika Yükleme Butonu */}
+                        <Button
+                          onClick={() => setIsCertificateDialogOpen(true)}
+                          disabled={certificates.length >= 5}
                         >
-                          <DialogTrigger asChild>
-                            <Button>Sertifika Yükle</Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Sertifika Yükle</DialogTitle>
-                              <DialogDescription>Yeni bir sertifika yüklemek için lütfen dosyayı seçin ve sertifika adını girin.</DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4 py-4">
-                              <Input type="file" onChange={(e) => {
-                                setNewCertificate({ ...newCertificate, file: e.target.files[0] });
-                              }} />
-                              <Input type="text" placeholder="Sertifika Adı" onChange={(e) => setNewCertificate({ ...newCertificate, name: e.target.value })} />
-                            </div>
-                            <DialogFooter>
-                              <Button onClick={handleAddCertificate}>Yükle</Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                          Sertifika Yükle {certificates.length >= 5 && "(Limit Dolu)"}
+                        </Button>
 
+                        {/* Sertifika Yükleme Dialogu */}
+                        {isCertificateDialogOpen && (
+                          <Dialog
+                            open={isCertificateDialogOpen}
+                            onOpenChange={setIsCertificateDialogOpen}
+                          >
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Sertifika Yükle</DialogTitle>
+                                <DialogDescription>Yeni bir sertifika yüklemek için lütfen dosyayı seçin ve sertifika adını girin.</DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4 py-4">
+                                <Input type="file" accept="image/*,application/pdf" onChange={(e) => {
+                                  if (e.target.files && e.target.files.length > 0) {
+                                    const file = e.target.files[0];
+                                    memoizedHandleCertificateChange.fileChange(file);
+                                  }
+                                }} />
+                                <Input
+                                  type="text"
+                                  placeholder="Sertifika Adı"
+                                  value={newCertificate.name}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    memoizedHandleCertificateChange.nameChange(value);
+                                  }}
+                                />
+                                {newCertificate.file && (
+                                  <div className="text-sm text-gray-500">
+                                    Dosya: {newCertificate.file.name} ({(newCertificate.file.size / 1024 / 1024).toFixed(2)} MB)
+                                  </div>
+                                )}
+                              </div>
+                              <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsCertificateDialogOpen(false)}>İptal</Button>
+                                <Button onClick={handleAddCertificate} disabled={isUploadingCertificate}>
+                                  {isUploadingCertificate ? (
+                                    <>
+                                      <span className="animate-spin mr-2">&#9696;</span>
+                                      Yükleniyor...
+                                    </>
+                                  ) : 'Yükle'}
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        )}
+
+                        {/* Sertifika Silme Modalı */}
+                        {isDeleteCertificateModalOpen && (
+                          <Dialog
+                            open={isDeleteCertificateModalOpen}
+                            onOpenChange={setIsDeleteCertificateModalOpen}
+                          >
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Sertifikayı Sil</DialogTitle>
+                                <DialogDescription>
+                                  "{certificateToDelete?.name}" sertifikasını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <DialogFooter>
+                                <Button variant="outline" onClick={cancelDeleteCertificate}>İptal</Button>
+                                <Button variant="destructive" onClick={confirmDeleteCertificate} disabled={isDeletingCertificate}>
+                                  {isDeletingCertificate ? (
+                                    <>
+                                      <span className="animate-spin mr-2">&#9696;</span>
+                                      Siliniyor...
+                                    </>
+                                  ) : 'Sil'}
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        )}
 
                         {/* Mevcut Sertifikalar */}
                         {certificates.length > 0 ? (
                           <div className="mt-4">
                             <h5 className="font-medium mb-3">Mevcut Sertifikalar ({certificates.length}/5)</h5>
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                              {certificates.map((cert, index) => (
-                                <div key={index} className="relative group">
+                              {certificates.map((cert) => (
+                                <div key={cert.id} className="relative group">
                                   <div className="aspect-square overflow-hidden rounded-lg hover:border hover:transition-all hover:duration-100 hover:border-blue-500">
-                                    {/* name and Url */}
+                                    {/* Dosya tipine göre ikon göster */}
                                     <div
                                       onClick={() => handleViewCertificate(cert)}
                                       className="w-full h-full flex items-center justify-center bg-gray-100 border-2 cursor-pointer"
                                     >
                                       <div className="text-center">
-                                        <ExternalLinkIcon className="h-10 w-10 text-gray-400" />
+                                        {cert.fileurl?.includes('.pdf') ? (
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                            <polyline points="14 2 14 8 20 8" />
+                                            <line x1="16" y1="13" x2="8" y2="13" />
+                                            <line x1="16" y1="17" x2="8" y2="17" />
+                                            <polyline points="10 9 9 9 8 9" />
+                                          </svg>
+                                        ) : (
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                            <circle cx="8.5" cy="8.5" r="1.5" />
+                                            <polyline points="21 15 16 10 5 21" />
+                                          </svg>
+                                        )}
                                       </div>
                                     </div>
                                   </div>
-                                  <h3 className="text-sm text-center font-medium">{cert.name}</h3>
+                                  <h3 className="text-sm text-center font-medium mt-2 truncate">{cert.name}</h3>
                                   <button
-                                    onClick={() => handleRemoveCertificate(index)}
+                                    onClick={() => handleRemoveCertificate(cert)}
                                     className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-md border border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    title="Sertifikayı Sil"
                                   >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2654,9 +2489,9 @@ function CilingirPanelContent() {
                           </div>
                         ) : (
                           <div className="mt-4">
-                            <div className="flex items-center justify-center gap-2">
+                            <div className="flex items-center justify-center gap-2 p-8 bg-gray-50 rounded-lg border border-gray-200">
                               <Info className="h-5 w-5 text-gray-400" />
-                              <p className="text-sm text-gray-500">Henüz sertifika yüklemediniz.</p>
+                              <p className="text-sm text-gray-500">Henüz sertifika yüklemediniz. İşletmenizin güvenilirliğini artırmak için sertifikalarınızı ekleyin.</p>
                             </div>
                           </div>
                         )}
@@ -3154,350 +2989,6 @@ function CilingirPanelContent() {
               </Card>
             )}
 
-            {activeTab === "advertising" && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Reklam Yönetimi</CardTitle>
-                  <CardDescription>Anahtar paketleri ve reklam ayarlarınızı yönetin</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {/* Mevcut Anahtar Bakiyesi */}
-                  <div className="mb-8">
-                    <div className="bg-blue-50 p-6 rounded-lg">
-                      <h3 className="text-xl font-bold text-gray-800 mb-2">Anahtar Bakiyeniz</h3>
-                      <div className="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                        </svg>
-                        <span className="text-3xl font-bold text-blue-600"> {keyBalance.totalkeybalance} Anahtar</span>
-                      </div>
-                      <div className="flex items-center ml-2 mt-2 text-gray-600">
-                        <Info className="w-4 h-4 mr-2" />
-                        <p className="text-sm">Son güncelleme: {new Date(keyBalance.lastupdated).toLocaleDateString('tr-TR')} {estimatedendday && '- Tahmini anahtar bitiş tarihi: ' + estimatedendday}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Anahtar Paketleri */}
-                  <div className="mb-8">
-                    <h3 className="text-xl font-bold text-gray-800 mb-4">Anahtar Paketleri</h3>
-                    <p className="text-sm text-gray-500 mb-4">Öne çıkartma anahtarları ile müşterilerinizin sizlere daha çok ulaşmasını sağlayabilirsiniz.</p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {/* Sol taraf - Paket kartları */}
-                      <div className="md:col-span-2">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {
-                            keyPackages.length === 0 && (
-                              <div className="text-center text-gray-500 h-full w-full flex items-center justify-center col-span-full py-10 border rounded-lg">
-                                <p>Anahtar paketleri yükleniyor...</p>
-                              </div>
-                            )
-                          }
-                          {keyPackages.map((pkg) => (
-                            <div
-                              key={pkg.id}
-                              onClick={() => handleSelectPackage(pkg)}
-                              className={`border rounded-lg p-4 hover:shadow-md transition-all duration-200 relative cursor-pointer
-                                ${selectedKeyPackage?.id === pkg.id
-                                  ? 'border-blue-500 border-2 bg-blue-50 transform scale-[1.02]'
-                                  : 'border-gray-200 hover:border-blue-200'}
-                                ${pkg.isRecommended ? 'ring-2 ring-blue-400 ring-opacity-50' : ''}
-                              `}
-                            >
-                              {pkg.isRecommended && (
-                                <div className="absolute -top-3 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
-                                  Popüler Seçim
-                                </div>
-                              )}
-                              <div className="text-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mx-auto text-blue-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                </svg>
-                                <h4 className="font-bold text-lg">{pkg.keyAmount} Anahtar</h4>
-                                <p className="text-md font-semibold text-gray-900">{pkg.name}</p>
-
-                                <div className="mt-2 flex justify-center">
-                                  <div className="px-4 py-1 bg-white rounded-full border border-gray-200 shadow-sm">
-                                    <span className={`font-bold text-lg ${pkg.isRecommended ? 'text-blue-600' : 'text-gray-800'}`}>
-                                      {new Intl.NumberFormat('tr-TR').format(pkg.price)} ₺
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Sağ taraf - Seçili paket detayları */}
-                      <div className="md:col-span-1">
-                        {selectedKeyPackage && (
-                          <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm h-full flex flex-col">
-                            <div className="mb-4 pb-4 border-b border-gray-100">
-                              <h4 className="font-bold text-xl text-gray-800 mb-1">{selectedKeyPackage.name}</h4>
-                              <div className="flex items-center text-blue-600 font-bold text-lg mb-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                </svg>
-                                {selectedKeyPackage.keyAmount} Anahtar
-                              </div>
-                              <p className="text-sm text-gray-600 mb-2">{selectedKeyPackage.description || "Bu paket ile profilinizi üst sıralarda göstererek daha fazla müşteriye ulaşabilirsiniz."}</p>
-                              <div className="flex items-center text-sm text-gray-500">
-                                <span className="mr-2">Birim Fiyat:</span>
-                                <span className="font-semibold">{(selectedKeyPackage.price / selectedKeyPackage.keyAmount).toFixed(1)} ₺/Anahtar</span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center justify-between mb-4">
-                              <span className="text-gray-700 font-semibold">Toplam Tutar:</span>
-                              <span className="text-xl font-bold text-blue-600">{new Intl.NumberFormat('tr-TR').format(selectedKeyPackage.price)} ₺</span>
-                            </div>
-
-                            <Button
-                              onClick={() => handlePackagePurchase(selectedKeyPackage.id)}
-                              className="mt-auto w-full bg-blue-600 hover:bg-blue-700 text-white"
-                              size="lg">
-                              Satın Al
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Günlük Anahtar Kullanım Tercihleri */}
-                  <div>
-                    <div className="flex items-center mb-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                      </svg>
-                      <h3 className="text-xl font-bold text-gray-800">Günlük Anahtar Kullanım Tercihleriniz</h3>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100 shadow-sm mb-6">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center">
-                          <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-800">Anahtar Kullanım Bilgisi</h4>
-                            <p className="text-sm text-gray-600">Anahtarlar müşterilere görünürlüğünüzü artırır</p>
-                            {estimatedendday && <div className="flex items-center text-gray-600">
-                              <Info className="w-4 h-4 mr-2" />
-                              <p className="text-sm">Tahmini anahtar bitiş tarihi: {estimatedendday}</p>
-                            </div>}
-                          </div>
-                        </div>
-                        <div className="flex items-center bg-white px-4 py-2 rounded-lg border border-blue-200">
-                          <span className="text-lg font-bold text-blue-600 mr-3">{dailyKeys.reduce((sum, day) => sum + (day.isactive ? 4 * day.keyamount || 0 : 0), 0)}</span>
-                          <span className="text-sm text-gray-600">Tahmini Aylık<br />Anahtar Kullanımı</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                      {Array.from({ length: 7 }).map((_, index) => {
-                        // Her indeks için güvenli değer almak için kontrol yapalım
-                        const dayData = dailyKeys[index] || { dayname: '', keyamount: 0, isactive: false };
-
-                        return (
-                          <div key={index} className={`relative overflow-hidden rounded-lg border ${dayData.isactive ? 'border-green-200 bg-gradient-to-b from-green-50 to-white' : 'border-gray-200 bg-gray-50'} p-5 transition-all duration-300 shadow-sm hover:shadow`}>
-
-                            {/* Gün ismi başlığı */}
-                            <div className="flex items-center justify-between mb-4">
-                              <h4 className="font-bold text-gray-800">{dayData.dayname || `${index == 0 ? 'Pazartesi' : index == 1 ? 'Salı' : index == 2 ? 'Çarşamba' : index == 3 ? 'Perşembe' : index == 4 ? 'Cuma' : index == 5 ? 'Cumartesi' : index == 6 ? 'Pazar' : ''}`}</h4>
-                              <div className={`px-2 py-1 text-xs font-medium rounded-full ${dayData.isactive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                {dayData.isactive ? 'Aktif' : 'Kapalı'}
-                              </div>
-                            </div>
-
-                            {/* Anahtar göstergesi */}
-                            <div className="mb-4 flex items-center">
-                              <div className="mr-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-8 w-8 ${dayData.isactive ? 'text-blue-500' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                </svg>
-                              </div>
-                              <div>
-                                <div className="text-2xl font-bold mb-1 text-gray-900">{dayData.isactive ? dayData.keyamount || 0 : 0}</div>
-                                <div className="text-xs text-gray-500">Günlük Anahtar</div>
-                                {dayData.isactive && dayData.keyamount > 0 && (
-                                  <div className="text-xs text-blue-600 mt-1 font-medium">
-                                    Yaklaşık {Math.floor(dayData.keyamount / 30)} müşteri/gün
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Kaydırma çubuğu */}
-                            <div className="mb-4">
-                              <input
-                                type="range"
-                                min="0"
-                                max="200"
-                                step="5"
-                                value={dayData.isactive ? dayData.keyamount || 0 : 0}
-                                onChange={(e) => handleDailyKeyChange(index, parseInt(e.target.value), dailyKeys[index]?.isactive)}
-                                disabled={!dailyKeys[index]?.isactive}
-                                className={`w-full h-2 rounded-lg appearance-none cursor-pointer ${dailyKeys[index]?.isactive ? 'bg-blue-200' : 'bg-gray-200'}`}
-                              />
-                              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                                <span>&nbsp;0&nbsp;&nbsp;</span>
-                                <span>&nbsp;&nbsp;50</span>
-                                <span>&nbsp;100</span>
-                                <span>&nbsp;150</span>
-                                <span>200</span>
-                              </div>
-                            </div>
-
-                            {/* Aktif/Pasif düğme */}
-                            <div className="flex items-center justify-between relative z-10">
-                              <span className="text-sm text-gray-600">Reklam Durumu</span>
-                              <label className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  className="sr-only peer"
-                                  checked={dailyKeys[index]?.isactive ?? false}
-                                  onChange={(e) => {
-                                    handleDailyKeyChange(index, dailyKeys[index]?.keyamount, e.target.checked);
-                                  }}
-                                />
-                                <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer ${dailyKeys[index]?.isactive ? 'after:translate-x-full after:border-white bg-green-600' : 'after:border-gray-300'} after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all border`}></div>
-                              </label>
-                            </div>
-
-                            {/* Arka plan dekoru */}
-                            {dailyKeys[index]?.isactive && (
-                              <div className="absolute -right-4 -bottom-4 opacity-10 z-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-24 w-24 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                </svg>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    <div className="mt-8 flex justify-between items-center">
-                      <p className="text-sm text-gray-500 italic">Değişikliklerinizi kaydetmeyi unutmayın.</p>
-                      <Button
-                        className="bg-green-600 hover:bg-green-700 text-white rounded-full px-6"
-                        disabled={isSavingDailyKeys}
-                        onClick={handleSaveDailyKeys}
-                      >
-                        {isSavingDailyKeys ? (
-                          <div className="flex items-center">
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Kaydediliyor...
-                          </div>
-                        ) : (
-                          <>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            Değişiklikleri Kaydet
-                          </>
-                        )}
-                      </Button>
-                    </div>
-
-                    {/* Anahtar Kullanım Geçmişi */}
-                    <div className="my-8">
-                      <div className="flex items-center mb-4">
-                        <Clock className="h-6 w-6 text-blue-600 mr-2" />
-                        <h3 className="text-xl font-bold text-gray-800">Anahtar Kullanım Geçmişi</h3>
-                      </div>
-                      <div className="bg-white shadow-sm rounded-lg border border-gray-100">
-                        {keyUsageHistory.length === 0 ? (
-                          <div className="p-6 text-center text-gray-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                            </svg>
-                            <p>Henüz anahtar kullanım geçmişiniz bulunmamaktadır.</p>
-                          </div>
-                        ) : (
-                          <ul className="divide-y divide-gray-100">
-                            {keyUsageHistory.map((activity) => (
-                              <li key={activity.id} className="flex items-center p-4 hover:bg-blue-50 transition-colors">
-                                <div className="flex-shrink-0 mr-4">
-                                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                    </svg>
-                                  </div>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-gray-900 truncate">{activity.activitytype == 'locksmith_list_view' ? 'Çilingir aramasında profiliniz görüntülendi' : activity.activitytype == 'call_request' ? 'Bir arama aldınız' : activity.activitytype == 'whatsapp_message' ? 'Whatsapptan bir mesaj aldınız' : activity.activitytype == 'website_visit' ? 'Bir müşteri web sitenizi ziyaret etti' : 'Diğer'}</p>
-                                  <p className="text-sm text-gray-500">{new Date(activity.createdat).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-                                </div>
-                                <div className="inline-flex items-center text-base font-semibold text-blue-600">
-                                  {activity.keyamount} Anahtar
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                        {keyUsageHistory.length > 0 && (
-                          <div className="px-4 py-3 bg-gray-50 flex items-center justify-between rounded-b-lg">
-                            <div className="text-sm text-gray-500">
-                              Toplam: {totalKeyUsageHistory} kayıt
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              {/* Önceki Sayfa */}
-                              <button
-                                onClick={() => handleChangePageKeyUsageHistory(currentPageKeyUsageHistory - 1)}
-                                disabled={currentPageKeyUsageHistory === 1 || isKeyUsagePreviousPageLoading}
-                                className={`p-2 rounded-md border ${currentPageKeyUsageHistory === 1 ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-blue-600 border-blue-200 hover:bg-blue-50'}`}
-                              >
-                                {isKeyUsagePreviousPageLoading ?
-                                  <svg className="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                  </svg>
-                                  :
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                  </svg>
-                                }
-                              </button>
-                              <div className="text-sm font-medium text-gray-700">
-                                Sayfa {currentPageKeyUsageHistory} / {totalPagesKeyUsageHistory}
-                              </div>
-                              {/* Sonraki Sayfa */}
-                              <button
-                                onClick={() => handleChangePageKeyUsageHistory(currentPageKeyUsageHistory + 1)}
-                                disabled={currentPageKeyUsageHistory === totalPagesKeyUsageHistory || isKeyUsageNextPageLoading}
-                                className={`p-2 rounded-md border ${currentPageKeyUsageHistory === totalPagesKeyUsageHistory ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-blue-600 border-blue-200 hover:bg-blue-50'}`}
-                              >
-                                {isKeyUsageNextPageLoading ?
-                                  <svg className="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                  </svg>
-                                  :
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                  </svg>
-                                }
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
             {activeTab === "settings" && (
               <Card>
                 <CardHeader>
@@ -3598,137 +3089,6 @@ function CilingirPanelContent() {
           </div>
         </div>
       </div>
-
-      {/* Anahtar Paketi Satın Alma Modalı */}
-      <Dialog open={isPackageModalOpen} onOpenChange={setIsPackageModalOpen}>
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl flex items-center gap-2">
-              <Key className="h-5 w-5 text-blue-600" />
-              Anahtar Paketi Satın Al
-            </DialogTitle>
-            <DialogDescription>
-              Aşağıdaki bilgileri inceleyip satın alma talebinizi oluşturabilirsiniz.
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedPackage && (
-            <div className="space-y-6">
-              <div className="rounded-lg border border-blue-100 overflow-hidden">
-                {/* Paket Başlık */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border-b border-blue-100">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-bold text-xl text-blue-800">{selectedPackage.name}</h4>
-                    {selectedPackage.isRecommended && (
-                      <span className="bg-blue-600 text-white text-xs font-medium px-2.5 py-1 rounded-full">
-                        Önerilen
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-blue-600 mt-1">
-                    {selectedPackage.description || "Bu paket ile profilinizi üst sıralarda göstererek daha fazla müşteriye ulaşabilirsiniz."}
-                  </p>
-                </div>
-
-                {/* Paket Detayları */}
-                <div className="p-4 bg-white">
-                  <div className="flex flex-col sm:flex-row justify-between gap-4">
-                    {/* Sol Kısım - Anahtar Bilgileri */}
-                    <div className="space-y-3">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                          <Key className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h5 className="font-semibold text-gray-900">{selectedPackage.keyAmount.toLocaleString('tr-TR')}</h5>
-                          <p className="text-xs text-gray-500">Toplam Anahtar</p>
-                        </div>
-                      </div>
-
-                      <div className="bg-blue-50 p-3 rounded-md">
-                        <div className="text-xs font-medium text-gray-500 mb-1">Anahtar Başına Maliyet</div>
-                        <div className="text-lg font-bold text-blue-700">
-                          {(selectedPackage.price / selectedPackage.keyAmount).toFixed(2)} ₺
-                          <span className="text-xs font-normal text-blue-600 ml-1">/ anahtar</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Sağ Kısım - Fiyat Bilgileri */}
-                    <div className="flex flex-col items-center justify-center bg-green-50 p-4 rounded-lg">
-                      <div className="text-sm font-medium text-green-700 mb-1">Toplam Tutar</div>
-                      <div className="text-2xl font-bold text-green-700">
-                        {selectedPackage.price.toLocaleString('tr-TR')} ₺
-                      </div>
-                      {!selectedPackage.isUnlimited && (
-                        <div className="text-xs text-green-600 mt-2">
-                          {selectedPackage.validFrom && selectedPackage.validTo &&
-                            `${new Date(selectedPackage.validFrom).toLocaleDateString('tr-TR')} - ${new Date(selectedPackage.validTo).toLocaleDateString('tr-TR')}`
-                          }
-                        </div>
-                      )}
-                      {selectedPackage.isUnlimited && (
-                        <div className="text-xs font-medium text-green-600 mt-2">
-                          Süresiz Paket
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-2">Satın Alma Notu (İsteğe Bağlı)</label>
-                <Textarea
-                  value={purchaseNote}
-                  onChange={(e) => setPurchaseNote(e.target.value)}
-                  placeholder="Yöneticiye satın alma işlemi hakkında iletmek istediğiniz bir not yazabilirsiniz."
-                  className="w-full resize-none"
-                />
-              </div>
-
-              <div className="text-sm text-gray-600 bg-amber-50 p-4 rounded-lg flex items-start space-x-3 border border-amber-100">
-                <Info className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-amber-800 mb-1">Ödeme Bilgisi</p>
-                  <p>Satın alma işleminiz site yöneticisi tarafından onaylandıktan sonra anahtar bakiyenize eklenecektir. İşlem ile ilgili bilgilendirme e-posta adresinize gönderilecektir.</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter className="sm:justify-end gap-2 mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setIsPackageModalOpen(false)}
-              disabled={isPurchasePending}
-              className="w-full sm:w-auto"
-            >
-              İptal
-            </Button>
-            <Button
-              onClick={handlePurchaseSubmit}
-              disabled={isPurchasePending}
-              className="relative w-full sm:w-auto bg-green-600 hover:bg-green-700"
-            >
-              {isPurchasePending ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  İşleniyor...
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  Satın Alma Talebi Oluştur
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
       {
         showDeleteModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

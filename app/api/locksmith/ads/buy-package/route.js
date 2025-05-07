@@ -6,6 +6,8 @@ export async function POST(request) {
 
   const { packageId, purchaseNote } = await request.json();
 
+  console.log(packageId, locksmithId, purchaseNote);
+
   if (!packageId) {
     return NextResponse.json({
       error: 'Paket seçilmemiş!',
@@ -20,18 +22,18 @@ export async function POST(request) {
     .single();
 
 
-    if (keybalanceError) {
-      return NextResponse.json({
-        error: 'Locksmith bulunamadı',
-      }, { status: 404 });
-    }
-    
-    const { data: packageData, error: packageError } = await supabase
+  if (keybalanceError) {
+    return NextResponse.json({
+      error: 'Locksmith bulunamadı',
+    }, { status: 404 });
+  }
+
+  const { data: packageData, error: packageError } = await supabase
     .from('key_packages')
     .select('keyAmount, price')
     .eq('id', packageId)
     .single();
-    
+
   if (packageError) {
     return NextResponse.json({
       error: 'Paket bulunamadı',
@@ -64,5 +66,5 @@ export async function POST(request) {
 
   return NextResponse.json({
     message: 'Paket satın alındı',
-  }, { status: 200 });  
+  }, { status: 200 });
 }

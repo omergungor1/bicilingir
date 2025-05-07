@@ -30,10 +30,10 @@ function isSearchBot(userAgent) {
 
 // IP bazlı rate limiting fonksiyonu
 function checkIPRateLimit(ip, limit = 100, windowMs = 60 * 1000, userAgent = '') {
-  // Arama motoru botlarını limit dışı tut
+  //Bunu daha sonra kaldır
   return { limited: false, remaining: limit };
 
-  //Bunu daha sonra kaldır
+  // Arama motoru botlarını limit dışı tut
   if (isSearchBot(userAgent)) {
     return { limited: false, remaining: limit };
   }

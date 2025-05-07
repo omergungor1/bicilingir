@@ -9,6 +9,8 @@ import { EmergencyCallButton } from "../../../components/emergency-button";
 import { ImageGallery } from "../../../components/image-gallery";
 import { RatingModal } from "../../../components/RatingModal";
 import { useToast } from "../../../components/ToastContext";
+import Map from "../../../components/Map";
+import { getUserId, getSessionId } from "../../../lib/utils";
 
 const styles = {
   header: {
@@ -190,8 +192,8 @@ const LocksmithDetailPage = () => {
             locksmithId: locksmith.id,
             details: `${locksmith.businessname || locksmith.fullname}`
           }),
-          userId: localStorage.getItem('userId'),
-          sessionId: localStorage.getItem('sessionId'),
+          userId: getUserId(),
+          sessionId: getSessionId(),
           userAgent: navigator.userAgent || ''
         }),
       })
@@ -206,7 +208,8 @@ const LocksmithDetailPage = () => {
           console.error('Aktivite log hatası:', error);
         });
     } catch (error) {
-      console.error('Aktivite log hatası:', error);
+      console.error('Telefon araması hatası:', error);
+      showToast("Telefon araması yapılırken bir hata oluştu", "error");
     }
 
     // // Google Analytics'e arama sonucu görüntüleme kaydı
@@ -234,7 +237,6 @@ const LocksmithDetailPage = () => {
   };
 
   const handleWhatsappMessage = () => {
-    // Çilingir whatsapp mesajı aktivitesini kaydet
     try {
       // API üzerinden doğrudan aktivite kaydı oluştur
       fetch('/api/public/user/activity', {
@@ -249,8 +251,8 @@ const LocksmithDetailPage = () => {
             locksmithId: locksmith.id,
             details: `${locksmith.businessname || locksmith.fullname}`
           }),
-          userId: localStorage.getItem('userId'),
-          sessionId: localStorage.getItem('sessionId'),
+          userId: getUserId(),
+          sessionId: getSessionId(),
           userAgent: navigator.userAgent || ''
         }),
       })
@@ -269,7 +271,6 @@ const LocksmithDetailPage = () => {
     }
 
     try {
-      console.log(locksmith);
       // WhatsApp numarasını formatlama ve yönlendirme
       if (locksmith.whatsappnumber) {
         let formattedNumber = locksmith.whatsappnumber.replace(/\s+/g, '');
@@ -306,7 +307,7 @@ const LocksmithDetailPage = () => {
       }
     } catch (error) {
       console.error('WhatsApp mesaj gönderme hatası:', error);
-      showToast("WhatsApp mesajı gönderilirken bir hata oluştu", "error", 3000);
+      showToast("WhatsApp mesajı gönderilirken bir hata oluştu", "error");
     }
   };
 
@@ -510,19 +511,32 @@ const LocksmithDetailPage = () => {
     )
   }
 
-  const Map = ({ customClass }) => {
+  const MapSection = ({ customClass }) => {
     return (
-      <>
-        <div className={`bg-gray-50 rounded-lg p-6 mb-6 ${customClass}`}>
-          <h3 className="text-lg font-bold text-gray-800 mb-4">Adres</h3>
-          <p className="text-gray-700 mb-4">{locksmith.address || `${locksmith.province} ${locksmith.district} bölgesinde hizmet vermektedir.`}</p>
-          <div className="bg-gray-200 h-48 rounded-lg flex items-center justify-center text-gray-500">
-            Harita Görünümü
-          </div>
+      <div className={`bg-gray-50 rounded-lg mb-6 ${customClass}`}>
+        <h3 className="text-lg font-bold text-gray-800 px-6 pt-6 mb-4">Adres</h3>
+        <p className="text-gray-700 px-6 mb-4">{locksmith.address || `${locksmith.province} ${locksmith.district} bölgesinde hizmet vermektedir.`}</p>
+        <div className="bg-white rounded-lg overflow-hidden shadow-sm">
+          <Map
+            center={{
+              lat: locksmith.lat || 40.1885,
+              lng: locksmith.lng || 29.0610
+            }}
+            zoom={15}
+            markers={[{
+              position: {
+                lat: locksmith.lat || 40.1885,
+                lng: locksmith.lng || 29.0610
+              },
+              title: locksmith.name,
+              description: locksmith.address || `${locksmith.province} ${locksmith.district} bölgesinde hizmet vermektedir.`,
+              image: locksmith.profileImage
+            }]}
+          />
         </div>
-      </>
-    )
-  }
+      </div>
+    );
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -618,6 +632,9 @@ const LocksmithDetailPage = () => {
               <CallButtons customClass="block md:hidden flex-row" />
 
               <WorkingHours customClass="block md:hidden" />
+
+              {/* Harita */}
+              <MapSection customClass="block md:hidden" />
 
               {locksmith.reviews && locksmith.reviews.length > 0 && (
                 <div className="border-t border-gray-200 pt-6 mb-6">
@@ -801,12 +818,12 @@ const LocksmithDetailPage = () => {
               <ImagesGallery customClass="hidden md:block" />
 
               {/* Harita */}
-              <Map customClass="hidden md:block" />
+              <MapSection customClass="hidden md:block" />
 
-              {/* Acil Durum Butonu */}
+              {/* Daha fazla çilingir arıyorsanız */}
               <div className="bg-yellow-100 rounded-lg p-6 mb-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-2">Acil Durum mu?</h3>
-                <p className="text-gray-700 mb-4">Kapınız kilitli kaldıysa veya acil çilingir hizmetine ihtiyacınız varsa hemen arayın!</p>
+                <h3 className="text-lg font-bold text-gray-800 mb-2">Daha fazla çilingir mi arıyorsunuz?</h3>
+                <p className="text-gray-700 mb-4">Daha fazla çilingir lazımsa detaylı çilingir arama motorumuzu kullanın.</p>
                 <EmergencyCallButton />
               </div>
             </div>
