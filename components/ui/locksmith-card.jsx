@@ -46,60 +46,60 @@ export default function LocksmithCard({ locksmith, index }) {
     }, []);
 
     // Çilingir kartı göründüğünde aktivite logunu kaydet
-    useEffect(() => {
-        const logLocksmithView = () => {
-            try {
-                const logData = {
-                    activitytype: 'locksmith_list_view',
-                    level: 1,
-                    data: JSON.stringify({
-                        locksmithId: locksmith.id,
-                        locksmithName: locksmith.name,
-                        locksmithIndex: index,
-                        searchProvinceId: searchValues?.provinceId || null,
-                        searchDistrictId: searchValues?.districtId || null,
-                        searchServiceId: searchValues?.serviceId || null
-                    }),
-                    userId: getUserId(),
-                    sessionId: getSessionId(),
-                    userAgent: navigator.userAgent || ''
-                };
+    // useEffect(() => {
+    //     const logLocksmithView = () => {
+    //         try {
+    //             const logData = {
+    //                 activitytype: 'locksmith_list_view',
+    //                 level: 1,
+    //                 data: JSON.stringify({
+    //                     locksmithId: locksmith.id,
+    //                     locksmithName: locksmith.name,
+    //                     locksmithIndex: index,
+    //                     searchProvinceId: searchValues?.provinceId || null,
+    //                     searchDistrictId: searchValues?.districtId || null,
+    //                     searchServiceId: searchValues?.serviceId || null
+    //                 }),
+    //                 userId: getUserId(),
+    //                 sessionId: getSessionId(),
+    //                 userAgent: navigator.userAgent || ''
+    //             };
 
-                // SendBeacon API ile loglama - at ve unut yaklaşımı
-                if (navigator.sendBeacon) {
-                    const blob = new Blob([JSON.stringify(logData)], { type: 'application/json' });
-                    navigator.sendBeacon('/api/public/user/activity', blob);
-                } else {
-                    // Fallback - SendBeacon yoksa async fetch kullan ve cevabı bekleme
-                    fetch('/api/public/user/activity', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(logData),
-                        // keepalive özelliği sayfa kapanırken bile isteğin tamamlanmasını sağlar
-                        keepalive: true
-                    }).catch(error => {
-                        console.error('Liste görüntüleme log hatası:', error);
-                    });
-                }
-            } catch (error) {
-                console.error('Liste görüntüleme log hatası:', error);
-            }
-        };
+    //             // SendBeacon API ile loglama - at ve unut yaklaşımı
+    //             if (navigator.sendBeacon) {
+    //                 const blob = new Blob([JSON.stringify(logData)], { type: 'application/json' });
+    //                 navigator.sendBeacon('/api/public/user/activity', blob);
+    //             } else {
+    //                 // Fallback - SendBeacon yoksa async fetch kullan ve cevabı bekleme
+    //                 fetch('/api/public/user/activity', {
+    //                     method: 'POST',
+    //                     headers: {
+    //                         'Content-Type': 'application/json',
+    //                     },
+    //                     body: JSON.stringify(logData),
+    //                     // keepalive özelliği sayfa kapanırken bile isteğin tamamlanmasını sağlar
+    //                     keepalive: true
+    //                 }).catch(error => {
+    //                     console.error('Liste görüntüleme log hatası:', error);
+    //                 });
+    //             }
+    //         } catch (error) {
+    //             console.error('Liste görüntüleme log hatası:', error);
+    //         }
+    //     };
 
-        // Çilingir verisi yüklendiğinde loglama işlemini gerçekleştir
-        if (locksmith && locksmith.id) {
-            // requestIdleCallback kullan (tarayıcı boştayken çalıştır)
-            // Tarayıcı desteği yoksa setTimeout fallback kullan
-            if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-                window.requestIdleCallback(() => logLocksmithView(), { timeout: 2000 });
-            } else {
-                // Fallback: Sayfa yüklendikten 500ms sonra çalıştır
-                setTimeout(logLocksmithView, 500);
-            }
-        }
-    }, [locksmith.id, index, searchValues]); // locksmith.id veya searchValues değiştiğinde tekrar çalıştır
+    //     // Çilingir verisi yüklendiğinde loglama işlemini gerçekleştir
+    //     if (locksmith && locksmith.id) {
+    //         // requestIdleCallback kullan (tarayıcı boştayken çalıştır)
+    //         // Tarayıcı desteği yoksa setTimeout fallback kullan
+    //         if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    //             window.requestIdleCallback(() => logLocksmithView(), { timeout: 2000 });
+    //         } else {
+    //             // Fallback: Sayfa yüklendikten 500ms sonra çalıştır
+    //             setTimeout(logLocksmithView, 500);
+    //         }
+    //     }
+    // }, [locksmith.id, index, searchValues]); // locksmith.id veya searchValues değiştiğinde tekrar çalıştır
 
     const styles = {
         accentButton: {
