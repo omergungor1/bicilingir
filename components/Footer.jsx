@@ -37,6 +37,7 @@ export default function Footer() {
               <li><Link href="/privacy" className="hover:text-white">Gizlilik Politikası</Link></li>
               <li><Link href="/terms" className="hover:text-white">Kullanım Şartları</Link></li>
               <li><Link href="/iletisim" className="hover:text-white">İletişim</Link></li>
+              <li><Link href="/sitemap.xml" className="hover:text-white">Site Haritası</Link></li>
             </ul>
           </div>
           <div>
