@@ -126,7 +126,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
         const serviceTypeName = serviceType.name;
 
         if (neighborhood) {
-            const neighborhoodName = neighborhood.name;
+            const neighborhoodName = neighborhood.name + ' Mahallesi';
             const districtName = district.name;
             const cityName = city.name;
 
@@ -156,7 +156,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
         }
     }
     else if (neighborhood) {
-        const neighborhoodName = neighborhood.name;
+        const neighborhoodName = neighborhood.name + ' Mahallesi';
         const districtName = district.name;
         const cityName = city.name;
 
