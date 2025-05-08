@@ -90,7 +90,14 @@ export default function LocksmithCard({ locksmith, index }) {
 
         // Çilingir verisi yüklendiğinde loglama işlemini gerçekleştir
         if (locksmith && locksmith.id) {
-            logLocksmithView();
+            // requestIdleCallback kullan (tarayıcı boştayken çalıştır)
+            // Tarayıcı desteği yoksa setTimeout fallback kullan
+            if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+                window.requestIdleCallback(() => logLocksmithView(), { timeout: 2000 });
+            } else {
+                // Fallback: Sayfa yüklendikten 500ms sonra çalıştır
+                setTimeout(logLocksmithView, 500);
+            }
         }
     }, [locksmith.id, index, searchValues]); // locksmith.id veya searchValues değiştiğinde tekrar çalıştır
 
@@ -152,6 +159,14 @@ export default function LocksmithCard({ locksmith, index }) {
         updatedLoadingStates[id] = true;
         setLoadingLocksmithIds(updatedLoadingStates);
 
+        // Mevcut URL'yi al ve referrer olarak ekle
+        const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+        const referrer = encodeURIComponent(currentUrl);
+
+        // Çilingir detay sayfasına yönlendir
+        const formattedSlug = `/cilingirler/${slug}?fromDetail=true&referrer=${referrer}`;
+
+        // Loglamayı arka planda yapacağız, sayfaya yönlendirmeyi geciktirmemek için
         try {
             const logData = {
                 activitytype: 'locksmith_detail_view',
@@ -167,39 +182,41 @@ export default function LocksmithCard({ locksmith, index }) {
                 userAgent: navigator.userAgent || ''
             };
 
-            // SendBeacon API ile loglama - at ve unut yaklaşımı
+            // SendBeacon API ile arka planda loglama
             if (navigator.sendBeacon) {
                 const blob = new Blob([JSON.stringify(logData)], { type: 'application/json' });
                 navigator.sendBeacon('/api/public/user/activity', blob);
             } else {
-                // Fallback olarak fetch kullan ve cevabı bekleme
-                fetch('/api/public/user/activity', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(logData),
-                    keepalive: true
-                }).catch(error => {
-                    console.error('Aktivite log hatası:', error);
-                });
+                // Fallback olarak fetch kullan
+                // Kullanıcı deneyimini geciktirmemek için loglama işlemini arka planda yap
+                setTimeout(() => {
+                    fetch('/api/public/user/activity', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(logData),
+                        keepalive: true
+                    }).catch(error => {
+                        console.error('Aktivite log hatası:', error);
+                    });
+                }, 10);
             }
         } catch (error) {
             console.error('Aktivite log hatası:', error);
         }
-
-        // Mevcut URL'yi al ve referrer olarak ekle
-        const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
-        const referrer = encodeURIComponent(currentUrl);
-
-        // Çilingir detay sayfasına yönlendir
-        const formattedSlug = `/cilingirler/${slug}?fromDetail=true&referrer=${referrer}`;
 
         // Detay sayfasına yönlendir, scroll davranışını engellemek için scroll=false
         router.push(formattedSlug, undefined, { scroll: false });
     };
 
     const handleCallLocksmith = (locksmith, index) => {
+        // Telefon araması yap - önce kullanıcı deneyimini önceliklendiriyoruz
+        const phoneNumber = locksmith.phone.replace(/\D/g, ''); // Sadece rakamları al
+        window.location.href = `tel:${phoneNumber}`;
+
+        // Arama yönlendirmesinden sonra arka planda log gönder
+        // Bu noktada kullanıcı telefon uygulamasına yönlendirilmiş olacak
         try {
             const logData = {
                 activitytype: 'call_request',
@@ -237,47 +254,10 @@ export default function LocksmithCard({ locksmith, index }) {
         } catch (error) {
             console.error('Aktivite log hatası:', error);
         }
-
-        // Telefon araması yap
-        const phoneNumber = locksmith.phone.replace(/\D/g, ''); // Sadece rakamları al
-        window.location.href = `tel:${phoneNumber}`;
     };
 
     const handleWhatsappMessage = (locksmith, index) => {
-        try {
-            const logData = {
-                activitytype: 'whatsapp_message',
-                level: 1,
-                data: JSON.stringify({
-                    locksmithId: locksmith.id,
-                    details: `${locksmith.businessname || locksmith.fullname}`
-                }),
-                userId: getUserId(),
-                sessionId: getSessionId(),
-                userAgent: navigator.userAgent || ''
-            };
-
-            // SendBeacon API ile loglama
-            if (navigator.sendBeacon) {
-                const blob = new Blob([JSON.stringify(logData)], { type: 'application/json' });
-                navigator.sendBeacon('/api/public/user/activity', blob);
-            } else {
-                // Fallback olarak fetch kullan
-                fetch('/api/public/user/activity', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(logData),
-                    keepalive: true
-                }).catch(error => {
-                    console.error('Aktivite log hatası:', error);
-                });
-            }
-        } catch (error) {
-            console.error('Aktivite log hatası:', error);
-        }
-
+        // WhatsApp link açma işlemini ilk önce yap
         try {
             // WhatsApp numarasını formatlama ve yönlendirme
             if (locksmith.whatsapp) {
@@ -312,10 +292,47 @@ export default function LocksmithCard({ locksmith, index }) {
                 }
             } else {
                 showToast("Bu çilingirin WhatsApp numarası bulunamadı", "error", 3000);
+                return; // Numara yoksa loglama yapma
             }
         } catch (error) {
             console.error('WhatsApp mesaj gönderme hatası:', error);
             showToast("WhatsApp mesajı gönderilirken bir hata oluştu", "error", 3000);
+            return; // Hata durumunda loglama yapma
+        }
+
+        // WhatsApp'a yönlendirdikten sonra arka planda loglama yap
+        try {
+            const logData = {
+                activitytype: 'whatsapp_message',
+                level: 1,
+                data: JSON.stringify({
+                    locksmithId: locksmith.id,
+                    details: `${locksmith.businessname || locksmith.fullname}`
+                }),
+                userId: getUserId(),
+                sessionId: getSessionId(),
+                userAgent: navigator.userAgent || ''
+            };
+
+            // SendBeacon API ile loglama
+            if (navigator.sendBeacon) {
+                const blob = new Blob([JSON.stringify(logData)], { type: 'application/json' });
+                navigator.sendBeacon('/api/public/user/activity', blob);
+            } else {
+                // Fallback olarak fetch kullan
+                fetch('/api/public/user/activity', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(logData),
+                    keepalive: true
+                }).catch(error => {
+                    console.error('Aktivite log hatası:', error);
+                });
+            }
+        } catch (error) {
+            console.error('Aktivite log hatası:', error);
         }
     };
 

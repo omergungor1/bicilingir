@@ -15,7 +15,6 @@ import Image from 'next/image';
 import { useRouter } from "next/navigation";
 import { RatingModal } from "../components/RatingModal";
 import LocksmithCard from "../components/ui/locksmith-card";
-import { initUserSession } from '../redux/features/userSlice'
 import {
   Popover,
   PopoverContent,
