@@ -47,33 +47,41 @@ export default function LocksmithCard({ locksmith, index }) {
 
     // Çilingir kartı göründüğünde aktivite logunu kaydet
     useEffect(() => {
-        const logLocksmithView = async () => {
+        const logLocksmithView = () => {
             try {
-                // API üzerinden aktivite kaydı oluştur
-                const response = await fetch('/api/public/user/activity', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        activitytype: 'locksmith_list_view',
-                        level: 1,
-                        data: JSON.stringify({
-                            locksmithId: locksmith.id,
-                            locksmithName: locksmith.name,
-                            locksmithIndex: index,
-                            searchProvinceId: searchValues?.provinceId || null,
-                            searchDistrictId: searchValues?.districtId || null,
-                            searchServiceId: searchValues?.serviceId || null
-                        }),
-                        userId: getUserId(),
-                        sessionId: getSessionId(),
-                        userAgent: navigator.userAgent || ''
+                const logData = {
+                    activitytype: 'locksmith_list_view',
+                    level: 1,
+                    data: JSON.stringify({
+                        locksmithId: locksmith.id,
+                        locksmithName: locksmith.name,
+                        locksmithIndex: index,
+                        searchProvinceId: searchValues?.provinceId || null,
+                        searchDistrictId: searchValues?.districtId || null,
+                        searchServiceId: searchValues?.serviceId || null
                     }),
-                });
+                    userId: getUserId(),
+                    sessionId: getSessionId(),
+                    userAgent: navigator.userAgent || ''
+                };
 
-                if (!response.ok) {
-                    console.error('Liste görüntüleme log hatası:', await response.text());
+                // SendBeacon API ile loglama - at ve unut yaklaşımı
+                if (navigator.sendBeacon) {
+                    const blob = new Blob([JSON.stringify(logData)], { type: 'application/json' });
+                    navigator.sendBeacon('/api/public/user/activity', blob);
+                } else {
+                    // Fallback - SendBeacon yoksa async fetch kullan ve cevabı bekleme
+                    fetch('/api/public/user/activity', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(logData),
+                        // keepalive özelliği sayfa kapanırken bile isteğin tamamlanmasını sağlar
+                        keepalive: true
+                    }).catch(error => {
+                        console.error('Liste görüntüleme log hatası:', error);
+                    });
                 }
             } catch (error) {
                 console.error('Liste görüntüleme log hatası:', error);
@@ -145,29 +153,36 @@ export default function LocksmithCard({ locksmith, index }) {
         setLoadingLocksmithIds(updatedLoadingStates);
 
         try {
-            // API üzerinden doğrudan aktivite kaydı oluştur
-            const response = await fetch('/api/public/user/activity', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    activitytype: 'locksmith_detail_view',
-                    level: 1,
-                    data: JSON.stringify({
-                        locksmithId: id,
-                        searchProvinceId: searchValues?.provinceId || null,
-                        searchDistrictId: searchValues?.districtId || null,
-                        searchServiceId: searchValues?.serviceId || null
-                    }),
-                    userId: getUserId(),
-                    sessionId: getSessionId(),
-                    userAgent: navigator.userAgent || ''
+            const logData = {
+                activitytype: 'locksmith_detail_view',
+                level: 1,
+                data: JSON.stringify({
+                    locksmithId: id,
+                    searchProvinceId: searchValues?.provinceId || null,
+                    searchDistrictId: searchValues?.districtId || null,
+                    searchServiceId: searchValues?.serviceId || null
                 }),
-            });
+                userId: getUserId(),
+                sessionId: getSessionId(),
+                userAgent: navigator.userAgent || ''
+            };
 
-            if (!response.ok) {
-                console.error('Aktivite log hatası:', await response.text());
+            // SendBeacon API ile loglama - at ve unut yaklaşımı
+            if (navigator.sendBeacon) {
+                const blob = new Blob([JSON.stringify(logData)], { type: 'application/json' });
+                navigator.sendBeacon('/api/public/user/activity', blob);
+            } else {
+                // Fallback olarak fetch kullan ve cevabı bekleme
+                fetch('/api/public/user/activity', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(logData),
+                    keepalive: true
+                }).catch(error => {
+                    console.error('Aktivite log hatası:', error);
+                });
             }
         } catch (error) {
             console.error('Aktivite log hatası:', error);
@@ -184,35 +199,40 @@ export default function LocksmithCard({ locksmith, index }) {
         router.push(formattedSlug, undefined, { scroll: false });
     };
 
-    const handleCallLocksmith = async (locksmith, index) => {
+    const handleCallLocksmith = (locksmith, index) => {
         try {
-            // Aktivite loglaması
-            const response = await fetch('/api/public/user/activity', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    activitytype: 'call_request',
-                    level: 1,
-                    data: JSON.stringify({
-                        locksmithId: locksmith.id,
-                        locksmithName: locksmith.name,
-                        locksmithPhone: locksmith.phone,
-                        searchProvinceId: searchValues?.provinceId || null,
-                        searchDistrictId: searchValues?.districtId || null,
-                        searchServiceId: searchValues?.serviceId || null
-                    }),
-                    userId: getUserId(),
-                    sessionId: getSessionId(),
-                    userAgent: navigator.userAgent || ''
+            const logData = {
+                activitytype: 'call_request',
+                level: 1,
+                data: JSON.stringify({
+                    locksmithId: locksmith.id,
+                    locksmithName: locksmith.name,
+                    locksmithPhone: locksmith.phone,
+                    searchProvinceId: searchValues?.provinceId || null,
+                    searchDistrictId: searchValues?.districtId || null,
+                    searchServiceId: searchValues?.serviceId || null
                 }),
-            });
+                userId: getUserId(),
+                sessionId: getSessionId(),
+                userAgent: navigator.userAgent || ''
+            };
 
-            if (!response.ok) {
-                console.error('Arama aktivitesi log hatası:', await response.text());
+            // SendBeacon API ile loglama
+            if (navigator.sendBeacon) {
+                const blob = new Blob([JSON.stringify(logData)], { type: 'application/json' });
+                navigator.sendBeacon('/api/public/user/activity', blob);
             } else {
-                console.log('Çilingir arama aktivitesi kaydedildi.');
+                // Fallback olarak fetch kullan
+                fetch('/api/public/user/activity', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(logData),
+                    keepalive: true
+                }).catch(error => {
+                    console.error('Arama aktivitesi log hatası:', error);
+                });
             }
         } catch (error) {
             console.error('Aktivite log hatası:', error);
@@ -224,35 +244,36 @@ export default function LocksmithCard({ locksmith, index }) {
     };
 
     const handleWhatsappMessage = (locksmith, index) => {
-
         try {
-            fetch('/api/public/user/activity', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    activitytype: 'whatsapp_message',
-                    level: 1,
-                    data: JSON.stringify({
-                        locksmithId: locksmith.id,
-                        details: `${locksmith.businessname || locksmith.fullname}`
-                    }),
-                    userId: getUserId(),
-                    sessionId: getSessionId(),
-                    userAgent: navigator.userAgent || ''
+            const logData = {
+                activitytype: 'whatsapp_message',
+                level: 1,
+                data: JSON.stringify({
+                    locksmithId: locksmith.id,
+                    details: `${locksmith.businessname || locksmith.fullname}`
                 }),
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        console.error('Aktivite log hatası:', response.statusText);
-                    } else {
-                        console.log('Çilingir whatsapp mesajı aktivitesi kaydedildi.');
-                    }
-                })
-                .catch(error => {
+                userId: getUserId(),
+                sessionId: getSessionId(),
+                userAgent: navigator.userAgent || ''
+            };
+
+            // SendBeacon API ile loglama
+            if (navigator.sendBeacon) {
+                const blob = new Blob([JSON.stringify(logData)], { type: 'application/json' });
+                navigator.sendBeacon('/api/public/user/activity', blob);
+            } else {
+                // Fallback olarak fetch kullan
+                fetch('/api/public/user/activity', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(logData),
+                    keepalive: true
+                }).catch(error => {
                     console.error('Aktivite log hatası:', error);
                 });
+            }
         } catch (error) {
             console.error('Aktivite log hatası:', error);
         }
