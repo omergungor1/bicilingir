@@ -6,14 +6,14 @@ import React, { useState, useEffect } from "react";
 const originalError = console.error;
 console.error = (...args) => {
   // "E-posta veya şifre hatalı" gibi özel hataları engelleme
-  if (args.length > 0 && 
-      typeof args[0] === 'string' && 
-      (args[0].includes("E-posta veya şifre hatalı") || 
-       args[0].includes("Login hatası"))) {
+  if (args.length > 0 &&
+    typeof args[0] === 'string' &&
+    (args[0].includes("E-posta veya şifre hatalı") ||
+      args[0].includes("Login hatası"))) {
     console.log("Login hatası yakalandı (bilgi):", args[0]);
     return;
   }
-  
+
   // Diğer hataları normal şekilde gösterme
   originalError.apply(console, args);
 };
@@ -34,12 +34,12 @@ export default function CilingirLogin() {
     password: "",
   });
   const [formError, setFormError] = useState("");
-  
+
   // Redux hooks
   const dispatch = useDispatch();
   const router = useRouter();
   const { user, role, isAuthenticated, loading, error } = useSelector(state => state.auth);
-  
+
   // Toast hook'unu kullan
   const { showToast } = useToast();
 
@@ -57,7 +57,7 @@ export default function CilingirLogin() {
   // Kullanıcı giriş yapmışsa, rolüne göre yönlendir
   useEffect(() => {
     console.log("useEffect: Auth durumu değişti", { isAuthenticated, role, user });
-    
+
     if (isAuthenticated && user && role) {
       if (role === 'admin') {
         showToast("Admin olarak giriş yaptınız", "success");
@@ -91,7 +91,7 @@ export default function CilingirLogin() {
     e.preventDefault();
     setFormError("");
     dispatch(resetAuthError());
-    
+
     // Form doğrulama
     if (!formData.email || !formData.password) {
       const errorMsg = "Lütfen e-posta ve şifrenizi girin";
@@ -101,7 +101,7 @@ export default function CilingirLogin() {
     }
 
     console.log("Giriş denemesi başlatılıyor...");
-    
+
     // Redux login action'ını çağır
     dispatch(loginUser({
       email: formData.email,
@@ -113,7 +113,7 @@ export default function CilingirLogin() {
         if (action.meta.requestStatus === 'fulfilled') {
           const result = action.payload;
           console.log("Login başarılı, sonuç:", result);
-          
+
           if (result && result.role) {
             if (result.role === 'admin') {
               showToast("Admin olarak giriş yaptınız", "success");
@@ -145,7 +145,7 @@ export default function CilingirLogin() {
         <div className="text-center mb-10">
           <Link href="/" className="flex justify-center mb-6">
             <span className="sr-only">Bi Çilingir</span>
-            <Image src="/logo.png" alt="Bi Çilingir" width={60} height={60} />
+            <Image src="/logo.png" alt="BiÇilingir Logo" width={60} height={60} />
           </Link>
           <h2 className="text-3xl font-extrabold text-gray-900">Çilingir Girişi</h2>
           <p className="mt-2 text-sm text-gray-600">
@@ -155,7 +155,7 @@ export default function CilingirLogin() {
             </Link>
           </p>
         </div>
-        
+
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           {formError && (
             <div className="mb-4 rounded-md bg-red-50 p-4">
@@ -166,7 +166,7 @@ export default function CilingirLogin() {
               </div>
             </div>
           )}
-          
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -244,21 +244,21 @@ export default function CilingirLogin() {
               </Button>
             </div>
             <div className="mt-6 grid grid-cols-1 gap-3">
-                <Link
-                  href="/"
-                  className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Ana Sayfaya Dön
-                </Link>
-              </div>
+              <Link
+                href="/"
+                className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Ana Sayfaya Dön
+              </Link>
+            </div>
           </form>
           <div className="flex flex-col space-y-4">
-        
-          <div className="text-xs mt-2 text-center text-gray-500">
-            Giriş yaparak, Bi Çilingir'in <Link href="/terms" target="_blank" className="text-blue-600 hover:underline">hizmet şartlarını</Link> ve <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline">gizlilik politikasını</Link> kabul etmiş olursunuz.
+
+            <div className="text-xs mt-2 text-center text-gray-500">
+              Giriş yaparak, Bi Çilingir'in <Link href="/terms" target="_blank" className="text-blue-600 hover:underline">hizmet şartlarını</Link> ve <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline">gizlilik politikasını</Link> kabul etmiş olursunuz.
+            </div>
           </div>
-        </div>
         </div>
       </div>
     </main>

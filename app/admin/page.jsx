@@ -624,7 +624,7 @@ function AdminPanelContent() {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
-              <Image src="/logo.png" alt="Bi Çilingir" width={40} height={40} />
+              <Image src="/logo.png" alt="BiÇilingir Logo" width={40} height={40} />
               <div>
                 <h1 className="text-xl font-bold">Bi Çilingir</h1>
                 <p className="text-sm text-gray-500">Admin Panel</p>

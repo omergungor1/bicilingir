@@ -1414,7 +1414,7 @@ function CilingirPanelContent() {
         <div className="container mx-auto">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-1">
-              <Image src="/logo.png" alt="bi-çilingir" width={32} height={32} />
+              <Image src="/logo.png" alt="BiÇilingir Logo" width={32} height={32} />
               <span className="font-bold text-lg text-gray-800">BiÇilingir</span>
             </div>
             <div className="flex items-center space-x-4">

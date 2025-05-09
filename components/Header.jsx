@@ -15,7 +15,7 @@ const styles = {
 export default function Header() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
@@ -31,14 +31,14 @@ export default function Header() {
         <div className="flex items-center justify-between w-full md:w-auto">
           <div className="flex items-center">
             <div className="w-10 h-10 mr-2 rounded-full flex items-center justify-center">
-              <Image src="/logo.png" alt="Bi Çilingir" width={100} height={100} />
+              <Image src="/logo.png" alt="BiÇilingir Logo" width={100} height={100} />
             </div>
             <Link href="/" className="text-xl font-bold text-white">Bi Çilingir</Link>
           </div>
-          
+
           {/* Hamburger Menü Butonu - Sadece Mobil */}
           <div className="md:hidden">
-            <button 
+            <button
               onClick={toggleMenu}
               className="text-white focus:outline-none"
               aria-label="Menüyü Aç/Kapat"
@@ -60,8 +60,8 @@ export default function Header() {
         <nav className={`${isMenuOpen ? 'flex border-1 border-white rounded-lg p-2 shadow-lg' : 'hidden'} md:flex  flex-col md:flex-row w-full md:w-auto mt-4 md:mt-0`}>
           <ul className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-6">
             <li>
-              <Link 
-                href="/" 
+              <Link
+                href="/"
                 className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/' ? ' border-b-2 border-white' : ''}`}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -69,8 +69,8 @@ export default function Header() {
               </Link>
             </li>
             <li>
-              <Link 
-                href="/hizmetler" 
+              <Link
+                href="/hizmetler"
                 className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/hizmetler' ? '  border-b-2 border-white' : ''}`}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -78,8 +78,8 @@ export default function Header() {
               </Link>
             </li>
             <li>
-              <Link 
-                href="/bilgi" 
+              <Link
+                href="/bilgi"
                 className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/bilgi' ? '  border-b-2 border-white' : ''}`}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -87,8 +87,8 @@ export default function Header() {
               </Link>
             </li>
             <li>
-              <Link 
-                href="/hakkimizda" 
+              <Link
+                href="/hakkimizda"
                 className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/hakkimizda' ? '  border-b-2 border-white' : ''}`}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -96,8 +96,8 @@ export default function Header() {
               </Link>
             </li>
             <li>
-              <Link 
-                href="/iletisim" 
+              <Link
+                href="/iletisim"
                 className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/iletisim' ? '  border-b-2 border-white' : ''}`}
                 onClick={() => setIsMenuOpen(false)}
               >
