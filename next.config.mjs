@@ -9,7 +9,7 @@ const nextConfig = {
       },
     ],
   },
-  trailingSlash: true,
+  trailingSlash: false,
   // Statik dosyaların yolunu düzeltelim
   poweredByHeader: false,
   reactStrictMode: true,

@@ -201,7 +201,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
         }
     }
 
-    const canonicalUrl = baseUrl + (canonicalPath || '') + '/';
+    const canonicalUrl = baseUrl + (canonicalPath || '');
 
     // Structured data oluşturalım
     const structuredData = await getJsonLd({
