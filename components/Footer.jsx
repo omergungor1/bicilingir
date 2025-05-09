@@ -26,6 +26,7 @@ export default function Footer() {
             <ul className="space-y-2 text-gray-300">
               <li><Link href="/" className="hover:text-white">Çilingir Bul</Link></li>
               <li><Link href="/cilingir/auth/register" className="hover:text-white">Çilingir Kayıt</Link></li>
+              <li><Link href="/fiyat-listesi" className="hover:text-white">Çilingir Fiyat Listesi</Link></li>
               <li><Link href="/hakkimizda" className="hover:text-white">Hakkımızda</Link></li>
             </ul>
           </div>
