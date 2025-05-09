@@ -46,6 +46,7 @@ export default function LocksmithCard({ locksmith, index }) {
     }, []);
 
     // Çilingir kartı göründüğünde aktivite logunu kaydet
+    //artık loglama yapılıyor
     useEffect(() => {
         const logLocksmithView = () => {
             try {
