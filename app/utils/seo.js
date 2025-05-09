@@ -180,6 +180,29 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
         keywords = `${cityName} çilingir, ${cityName} anahtarcı, kapı açma, kilit değiştirme`;
     }
 
+    // Dinamik URL oluştur
+    const baseUrl = 'https://bicilingir.com';
+    let canonicalPath = '';
+
+    if (citySlug) {
+        canonicalPath += `/${citySlug}`;
+        if (districtSlug) {
+            canonicalPath += `/${districtSlug}`;
+            if (neighborhoodSlug) {
+                canonicalPath += `/${neighborhoodSlug}`;
+                if (servicetypeSlug) {
+                    canonicalPath += `/${servicetypeSlug}`;
+                }
+            } else if (servicetypeSlug) {
+                canonicalPath += `/${servicetypeSlug}`;
+            }
+        } else if (servicetypeSlug) {
+            canonicalPath += `/${servicetypeSlug}`;
+        }
+    }
+
+    const canonicalUrl = baseUrl + (canonicalPath || '');
+
     // Structured data oluşturalım
     const structuredData = await getJsonLd({
         citySlug,
@@ -200,7 +223,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
         openGraph: {
             title: title || 'BiÇilingir - 7/24 Profesyonel Çilingirleri hemen bulun',
             description: description || 'Türkiye genelinde 7/24 acil çilingir, oto çilingir, ev çilingir ve kasa çilingir hizmeti veren profesyonel çilingirleri hemen bulun. Fiyatları karşılaştırın, hemen arayın.',
-            url: 'https://bicilingir.com',
+            url: canonicalUrl,
             siteName: 'BiÇilingir',
             images: [
                 {
@@ -214,7 +237,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
             type: 'website',
         },
         alternates: {
-            canonical: 'https://bicilingir.com',
+            canonical: canonicalUrl,
         },
         // JSON-LD yapılandırılmış verisi
         // scripts: structuredData ? [{
