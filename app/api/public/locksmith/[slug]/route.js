@@ -6,7 +6,7 @@ export async function GET(request, { params }) {
     // Slug parametresini al - params artık bir Promise
     const resolvedParams = await params;
     const slug = resolvedParams.slug;
-    
+
     if (!slug) {
       return NextResponse.json({ error: "Geçersiz çilingir bilgisi" }, { status: 400 });
     }
@@ -16,8 +16,8 @@ export async function GET(request, { params }) {
 
     // 1. Çilingiri slug'a göre bul
     const { data: locksmith, error: locksmithError } = await supabase
-    .from('locksmiths')
-    .select(`
+      .from('locksmiths')
+      .select(`
       id,
       authid,
       businessname,
@@ -44,15 +44,21 @@ export async function GET(request, { params }) {
         isworking,
         opentime,
         closetime
+      ),
+      locksmith_certificates (
+        id,
+        name,
+        fileurl,
+        filetype
       )
     `)
-    .eq('slug', slug)
-    .eq('isactive', true)
-    .single();
+      .eq('slug', slug)
+      .eq('isactive', true)
+      .single();
 
     if (locksmith?.locksmith_working_hours) {
       //çilingir çalışma günlerini listele -> dayofweek'e göre sırala
-      const sortedWorkingHours = locksmith?.locksmith_working_hours?.sort((a, b) => a.dayofweek - b.dayofweek); 
+      const sortedWorkingHours = locksmith?.locksmith_working_hours?.sort((a, b) => a.dayofweek - b.dayofweek);
       locksmith.locksmith_working_hours = sortedWorkingHours;
     }
 
@@ -110,20 +116,20 @@ export async function GET(request, { params }) {
     //   .limit(3);
 
     const reviewPromises = [5, 4, 3, 2, 1].map(rating =>
-        supabase
-          .from('reviews')
-          .select('*')
-          .eq('locksmithid', locksmith.id)
-          .eq('status', 'approved')
-          .eq('rating', rating)
-          .order('createdat', { ascending: false })
-          .limit(3)
-      );
-      
-      const reviewResults = await Promise.all(reviewPromises);
-      
-      // Sonuçları birleştir:
-      const reviews = reviewResults.flatMap(r => r.data || []);
+      supabase
+        .from('reviews')
+        .select('*')
+        .eq('locksmithid', locksmith.id)
+        .eq('status', 'approved')
+        .eq('rating', rating)
+        .order('createdat', { ascending: false })
+        .limit(3)
+    );
+
+    const reviewResults = await Promise.all(reviewPromises);
+
+    // Sonuçları birleştir:
+    const reviews = reviewResults.flatMap(r => r.data || []);
 
 
     // 6. Benzer çilingirleri getir (aynı ilçede bulunan diğer çilingirler)
@@ -189,12 +195,12 @@ export async function GET(request, { params }) {
         slug: item.slug
       })) : []
     };
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       success: true,
       locksmith: locksmithData
     });
-    
+
   } catch (error) {
     console.error('Çilingir locksmithServices getirilirken hata:', error);
     return NextResponse.json({ error: "Sunucu hatası" }, { status: 500 });
