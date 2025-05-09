@@ -37,16 +37,16 @@ const nextConfig = {
     // Aynı anda bellekte tutulacak sayfa sayısı
     pagesBufferLength: 2,
   },
-  // async redirects() {
-  //   return [
-  //     {
-  //       source: '/(.*)',
-  //       has: [{ type: 'host', value: 'www.bicilingir.com' }],
-  //       destination: 'https://bicilingir.com/:1',
-  //       permanent: true,
-  //     },
-  //   ]
-  // },
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.bicilingir.com' }],
+        destination: 'https://bicilingir.com/:path*',
+        permanent: true,
+      },
+    ]
+  },
 };
 
 export default nextConfig; 
