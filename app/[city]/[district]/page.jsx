@@ -244,6 +244,36 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
                             id: 4,
                             question: `${serviceInfo.title} hizmeti için hangi ödeme yöntemlerini kabul ediyorsunuz?`,
                             answer: `${formattedName}'de ${serviceInfo.title.toLowerCase()} hizmeti sunan çilingirlerimiz genellikle nakit, kredi kartı ve banka havalesi gibi çeşitli ödeme yöntemlerini kabul etmektedir. Ödeme yöntemi konusunda çilingir ustası ile önceden görüşmenizi öneririz.`
+                        },
+                        {
+                            id: 5,
+                            question: `${formattedName}'de gece ${serviceInfo.title} hizmeti alabilir miyim?`,
+                            answer: `Evet, ${formattedName}'de 7/24 ${serviceInfo.title.toLowerCase()} hizmeti veren çilingirlerimiz bulunmaktadır. Gece saatlerinde de acil durumlar için profesyonel çilingir ekiplerimize ulaşabilirsiniz. Gece hizmetlerinde normal çalışma saatlerine göre fiyat farkı olabileceğini unutmayınız.`
+                        },
+                        {
+                            id: 6,
+                            question: `${serviceInfo.title} hizmeti için hangi garantiler verilmektedir?`,
+                            answer: `${formattedName}'de ${serviceInfo.title.toLowerCase()} hizmeti sunan çilingirlerimiz genellikle yaptıkları işlere belirli süre garanti vermektedir. Bu garanti süresi kilit değişimi, montaj gibi işlemler için genellikle 1 yıl, diğer hizmetler için ise 3-6 ay arasında değişebilmektedir. Garanti kapsamı ve süresi hakkında detaylı bilgiyi çilingir ustası ile görüşerek alabilirsiniz.`
+                        },
+                        {
+                            id: 7,
+                            question: `${serviceInfo.title} hizmeti için yanımda hangi belgeler bulunmalı?`,
+                            answer: `${formattedName}'de ${serviceInfo.title.toLowerCase()} hizmeti alırken, özellikle ev veya araç açma gibi işlemlerde, kimliğinizi ve mülkün size ait olduğunu gösteren belgeler (tapu, kira sözleşmesi, araç ruhsatı vb.) yanınızda bulunmalıdır. Çilingirler, güvenlik nedeniyle bu belgeleri kontrol etmektedir.`
+                        },
+                        {
+                            id: 8,
+                            question: `${formattedName}'de en güvenilir ${serviceInfo.title} hizmetini nasıl bulabilirim?`,
+                            answer: `BiÇilingir platformumuz üzerinden ${formattedName}'de en güvenilir ${serviceInfo.title.toLowerCase()} hizmetini sunan çilingirleri bulabilirsiniz. Kullanıcı değerlendirmeleri, hizmet puanları ve çalışma süreleri gibi kriterlere göre filtreleme yaparak, size en uygun ve güvenilir çilingiri seçebilirsiniz.`
+                        },
+                        {
+                            id: 9,
+                            question: `${serviceInfo.title} için hangi marka kilitler/ürünler kullanılmaktadır?`,
+                            answer: `${formattedName}'de ${serviceInfo.title.toLowerCase()} hizmeti sunan çilingirlerimiz genellikle Kale, Yale, Mul-T-Lock, Mottura gibi güvenilir ve kaliteli markaların ürünlerini kullanmaktadır. İhtiyacınıza ve bütçenize göre farklı marka ve model seçenekleri sunulmaktadır. Kullanılacak ürünlerle ilgili çilingir ustasından detaylı bilgi alabilirsiniz.`
+                        },
+                        {
+                            id: 10,
+                            question: `${formattedName}'de ${serviceInfo.title} hizmeti için önceden randevu almam gerekiyor mu?`,
+                            answer: `${formattedName}'de ${serviceInfo.title.toLowerCase()} hizmeti için genellikle acil durumlar (kapı açma, anahtar kırılması vb.) için anında hizmet verilmektedir. Ancak kilit değişimi, kapı montajı gibi planlı işler için randevu alınması önerilir. BiÇilingir platformu üzerinden tercih ettiğiniz çilingir ile iletişime geçerek randevu oluşturabilirsiniz.`
                         }
                     ]
                 },
@@ -426,7 +456,62 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
                     {
                         id: 4,
                         question: `${districtInfo.city} ${districtInfo.name}'de oto çilingir hizmeti var mı?`,
-                        answer: `Evet, ${districtInfo.city} ${districtInfo.name} ilçesinde uzman oto çilingir ekiplerimiz hizmet vermektedir. Araç anahtarı kopyalama, kayıp anahtar yerine yenisini yapma, immobilizer programlama ve araç kapısı açma gibi hizmetlerimiz bulunmaktadır.`
+                        answer: `Evet, ${districtInfo.city} ${districtInfo.name} ilçesinde bir çok uzman oto çilingir ekipleri hizmet vermektedir. Araç anahtarı kopyalama, kayıp anahtar yerine yenisini yapma, immobilizer programlama ve araç kapısı açma gibi tüm hizmetler sunulmaktadır. Detaylı bilgi için en yakın oto çilingiri BiÇilingir ile bulabilir ve hemen arayabilirsiniz.`
+                    },
+                    {
+                        id: 5,
+                        question: `${districtInfo.city} ${districtInfo.name}'de çilingir kaç dakikada gelir?`,
+                        answer: `${districtInfo.city} ${districtInfo.name} ilçesinde çilingirler genellikle bulunduğunuz konuma göre 15-30 dakika içerisinde gelebilmektedir. Acil durumlarda ve yoğun olmayan saatlerde daha hızlı ulaşım sağlanabilmektedir. Trafik durumu ve mesafeye bağlı olarak bu süre değişiklik gösterebilir.`
+                    },
+                    {
+                        id: 6,
+                        question: `${districtInfo.city} ${districtInfo.name}'de 7/24 açık çilingir var mı?`,
+                        answer: `Evet, ${districtInfo.city} ${districtInfo.name} ilçesinde 7/24 açık çilingir hizmeti veren işletmeler bulunmaktadır. BiÇilingir platformu üzerinden istediğiniz saat diliminde hizmet veren çilingirleri bulabilir ve acil durumlarınızda iletişime geçebilirsiniz.`
+                    },
+                    {
+                        id: 7,
+                        question: `${districtInfo.city} ${districtInfo.name}'de güvenilir çilingir nasıl anlaşılır?`,
+                        answer: `Güvenilir çilingir seçiminde dikkat etmeniz gereken noktalar: Resmî kimlik ve iş kartı göstermesi, önceden fiyat bilgisi vermesi, müşteri yorumlarının olumlu olması ve profesyonel ekipmanlar kullanmasıdır. BiÇilingir platformunda listelenen çilingirler belirli kriterlere göre değerlendirilmekte ve güvenilirlik esas alınmaktadır.`
+                    },
+                    {
+                        id: 8,
+                        question: `${districtInfo.city} ${districtInfo.name}'de anahtar kapıda kaldı, ne yapmalıyım?`,
+                        answer: `Anahtarınız kapıda kaldıysa, BiÇilingir platformu üzerinden ${districtInfo.city} ${districtInfo.name}'de size en yakın çilingiri bulabilir ve hemen iletişime geçebilirsiniz. Çilingir gelene kadar kapıya zarar vermemeye çalışın. Çilingirlerimiz özel aletlerle kapınıza zarar vermeden açma işlemi gerçekleştirebilmektedir.`
+                    },
+                    {
+                        id: 9,
+                        question: `${districtInfo.city} ${districtInfo.name}'de kapı kilidi kırıldı, ne yapmalıyım?`,
+                        answer: `Kapı kilidiniz kırıldıysa, öncelikle güvenliğiniz için geçici önlemler alın ve hemen BiÇilingir üzerinden ${districtInfo.city} ${districtInfo.name}'de hizmet veren bir çilingir ile iletişime geçin. Çilingirlerimiz kilit değişimi ve tamir hizmetleri de sunmaktadır. Size uygun yeni kilit modelleri ve güvenlik önerileri konusunda da yardımcı olacaklardır.`
+                    },
+                    {
+                        id: 10,
+                        question: `${districtInfo.city} ${districtInfo.name}'de çilingirler kredi kartı kabul ediyor mu?`,
+                        answer: `Evet, ${districtInfo.city} ${districtInfo.name}'de bulunan çilingirlerin çoğu nakit ödemenin yanı sıra kredi kartı, banka kartı ve bazı durumlarda mobil ödeme seçenekleri de sunmaktadır. Ödeme seçenekleri hakkında bilgi almak için hizmet öncesinde çilingir ile görüşebilirsiniz. BiÇilingir platformumuzda ödeme seçeneklerini gösteren filtreleme özelliği de bulunmaktadır.`
+                    },
+                    {
+                        id: 11,
+                        question: `${districtInfo.city} ${districtInfo.name}'de parmak izi kilit sistemi kurulumu yapılıyor mu?`,
+                        answer: `Evet, ${districtInfo.city} ${districtInfo.name}'de çilingirlerimiz arasında parmak izi, kart okuyuculu ve şifreli elektronik kilit sistemleri kurulumu yapan uzmanlar bulunmaktadır. Modern güvenlik sistemleri için BiÇilingir platformumuzdan bu hizmeti veren çilingirleri filtreleyerek bulabilirsiniz. Akıllı kilit sistemleri kurulum fiyatları kilit markası ve modeline göre değişiklik göstermektedir.`
+                    },
+                    {
+                        id: 12,
+                        question: `Çocuğum evde kilitli kaldı, ${districtInfo.city} ${districtInfo.name}'de acil çilingir hizmeti nasıl alabilirim?`,
+                        answer: `Çocuğunuz evde kilitli kaldıysa, hemen BiÇilingir platformu üzerinden ${districtInfo.city} ${districtInfo.name}'de acil çilingir hizmeti alabilirsiniz. Acil durum olduğunu belirtirseniz, çilingirler öncelikli olarak size hizmet verecektir. Size en yakın çilingiri bulup, doğrudan arayarak durumu açıklayabilirsiniz. Bu tür acil durumlarda çilingirler genellikle 15 dakika içinde ulaşmaya çalışırlar.`
+                    },
+                    {
+                        id: 13,
+                        question: `${districtInfo.city} ${districtInfo.name}'de çelik kasam açılmıyor, kasa açma hizmeti nerede bulabilirim?`,
+                        answer: `${districtInfo.city} ${districtInfo.name}'de kasa açma konusunda uzmanlaşmış çilingirlerimiz mevcuttur. BiÇilingir platformumuzda 'kasa çilingiri' filtresini kullanarak size en yakın kasa çilingirini bulabilirsiniz. Profesyonel çilingirlerimiz, çelik kasa, elektronik kasa ve şifreli kasa gibi farklı kasa tipleri için açma hizmeti sunmaktadır. Hizmet sırasında kasa sahibi olduğunuzu kanıtlamanız gerektiğini unutmayınız.`
+                    },
+                    {
+                        id: 14,
+                        question: `${districtInfo.city} ${districtInfo.name}'de multilock kilit için anahtar kopyalama yapan çilingir var mı?`,
+                        answer: `Evet, ${districtInfo.city} ${districtInfo.name}'de Multilock, Kale, Yale gibi yüksek güvenlikli kilit sistemleri için anahtar kopyalama hizmeti veren uzman çilingirlerimiz bulunmaktadır. Bu özel anahtarlar için orijinal makine ve ekipmanlarla çalışan çilingirleri BiÇilingir platformumuzda bulabilirsiniz. Güvenlik sertifikalı anahtarlar için kilit kartınızı yanınızda bulundurmanız gerekebilir.`
+                    },
+                    {
+                        id: 15,
+                        question: `${districtInfo.city} ${districtInfo.name}'de immobilizer anahtar kopyalama ve kodlama yapılır mı?`,
+                        answer: `Evet, ${districtInfo.city} ${districtInfo.name}'de immobilizer (çipli) araç anahtarı kopyalama ve kodlama hizmeti veren oto çilingirlerimiz mevcuttur. BiÇilingir platformumuzda oto çilingiri kategorisinde, aracınızın markasına uygun hizmet veren çilingirleri bulabilirsiniz. Modern araçların çipli anahtarları için özel ekipmanlarla profesyonel hizmet sunulmaktadır.`
                     }
                 ]
             },

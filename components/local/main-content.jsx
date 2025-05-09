@@ -106,7 +106,7 @@ export default function MainContent(params) {
                 ))}
             </div>
 
-            <div className='md:hidden'>
+            <div className='block md:hidden'>
                 {sideMenuParams && <SideMenu {...sideMenuParams} />}
             </div>
 

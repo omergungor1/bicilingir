@@ -21,7 +21,7 @@ export default function CityContent({ citySlug, locksmiths, cityData, sideMenuPa
                     <MainContent {...mainContentParams} />
                 </div>
 
-                <div className="lg:col-span-1">
+                <div className="lg:col-span-1 hidden md:block">
                     <SideMenu {...sideMenuParams} />
                 </div>
             </div>
