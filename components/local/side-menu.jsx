@@ -80,7 +80,7 @@ export default function SideMenu(params) {
                         * Fiyatlar yaklaşık değerlerdir. Kesin fiyat için çilingir ile görüşmeniz gerekmektedir.
                     </div>
                     <div className="mt-4 text-xs text-gray-500 flex items-center gap-2 cursor-pointer flex justify-end">
-                        <Link href='#' className="text-blue-800 hover:underline flex items-center">
+                        <Link href='/fiyat-listesi' className="text-blue-800 hover:underline flex items-center">
                             Detaylı Fiyat Listesi
                         </Link>
                         <ChevronRight size={16} />

@@ -38,6 +38,12 @@ export default async function sitemap() {
                 changeFrequency: 'weekly',
                 priority: 0.8,
             },
+            {
+                url: `${baseUrl}/fiyat-listesi`,
+                lastModified: now,
+                changeFrequency: 'weekly',
+                priority: 0.8,
+            },
         ];
 
         // Sadece Bursa'yı (id=16) getir

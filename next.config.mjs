@@ -9,27 +9,28 @@ const nextConfig = {
       },
     ],
   },
+  trailingSlash: true,
   // Statik dosyaların yolunu düzeltelim
   poweredByHeader: false,
   reactStrictMode: true,
   // CSS sorunlarını çözmek için ek yapılandırmalar
-  experimental: {
-    // optimizeCss: {
-    //   // CSS optimizasyonu için critters ayarları
-    //   critters: {
-    //     // Tüm CSS'leri inline yapmak yerine, sadece kritik olanları inline yap
-    //     pruneSource: true,
-    //     // Yazı tiplerini inline yapma
-    //     inlineFonts: false,
-    //     // Medya sorgularını inline yapma
-    //     reduceInlineStyles: true,
-    //     // Kritik olmayan CSS'leri geciktir
-    //     preload: "swap"
-    //   }
-    // },
-    optimizeCss: false,
-    forceSwcTransforms: true,
-  },
+  // experimental: {
+  //   // optimizeCss: {
+  //   //   // CSS optimizasyonu için critters ayarları
+  //   //   critters: {
+  //   //     // Tüm CSS'leri inline yapmak yerine, sadece kritik olanları inline yap
+  //   //     pruneSource: true,
+  //   //     // Yazı tiplerini inline yapma
+  //   //     inlineFonts: false,
+  //   //     // Medya sorgularını inline yapma
+  //   //     reduceInlineStyles: true,
+  //   //     // Kritik olmayan CSS'leri geciktir
+  //   //     preload: "swap"
+  //   //   }
+  //   // },
+  //   optimizeCss: false,
+  //   forceSwcTransforms: true,
+  // },
   // Önbellek sorunlarını çözmek için
   onDemandEntries: {
     // Sayfaların bellekte tutulma süresi (ms)
@@ -41,8 +42,14 @@ const nextConfig = {
     return [
       {
         source: '/:path*',
-        has: [{ type: 'host', value: 'www.bicilingir.com' }],
         destination: 'https://bicilingir.com/:path*',
+        has: [
+          {
+            type: 'header',
+            key: 'host',
+            value: 'www.bicilingir.com',
+          },
+        ],
         permanent: true,
       },
     ]

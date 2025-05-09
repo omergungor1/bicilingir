@@ -42,7 +42,7 @@ async function getCityData(citySlug) {
             .eq('province_id', cityData.id);
 
         if (districtsError || !districtsData) {
-            console.error('İlçe bilgisi alınamadı:', districtsError);
+            console.error('İlçe bilgisi alınamadı');
             throw new Error('İlçeler bulunamadı');
         }
 
@@ -57,7 +57,7 @@ async function getCityData(citySlug) {
             .eq('isActive', true);
 
         if (servicesError || !servicesData) {
-            console.error('Hizmet bilgisi alınamadı:', servicesError);
+            console.error('Hizmet bilgisi alınamadı');
             throw new Error('Hizmet bulunamadı');
         }
 
