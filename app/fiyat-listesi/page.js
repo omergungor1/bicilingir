@@ -1,9 +1,9 @@
 import Link from 'next/link';
 
 export const metadata = {
-    title: 'Detaylı Çilingir Fiyat Listesi - BiÇilingir',
-    description: 'Çilingir hizmetleri için güncel ve detaylı fiyat listesi. Ev, servis, otomobil-motosiklet ve kasa hizmetleri için tüm fiyatlar.',
-    keywords: 'çilingir fiyatları, anahtar yapımı fiyatları, kapı açma fiyatları, kasa açma fiyatları, çelik kapı açma ücreti',
+    title: '2025 Güncel Çilingir Fiyat Listesi - Kapı Açma, Anahtar Yapımı, Oto Çilingir Fiyatları',
+    description: 'Türkiye genelinde 2025 yılı güncel çilingir hizmet fiyatları. Ev, otomobil, kasa açma ve anahtar yapımı için güncel ve detaylı fiyat listesi.',
+    keywords: 'çilingir fiyatları, kapı açma ücreti, anahtar yapımı fiyatları, oto çilingir fiyatları, kasa açma ücreti, çelik kapı açma fiyatı, 2025 çilingir fiyatları',
     alternates: {
         canonical: 'https://bicilingir.com/fiyat-listesi'
     }
@@ -12,25 +12,40 @@ export const metadata = {
 export default function FiyatListesi() {
     return (
         <div className="container mx-auto px-4 py-8 max-w-4xl">
-            <div className="flex items-center mb-6">
-                <Link
-                    href="/"
-                    className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-                    </svg>
-                    Ana Sayfaya Dön
-                </Link>
-            </div>
+            {/* Breadcrumb navigasyon */}
+            <nav className="flex mb-6 text-sm text-gray-500">
+                <ol className="flex items-center space-x-1">
+                    <li>
+                        <Link href="/" className="hover:text-blue-600 hover:underline">
+                            Ana Sayfa
+                        </Link>
+                    </li>
+                    <li>
+                        <span className="mx-2">/</span>
+                    </li>
+                    <li className="font-medium text-gray-700">
+                        Çilingir Fiyat Listesi
+                    </li>
+                </ol>
+            </nav>
 
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">Detaylı Çilingir Fiyat Listesi</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">2025 Güncel Çilingir Fiyat Listesi</h1>
+            <p className="text-lg text-gray-600 mb-6">Türkiye genelinde ev, otomobil, kasa ve servis alanlarındaki çilingir hizmetleri için detaylı ve güncel fiyat bilgileri.</p>
 
-            <div className="bg-blue-50 p-4 rounded-lg mb-8">
-                <p className="text-blue-800 text-sm">
-                    <strong>Not:</strong> Fiyatlar yaklaşık değerler olup, hizmetin türüne,
-                    mesafeye, saate ve özel durumlara göre değişiklik gösterebilir.
-                    Kesin fiyat bilgisi için lütfen çilingir ile iletişime geçiniz.
+            <div className="bg-blue-50 p-5 rounded-lg mb-8 border border-blue-100">
+                <h2 className="text-blue-800 text-lg font-semibold mb-2">Çilingir Fiyatları Hakkında Önemli Bilgiler</h2>
+                <p className="text-blue-800 text-sm mb-3">
+                    Aşağıda listelenen fiyatlar yaklaşık değerler olup, şu faktörlere bağlı olarak değişiklik gösterebilir:
+                </p>
+                <ul className="text-blue-700 text-sm list-disc pl-5 space-y-1">
+                    <li>Hizmetin türü ve zorluğu (Standart, yüksek güvenlikli vb.)</li>
+                    <li>Hizmetin verildiği saat (Mesai saati içi, akşam, gece)</li>
+                    <li>Hizmet mesafesi (Yakın mesafe azami 1 km olarak kabul edilir)</li>
+                    <li>Kullanılan malzeme ve ekipmanın kalitesi</li>
+                    <li>Çilingirin deneyimi ve uzmanlık alanı</li>
+                </ul>
+                <p className="text-blue-800 text-sm mt-3">
+                    <strong>Kesin fiyat bilgisi için her zaman çilingir ile önceden görüşmeniz tavsiye edilir.</strong> Bu fiyat listesi güncel olmakla birlikte bölgesel fiyat farklılıkları olabilir.
                 </p>
             </div>
 
@@ -343,6 +358,85 @@ export default function FiyatListesi() {
                 </p>
             </div>
 
+            {/* SSS - Sıkça Sorulan Sorular */}
+            <section className="my-12">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">Çilingir Hizmetleri Hakkında Sıkça Sorulan Sorular</h2>
+
+                <div className="space-y-6">
+                    <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3">Çilingir fiyatları neye göre değişiklik gösterir?</h3>
+                        <p className="text-gray-600">
+                            Çilingir fiyatları genellikle hizmetin türüne, kapı veya kilidin modelini, hizmetin verildiği saate ve mesafeye göre değişiklik gösterir. Örneğin, standart bir kapı açımı ile yüksek güvenlikli bir çelik kapı açımı arasında fiyat farkı vardır. Ayrıca gece saatlerinde veya resmi tatillerde verilen hizmetler için ek ücret talep edilebilir.
+                        </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3">Acil durumda gece çilingir hizmeti alabilir miyim?</h3>
+                        <p className="text-gray-600">
+                            Evet, birçok çilingir 7/24 hizmet vermektedir. Gece saatlerinde verilen hizmetler için genellikle ek ücret talep edilir. BiÇilingir üzerinden konumunuza en yakın ve o anda hizmet verebilecek çilingirlere anında ulaşabilirsiniz.
+                        </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3">Oto anahtarı yaptırmak için araç ruhsatı gerekli midir?</h3>
+                        <p className="text-gray-600">
+                            Evet, güvenlik nedeniyle araç anahtarı yaptırmak için araç ruhsatı ve kimlik belgesi istenir. Bu, aracın sahibinin gerçekten siz olduğunu doğrulamak için gereklidir. Immobilizer/transponder içeren modern araç anahtarları için yetkili servis veya özel donanıma sahip çilingirler hizmet verebilir.
+                        </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3">Kapı kilidini değiştirmek ne kadar sürer?</h3>
+                        <p className="text-gray-600">
+                            Standart bir kapı kilidi değişimi genellikle 30-60 dakika arasında tamamlanır. Ancak çelik kapılarda veya özel güvenlik sistemlerinde bu süre uzayabilir. Kilit değişiminde kapı tipine uygun yeni bir kilit seçilmesi önemlidir.
+                        </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3">Kasa şifremi unuttum, çilingir kasayı açabilir mi?</h3>
+                        <p className="text-gray-600">
+                            Evet, profesyonel çilingirler çoğu kasayı açabilirler. Ancak kasa modeline göre işlem süresi ve fiyatı değişiklik gösterir. Kasa açma işlemleri için genellikle kasanın satın alındığı yerin faturası veya kasanın size ait olduğunu gösteren belgeler istenebilir.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            {/* Çilingir Hizmetleri Hakkında Bilgi */}
+            <section className="my-12">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">Çilingir Hizmetleri Hakkında</h2>
+
+                <div className="prose max-w-none text-gray-600">
+                    <p>Çilingir hizmetleri, günlük hayatın kritik bir parçasıdır. Kapı dışarıda kilitli kaldığınızda, anahtarınızı kaybettiğinizde veya kilit sistemlerinizin bakımı gerektiğinde profesyonel çilingir hizmetine ihtiyaç duyarsınız.</p>
+
+                    <h3 className="text-xl font-semibold mt-6 mb-3">Çilingir Hizmet Türleri</h3>
+
+                    <p>Çilingirler geniş bir hizmet yelpazesi sunarlar:</p>
+
+                    <ul className="list-disc pl-6 my-4">
+                        <li><strong>Kapı Açma:</strong> Ev, iş yeri veya araç kapılarını anahtarsız açma</li>
+                        <li><strong>Anahtar Yapımı:</strong> Her türlü kapı, kilit veya araç için yedek anahtar üretimi</li>
+                        <li><strong>Kilit Değişimi:</strong> Eski, hasarlı veya güvenliği zayıflamış kilitlerin yenilenmesi</li>
+                        <li><strong>Kilit Tamir ve Bakımı:</strong> Mevcut kilitlerin onarımı ve düzenli bakımı</li>
+                        <li><strong>Çelik Kapı Servisi:</strong> Çelik kapıların kilit, menteşe ve mekanizma bakım-onarımı</li>
+                        <li><strong>Kasa Açma ve Şifre Değişimi:</strong> Şifresi unutulan kasaların açılması ve yeniden programlanması</li>
+                        <li><strong>Oto Çilingir Hizmetleri:</strong> Araç kapılarının açılması, kontak ve immobilizer işlemleri</li>
+                    </ul>
+
+                    <h3 className="text-xl font-semibold mt-6 mb-3">Çilingir Seçerken Dikkat Edilmesi Gerekenler</h3>
+
+                    <p>Güvenilir bir çilingir seçmek için şu noktalara dikkat etmelisiniz:</p>
+
+                    <ul className="list-disc pl-6 my-4">
+                        <li>Lisanslı ve sigortalı çilingirler tercih edilmelidir</li>
+                        <li>Önceki müşteri yorumları ve değerlendirmeleri kontrol edilmelidir</li>
+                        <li>7/24 hizmet veren çilingirler acil durumlar için tercih sebebidir</li>
+                        <li>Hizmet öncesi net fiyat bilgisi alınmalıdır</li>
+                        <li>Modern kilit teknolojileri konusunda bilgili olmalıdır</li>
+                    </ul>
+
+                    <p>BiÇilingir platformu, ihtiyacınıza uygun çilingirleri bulmanıza yardımcı olur. Konumunuzu belirterek size en yakın çilingirleri görüntüleyebilir, fiyatları karşılaştırabilir ve hemen iletişime geçebilirsiniz.</p>
+                </div>
+            </section>
+
             <div className="mt-8 text-center">
                 <Link
                     href="/"
@@ -351,7 +445,7 @@ export default function FiyatListesi() {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
                     </svg>
-                    Ana Sayfaya Dön
+                    En Yakın Çilingiri Bul
                 </Link>
             </div>
         </div>
