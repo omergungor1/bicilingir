@@ -125,7 +125,7 @@ export default function CilingirLogin() {
               console.log("Bilinmeyen rol:", result.role);
             }
           } else {
-            console.log("Rol bilgisi alınamadı:", result);
+            console.log("Rol bilgisi alınamadı");
             showToast("Rol bilgisi alınamadı", "error");
           }
         } else if (action.meta.requestStatus === 'rejected') {

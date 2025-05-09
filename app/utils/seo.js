@@ -49,7 +49,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
                 .single();
 
             if (cityError || !cityData) {
-                console.error('Şehir bilgisi alınamadı:', cityError);
+                console.error('Şehir bilgisi alınamadı');
             } else {
                 city = cityData;
             }
@@ -65,7 +65,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
                 .single();
 
             if (districtError || !districtData) {
-                console.error('İlçe bilgisi alınamadı:', districtError);
+                console.error('İlçe bilgisi alınamadı');
             } else {
                 district = districtData;
             }
@@ -83,7 +83,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
                 .single();
 
             if (neighborhoodError || !neighborhoodData) {
-                console.error('Mahalle bilgisi alınamadı:', neighborhoodError);
+                console.error('Mahalle bilgisi alınamadı');
             } else {
                 neighborhood = neighborhoodData;
             }
@@ -100,7 +100,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
                 .single();
 
             if (serviceError || !serviceData) {
-                console.error('Hizmet bilgisi alınamadı:', serviceError);
+                console.error('Hizmet bilgisi alınamadı');
                 // Eğer veritabanında bulunamazsa, slug'dan oluştur
                 serviceType = {
                     name: servicetypeSlug
