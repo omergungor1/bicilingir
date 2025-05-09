@@ -328,7 +328,7 @@ export default function FiyatListesi() {
                 </p>
                 <ul className="list-disc pl-5 mt-2 text-sm text-yellow-800">
                     <li>Bu liste mesai saatleri içinde geçerlidir.</li>
-                    <li>Yakın mesafe azami 1 km'dir.</li>
+                    <li>Yakın mesafe azami 1 km&apos;dir.</li>
                     <li>Özel ve döküm anahtarların fiyatları değişkendir.</li>
                     <li>Özel yapım ve Avrupa kasa açma fiyatı değişkendir.</li>
                     <li>Özel kilit ve montaj fiyatı değişkendir.</li>
@@ -339,7 +339,7 @@ export default function FiyatListesi() {
 
             <div className="text-center mt-10">
                 <p className="text-gray-500 text-sm">
-                    Fiyatlar son güncelleme tarihi: 01/01/2025
+                    Fiyatlar son güncelleme tarihi: 01/05/2025
                 </p>
             </div>
 
