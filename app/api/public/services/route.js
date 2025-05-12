@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseServer } from '../../../../lib/supabase';
 
 export async function GET() {
+  console.log('services route çalıştı*********************');
   const supabase = getSupabaseServer();
   try {
     // Gerçek sistemde tüm servisler ve çilingirin aktif servisleri

@@ -829,7 +829,6 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
       .select();
 
 
-    console.log('activitytype:', activitytype)
     if (additionalData.locksmithId && activitytype === 'call_request') {
       try {
         // 1. Adım: mevcut call_count değerini alıyoruz

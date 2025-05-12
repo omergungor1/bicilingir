@@ -8,18 +8,11 @@ import { Checkbox } from "../components/ui/checkbox";
 import Hero from "../components/Hero";
 import SearchForm from "../components/SearchForm";
 import { useToast } from "../components/ToastContext";
-import { ChevronRight, Info } from "lucide-react";
 import { useDispatch, useSelector } from 'react-redux'
 import { searchLocksmiths, setSelectedValues as setReduxSelectedValues } from '../redux/features/searchSlice';
-import Image from 'next/image';
 import { useRouter } from "next/navigation";
 import { RatingModal } from "../components/RatingModal";
 import LocksmithCard from "../components/ui/locksmith-card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "../components/ui/popover"
 
 
 const styles = {
@@ -84,18 +77,24 @@ export default function Home() {
   // Redux state ve dispatch
   const dispatch = useDispatch();
   const {
-    selectedValues: reduxSelectedValues,
-    locksmiths: reduxLocksmiths,
-    isLoading: reduxIsLoading,
-    error: reduxError,
-    showResults: reduxShowResults,
-    hasSearched: reduxHasSearched
-  } = useSelector(state => state.search);
+    selectedValues: reduxSelectedValues = { serviceId: null, serviceSlug: null, districtId: null, provinceId: null },
+    locksmiths: reduxLocksmiths = [],
+    isLoading: reduxIsLoading = false,
+    error: reduxError = null,
+    showResults: reduxShowResults = false,
+    hasSearched: reduxHasSearched = false
+  } = useSelector(state => state.search) || {};
 
   // Lokal state - Redux tarafından yönetilecek alanlar için artık iskeleti tutuyoruz
   const [showFilters, setShowFilters] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedLocksmith, setSelectedLocksmith] = useState(null);
+
+  // Local state tanımlamaları - serviceList burada tanımlıyoruz
+  const [loading, setLoading] = useState(false);
+  const [serviceList, setServiceList] = useState([]);
+  const [isLoadingServices, setIsLoadingServices] = useState(false);
+  const [selectedServiceId, setSelectedServiceId] = useState(null);
 
   // Arama sonuçları için state
   const [searchResults, setSearchResults] = useState({
@@ -108,19 +107,55 @@ export default function Home() {
 
   // Form değerleri için local state - Redux store ile senkronize çalışacak
   const [selectedValues, setSelectedValues] = useState({
-    serviceId: reduxSelectedValues.serviceId,
-    districtId: reduxSelectedValues.districtId,
-    provinceId: reduxSelectedValues.provinceId
+    serviceId: null,
+    serviceSlug: null,
+    districtId: null,
+    provinceId: null
   });
 
   // Redux store değişince local state'i güncelle
   useEffect(() => {
-    setSelectedValues({
-      serviceId: reduxSelectedValues.serviceId,
-      districtId: reduxSelectedValues.districtId,
-      provinceId: reduxSelectedValues.provinceId
-    });
-  }, [reduxSelectedValues]);
+    if (reduxSelectedValues) {
+      // Mevcut değerlerle gelen değerleri karşılaştır, farklıysa güncelle
+      const isDifferent =
+        reduxSelectedValues.serviceId !== selectedValues.serviceId ||
+        reduxSelectedValues.serviceSlug !== selectedValues.serviceSlug ||
+        reduxSelectedValues.districtId !== selectedValues.districtId ||
+        reduxSelectedValues.provinceId !== selectedValues.provinceId;
+
+      if (isDifferent) {
+        // Önce yeni değerleri oluşturalım
+        const newValues = {
+          serviceId: reduxSelectedValues.serviceId || null,
+          serviceSlug: reduxSelectedValues.serviceSlug || null,
+          districtId: reduxSelectedValues.districtId || null,
+          provinceId: reduxSelectedValues.provinceId || null
+        };
+
+        // Tek bir state güncellemesi yapalım
+        setSelectedValues(newValues);
+
+        // Servis ID veya Slug'a göre UI'da servis filtresini seçelim
+        // Burayı ayrı bir useEffect'e taşıyalım
+      }
+    }
+  }, [reduxSelectedValues]); // selectedValues'u bağımlılıklardan çıkardık
+
+  // Service ID ve slug'ı takip eden ayrı bir useEffect
+  useEffect(() => {
+    // ServiceList ve reduxSelectedValues hazır olduğunda
+    if (serviceList.length > 0 && reduxSelectedValues) {
+      if (reduxSelectedValues.serviceId) {
+        setSelectedServiceId(reduxSelectedValues.serviceId);
+      } else if (reduxSelectedValues.serviceSlug) {
+        // Slug'a göre servisi bul ve ID'sini ayarla
+        const matchingService = serviceList.find(s => s.slug === reduxSelectedValues.serviceSlug);
+        if (matchingService) {
+          setSelectedServiceId(matchingService.id);
+        }
+      }
+    }
+  }, [serviceList, reduxSelectedValues]);
 
   const [customerFeedback, setCustomerFeedback] = useState({
     rating: 0,
@@ -141,25 +176,37 @@ export default function Home() {
 
   // Local değişikliği Redux'a aktar
   const handleLocalSelectedValuesChange = (newValues) => {
-    // Önce Redux'a bildir
-    dispatch(setReduxSelectedValues({
-      ...selectedValues,
-      ...newValues
-    }));
+    // İki çözüm var: ya bunu tamamen kaldırabilir ve sadece newValues ile çalışabiliriz
+    // ya da gerçekten değişiklik olduğunda değer güncellemesi yapabiliriz
 
-    // Sonra local state'i güncelle
-    setSelectedValues(prev => ({
-      ...prev,
-      ...newValues
-    }));
+    // Değerler zaten aynıysa güncelleme yapma (boş incelemeleri kapat)
+    let hasChanged = false;
+    const mergedValues = { ...selectedValues };
+
+    // Sadece gelen alanlara bak ve bunları güncelle
+    Object.keys(newValues).forEach(key => {
+      if (newValues[key] !== selectedValues[key]) {
+        mergedValues[key] = newValues[key];
+        hasChanged = true;
+      }
+    });
+
+    // Değişiklik yoksa işlem yapma
+    if (!hasChanged) return;
+
+    // Redux'a değerleri gönder 
+    dispatch(setReduxSelectedValues(mergedValues));
+
+    // Local state'i güncelle (sadece bir kez)
+    setSelectedValues(mergedValues);
   };
 
   const handleSearch = async (e) => {
     if (e) e.preventDefault();
 
     // Validasyon: Gerekli alanlar seçilmiş mi?
-    if (!selectedValues.provinceId || !selectedValues.districtId || !selectedValues.serviceId) {
-      showToast('Lütfen il, ilçe ve hizmet seçin');
+    if (!selectedValues.provinceId || !selectedValues.districtId) {
+      showToast('Lütfen ilçenizi seçin');
       return;
     }
 
@@ -171,55 +218,37 @@ export default function Home() {
       const searchParams = new URLSearchParams();
       searchParams.append('provinceId', selectedValues.provinceId);
       searchParams.append('districtId', selectedValues.districtId);
-      searchParams.append('serviceId', selectedValues.serviceId);
+
+      // Servis ID veya Slug varsa ekle
+      if (selectedValues.serviceSlug) {
+        searchParams.append('servicetypeSlug', selectedValues.serviceSlug);
+      } else if (selectedValues.serviceId) {
+        searchParams.append('serviceId', selectedValues.serviceId);
+      }
+
       searchParams.append('count', 3);
 
-      // Arama parametrelerini Redux'a kaydet
-      dispatch(setReduxSelectedValues(selectedValues));
-
-      // localStorage'a arama değerlerini kaydet
-      try {
-        localStorage.setItem('searchValues', JSON.stringify(selectedValues));
-      } catch (error) {
-        console.error('Arama değerleri kaydedilemedi:', error);
-      }
-
-      // Doğrudan API çağrısı yap (/api/locksmiths)
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-      const url = `${baseUrl}/api/locksmiths?${searchParams.toString()}`;
-      const response = await fetch(url);
-      const data = await response.json();
+      // API isteğini doğrudan /api/locksmiths endpointine yönlendir
+      const response = await fetch(`/api/locksmiths?${searchParams.toString()}`);
 
       if (!response.ok) {
-        throw new Error(data.error || 'Çilingir verilerini alırken bir hata oluştu');
+        throw new Error(`HTTP error ${response.status}`);
       }
 
-      // Redux store güncelleme
-      if (data.locksmiths && data.locksmiths.length > 0) {
-        // Çilingir sonuçları için ek veri hazırlığı
-        const formattedLocksmiths = data.locksmiths.map(locksmith => {
-          return {
-            ...locksmith,
-            serviceNames: locksmith.serviceList?.map(service => service.name) || [],
-            price: {
-              min: locksmith.serviceList && locksmith.serviceList.length > 0 ?
-                Math.min(...locksmith.serviceList.map(s => s.price1.min)) : 0,
-              max: locksmith.serviceList && locksmith.serviceList.length > 0 ?
-                Math.max(...locksmith.serviceList.map(s => s.price1.max)) : 0
-            }
-          };
-        });
+      const data = await response.json();
 
-        // Redux store'u başarılı sonuçla güncelle
+      // Çilingir verisi geldi mi kontrol et
+      if (data.locksmiths && data.locksmiths.length > 0) {
+        // Redux durumunu güncelle
         dispatch({
           type: 'search/searchLocksmiths/fulfilled',
           payload: {
-            locksmiths: formattedLocksmiths,
+            locksmiths: data.locksmiths,
             selectedValues: selectedValues
           }
         });
       } else {
-        showToast('Seçilen kriterlere uygun çilingir bulunamadı', 'info', 3000);
+        // Sonuç bulunamadı bilgisini gönder
         dispatch({
           type: 'search/searchLocksmiths/fulfilled',
           payload: {
@@ -227,20 +256,91 @@ export default function Home() {
             selectedValues: selectedValues
           }
         });
+
+        // Kullanıcıya bilgi ver
+        showToast('Bu bölgede çilingir bulunamadı.', 'info');
       }
 
-      // Sonuçlar bölümüne scroll yap
-      document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Sonuçları göster
+      document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
 
     } catch (error) {
-      console.error("Arama hatası:", error);
-      showToast('Arama sırasında bir hata oluştu. Lütfen tekrar deneyin.', 'error', 3000);
-      setLoadingLocksmithIds({});
-
-      // Redux store'u hata ile güncelle
+      console.error('Arama hatası:', error);
       dispatch({
         type: 'search/searchLocksmiths/rejected',
-        payload: error.message
+        payload: 'Çilingir araması sırasında bir hata oluştu. Lütfen tekrar deneyin.'
+      });
+    }
+  };
+
+  const handleSearchWithValues = async (values) => {
+    // Validasyon: Gerekli alanlar seçilmiş mi?
+    if (!values.provinceId || !values.districtId) {
+      showToast('Lütfen ilçenizi seçin');
+      return;
+    }
+
+    // Redux durumunu güncelle (isLoading = true, showResults = true)
+    dispatch({ type: 'search/searchLocksmiths/pending' });
+    setLoadingLocksmithIds({});
+
+    try {
+      const searchParams = new URLSearchParams();
+      searchParams.append('provinceId', values.provinceId);
+      searchParams.append('districtId', values.districtId);
+
+      // Servis ID veya Slug varsa ekle
+      if (values.serviceSlug) {
+        searchParams.append('servicetypeSlug', values.serviceSlug);
+      } else if (values.serviceId) {
+        searchParams.append('serviceId', values.serviceId);
+      }
+
+      searchParams.append('count', 3);
+
+      console.log('Search params:', searchParams.toString());
+
+      // API isteğini doğrudan /api/locksmiths endpointine yönlendir
+      const response = await fetch(`/api/locksmiths?${searchParams.toString()}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Çilingir verisi geldi mi kontrol et
+      if (data.locksmiths && data.locksmiths.length > 0) {
+        // Redux durumunu güncelle
+        dispatch({
+          type: 'search/searchLocksmiths/fulfilled',
+          payload: {
+            locksmiths: data.locksmiths,
+            selectedValues: values
+          }
+        });
+      } else {
+        // Sonuç bulunamadı bilgisini gönder
+        dispatch({
+          type: 'search/searchLocksmiths/fulfilled',
+          payload: {
+            locksmiths: [],
+            selectedValues: values
+          }
+        });
+
+        // Kullanıcıya bilgi ver
+        showToast('Bu bölgede çilingir bulunamadı.', 'info');
+      }
+
+      // Sonuçları göster
+      document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
+
+    } catch (error) {
+      console.error('Arama hatası:', error);
+      dispatch({
+        type: 'search/searchLocksmiths/rejected',
+        payload: 'Çilingir araması sırasında bir hata oluştu. Lütfen tekrar deneyin.'
       });
     }
   };
@@ -248,7 +348,6 @@ export default function Home() {
   // SearchParamsHandler bileşeni
   const SearchParamsHandler = ({ searchParams }) => {
     useEffect(() => {
-
       if (searchParams.has('focusList')) {
         setTimeout(() => {
           document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -260,14 +359,29 @@ export default function Home() {
         // URL'de fromDetail parametresi varsa, bu geri dönüş aramasıdır
         const isFromDetailPage = searchParams.has('fromDetail');
 
-        // Redux store'dan mevcut seçili değerleri al
-        const currentProvinceId = reduxSelectedValues.provinceId;
-        const currentDistrictId = reduxSelectedValues.districtId;
-        const currentServiceId = reduxSelectedValues.serviceId;
+        // Redux store'dan mevcut seçili değerleri al (null kontrolü ile)
+        const currentProvinceId = reduxSelectedValues?.provinceId;
+        const currentDistrictId = reduxSelectedValues?.districtId;
+        const currentServiceId = reduxSelectedValues?.serviceId;
+        const currentServiceSlug = reduxSelectedValues?.serviceSlug;
+
+        // Kullanıcı detay sayfasından geri dönüyorsa filtreyi muhafaza edelim
+        if (isFromDetailPage) {
+          // Redux'ta kaydedilmiş ID varsa onu UI'da gösterelim 
+          if (currentServiceId) {
+            setSelectedServiceId(currentServiceId);
+          } else if (currentServiceSlug && serviceList && serviceList.length > 0) {
+            // Slug'a göre servisi bul ve ID'sini ayarla
+            const matchingService = serviceList.find(s => s.slug === currentServiceSlug);
+            if (matchingService) {
+              setSelectedServiceId(matchingService.id);
+            }
+          }
+        }
 
         // Eğer değerler zaten seçiliyse ve detay sayfasından geliyorsa,
         // sadece arama sonuçlarını göster ama loglama yapma
-        if (isFromDetailPage && currentProvinceId && currentDistrictId && currentServiceId) {
+        if (isFromDetailPage && currentProvinceId && currentDistrictId) {
           // Redux loading durumunu güncelle
           dispatch({ type: 'search/searchLocksmiths/pending' });
 
@@ -599,6 +713,42 @@ export default function Home() {
     router.push(`/cilingirler/${slug}?fromDetail=true`, undefined, { scroll: false });
   };
 
+  // Servisleri çek (geçici olarak statik servis listesi kullanıyoruz)
+  useEffect(() => {
+    // Geçici statik servis listesi
+    const staticServices = [
+      { id: 1, name: "Acil", slug: "acil-cilingir" },
+      { id: 2, name: "7/24", slug: "7-24-cilingir" },
+      { id: 3, name: "Ev", slug: "ev-cilingir" },
+      { id: 4, name: "Otomobil", slug: "otomobil-cilingir" },
+      { id: 5, name: "Kasa", slug: "kasa-cilingir" },
+    ];
+
+    setServiceList(staticServices);
+    setIsLoadingServices(false);
+
+    /* API çağrısını geçici olarak yorum satırına alıyoruz
+    const fetchServices = async () => {
+      try {
+        setIsLoadingServices(true);
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        console.log('baseUrl', baseUrl);
+        const response = await fetch(`${baseUrl}/api/public/services`);
+        const data = await response.json();
+        console.log('data', data);
+        setServiceList(data.services || []);
+      } catch (error) {
+        console.error("Hizmetler yüklenirken hata:", error);
+        showToast("Hizmetler yüklenirken bir sorun oluştu", "error", 3000);
+      } finally {
+        setIsLoadingServices(false);
+      }
+    };
+
+    fetchServices();
+    */
+  }, []);
+
   return (
     <main className="flex min-h-screen flex-col items-center">
       {/* Suspense sınırı ile searchParams kullanımı */}
@@ -631,15 +781,6 @@ export default function Home() {
         <div className="w-full max-w-6xl mx-auto px-4 my-12" id="results-section">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl md:text-2xl font-bold text-gray-800">En Yakın Çilingirler</h2>
-            {/* <button 
-              onClick={() => setShowFilters(!showFilters)}
-              className="text-blue-600 flex items-center gap-1"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
-              </svg>
-              {showFilters ? "Gizle" : "Filtrele"}
-            </button> */}
           </div>
 
           {/* Yüklenirken spinner göster */}
@@ -652,55 +793,67 @@ export default function Home() {
             </div>
           ) : (
             <>
-              {/* Filtre Paneli */}
-              {showFilters && (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <h3 className="font-medium mb-2">Hizmet Türü</h3>
-                      <div className="space-y-2">
-                        {['Kapı Açma', 'Kilit Değiştirme', 'Çelik Kapı', 'Oto Çilingir', 'Kasa Çilingir'].map((service) => (
-                          <div key={service} className="flex items-center">
-                            <Checkbox id={service} />
-                            <label htmlFor={service} className="ml-2 text-sm text-gray-700">{service}</label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="font-medium mb-2">Değerlendirme</h3>
-                      <div className="space-y-2">
-                        {[4, 3, 2, 1].map((rating) => (
-                          <div key={rating} className="flex items-center">
-                            <Checkbox id={`rating-${rating}`} />
-                            <label htmlFor={`rating-${rating}`} className="ml-2 text-sm text-gray-700">
-                              {rating}+ <span className="text-yellow-500">★</span>
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="font-medium mb-2">Çalışma Saatleri</h3>
-                      <div className="space-y-2">
-                        <div className="flex items-center">
-                          <Checkbox id="24-hours" />
-                          <label htmlFor="24-hours" className="ml-2 text-sm text-gray-700">24 Saat Açık</label>
-                        </div>
-                        <div className="flex items-center">
-                          <Checkbox id="weekend" />
-                          <label htmlFor="weekend" className="ml-2 text-sm text-gray-700">Hafta Sonu Açık</label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end mt-4">
-                    <Button variant="outline" className="mr-2">Temizle</Button>
-                    <Button>Filtrele</Button>
-                  </div>
+              {/* Servis Kategori Filtreleri */}
+              <div className="mb-6 bg-white p-0 rounded-lg">
+                {/* <h3 className="text-lg font-medium text-gray-700 mb-3">Hizmet Kategorileri</h3> */}
+                <div className="flex overflow-x-auto no-scrollbar gap-1 pb-0">
+                  <Button
+                    variant={selectedServiceId === null ? "primary" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setSelectedServiceId(null);
+                      // Tüm servisleri göster (sadece ilçe bazlı filtreleme)
+                      const newValues = { ...selectedValues, serviceId: null, serviceSlug: null };
+                      setSelectedValues(newValues);
+                      // Yeni değerlerle arama yap (doğrudan güncel değerleri kullan)
+                      handleSearchWithValues(newValues);
+                    }}
+                    className={`rounded-full whitespace-nowrap flex-shrink-0 ${selectedServiceId === null
+                      ? "bg-blue-600 text-white font-bold shadow-md border-2 border-blue-600"
+                      : "bg-white text-gray-700 hover:bg-gray-100"
+                      }`}
+                  >
+                    Tümü
+                  </Button>
+                  {/* Servis kategorileri (dinamik olarak yüklenecek) */}
+                  {serviceList.map(service => (
+                    <Button
+                      key={service.id}
+                      variant={selectedServiceId === service.id ? "primary" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        setSelectedServiceId(service.id);
+                        // İlçe ve servis filtresini birlikte kullan
+                        const newValues = {
+                          ...selectedValues,
+                          // serviceId: service.id,
+                          serviceSlug: service.slug
+                        };
+                        setSelectedValues(newValues);
+                        // Yeni değerlerle arama yap (doğrudan güncel değerleri kullan)
+                        handleSearchWithValues(newValues);
+                      }}
+                      className={`rounded-full whitespace-nowrap flex-shrink-0 ${selectedServiceId === service.id
+                        ? "bg-blue-600 text-white font-bold shadow-md border-2 border-blue-600"
+                        : "bg-white text-gray-700 hover:bg-gray-100"
+                        }`}
+                    >
+                      {service.name}
+                    </Button>
+                  ))}
                 </div>
-              )}
+              </div>
+
+              {/* CSS sınıfı ekleyelim */}
+              <style jsx global>{`
+                .no-scrollbar::-webkit-scrollbar {
+                  display: none;
+                }
+                .no-scrollbar {
+                  -ms-overflow-style: none;  /* IE ve Edge */
+                  scrollbar-width: none;     /* Firefox */
+                }
+              `}</style>
 
               {/* Çilingir Listesi */}
               <div className="space-y-6">

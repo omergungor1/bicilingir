@@ -44,7 +44,7 @@ function isWithinTimeRange(openHour, closeHour) {
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
-
+        console.log('searchParams Route:', searchParams.toString());
         // Slug tabanlı parametreler
         const citySlug = searchParams.get('citySlug');
         const districtSlug = searchParams.get('districtSlug');
@@ -104,6 +104,7 @@ export async function GET(request) {
             .select('id')
             .eq('isactive', true)
             .eq('provinceid', cityId);
+
 
         if (locksmithsData) {
             locksmithIds = locksmithsData.map(item => item.id);
@@ -181,8 +182,11 @@ export async function GET(request) {
             }
         }
 
+        console.log('servicetypeSlug:', servicetypeSlug);
+        console.log('serviceParamId:', serviceParamId);
+
         //Bu hizmeti veriyor mu? locksmith_services tablosunda var mı?
-        if (servicetypeSlug) {
+        if (servicetypeSlug || serviceParamId) {
             //get serviceid 
             let serviceId = serviceParamId;
 
@@ -311,7 +315,7 @@ export async function GET(request) {
                 }
             })),
             slug: item.slug,
-            openingHours: "Mo-Su 00:00-23:59",
+            // openingHours: "Mo-Su 00:00-23:59",
             serviceType: servicetypeSlug ? servicetypeSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : "Çilingir Hizmeti",
             location: {
                 lat: item.locksmith_details.lat,
