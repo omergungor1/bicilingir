@@ -8,7 +8,9 @@ CREATE TABLE services (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     minPrice int2,
-    maxPrice int2
+    maxPrice int2,
+    slug TEXT UNIQUE NOT NULL,
+    sortOrder INT DEFAULT 0
 );
 
 -- İl (Province) Tablosu

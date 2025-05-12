@@ -298,8 +298,6 @@ export default function Home() {
 
       searchParams.append('count', 3);
 
-      console.log('Search params:', searchParams.toString());
-
       // API isteğini doğrudan /api/locksmiths endpointine yönlendir
       const response = await fetch(`/api/locksmiths?${searchParams.toString()}`);
 
@@ -716,27 +714,26 @@ export default function Home() {
   // Servisleri çek (geçici olarak statik servis listesi kullanıyoruz)
   useEffect(() => {
     // Geçici statik servis listesi
-    const staticServices = [
-      { id: 1, name: "Acil", slug: "acil-cilingir" },
-      { id: 2, name: "7/24", slug: "7-24-cilingir" },
-      { id: 3, name: "Ev", slug: "ev-cilingir" },
-      { id: 4, name: "Otomobil", slug: "otomobil-cilingir" },
-      { id: 5, name: "Kasa", slug: "kasa-cilingir" },
-    ];
+    // const staticServices = [
+    //   { id: 1, name: "Acil", slug: "acil-cilingir" },
+    //   { id: 2, name: "7/24", slug: "7-24-cilingir" },
+    //   { id: 3, name: "Ev", slug: "ev-cilingir" },
+    //   { id: 4, name: "Otomobil", slug: "otomobil-cilingir" },
+    //   { id: 5, name: "Kasa", slug: "kasa-cilingir" },
+    // ];
 
-    setServiceList(staticServices);
-    setIsLoadingServices(false);
+    // setServiceList(staticServices);
+    // setIsLoadingServices(false);
 
-    /* API çağrısını geçici olarak yorum satırına alıyoruz
+    /* API çağrısını geçici olarak yorum satırına alıyoruz */
     const fetchServices = async () => {
       try {
         setIsLoadingServices(true);
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-        console.log('baseUrl', baseUrl);
-        const response = await fetch(`${baseUrl}/api/public/services`);
+        const response = await fetch("/api/public/services");
         const data = await response.json();
-        console.log('data', data);
-        setServiceList(data.services || []);
+
+        setServiceList(data.services);
+        setIsLoadingServices(false);
       } catch (error) {
         console.error("Hizmetler yüklenirken hata:", error);
         showToast("Hizmetler yüklenirken bir sorun oluştu", "error", 3000);
@@ -746,7 +743,6 @@ export default function Home() {
     };
 
     fetchServices();
-    */
   }, []);
 
   return (
@@ -823,14 +819,11 @@ export default function Home() {
                       size="sm"
                       onClick={() => {
                         setSelectedServiceId(service.id);
-                        // İlçe ve servis filtresini birlikte kullan
                         const newValues = {
                           ...selectedValues,
-                          // serviceId: service.id,
                           serviceSlug: service.slug
                         };
                         setSelectedValues(newValues);
-                        // Yeni değerlerle arama yap (doğrudan güncel değerleri kullan)
                         handleSearchWithValues(newValues);
                       }}
                       className={`rounded-full whitespace-nowrap flex-shrink-0 ${selectedServiceId === service.id
@@ -838,7 +831,7 @@ export default function Home() {
                         : "bg-white text-gray-700 hover:bg-gray-100"
                         }`}
                     >
-                      {service.name}
+                      {service.name.split(' ')[0]}
                     </Button>
                   ))}
                 </div>
