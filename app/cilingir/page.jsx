@@ -1557,12 +1557,12 @@ function CilingirPanelContent() {
                   </span>
                 </div>
                 <div className="h-5 w-px bg-gray-300"></div>
-                <Link href={`/cilingirler/${locksmith.slug}`} target="_blank" rel="noopener noreferrer" className="hidden md:block">
+                {locksmith.isactive && <Link href={`/cilingirler/${locksmith.slug}`} target="_blank" rel="noopener noreferrer" className="hidden md:block">
                   <button className="text-sm flex items-center space-x-1 text-blue-600 hover:text-blue-800">
                     <Eye className="h-4 w-4" />
                     <span>Önizle</span>
                   </button>
-                </Link>
+                </Link>}
               </div>
             </div>
           </div>
@@ -2052,12 +2052,12 @@ function CilingirPanelContent() {
                   <CardTitle>Profil Bilgileri</CardTitle>
                   <CardDescription className="text-sm text-gray-500 flex items-center justify-between">
                     <span>İşletme bilgilerinizi güncelleyin</span>
-                    <Link href={`/cilingirler/${locksmith.slug}`} target="_blank" rel="noopener noreferrer" className="block md:hidden">
+                    {locksmith.isactive && <Link href={`/cilingirler/${locksmith.slug}`} target="_blank" rel="noopener noreferrer" className="block md:hidden">
                       <button className="text-sm flex items-center space-x-1 text-blue-600 hover:text-blue-800">
                         <Eye className="h-4 w-4" />
                         <span>Önizle</span>
                       </button>
-                    </Link>
+                    </Link>}
                     {/* <button onClick={() => sendMailTest()} className="text-sm flex items-center space-x-1 text-blue-600 hover:text-blue-800">
                       <Mail className="h-4 w-4" />
                       <span>Mail Test</span>

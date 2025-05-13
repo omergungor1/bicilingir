@@ -48,10 +48,8 @@ export const loginUser = createAsyncThunk(
         return rejectWithValue(errorMessage);
       }
 
-      console.log('Login başarılı:', data);
       const user = data.user;
 
-      console.log('user***', user);
 
       // Kullanıcı rolünü al
       const { data: roleData, error: roleError } = await supabase
@@ -75,13 +73,10 @@ export const loginUser = createAsyncThunk(
             .eq('authid', user.id)
             .single();
 
-          console.log('user.id***', user.id);
-          console.log('locksmithData***', locksmithData);
 
           if (locksmithError) {
             console.error('Çilingir bilgisi alınamadı:', locksmithError);
           } else if (locksmithData && locksmithData.id) {
-            console.log('Çilingir bilgisi alındı, users tablosu güncelleniyor...');
 
             // User-Agent ve IP bilgilerini al
             const userAgent = navigator.userAgent;
@@ -114,8 +109,6 @@ export const loginUser = createAsyncThunk(
 
               if (updateError) {
                 console.error('Çilingir kullanıcı güncellenirken hata:', updateError);
-              } else {
-                console.log('Çilingir kullanıcı başarıyla güncellendi');
               }
             } else {
               // Yeni kullanıcı kaydı oluştur
@@ -134,8 +127,6 @@ export const loginUser = createAsyncThunk(
 
               if (newUserError) {
                 console.error('Çilingir kullanıcı oluşturulurken hata:', newUserError);
-              } else {
-                console.log('Çilingir kullanıcı başarıyla oluşturuldu');
               }
             }
           }
@@ -149,7 +140,6 @@ export const loginUser = createAsyncThunk(
         data: { role: roleData.role }
       });
 
-      console.log('Kullanıcı rolü:', roleData.role);
       return {
         user,
         role: roleData.role

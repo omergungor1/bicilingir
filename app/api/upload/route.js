@@ -1,8 +1,27 @@
 import { getSupabaseServer } from '../../../lib/supabase';
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-// Service role key ile Supabase istemcisi oluştur (Admin yetkisine sahip)
+// Normal Supabase istemcisi
 const supabase = getSupabaseServer();
+
+// Admin yetkilerine sahip service_role ile Supabase istemcisi oluştur
+const getSupabaseAdmin = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // Service role key kullanılıyor
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('Supabase yapılandırma bilgileri eksik');
+    throw new Error('Supabase yapılandırma bilgileri eksik');
+  }
+
+  return createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false
+    }
+  });
+};
 
 export async function POST(request) {
   try {
@@ -26,8 +45,11 @@ export async function POST(request) {
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
     const filePath = `${fileName}`;
 
-    // Dosyayı Supabase bucket'a yükle
-    const { data, error } = await supabase.storage
+    // Admin yetkili Supabase istemcisini getir
+    const supabaseAdmin = getSupabaseAdmin();
+
+    // Dosyayı Supabase bucket'a yükle (admin yetkisiyle)
+    const { data, error } = await supabaseAdmin.storage
       .from(bucketName)
       .upload(filePath, buffer, {
         contentType: file.type, // MIME tipini belirt
@@ -43,7 +65,7 @@ export async function POST(request) {
     }
 
     // Dosya URL'ini oluştur
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = supabaseAdmin.storage
       .from(bucketName)
       .getPublicUrl(filePath);
 

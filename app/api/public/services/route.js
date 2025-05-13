@@ -4,8 +4,6 @@ import { getSupabaseServer } from '../../../../lib/supabase';
 export async function GET() {
   const supabase = getSupabaseServer();
   try {
-    // Gerçek sistemde tüm servisler ve çilingirin aktif servisleri
-    // Örnek implementasyon (gerçek kodda burada veritabanı sorgusu olacak)
     const { data: services, error } = await supabase
       .from('services')
       .select('id,name,slug,sortorder')

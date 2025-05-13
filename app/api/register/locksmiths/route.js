@@ -12,7 +12,6 @@ export async function POST(request) {
       locksmithDistrictsInsertData,
       locksmithWorkingHoursInsertData
     } = await request.json();
-    console.log('locksmithInsertData:', locksmithInsertData);
 
     // Gerekli alanların kontrolü
     if (!locksmithInsertData || !locksmithDetailsInsertData || !locksmithServicesInsertData || !locksmithDistrictsInsertData || !locksmithWorkingHoursInsertData) {
@@ -112,24 +111,24 @@ export async function POST(request) {
       );
     }
     //insert total key balance table
-    const { data: totalKeyBalanceData, error: totalKeyBalanceError } = await supabase
-      .from('key_balance')
-      .insert([
-        {
-          locksmithid: locksmithId,
-          totalkeybalance: 300,
-          lastupdated: new Date().toISOString()
-        }
-      ])
-      .select();
+    // const { data: totalKeyBalanceData, error: totalKeyBalanceError } = await supabase
+    //   .from('key_balance')
+    //   .insert([
+    //     {
+    //       locksmithid: locksmithId,
+    //       totalkeybalance: 300,
+    //       lastupdated: new Date().toISOString()
+    //     }
+    //   ])
+    //   .select();
 
-    if (totalKeyBalanceError) {
-      console.error('Toplam anahtar bakiyesi kaydı hatası:', totalKeyBalanceError);
-      return NextResponse.json(
-        { error: totalKeyBalanceError.message },
-        { status: 500 }
-      );
-    }
+    // if (totalKeyBalanceError) {
+    //   console.error('Toplam anahtar bakiyesi kaydı hatası:', totalKeyBalanceError);
+    //   return NextResponse.json(
+    //     { error: totalKeyBalanceError.message },
+    //     { status: 500 }
+    //   );
+    // }
 
     //locksmith_traffic insert
     const { data: locksmithTrafficData, error: locksmithTrafficError } = await supabase
@@ -215,56 +214,56 @@ export async function POST(request) {
       );
     }
 
-    const dailyKeyPreferencesObjects = [{
-      locksmithid: locksmithId,
-      dayofweek: 0,
-      keyamount: 60,
-      isActive: true
-    }, {
-      locksmithid: locksmithId,
-      dayofweek: 1,
-      keyamount: 60,
-      isActive: true
-    }, {
-      locksmithid: locksmithId,
-      dayofweek: 2,
-      keyamount: 60,
-      isActive: true
-    }, {
-      locksmithid: locksmithId,
-      dayofweek: 3,
-      keyamount: 60,
-      isActive: true
-    }, {
-      locksmithid: locksmithId,
-      dayofweek: 4,
-      keyamount: 60,
-      isActive: true
-    }, {
-      locksmithid: locksmithId,
-      dayofweek: 5,
-      keyamount: 60,
-      isActive: true
-    }, {
-      locksmithid: locksmithId,
-      dayofweek: 6,
-      keyamount: 60,
-      isActive: true
-    }];
+    // const dailyKeyPreferencesObjects = [{
+    //   locksmithid: locksmithId,
+    //   dayofweek: 0,
+    //   keyamount: 60,
+    //   isActive: true
+    // }, {
+    //   locksmithid: locksmithId,
+    //   dayofweek: 1,
+    //   keyamount: 60,
+    //   isActive: true
+    // }, {
+    //   locksmithid: locksmithId,
+    //   dayofweek: 2,
+    //   keyamount: 60,
+    //   isActive: true
+    // }, {
+    //   locksmithid: locksmithId,
+    //   dayofweek: 3,
+    //   keyamount: 60,
+    //   isActive: true
+    // }, {
+    //   locksmithid: locksmithId,
+    //   dayofweek: 4,
+    //   keyamount: 60,
+    //   isActive: true
+    // }, {
+    //   locksmithid: locksmithId,
+    //   dayofweek: 5,
+    //   keyamount: 60,
+    //   isActive: true
+    // }, {
+    //   locksmithid: locksmithId,
+    //   dayofweek: 6,
+    //   keyamount: 60,
+    //   isActive: true
+    // }];
 
-    //daily_key_preferences tablosuna kayıt
-    const { data: dailyKeyPreferencesData, error: dailyKeyPreferencesError } = await supabase
-      .from('daily_key_preferences')
-      .insert(dailyKeyPreferencesObjects)
-      .select();
+    // //daily_key_preferences tablosuna kayıt
+    // const { data: dailyKeyPreferencesData, error: dailyKeyPreferencesError } = await supabase
+    //   .from('daily_key_preferences')
+    //   .insert(dailyKeyPreferencesObjects)
+    //   .select();
 
-    if (dailyKeyPreferencesError) {
-      console.error('Günlük anahtar tercihleri kaydı hatası:', dailyKeyPreferencesError);
-      return NextResponse.json(
-        { error: dailyKeyPreferencesError.message },
-        { status: 500 }
-      );
-    }
+    // if (dailyKeyPreferencesError) {
+    //   console.error('Günlük anahtar tercihleri kaydı hatası:', dailyKeyPreferencesError);
+    //   return NextResponse.json(
+    //     { error: dailyKeyPreferencesError.message },
+    //     { status: 500 }
+    //   );
+    // }
 
     const name = locksmithInsertData.fullname.split(' ')[0] || '';
     //Create a welcome notification
@@ -327,12 +326,7 @@ export async function PUT(request) {
       locksmithDocumentsInsertData
     } = await request.json();
 
-    console.log('PUT:');
-    console.log('locksmithid:', locksmithid);
 
-
-
-    console.log('locksmithImagesInsertData:', locksmithImagesInsertData);
     const imagesObjects = locksmithImagesInsertData?.images?.map(image => ({
       locksmith_id: locksmithid,
       image_url: image.image_url,
@@ -340,7 +334,7 @@ export async function PUT(request) {
       display_order: image.display_order,
       is_main: false
     }));
-    console.log('imagesObjects:', imagesObjects);
+
 
     // locksmith_images tablosuna kayıt
     const { data: locksmithImagesData, error: locksmithImagesError } = await supabase
@@ -356,15 +350,13 @@ export async function PUT(request) {
       );
     }
 
-
-    console.log('locksmithCertificatesInsertData:', locksmithCertificatesInsertData);
     const certificatesObjects = locksmithCertificatesInsertData?.certificates?.map(certificate => ({
       locksmithid: locksmithid,
       name: certificate.name || 'Yok',
       fileurl: certificate.url,
       createdat: new Date().toISOString()
     }));
-    console.log('certificatesObjects:', certificatesObjects);
+
 
     // locksmith_certificates tablosuna kayıt
     const { data: locksmithCertificatesData, error: locksmithCertificatesError } = await supabase
@@ -380,7 +372,6 @@ export async function PUT(request) {
       );
     }
 
-    console.log('locksmithDocumentsInsertData:', locksmithDocumentsInsertData);
 
     const documentsObjects = {
       locksmithid: locksmithid,
@@ -388,7 +379,6 @@ export async function PUT(request) {
       fileurl: locksmithDocumentsInsertData?.documents?.url,
       createdat: new Date().toISOString()
     };
-    console.log('documentsObjects:', documentsObjects);
 
     // locksmith_documents tablosuna kayıt
     const { data: locksmithDocumentsData, error: locksmithDocumentsError } = await supabase

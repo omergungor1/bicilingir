@@ -8,7 +8,7 @@ const supabase = getSupabaseServer();
 
 export async function POST(request) {
   try {
-    const { email } = await request.json();
+    const { email, phone } = await request.json();
 
     // E-posta formatını kontrol et
     if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -20,8 +20,11 @@ export async function POST(request) {
 
     const { data: locksmithData, error: locksmithError } = await supabase
       .from('locksmiths')
-      .select('email')
-      .eq('email', email)
+      .select('email,phonenumber,whatsappnumber')
+      // .eq('email', email)
+      // .eq('phonenumber', phone)
+      // .eq('whatsappnumber', phone)
+      .or(`email.eq.${email},phonenumber.eq.${phone},whatsappnumber.eq.${phone}`)
       .limit(1);
 
     if (locksmithError) {

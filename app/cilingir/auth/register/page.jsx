@@ -82,7 +82,8 @@ const uploadFilesToBucket = async (files, bucketName) => {
 };
 
 // Slug oluşturma fonksiyonu
-const generateSlug = (businessName, provinceName, districtName) => {
+const generateSlug = (businessName) => {
+  //, provinceName, districtName
   if (!businessName) return '';
 
   // Türkçe karakterleri ve boşlukları düzelt
@@ -104,24 +105,24 @@ const generateSlug = (businessName, provinceName, districtName) => {
   // Boşlukları tire ile değiştir
   slug = slug.replace(/\s+/g, '-');
 
-  // İl ve ilçe ekle (varsa)
-  if (provinceName) {
-    let province = provinceName.toLowerCase();
-    Object.keys(turkishToEnglish).forEach(key => {
-      province = province.replace(new RegExp(key, 'g'), turkishToEnglish[key]);
-    });
-    province = province.replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-');
-    slug += `-${province}`;
-  }
+  // // İl ve ilçe ekle (varsa)
+  // if (provinceName) {
+  //   let province = provinceName.toLowerCase();
+  //   Object.keys(turkishToEnglish).forEach(key => {
+  //     province = province.replace(new RegExp(key, 'g'), turkishToEnglish[key]);
+  //   });
+  //   province = province.replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-');
+  //   slug += `-${province}`;
+  // }
 
-  if (districtName) {
-    let district = districtName.toLowerCase();
-    Object.keys(turkishToEnglish).forEach(key => {
-      district = district.replace(new RegExp(key, 'g'), turkishToEnglish[key]);
-    });
-    district = district.replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-');
-    slug += `-${district}`;
-  }
+  // if (districtName) {
+  //   let district = districtName.toLowerCase();
+  //   Object.keys(turkishToEnglish).forEach(key => {
+  //     district = district.replace(new RegExp(key, 'g'), turkishToEnglish[key]);
+  //   });
+  //   district = district.replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '-');
+  //   slug += `-${district}`;
+  // }
 
   // Fazla tireleri temizle
   slug = slug.replace(/-+/g, '-');
@@ -1098,14 +1099,15 @@ export default function CilingirKayit() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: formData.email
+          email: formData.email,
+          phone: formData.telefon
         }),
       });
       const data = await response.json();
 
       if (data.exists) {
-        newErrors.email = 'Bu e-posta adresi zaten kayıtlı. Lütfen başka bir e-posta adresi kullanınız.';
-        return 'Bu e-posta adresi zaten kayıtlı. Lütfen başka bir e-posta adresi kullanınız.';
+        newErrors.email = 'Bu e-posta veya telefon numarası zaten kayıtlı. Lütfen değiştiriniz.';
+        return 'Bu e-posta veya telefon numarası zaten kayıtlı. Lütfen değiştiriniz.';
       }
 
 
@@ -1375,11 +1377,11 @@ export default function CilingirKayit() {
 
 
       // 5. İl adı ve ilçe adını al
-      const provinceName = turkiyeIlIlce.provinces.find(il => il.id === formData.il)?.name || '';
-      const districtName = turkiyeIlIlce.districts.find(ilce => ilce.id === formData.ilce)?.name || '';
+      // const provinceName = turkiyeIlIlce.provinces.find(il => il.id === formData.il)?.name || '';
+      // const districtName = turkiyeIlIlce.districts.find(ilce => ilce.id === formData.ilce)?.name || '';
 
       // 6. Slug oluştur
-      const slug = generateSlug(formData.isletmeAdi, provinceName, districtName);
+      const slug = generateSlug(formData.isletmeAdi);
 
 
       const locksmithInsertData = {
@@ -1409,7 +1411,6 @@ export default function CilingirKayit() {
         youtube_url: formData.sosyalMedya.youtube || null,
         websiteurl: formData.websiteUrl || null,
         startdate: `${formData.startDate}-01-01`,
-        password: formData.sifre
       }
 
       const locksmithDistrictsInsertData = {
@@ -1451,18 +1452,15 @@ export default function CilingirKayit() {
       const locksmithid = await locksmithResponseData.locksmithid;
 
 
-      console.log('Giriş denemesi başlatılıyor');
       try {
         await dispatch(loginUser({
           email: formData.email,
           password: formData.sifre
         }));
-        console.log('Giriş isteği gönderildi');
       } catch (loginError) {
         console.error('Giriş hatası:', loginError);
         showToast("Kayıt başarılı fakat otomatik giriş yapılamadı. Lütfen manuel olarak giriş yapın.", "warning");
       }
-      console.log('Giriş denemesi tamamlandı');
 
 
       // 2. İşletme resimlerini Supabase bucket'a yükle
@@ -2042,8 +2040,8 @@ export default function CilingirKayit() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Sosyal Medya Linkleri */}
+                  {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    // Sosyal Medya Linkleri 
                     <div className="md:col-span-2 mt-4">
                       <h3 className="text-lg font-medium mb-3">Sosyal Medya Hesaplarınız</h3>
                       <p className="text-sm text-gray-500 mb-4">
@@ -2152,7 +2150,7 @@ export default function CilingirKayit() {
                         <p className="mt-1 text-sm text-red-600">{errors['sosyalMedya.tiktok']}</p>
                       )}
                     </div>
-                  </div>
+                  </div> */}
 
                   <div className="flex justify-between mt-8">
                     <Button type="button" variant="outline" onClick={prevStep}>Geri</Button>
