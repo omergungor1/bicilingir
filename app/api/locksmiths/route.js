@@ -183,6 +183,8 @@ export async function GET(request) {
 
         //Bu hizmeti veriyor mu? locksmith_services tablosunda var mı?
         if (servicetypeSlug || serviceParamId) {
+            // console.log('servicetypeSlug:', servicetypeSlug);
+            // console.log('serviceParamId:', serviceParamId);
             //get serviceid 
             let serviceId = serviceParamId;
 

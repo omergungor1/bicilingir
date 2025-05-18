@@ -358,7 +358,7 @@ export default function LocksmithCard({ locksmith, index }) {
                         {/* Whatsapp Butonu */}
                         <Button
                             variant="outline"
-                            className={`w-full text-white! flex items-center justify-center gap-2 ${index === 0 ? 'bg-green-600 hover:bg-green-700 font-bold shadow-md' : 'bg-green-500 hover:bg-green-600'}`}
+                            className={`w-full text-white flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 font-bold shadow-md`}
                             onClick={() => handleWhatsappMessage(locksmith, index)}
                         >
                             <svg
@@ -443,10 +443,10 @@ export default function LocksmithCard({ locksmith, index }) {
                                     </div>
                                 </PopoverContent>
                             </Popover>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                        </div >
+                    </div >
+                </div >
+            </div >
+        </div >
     )
 }
