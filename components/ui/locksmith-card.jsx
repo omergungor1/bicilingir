@@ -354,7 +354,7 @@ export default function LocksmithCard({ locksmith, index }) {
                         <div>
                             <div className="flex flex-col gap-2">
                                 <h3 className={`text-xl font-bold ${index === 0 ? 'text-blue-800' : 'text-gray-800'}`}>{locksmith.name}</h3>
-                                <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
+                                <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2">
                                     {index === 0 && (
                                         <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -468,9 +468,11 @@ export default function LocksmithCard({ locksmith, index }) {
                     <div className="space-y-3">
                         <Button
                             onClick={() => handleCallLocksmith(locksmith, index)}
-                            className={`w-full ${index === 0 ? 'bg-blue-600 hover:bg-blue-700 text-white font-bold animate-pulse shadow-md' : 'bg-[#4169E1]'}`}
+                            // className={`w-full ${index === 0 ? 'bg-blue-600 hover:bg-blue-700 text-white font-bold animate-pulse shadow-md' : 'bg-[#4169E1]'}`}
+                            className={`w-full shadow-md bg-[#4169E1]`}
                         >
-                            {index === 0 ? 'Hemen Ara' : 'Ara'}
+                            {/* {index === 0 ? 'Hemen Ara' : 'Ara'} */}
+                            {locksmith.phone}
                             {index === 0 && (
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />

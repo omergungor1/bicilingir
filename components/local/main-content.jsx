@@ -47,10 +47,10 @@ export default function MainContent(params) {
                 ))}
             </nav>
             {/* Sayfa başlığı */}
-            <h1 className="text-3xl font-bold mb-2">{mainCard.title}</h1>
+            <h1 className="text-2xl font-bold mb-2">{mainCard.title}</h1>
             <p className="text-gray-600 mb-6">{mainCard.description}</p>
 
-            <h2 className="text-2xl font-semibold mb-4">{locksmitList.title}</h2>
+            <h2 className="text-xl font-semibold mb-4">{locksmitList.title}</h2>
             <p className="text-gray-600 mb-6">{locksmitList.description}</p>
             <div className="grid grid-cols-1 gap-6 mb-8">
                 {locksmitList.data.map((locksmith, index) => (
@@ -60,13 +60,13 @@ export default function MainContent(params) {
 
             {/**Second Card */}
             <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
-                <h2 className="text-2xl font-semibold mb-4">{seconCard.title}</h2>
+                <h2 className="text-xl font-semibold mb-4">{seconCard.title}</h2>
                 {seconCard.longDescription && seconCard.longDescription.split('\n').map((line, index) => (
                     <p className="mt-2" key={index}>{line}</p>
                 ))}
             </div>
 
-            <h2 className="text-2xl font-semibold mb-4">{serviceList.title}</h2>
+            <h2 className="text-xl font-semibold mb-4">{serviceList.title}</h2>
             <p className="text-gray-600 mb-6">{serviceList.description}</p>
 
             {/**Service List */}
@@ -113,7 +113,7 @@ export default function MainContent(params) {
 
             {/* Sık Sorulan Sorular */}
             <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">{sssList.title}</h2>
+                <h2 className="text-xl font-bold text-gray-800 mb-6">{sssList.title}</h2>
                 <p className="text-gray-600 mb-6">{sssList.description}</p>
 
                 <div className="space-y-4">
