@@ -565,100 +565,97 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
     const deviceType = userAgent.includes('Mobile') ? 'mobile' : 'desktop';
 
     // activitytype tipine göre level ayarı
-    let finalLevel = level;
+    let finalLevel = 1;
 
-    // call_request ve locksmith_detail_view için her zaman level 1 kullan
-    if (activitytype === 'call_request' || activitytype === 'locksmith_detail_view') {
-      finalLevel = 1;
-      // console.log(`${activitytype} için level zorla 1 olarak ayarlandı`);
-    }
 
-    // Key usage bilgisini al
-    const { data: keyUsageData, error: keyUsageError } = await supabase
-      .from('key_usage_types')
-      .select('id, keyamount')
-      .eq('name', activitytype)
-      .eq('level', finalLevel)
-      .limit(1);
+    //18 mayıs 2025
+    // // Key usage bilgisini al
+    // const { data: keyUsageData, error: keyUsageError } = await supabase
+    //   .from('key_usage_types')
+    //   .select('id, keyamount')
+    //   .eq('name', activitytype)
+    //   .eq('level', finalLevel)
+    //   .limit(1);
 
-    if (keyUsageError) {
-      console.error('Key usage bilgisi alınamadı:', keyUsageError);
-    }
+    // if (keyUsageError) {
+    //   console.error('Key usage bilgisi alınamadı:', keyUsageError);
+    // }
 
-    let keyAmount = 0;
-    let usageTypeId = null;
     let systemNote = '';
 
-    if (keyUsageData && keyUsageData.length > 0) {
-      keyAmount = keyUsageData[0].keyamount;
-      usageTypeId = keyUsageData[0].id;
-      // console.log(`Key usage bilgisi alındı: ${activitytype} (level: ${finalLevel}) - ${keyAmount} anahtar`);
-    } else {
-      // console.warn(`Key usage bilgisi bulunamadı: ${activitytype} (level: ${finalLevel}). Varsayılan değer kullanılıyor.`);
-      // Varsayılan değer olarak 0 anahtar kullan
-      keyAmount = 0;
-      systemNote += '|Key usage bilgisi bulunamadı';
-    }
+    //18 mayıs 2025
+    // if (keyUsageData && keyUsageData.length > 0) {
+    //   keyAmount = keyUsageData[0].keyamount;
+    //   usageTypeId = keyUsageData[0].id;
+    //   // console.log(`Key usage bilgisi alındı: ${activitytype} (level: ${finalLevel}) - ${keyAmount} anahtar`);
+    // } else {
+    //   // console.warn(`Key usage bilgisi bulunamadı: ${activitytype} (level: ${finalLevel}). Varsayılan değer kullanılıyor.`);
+    //   // Varsayılan değer olarak 0 anahtar kullan
+    //   keyAmount = 0;
+    //   systemNote += '|Key usage bilgisi bulunamadı';
+    // }
 
-    try {
-      //count user_activity_logs with userId
-      const { count: userActivityLogsCount, error: userActivityLogsError } = await supabase
-        .from('user_activity_logs')
-        .select('id', { count: 'exact', head: true })
-        .eq('userid', userId)
+    //18 mayıs 2025
+    // try {
+    //   //count user_activity_logs with userId
+    //   const { count: userActivityLogsCount, error: userActivityLogsError } = await supabase
+    //     .from('user_activity_logs')
+    //     .select('id', { count: 'exact', head: true })
+    //     .eq('userid', userId)
 
-      if (userActivityLogsError) {
-        console.error('Kullanıcı aktivite kayıtları alınamadı:', userActivityLogsError);
-      }
+    //   if (userActivityLogsError) {
+    //     console.error('Kullanıcı aktivite kayıtları alınamadı:', userActivityLogsError);
+    //   }
 
 
-      if (userActivityLogsCount > 10 && userId) {
-        //update users table issuspicious to true
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({ issuspicious: true })
-          .eq('id', userId);
+    //18 mayıs 2025
+    //   if (userActivityLogsCount > 10 && userId) {
+    //     //update users table issuspicious to true
+    //     const { error: updateError } = await supabase
+    //       .from('users')
+    //       .update({ issuspicious: true })
+    //       .eq('id', userId);
 
-        if (updateError) {
-          console.error('Kullanıcı güncellenemedi:', updateError);
-        }
+    //     if (updateError) {
+    //       console.error('Kullanıcı güncellenemedi:', updateError);
+    //     }
 
-      }
-    } catch (error) {
-      console.error('Kullanıcı aktivite kayıtları alınamadı:', error);
-    }
+    //   }
+    // } catch (error) {
+    //   console.error('Kullanıcı aktivite kayıtları alınamadı:', error);
+    // }
 
     // Kullanıcının varlığını kontrol et, yoksa yeni bir kullanıcı oluştur
     // Bu adım, users tablosu boşaltıldığında foreign key hatası almanın önüne geçecek
     if (userId) {
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('id,islocksmith,issuspicious')
+        .select('id')
         .eq('id', userId)
         .limit(1);
 
       if (userError) {
         console.error('Kullanıcı kontrolü sırasında hata:', userError);
       }
-      try {
+      // try {
 
-        if (userData[0]?.islocksmith) {
-          keyAmount = 0;
-          systemNote += '|Çilingir kullanıcı';
-        }
+      //   if (userData[0]?.islocksmith) {
+      //     keyAmount = 0;
+      //     systemNote += '|Çilingir kullanıcı';
+      //   }
 
-        if (userData[0]?.issuspicious) {
-          keyAmount = 0;
-          systemNote += '|Şüpheli kullanıcı';
-        }
+      //   if (userData[0]?.issuspicious) {
+      //     keyAmount = 0;
+      //     systemNote += '|Şüpheli kullanıcı';
+      //   }
 
-      } catch (error) {
-        console.error('Kullanıcı bilgisi alınamadı:', error);
-      }
+      // } catch (error) {
+      //   console.error('Kullanıcı bilgisi alınamadı:', error);
+      // }
 
       // Kullanıcı bulunamadıysa yeni bir kullanıcı oluştur
       if (!userData || userData.length === 0) {
-        console.log(`Kullanıcı ID ${userId} veritabanında bulunamadı, yeni kullanıcı oluşturuluyor...`);
+        console.log(`Kullanıcı bulunamadı, yeni kullanıcı oluşturuluyor...`);
         const newUserData = {
           id: userId, // Mevcut ID'yi koruyoruz
           useragent: userAgent || 'Unknown',
@@ -721,55 +718,56 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
         return null;
       }
 
-      console.log(`Yeni kullanıcı oluşturuldu: ${userId}`);
     }
 
-    try {
-      if (additionalData.locksmithId) {
-        const { data: locksmithData, error: locksmithError } = await supabase
-          .from('locksmiths')
-          .select('provinceid')
-          .eq('id', additionalData.locksmithId)
-          .limit(1);
+    //18 mayıs 2025
+    // try {
+    //   if (additionalData.locksmithId) {
+    //     const { data: locksmithData, error: locksmithError } = await supabase
+    //       .from('locksmiths')
+    //       .select('provinceid')
+    //       .eq('id', additionalData.locksmithId)
+    //       .limit(1);
 
-        if (locksmithError) {
-          console.error('Çilingir bilgisi alınamadı:', locksmithError);
-        }
-
-
-        if (locksmithData && locksmithData.length > 0) {
-          if (locksmithData[0].provinceid !== additionalData.searchProvinceId) {
-            keyAmount = 0;
-            systemNote += '|Çilingir bu ilde çalışmıyor';
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Çilingir bilgisi alınamadı:', error);
-    }
+    //     if (locksmithError) {
+    //       console.error('Çilingir bilgisi alınamadı:', locksmithError);
+    //     }
 
 
-    try {
-      if (additionalData.locksmithId && additionalData.searchServiceId) {
-        const { data: locksmithData, error: locksmithError } = await supabase
-          .from('locksmith_services')
-          .select('serviceid')
-          .eq('locksmithid', additionalData.locksmithId)
-          .eq('serviceid', additionalData.searchServiceId)
-          .eq('isactive', true)
-          .limit(1);
+    //     if (locksmithData && locksmithData.length > 0) {
+    //       if (locksmithData[0].provinceid !== additionalData.searchProvinceId) {
+    //         keyAmount = 0;
+    //         systemNote += '|Çilingir bu ilde çalışmıyor';
+    //       }
+    //     }
+    //   }
+    // } catch (error) {
+    //   console.error('Çilingir bilgisi alınamadı:', error);
+    // }
 
-        if (locksmithError) {
-          console.error('Çilingir bilgisi alınamadı:', locksmithError);
-        } else if (!locksmithData || locksmithData.length === 0) {
-          keyAmount = 0;
-          systemNote += '|Çilingir bu hizmeti vermiyor';
-        }
-      }
 
-    } catch (error) {
-      console.error('Çilingir bilgisi alınamadı:', error);
-    }
+    //18 mayıs 2025
+    // try {
+    //   if (additionalData.locksmithId && additionalData.searchServiceId) {
+    //     const { data: locksmithData, error: locksmithError } = await supabase
+    //       .from('locksmith_services')
+    //       .select('serviceid')
+    //       .eq('locksmithid', additionalData.locksmithId)
+    //       .eq('serviceid', additionalData.searchServiceId)
+    //       .eq('isactive', true)
+    //       .limit(1);
+
+    //     if (locksmithError) {
+    //       console.error('Çilingir bilgisi alınamadı:', locksmithError);
+    //     } else if (!locksmithData || locksmithData.length === 0) {
+    //       keyAmount = 0;
+    //       systemNote += '|Çilingir bu hizmeti vermiyor';
+    //     }
+    //   }
+
+    // } catch (error) {
+    //   console.error('Çilingir bilgisi alınamadı:', error);
+    // }
 
 
 
@@ -778,15 +776,17 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
       userid: userId,
       activitytype: activitytype,
       devicetype: deviceType,
-      keyamount: keyAmount,
+      keyamount: 0,
       createdat: new Date().toISOString(),
       systemnote: systemNote
     };
 
-    // UsageTypeId varsa ekle
-    if (usageTypeId) {
-      insertData.usagetypeid = usageTypeId;
-    }
+
+    //18 mayıs 2025
+    // // UsageTypeId varsa ekle
+    // if (usageTypeId) {
+    //   insertData.usagetypeid = usageTypeId;
+    // }
 
     // SessionId varsa ve UUID formatındaysa ekle
     if (sessionId) {
