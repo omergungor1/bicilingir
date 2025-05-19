@@ -24,7 +24,7 @@ export default function GemlikCilingirPage() {
     return (
         <div className="min-h-screen bg-gray-50 overflow-x-hidden touch-pan-y px-4 md:px-16 lg:px-32 pt-2 pb-8">
             {/* Sayfa başlığı */}
-            <h1 className="text-xl font-bold mb-2">Gemlik 7/24 Acil Çilingirler</h1>
+            <h1 className="text-xl lg:text-2xl font-bold mb-2">Gemlik 7/24 Acil Çilingirler</h1>
             <p className="text-sm md:text-base text-gray-600 mb-3">Gemlik 7/24 çalışan acil çilingirler aşağıda listelenmiştir. Hemen arayıp bilgi alabilirsiniz.</p>
 
             <div className="grid grid-cols-1 gap-6 mb-8">
@@ -34,44 +34,58 @@ export default function GemlikCilingirPage() {
             </div>
 
             {/* Çilingir Hizmetleri */}
-            <section aria-label="Çilingir Hizmetleri" className="mb-8">
-                <h2 className="text-xl font-bold mb-6">Gemlik Çilingir Hizmetleri</h2>
+            <section aria-label="Çilingir Hizmetleri" className="mb-12">
+                <h2 className="text-lg lg:text-xl font-bold mb-6 text-gray-900">Gemlik Çilingir Hizmetleri</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[
                         {
                             title: "7/24 Çilingir Hizmeti",
-                            desc: "Gemlik'in tüm mahallelerinde 7/24 kesintisiz çilingir hizmeti sunuyoruz. Gece gündüz demeden, dakikalar içinde kapınızdayız."
+                            desc: "Gemlik'in tüm mahallelerinde 7/24 kesintisiz çilingir hizmeti sunuyoruz. Gece gündüz demeden, dakikalar içinde kapınızdayız.",
+                            id: "service-24-7"
                         },
                         {
                             title: "Acil Kapı Açma",
-                            desc: "Gemlik'te kapınız mı kilitli kaldı? Profesyonel ekibimiz en kısa sürede yanınızda. Kilide zarar vermeden kapınızı açıyoruz."
+                            desc: "Gemlik'te kapınız mı kilitli kaldı? Profesyonel ekibimiz en kısa sürede yanınızda. Kilide zarar vermeden kapınızı açıyoruz.",
+                            id: "service-emergency"
                         },
                         {
                             title: "Oto Çilingir & Anahtar",
-                            desc: "Gemlik'te araç anahtarı mı kayboldu? Tüm marka araçlar için yerinde anahtar yapımı ve immobilizer programlama hizmeti."
+                            desc: "Gemlik'te araç anahtarı mı kayboldu? Tüm marka araçlar için yerinde anahtar yapımı ve immobilizer programlama hizmeti.",
+                            id: "service-auto"
                         },
                         {
                             title: "Ev & İşyeri Çilingir",
-                            desc: "Gemlik'te ev, apartman ve iş yeri kapıları için uzman çilingir. Çelik kapı, elektronik kilit ve alarm sistemleri kurulumu."
-                        },
-                        {
-                            title: "Kasa Çilingir",
-                            desc: "Gemlik'te kasa açma ve kilit sistemleri konusunda güvenilir çözüm ortağınız.",
+                            desc: "Gemlik'te ev, apartman ve iş yeri kapıları için uzman çilingir. Çelik kapı, elektronik kilit ve alarm sistemleri kurulumu.",
+                            id: "service-home"
                         }
                     ].map((service, idx) => (
-                        <article key={idx} className="bg-white p-6 rounded-lg border border-gray-100 hover:border-blue-100 transition-colors">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">{service.title}</h3>
-                            <p className="text-gray-600 leading-relaxed">{service.desc}</p>
+                        <article
+                            key={service.id}
+                            id={service.id}
+                            className="bg-white p-6 rounded-lg border border-gray-200 hover:border-blue-200 transition-colors"
+                            aria-labelledby={`title-${service.id}`}
+                        >
+                            <h3
+                                id={`title-${service.id}`}
+                                className="text-base lg:text-lg font-semibold text-gray-900 mb-3"
+                            >
+                                {service.title}
+                            </h3>
+                            <p className="text-gray-700 leading-relaxed">
+                                {service.desc}
+                            </p>
                         </article>
                     ))}
                 </div>
             </section>
 
-            <h2 className="text-xl font-bold mb-2">Gemlik Çilingir Anahtarcılar</h2>
-            <p className="text-gray-600 mb-6">Yukarıda Bursa Gemlik ilçesinde faaliyet gösteren çilingirler listelenmiştir. Şuanda açık ve aktif hizmet vermektedir. Hemen arayarak bilgi alabilirsiniz.</p>
+            <section aria-label="Çilingir Listesi">
+                <h2 className="text-lg lg:text-xl font-bold mb-4 text-gray-900">Gemlik Çilingir Anahtarcılar</h2>
+                <p className="text-gray-700 mb-6">Yukarıda Bursa Gemlik ilçesinde faaliyet gösteren çilingirler listelenmiştir. Şuanda açık ve aktif hizmet vermektedir. Hemen arayarak bilgi alabilirsiniz.</p>
+            </section>
 
             {/* Sık Sorulan Sorular */}
-            <h2 className="text-xl font-bold text-gray-800 mb-2">Sık Sorulan Sorular</h2>
+            <h2 className="text-lg lg:text-xl font-bold text-gray-800 mb-2">Sık Sorulan Sorular</h2>
             <div className="space-y-2">
                 {
                     sssList.map((item, index) => (

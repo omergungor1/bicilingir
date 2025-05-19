@@ -19,12 +19,12 @@ export default function PrivacyPage() {
 
         <div className="bg-white p-8 rounded-lg shadow-md">
           <h1 className="text-3xl font-bold mb-8 text-gray-800 text-center">Gizlilik Politikası</h1>
-          
+
           <div className="prose max-w-none">
             <p className="text-gray-600 mb-6">
-              Son güncelleme: {new Date().toLocaleDateString('tr-TR', {year: 'numeric', month: 'long', day: 'numeric'})}
+              Son güncelleme: {new Date().toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
-            
+
             <h2 className="text-xl font-semibold mb-4 text-gray-800">1. Giriş</h2>
             <p className="mb-4">
               Bi Çilingir olarak, gizliliğinize saygı duyuyor ve kişisel verilerinizin korunmasına önem veriyoruz. Bu Gizlilik Politikası, web sitemizi ve hizmetlerimizi kullanırken kişisel verilerinizin nasıl toplandığını, kullanıldığını, paylaşıldığını ve korunduğunu açıklamaktadır.
@@ -44,7 +44,7 @@ export default function PrivacyPage() {
               <li>Çilingirler hakkında bıraktığınız değerlendirmeler ve yorumlar</li>
               <li>Hesap güvenliği için gerekli bilgiler</li>
             </ul>
-            
+
             <h3 className="text-lg font-medium mb-2 text-gray-700">2.2. Çilingirlerden Topladığımız Bilgiler</h3>
             <ul className="list-disc pl-6 mb-4">
               <li>Kişisel bilgiler (ad, soyad, e-posta adresi, telefon numarası)</li>
@@ -53,7 +53,7 @@ export default function PrivacyPage() {
               <li>Profesyonel deneyim ve sertifikalar</li>
               <li>Kimlik ve işletme belgelerinin kopyaları</li>
             </ul>
-            
+
             <h3 className="text-lg font-medium mb-2 text-gray-700">2.3. Otomatik Olarak Toplanan Bilgiler</h3>
             <ul className="list-disc pl-6 mb-4">
               <li>IP adresi ve cihaz kimliği</li>
@@ -87,6 +87,7 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-6 mb-4">
               <li><strong>Çilingirler ve Kullanıcılar:</strong> Platformun temel işlevi gereği, hizmet sağlamak için gerekli olan bilgiler çilingirler ve kullanıcılar arasında paylaşılabilir.</li>
               <li><strong>Hizmet Sağlayıcılar:</strong> Hizmetlerimizi sağlamamıza yardımcı olan güvenilir üçüncü taraf hizmet sağlayıcılarla (ödeme işlemcileri, bulut depolama sağlayıcıları, analiz hizmetleri vb.) bilgi paylaşabiliriz.</li>
+              <li><strong>Google Hizmetleri:</strong> Platformumuz, reklam performansını artırmak ve kullanıcı deneyimini iyileştirmek amacıyla Google ile belirli kullanıcı verilerini paylaşabilir. Google, bu verileri yalnızca dönüşüm ölçümü ve analiz amacıyla işler. Tüm veri paylaşımı, Google'ın gizlilik standartları ve bizim Gizlilik Politikamız kapsamında güvenli bir şekilde gerçekleştirilir.</li>
               <li><strong>Yasal Zorunluluklar:</strong> Yasal bir yükümlülüğe uymak, platformumuzun haklarını ve güvenliğini korumak veya yasal bir süreç kapsamında bilgileri paylaşabiliriz.</li>
               <li><strong>İşletme Devri:</strong> Şirketimizin satışı, birleşmesi veya devri durumunda kişisel bilgiler de devredilebilir.</li>
               <li><strong>İzninizle:</strong> Açıkça izin verdiğiniz diğer durumlarda bilgilerinizi paylaşabiliriz.</li>
@@ -164,7 +165,7 @@ export default function PrivacyPage() {
               Gizlilik Politikamız veya kişisel verilerinizin işlenmesi hakkında sorularınız, endişeleriniz veya talepleriniz varsa, lütfen bizimle <Link href="/iletisim" className="text-blue-600 hover:underline">iletişim sayfamız</Link> aracılığıyla iletişime geçin.
             </p>
           </div>
-          
+
           <div className="mt-10 pt-6 border-t border-gray-200">
             <Link href="/" className="text-blue-600 hover:underline">← Ana Sayfa'ya Dön</Link>
           </div>
