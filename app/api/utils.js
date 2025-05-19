@@ -777,7 +777,7 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
       activitytype: activitytype,
       devicetype: deviceType,
       keyamount: 0,
-      createdat: new Date().toISOString(),
+      createdat: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
       systemnote: systemNote
     };
 

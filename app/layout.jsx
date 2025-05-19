@@ -43,19 +43,22 @@ export default function RootLayout({ children }) {
         </noscript>
 
         {/* Analitics için zaten vardı */}
-        <Script
+        {/* GTAG entegre edince gerek kalmadı */}
+        {/* <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-4Y185JLHGY"
           strategy="afterInteractive"
-        />
+        /> */}
+
         {/* Analitics için zaten vardı */}
-        <Script id="google-analytics" strategy="afterInteractive">
+        {/* GTAG entegre edince gerek kalmadı */}
+        {/* <Script id="google-analytics" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', 'G-4Y185JLHGY');
           `}
-        </Script>
+        </Script> */}
 
         {/* Kullanıcı ID ve Oturum Yönetimi */}
         {/* <Script id="user-tracking" strategy="beforeInteractive">
