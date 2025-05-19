@@ -206,6 +206,15 @@ export default function LocksmithCard({ locksmith, index }) {
                     console.error('Arama aktivitesi log hatası:', error);
                 });
             }
+
+            if (window.gtag) {
+                window.gtag('event', 'call_click', {
+                    event_category: 'engagement',
+                    event_label: locksmith.businessname || locksmith.fullname,
+                    value: 1
+                });
+            }
+
         } catch (error) {
             console.error('Aktivite log hatası:', error);
         }
@@ -284,6 +293,14 @@ export default function LocksmithCard({ locksmith, index }) {
                     keepalive: true
                 }).catch(error => {
                     console.error('Aktivite log hatası:', error);
+                });
+            }
+
+            if (window.gtag) {
+                window.gtag('event', 'whatsapp_click', {
+                    event_category: 'engagement',
+                    event_label: locksmith.businessname || locksmith.fullname,
+                    value: 1
                 });
             }
         } catch (error) {
