@@ -34,53 +34,34 @@ export default function GemlikCilingirPage() {
             </div>
 
             {/* Çilingir Hizmetleri */}
-            <section aria-label="Çilingir Hizmetleri">
-                <h2 className="text-xl font-bold mb-4">Gemlik Çilingir Hizmetleri</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            <section aria-label="Çilingir Hizmetleri" className="mb-8">
+                <h2 className="text-xl font-bold mb-6">Gemlik Çilingir Hizmetleri</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[
                         {
-                            title: "7/24 Çilingir",
-                            desc: "Gemlik'in tüm mahallelerinde 7/24 kesintisiz çilingir hizmeti. Dakikalar içinde yanınızdayız.",
-                            icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
-                            color: "blue"
+                            title: "7/24 Çilingir Hizmeti",
+                            desc: "Gemlik'in tüm mahallelerinde 7/24 kesintisiz çilingir hizmeti sunuyoruz. Gece gündüz demeden, dakikalar içinde kapınızdayız."
                         },
                         {
-                            title: "Acil Çilingir",
-                            desc: "Gemlik'te kapıda mı kaldınız? En yakın çilingir ekibimiz size bir telefon kadar yakın.",
-                            icon: "M13 10V3L4 14h7v7l9-11h-7z",
-                            color: "red"
+                            title: "Acil Kapı Açma",
+                            desc: "Gemlik'te kapınız mı kilitli kaldı? Profesyonel ekibimiz en kısa sürede yanınızda. Kilide zarar vermeden kapınızı açıyoruz."
                         },
                         {
-                            title: "Otomobil Çilingir",
-                            desc: "Gemlik'te araç anahtarı kopyalama ve immobilizer hizmetleri için uzman ekibimiz hazır.",
-                            icon: "M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z",
-                            color: "green"
+                            title: "Oto Çilingir & Anahtar",
+                            desc: "Gemlik'te araç anahtarı mı kayboldu? Tüm marka araçlar için yerinde anahtar yapımı ve immobilizer programlama hizmeti."
                         },
                         {
-                            title: "Ev Çilingir",
-                            desc: "Gemlik'te ev ve iş yeri kapıları için profesyonel çilingir hizmeti veriyoruz.",
-                            icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
-                            color: "purple"
+                            title: "Ev & İşyeri Çilingir",
+                            desc: "Gemlik'te ev, apartman ve iş yeri kapıları için uzman çilingir. Çelik kapı, elektronik kilit ve alarm sistemleri kurulumu."
                         },
                         {
                             title: "Kasa Çilingir",
                             desc: "Gemlik'te kasa açma ve kilit sistemleri konusunda güvenilir çözüm ortağınız.",
-                            icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z",
-                            color: "yellow"
                         }
                     ].map((service, idx) => (
-                        <article key={idx} className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                            <div className="flex items-start gap-3">
-                                <div className={`p-2 bg-${service.color}-50 rounded-lg shrink-0`}>
-                                    <svg className={`h-6 w-6 text-${service.color}-600`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={service.icon} />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-gray-800 mb-1">{service.title}</h3>
-                                    <p className="text-sm text-gray-600">{service.desc}</p>
-                                </div>
-                            </div>
+                        <article key={idx} className="bg-white p-6 rounded-lg border border-gray-100 hover:border-blue-100 transition-colors">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">{service.title}</h3>
+                            <p className="text-gray-600 leading-relaxed">{service.desc}</p>
                         </article>
                     ))}
                 </div>
