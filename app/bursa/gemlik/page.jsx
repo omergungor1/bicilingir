@@ -33,6 +33,10 @@ export default function GemlikCilingirPage() {
                 ))}
             </div>
 
+            <h2 className="text-xl font-bold mb-2">Gemlik Çilingir Anahtarcılar</h2>
+            <p className="text-gray-600 mb-6">Yukarıda Bursa Gemlik ilçesinde faaliyet gösteren çilingirler listelenmiştir. Şuanda açık ve aktif hizmet vermektedir. Hemen arayarak bilgi alabilirsiniz.</p>
+
+
             {/* Çilingir Hizmetleri */}
             <section aria-label="Çilingir Hizmetleri" className="mb-8">
                 <h2 className="text-xl font-bold mb-6">Gemlik Çilingir Hizmetleri</h2>
@@ -66,9 +70,6 @@ export default function GemlikCilingirPage() {
                     ))}
                 </div>
             </section>
-
-            <h2 className="text-xl font-bold mb-2">Gemlik Çilingir Anahtarcılar</h2>
-            <p className="text-gray-600 mb-6">Yukarıda Bursa Gemlik ilçesinde faaliyet gösteren çilingirler listelenmiştir. Şuanda açık ve aktif hizmet vermektedir. Hemen arayarak bilgi alabilirsiniz.</p>
 
             {/* Sık Sorulan Sorular */}
             <h2 className="text-xl font-bold text-gray-800 mb-2">Sık Sorulan Sorular</h2>

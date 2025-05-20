@@ -33,6 +33,10 @@ export default function YildirimCilingirPage() {
                 ))}
             </div>
 
+            <h2 className="text-xl font-bold mb-2">Yıldırım Çilingir Anahtarcılar</h2>
+            <p className="text-gray-600 mb-6">Yukarıda Bursa Yıldırım ilçesinde faaliyet gösteren çilingirler listelenmiştir. Şuanda açık ve aktif hizmet vermektedir. Hemen arayarak bilgi alabilirsiniz.</p>
+
+
             {/* Çilingir Hizmetleri */}
             <section aria-label="Çilingir Hizmetleri" className="mb-8">
                 <h2 className="text-xl font-bold mb-6">Yıldırım Çilingir Hizmetleri</h2>
@@ -66,10 +70,6 @@ export default function YildirimCilingirPage() {
                     ))}
                 </div>
             </section>
-
-            <h2 className="text-xl font-bold mb-2">Yıldırım Çilingir Anahtarcılar</h2>
-            <p className="text-gray-600 mb-6">Yukarıda Bursa Yıldırım ilçesinde faaliyet gösteren çilingirler listelenmiştir. Şuanda açık ve aktif hizmet vermektedir. Hemen arayarak bilgi alabilirsiniz.</p>
-
 
             {/* Sık Sorulan Sorular */}
             <h2 className="text-xl font-bold text-gray-800 mb-2">Sık Sorulan Sorular</h2>

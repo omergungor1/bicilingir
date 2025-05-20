@@ -207,6 +207,7 @@ export default function LocksmithCard({ locksmith, index }) {
                 });
             }
 
+            //muhtemelen buna gerek yok. 19 mayıs ekledim. Sonra kaldırılacak.
             if (window.gtag) {
                 window.gtag('event', 'call_click', {
                     event_category: 'engagement',

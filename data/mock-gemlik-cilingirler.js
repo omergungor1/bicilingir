@@ -13,7 +13,7 @@ export const mockLocksmiths = [
         "city": "Bursa",
         "district": "Gemlik",
         "rating": 4.9,
-        "reviewCount": 4,
+        "reviewCount": 32,
         "locksmith_districts": [
             {
                 "districts": {
@@ -188,7 +188,7 @@ export const mockLocksmiths = [
         "city": "Bursa",
         "district": "Gemlik",
         "rating": 4.8,
-        "reviewCount": 2,
+        "reviewCount": 38,
         "locksmith_districts": [
             {
                 "districts": {
