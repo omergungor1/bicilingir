@@ -288,7 +288,7 @@ export default function LocksmithDetail({ locksmith: initialData, similarLocksmi
                                             <div key={certificate.id} onClick={() => window.open(certificate.fileurl, '_blank')} className="bg-gray-50 p-4 rounded-lg flex items-center cursor-pointer">
                                                 <div className="relative w-8 h-8 mr-4">
                                                     <Image
-                                                        src="/images/certificate-icon.svg"
+                                                        src="/images/certificate-icon.png"
                                                         alt="Sertifika İkonu"
                                                         fill
                                                         sizes="32px"
@@ -312,7 +312,7 @@ export default function LocksmithDetail({ locksmith: initialData, similarLocksmi
                                 <div className="border-t border-gray-200 pt-6 mb-6">
                                     <h2 className="text-xl font-bold text-gray-800 mb-4">Müşteri Yorumları</h2>
                                     <div className="space-y-4">
-                                        {initialData.reviews.map((review) => (
+                                        {initialData.reviews.slice(0, 5).map((review) => (
                                             <div key={review.id} className="bg-gray-50 p-4 rounded-lg">
                                                 <div className="flex justify-between items-start mb-2">
                                                     <div>
