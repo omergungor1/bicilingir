@@ -1398,7 +1398,6 @@ export default function CilingirKayit() {
         profileimageurl: null,
         isverified: false,
         isactive: false,
-        password: formData.sifre
       }
 
       const locksmithDetailsInsertData = {

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "../../../components/ui/button";
@@ -174,12 +175,15 @@ export default function LocksmithDetail({ locksmith: initialData, similarLocksmi
                         {/* Sol Bölüm - Çilingir Detayları */}
                         <div className="w-full lg:w-2/3 p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-gray-200">
                             <div className="mb-6">
-                                <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center text-white mb-4">
+                                <div className="relative w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center text-white mb-4">
                                     {initialData.locksmith_images?.find(img => img.is_profile)?.image_url ? (
-                                        <img
+                                        <Image
                                             src={initialData.locksmith_images.find(img => img.is_profile).image_url}
-                                            alt="Profil"
-                                            className="w-full h-full object-cover rounded-lg"
+                                            alt={`${initialData.businessname || initialData.fullname} Profil Resmi`}
+                                            fill
+                                            sizes="64px"
+                                            className="object-cover rounded-lg"
+                                            priority
                                         />
                                     ) : (
                                         <span className="text-2xl">{initialData.businessname?.substring(0, 2) || "ÇL"}</span>
@@ -281,11 +285,15 @@ export default function LocksmithDetail({ locksmith: initialData, similarLocksmi
                                     <h2 className="text-xl font-bold text-gray-800 mb-4">Sertifikalar ve Belgeler</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {initialData.locksmith_certificates.map((certificate) => (
-                                            <div key={certificate.id} onClick={() => window.open(certificate.fileurl, '_blank')} className=" bg-gray-50 p-4 rounded-lg flex items-center cursor-pointer">
-                                                <div className="mr-4">
-                                                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
+                                            <div key={certificate.id} onClick={() => window.open(certificate.fileurl, '_blank')} className="bg-gray-50 p-4 rounded-lg flex items-center cursor-pointer">
+                                                <div className="relative w-8 h-8 mr-4">
+                                                    <Image
+                                                        src="/images/certificate-icon.svg"
+                                                        alt="Sertifika İkonu"
+                                                        fill
+                                                        sizes="32px"
+                                                        className="text-blue-600"
+                                                    />
                                                 </div>
                                                 <div>
                                                     <h3 className="font-semibold text-gray-800">{certificate.name}</h3>
@@ -334,8 +342,18 @@ export default function LocksmithDetail({ locksmith: initialData, similarLocksmi
                                                 className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors"
                                             >
                                                 <div className="flex items-center">
-                                                    <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center text-white mr-4">
-                                                        <span className="text-lg">{item.businessname?.substring(0, 2) || "ÇL"}</span>
+                                                    <div className="relative w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center text-white mr-4">
+                                                        {item.locksmith_images?.find(img => img.is_profile)?.image_url ? (
+                                                            <Image
+                                                                src={item.locksmith_images.find(img => img.is_profile).image_url}
+                                                                alt={`${item.businessname || item.fullname} Profil Resmi`}
+                                                                fill
+                                                                sizes="48px"
+                                                                className="object-cover rounded-lg"
+                                                            />
+                                                        ) : (
+                                                            <span className="text-lg">{item.businessname?.substring(0, 2) || "ÇL"}</span>
+                                                        )}
                                                     </div>
                                                     <div>
                                                         <h3 className="font-semibold text-gray-800">{item.businessname || item.fullname}</h3>
