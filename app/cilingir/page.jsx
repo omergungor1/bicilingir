@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Checkbox } from "../../components/ui/checkbox";
-import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X, Footprints, File, ExternalLinkIcon, Clock, Search, CheckCircle, AlertTriangle, AlertCircle, Bell, User, Trash2, MessageCircle, Globe, MapPin, Key, ShoppingCart, Mail, Plus } from "lucide-react";
+import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X, Footprints, File, ExternalLinkIcon, Clock, Search, CheckCircle, AlertTriangle, AlertCircle, Bell, User, Trash2, MessageCircle, Globe, MapPin, Key, ShoppingCart, Mail, Plus, ArrowRight } from "lucide-react";
 import { useToast } from "../../components/ToastContext";
 import Link from "next/link";
 import Image from "next/image";
@@ -1413,14 +1413,16 @@ function CilingirPanelContent() {
   const [isEditingDailyBudget, setIsEditingDailyBudget] = useState(false);
   const [dailyBudget, setDailyBudget] = useState("200");
   const [balance, setBalance] = useState(1250);
+  const [suggestedBudget] = useState("330");
 
   // Günlük bütçe kaydetme fonksiyonu
   const handleSaveDailyBudget = () => {
     // API entegrasyonu yapılacak
-    toast({
-      title: "Günlük Bütçe Güncellendi",
-      description: `Günlük reklam bütçeniz ₺${dailyBudget} olarak güncellendi.`,
-    });
+    // toast({
+    //   title: "Günlük Bütçe Güncellendi",
+    //   description: `Günlük reklam bütçeniz ₺${dailyBudget} olarak güncellendi.`,
+    // });
+    showToast(`Günlük reklam bütçeniz ₺${dailyBudget} olarak güncellendi.`, "success");
     setIsEditingDailyBudget(false);
   };
 
@@ -1442,12 +1444,15 @@ function CilingirPanelContent() {
   const handleBalanceSubmit = async (e) => {
     e.preventDefault();
     // API entegrasyonu yapılacak
-    toast({
-      title: "Bakiye Yükleme Talebi Oluşturuldu",
-      description: `₺${balanceAmount} tutarındaki bakiye yükleme talebiniz alındı. Admin onayından sonra bakiyenize yansıyacaktır.`,
-    });
+    showToast(`₺${balanceAmount} tutarındaki bakiye yükleme talebiniz alındı. Admin onayından sonra bakiyenize yansıyacaktır.`, "success");
     setShowBalanceModal(false);
     setBalanceAmount("");
+  };
+
+  // Önerilen bütçeyi uygulama fonksiyonu
+  const handleApplySuggestedBudget = () => {
+    setDailyBudget(suggestedBudget);
+    showToast(`Günlük reklam bütçeniz önerilen miktar olan ₺${suggestedBudget} olarak güncellendi.`, "success");
   };
 
   return (
@@ -3214,10 +3219,34 @@ function CilingirPanelContent() {
                           <CardTitle className="text-sm font-medium text-purple-600">Önerilen Günlük Bütçe</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="text-3xl font-bold text-purple-700">₺330.00</div>
-                          <p className="text-sm text-purple-600 mt-2">
-                            Rekabet için önerilen optimum miktar
-                          </p>
+                          <div className="flex flex-col gap-4">
+                            <div>
+                              <div className="text-3xl font-bold text-purple-700">{parseFloat(suggestedBudget).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}</div>
+                              <p className="text-sm text-purple-600 mt-2">
+                                Rekabet için önerilen optimum miktar
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                onClick={handleApplySuggestedBudget}
+                                variant="outline"
+                                className="w-full text-purple-700 border-purple-200 hover:bg-purple-50"
+                                disabled={dailyBudget === suggestedBudget}
+                              >
+                                {dailyBudget === suggestedBudget ? (
+                                  <span className="flex items-center gap-2">
+                                    <CheckCircle className="h-4 w-4" />
+                                    Uygulandı
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center gap-2">
+                                    <ArrowRight className="h-4 w-4" />
+                                    Uygula
+                                  </span>
+                                )}
+                              </Button>
+                            </div>
+                          </div>
                         </CardContent>
                       </Card>
                     </div>
