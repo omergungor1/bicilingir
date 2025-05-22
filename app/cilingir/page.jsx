@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Checkbox } from "../../components/ui/checkbox";
-import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X, Footprints, File, ExternalLinkIcon, Clock, Search, CheckCircle, AlertTriangle, AlertCircle, Bell, User, Trash2, MessageCircle, Globe, MapPin, Key, ShoppingCart, Mail } from "lucide-react";
+import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X, Footprints, File, ExternalLinkIcon, Clock, Search, CheckCircle, AlertTriangle, AlertCircle, Bell, User, Trash2, MessageCircle, Globe, MapPin, Key, ShoppingCart, Mail, Plus } from "lucide-react";
 import { useToast } from "../../components/ToastContext";
 import Link from "next/link";
 import Image from "next/image";
@@ -33,6 +33,7 @@ import { AiAssistButton } from "../../components/ui/ai-assist-button";
 import { TiptapEditor } from "../../components/ui/tiptap-editor";
 import SubscriptionPackages from "../../components/ui/subscription-packages";
 import { useJsApiLoader, GoogleMap, Marker, Autocomplete } from '@react-google-maps/api';
+import { ResponsiveLine } from '@nivo/line'
 
 
 export default function CilingirPanel() {
@@ -1407,6 +1408,48 @@ function CilingirPanelContent() {
     }
   }, [isLoaded, locksmith?.lat, locksmith?.lng]);
 
+  const [showBalanceModal, setShowBalanceModal] = useState(false);
+  const [balanceAmount, setBalanceAmount] = useState("");
+  const [isEditingDailyBudget, setIsEditingDailyBudget] = useState(false);
+  const [dailyBudget, setDailyBudget] = useState("200");
+  const [balance, setBalance] = useState(1250);
+
+  // Günlük bütçe kaydetme fonksiyonu
+  const handleSaveDailyBudget = () => {
+    // API entegrasyonu yapılacak
+    toast({
+      title: "Günlük Bütçe Güncellendi",
+      description: `Günlük reklam bütçeniz ₺${dailyBudget} olarak güncellendi.`,
+    });
+    setIsEditingDailyBudget(false);
+  };
+
+  // Tahmini bitiş tarihi hesaplama
+  const calculateEstimatedEndDate = () => {
+    const currentBalance = 1250; // API'den gelecek
+    const daily = parseFloat(dailyBudget);
+    const daysLeft = Math.floor(currentBalance / daily);
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + daysLeft);
+    return endDate.toLocaleDateString('tr-TR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
+  // Bakiye yükleme işlemi için yeni fonksiyon
+  const handleBalanceSubmit = async (e) => {
+    e.preventDefault();
+    // API entegrasyonu yapılacak
+    toast({
+      title: "Bakiye Yükleme Talebi Oluşturuldu",
+      description: `₺${balanceAmount} tutarındaki bakiye yükleme talebiniz alındı. Admin onayından sonra bakiyenize yansıyacaktır.`,
+    });
+    setShowBalanceModal(false);
+    setBalanceAmount("");
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Header */}
@@ -1418,6 +1461,15 @@ function CilingirPanelContent() {
               <span className="font-bold text-lg text-gray-800">BiÇilingir</span>
             </div>
             <div className="flex items-center space-x-4">
+              <div className="hidden md:flex items-center space-x-4">
+                <div className="flex items-center space-x-1">
+                  <span className="text-sm text-gray-500">Bakiye:</span>
+                  <span className="text-sm font-medium text-green-600">
+                    {balance.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}₺
+                  </span>
+                </div>
+                <div className="h-5 w-px bg-gray-300"></div>
+              </div>
               <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
                 <PopoverTrigger asChild>
                   <button
@@ -1535,7 +1587,6 @@ function CilingirPanelContent() {
                   </div>
                 </PopoverContent>
               </Popover>
-
               <button
                 className="text-gray-500 hover:text-blue-600 md:hidden"
                 onClick={() => {
@@ -1547,23 +1598,6 @@ function CilingirPanelContent() {
               >
                 {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
-
-              <div className="hidden md:flex items-center space-x-4">
-                <div className="h-5 w-px bg-gray-300"></div>
-                <div className="flex items-center space-x-1">
-                  <span className="text-sm text-gray-500">Durum:</span>
-                  <span className={`text-sm font-medium ${locksmith.isactive ? 'text-green-600' : 'text-red-600'}`}>
-                    {locksmith.isactive ? 'Aktif' : 'Pasif'}
-                  </span>
-                </div>
-                <div className="h-5 w-px bg-gray-300"></div>
-                {locksmith.isactive && <Link href={`/cilingirler/${locksmith.slug}`} target="_blank" rel="noopener noreferrer" className="hidden md:block">
-                  <button className="text-sm flex items-center space-x-1 text-blue-600 hover:text-blue-800">
-                    <Eye className="h-4 w-4" />
-                    <span>Önizle</span>
-                  </button>
-                </Link>}
-              </div>
             </div>
           </div>
         </div>
@@ -1610,11 +1644,21 @@ function CilingirPanelContent() {
                   </button>
 
                   <button
-                    onClick={() => handleTabChange("subscriptions")}
-                    className={`flex items-center space-x-3 p-3 rounded-lg text-left cursor-pointer transition-colors ${activeTab === "subscriptions" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
+                    onClick={() => handleTabChange("subscription")}
+                    className={`flex items-center space-x-3 p-3 rounded-lg text-left cursor-pointer transition-colors ${activeTab === "subscription" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
                   >
                     <ShoppingCart className="h-5 w-5" />
                     <span>Abonelik</span>
+                  </button>
+                  <button
+                    onClick={() => handleTabChange("ads")}
+                    className={`flex items-center space-x-3 p-3 rounded-lg text-left cursor-pointer transition-colors ${activeTab === "ads" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                    </svg>
+                    <span>Reklam</span>
                   </button>
 
                   <button
@@ -2027,18 +2071,18 @@ function CilingirPanelContent() {
               </Card>
             )}
 
-            {activeTab === "subscriptions" && (
+            {activeTab === "subscription" && (
               <Card>
                 <CardHeader>
                   <div className="flex justify-between items-center">
                     <div>
-                      <CardTitle>Abonelik</CardTitle>
-                      <CardDescription>BiÇilingir platformunda öne çıkmak için paket seçin</CardDescription>
+                      <CardTitle>Reklam</CardTitle>
+                      <CardDescription>BiÇilingir platformunda öne çıkmak için reklam seçin</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {/* Paket Abonelikleri */}
+                  {/* Paket Reklamları */}
                   <div className="overflow-hidden">
                     <SubscriptionPackages />
                   </div>
@@ -2047,647 +2091,653 @@ function CilingirPanelContent() {
             )}
 
             {activeTab === "profile" && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Profil Bilgileri</CardTitle>
-                  <CardDescription className="text-sm text-gray-500 flex items-center justify-between">
-                    <span>İşletme bilgilerinizi güncelleyin</span>
-                    {locksmith.isactive && <Link href={`/cilingirler/${locksmith.slug}`} target="_blank" rel="noopener noreferrer" className="block md:hidden">
-                      <button className="text-sm flex items-center space-x-1 text-blue-600 hover:text-blue-800">
-                        <Eye className="h-4 w-4" />
-                        <span>Önizle</span>
-                      </button>
-                    </Link>}
-                    {/* <button onClick={() => sendMailTest()} className="text-sm flex items-center space-x-1 text-blue-600 hover:text-blue-800">
-                      <Mail className="h-4 w-4" />
-                      <span>Mail Test</span>
-                    </button> */}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="flex items-center space-x-4">
-                      {businessImages.length > 0 && businessImages[profileImageIndex] ? (
-                        <div className="relative w-24 h-24 rounded-full overflow-hidden">
-                          <Image
-                            src={businessImages[profileImageIndex].image_url}
-                            alt="İşletme Profil Resmi"
-                            className="object-cover"
-                            fill
-                            sizes="96px"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
-                          <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                          </svg>
-                        </div>
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <div>
+                        <CardTitle>Profil Bilgileri</CardTitle>
+                        <CardDescription>Profil bilgilerinizi güncelleyin ve yönetin</CardDescription>
+                      </div>
+                      {locksmith.isactive && (
+                        <Button
+                          variant="outline"
+                          className="w-full sm:w-auto flex items-center gap-2"
+                          asChild
+                        >
+                          <Link href={`/cilingirler/${locksmith.slug}`} target="_blank" rel="noopener noreferrer">
+                            <Eye className="h-4 w-4" />
+                            Profilimi Önizle
+                          </Link>
+                        </Button>
                       )}
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="md:col-span-2">
-                        <label className="block text-sm mb-1">İşletme Adı</label>
-                        <Input
-                          value={locksmith?.businessname || ""}
-                          onChange={(e) => handleLocksmithDataChange('businessname', e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm mb-1">Ad Soyad</label>
-                        <Input
-                          value={locksmith?.fullname || ""}
-                          onChange={(e) => handleLocksmithDataChange('fullname', e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm mb-1">Telefon</label>
-                        <Input
-                          value={formatPhoneNumber(locksmith?.phonenumber) || ""}
-                          onChange={(e) => handleLocksmithDataChange('phonenumber', formatPhoneNumber(e.target.value))}
-                          placeholder="Örn: 05XX XXX XX XX"
-                          maxLength={14}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm mb-1">Whatsapp</label>
-                        <Input
-                          value={formatPhoneNumber(locksmith?.whatsappnumber) || ""}
-                          onChange={(e) => handleLocksmithDataChange('whatsappnumber', formatPhoneNumber(e.target.value))}
-                          placeholder="Örn: 05XX XXX XX XX"
-                          maxLength={14}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm mb-1">E-posta</label>
-                        <Input
-                          value={locksmith?.email || ""}
-                          onChange={(e) => handleLocksmithDataChange('email', e.target.value)}
-                        />
-                      </div>
-
-
-                      {/* İl - ilçe seçimi */}
-                      <div className="md:col-span-1">
-                        <label className="block text-sm mb-1">İl</label>
-                        <select
-                          className="w-full p-2 border rounded-md"
-                          onChange={(e) => {
-                            handleProvinceChange(e.target.value)
-                            setProvinceChanged(true)
-                          }}
-                          value={locksmith?.provinceid || ""}
-                        >
-                          <option value="">İl Seçiniz</option>
-                          {provinces.map((il) => (
-                            <option key={il.id} value={il.id}>{il.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="md:col-span-1">
-                        <label className="block text-sm mb-1">İlçe</label>
-                        <select
-                          className="w-full p-2 border rounded-md"
-                          onChange={(e) => handleLocksmithDataChange('districtid', parseInt(e.target.value))}
-                          value={locksmith?.districtid || ""}
-                          disabled={!locksmith?.provinceid}
-                        >
-                          <option value="">İlçe Seçiniz</option>
-                          {districts.map((ilce) => (
-                            <option key={ilce.id} value={ilce.id}>{ilce.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Tam Adres */}
-                      <div className="md:col-span-2">
-                        <label className="block text-sm mb-1">Konum ve Adres</label>
-                        {isLoaded ? (
-                          <div className="w-full mb-2">
-                            <Autocomplete
-                              onLoad={(autocomplete) => { autocompleteRef.current = autocomplete; }}
-                              onPlaceChanged={onPlaceChanged}
-                            >
-                              <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                                <input
-                                  type="text"
-                                  className="w-full pl-10 p-2 border rounded-md mb-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                                  placeholder="Adres ara..."
-                                  defaultValue=""
-                                />
-                              </div>
-                            </Autocomplete>
-
-                            <div className="h-[300px] w-full rounded-md overflow-hidden border">
-                              <GoogleMap
-                                mapContainerStyle={{ width: '100%', height: '100%' }}
-                                center={mapCenter}
-                                zoom={15}
-                                onLoad={onMapLoad}
-                                onClick={onMapClick}
-                              >
-                                <Marker
-                                  position={mapCenter}
-                                  draggable={true}
-                                  onDragEnd={onMarkerDragEnd}
-                                />
-                              </GoogleMap>
-                            </div>
-
-                            <div className="mt-2 text-sm text-gray-500 flex items-center space-x-2">
-                              {isMapLoading ? (
-                                <div className="flex items-center">
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
-                                  <span>Adres yükleniyor...</span>
-                                </div>
-                              ) : (
-                                <>
-                                  <MapPin className="h-4 w-4 text-blue-500" />
-                                  <span>Adres aramak için yukarıdaki kutuyu kullanın veya haritada bir konuma tıklayın</span>
-                                </>
-                              )}
-                            </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      <div className="flex items-center space-x-4">
+                        {businessImages.length > 0 && businessImages[profileImageIndex] ? (
+                          <div className="relative w-24 h-24 rounded-full overflow-hidden">
+                            <Image
+                              src={businessImages[profileImageIndex].image_url}
+                              alt="İşletme Profil Resmi"
+                              className="object-cover"
+                              fill
+                              sizes="96px"
+                            />
                           </div>
                         ) : (
-                          <div className="flex items-center justify-center h-[300px] bg-gray-100 rounded-md">
-                            <div className="text-center">
-                              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-2"></div>
-                              <p className="text-gray-500">Google Haritalar yükleniyor...</p>
-                            </div>
+                          <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
+                            <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
                           </div>
                         )}
-                        <label className="block text-sm mb-1">Açık Adres</label>
-                        <textarea
-                          className="w-full min-h-[100px] p-2 border rounded-md"
-                          value={locksmith?.fulladdress || ""}
-                          onChange={(e) => handleLocksmithDataChange('fulladdress', e.target.value)}
-                          placeholder="Adres haritada görüntülenmiyorsa manuel olarak yazabilirsiniz"
-                        ></textarea>
                       </div>
 
-                      {/*tagline*/}
-                      <div className="md:col-span-2">
-                        <div className="flex justify-between items-center mb-2">
-                          <label className="block text-sm mb-1">Kısa Tanıtım {locksmith?.tagline?.length}/150</label>
-                          <AiAssistButton
-                            onClick={() => handleAiAssist('tagline')}
-                            loading={isLoadingAi.tagline}
-                            className="text-xs py-1 px-2"
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="md:col-span-2">
+                          <label className="block text-sm mb-1">İşletme Adı</label>
+                          <Input
+                            value={locksmith?.businessname || ""}
+                            onChange={(e) => handleLocksmithDataChange('businessname', e.target.value)}
                           />
                         </div>
-                        <Input
-                          maxLength={150}
-                          value={locksmith?.tagline || ""}
-                          onChange={(e) => handleLocksmithDataChange('tagline', e.target.value)}
-                        />
-                      </div>
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          İşletme Hakkında ({locksmith?.abouttext?.length || 0}/1000)
-                        </label>
-                        <TiptapEditor
-                          content={locksmith?.abouttext || ""}
-                          onChange={(content) => handleLocksmithDataChange('abouttext', content)}
-                          placeholder="İşletmeniz hakkında detaylı bilgi verin..."
-                          maxLength={1000}
-                          showAiAssist={true}
-                          aiAssistField="hakkinda"
-                          className="mt-2"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Maksimum müşteri sayısı */}
-                    <div>
-                      <h4 className="font-medium mb-4 mt-6">Bir saat içinde maksimum kaç müşteriye hizmet verebilirsiniz?</h4>
-                      <div className="flex items-center space-x-2">
-                        <p className="text-sm text-gray-500">Maksimum müşteri sayısı</p>
-                        <Input
-                          className="w-24"
-                          type="number"
-                          value={locksmith?.customerlimitperhour > 0 ? locksmith?.customerlimitperhour : 0}
-                          onChange={(e) => handleLocksmithDataChange('customerlimitperhour', e.target.value)}
-                          placeholder="Örn: 10" />
-                        <p className="text-sm text-gray-500">/saat</p>
-                      </div>
-                    </div>
-
-                    <div className="border-t border-gray-200 my-6" />
-
-                    {/* Çalışma Saatleri */}
-                    <div>
-                      <h4 className="font-medium mb-4 mt-6">Çalışma Saatleri</h4>
-                      <div className="space-y-4">
-                        {dailyHours.map((day) => (
-                          <div key={day.dayofweek} className="flex md:items-center items-start md:flex-row flex-col justify-between border p-3 rounded-md bg-gray-50">
-                            <div className="flex items-center space-x-3">
-                              <Checkbox
-                                id={`workday-${day.dayofweek}`}
-                                checked={day.isworking}
-                                onCheckedChange={(checked) => {
-                                  handleWorkDayToggle(day.dayofweek, !!checked);
-                                }}
-                              />
-                              <label
-                                htmlFor={`workday-${day.dayofweek}`}
-                                className={`font-medium ${!day.isworking ? "text-gray-400" : ""}`}
-                              >
-                                {day.dayofweek == 0 ? "Pazartesi" : day.dayofweek == 1 ? "Salı" : day.dayofweek == 2 ? "Çarşamba" : day.dayofweek == 3 ? "Perşembe" : day.dayofweek == 4 ? "Cuma" : day.dayofweek == 5 ? "Cumartesi" : "Pazar"}
-                              </label>
-                            </div>
-                            <div className="flex items-center space-x-2 md:mt-0 mt-2">
-                              <div className="flex items-center space-x-2 mr-4">
-                                <Checkbox
-                                  id={`24hours-${day.dayofweek}`}
-                                  checked={day.isworking && day.is24hopen}
-                                  onCheckedChange={(checked) => {
-                                    handle24HourToggle(day.dayofweek, !!checked);
-                                  }}
-                                  disabled={!day.isworking}
-                                />
-                                <label
-                                  htmlFor={`24hours-${day.dayofweek}`}
-                                  className={`text-sm ${!day.isworking ? "text-gray-400" : ""}`}
-                                >
-                                  24 Saat
-                                </label>
-                              </div>
-                              <Input
-                                type="time"
-                                value={day.opentime ? day.opentime.substring(0, 5) : "09:00"}
-                                onChange={(e) => {
-                                  handleTimeChange(day.dayofweek, 'start', e.target.value);
-                                }}
-                                disabled={!day.isworking || day.is24hopen}
-                                className={`w-24 ${(!day.isworking || day.is24hopen) ? "bg-gray-100 text-gray-400" : ""}`}
-                              />
-                              <span className={!day.isworking ? "text-gray-400" : ""}>-</span>
-                              <Input
-                                type="time"
-                                value={day.closetime ? day.closetime.substring(0, 5) : "18:00"}
-                                onChange={(e) => {
-                                  handleTimeChange(day.dayofweek, 'end', e.target.value);
-                                }}
-                                disabled={!day.isworking || day.is24hopen}
-                                className={`w-24 ${(!day.isworking || day.is24hopen) ? "bg-gray-100 text-gray-400" : ""}`}
-                              />
-                              <span className={`ml-2 text-sm ${day.isworking ? "text-green-600" : "text-red-500"}`}>
-                                {day.isworking ? "Açık" : "Kapalı"}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                        <div className="flex justify-end mt-4">
-                          <Button
-                            onClick={handleWorkingHoursUpdate}
-                            disabled={isWorkingHoursUpdating}
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
-                          >
-                            Çalışma Saatlerini Kaydet
-                          </Button>
+                        <div>
+                          <label className="block text-sm mb-1">Ad Soyad</label>
+                          <Input
+                            value={locksmith?.fullname || ""}
+                            onChange={(e) => handleLocksmithDataChange('fullname', e.target.value)}
+                          />
                         </div>
-                      </div>
-                    </div>
+                        <div>
+                          <label className="block text-sm mb-1">Telefon</label>
+                          <Input
+                            value={formatPhoneNumber(locksmith?.phonenumber) || ""}
+                            onChange={(e) => handleLocksmithDataChange('phonenumber', formatPhoneNumber(e.target.value))}
+                            placeholder="Örn: 05XX XXX XX XX"
+                            maxLength={14}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm mb-1">Whatsapp</label>
+                          <Input
+                            value={formatPhoneNumber(locksmith?.whatsappnumber) || ""}
+                            onChange={(e) => handleLocksmithDataChange('whatsappnumber', formatPhoneNumber(e.target.value))}
+                            placeholder="Örn: 05XX XXX XX XX"
+                            maxLength={14}
+                          />
+                        </div>
 
-                    <div className="border-t border-gray-200 my-6" />
+                        <div>
+                          <label className="block text-sm mb-1">E-posta</label>
+                          <Input
+                            value={locksmith?.email || ""}
+                            onChange={(e) => handleLocksmithDataChange('email', e.target.value)}
+                          />
+                        </div>
 
-                    {/* Sertifikalar */}
-                    <div className="mt-6">
-                      <h4 className="font-medium mb-4">Sertifikalar</h4>
-                      <div className="space-y-4">
-                        {/* Sertifika Yükleme Butonu */}
-                        <Button
-                          onClick={() => setIsCertificateDialogOpen(true)}
-                          disabled={certificates.length >= 5}
-                        >
-                          Sertifika Yükle {certificates.length >= 5 && "(Limit Dolu)"}
-                        </Button>
 
-                        {/* Sertifika Yükleme Dialogu */}
-                        {isCertificateDialogOpen && (
-                          <Dialog
-                            open={isCertificateDialogOpen}
-                            onOpenChange={setIsCertificateDialogOpen}
+                        {/* İl - ilçe seçimi */}
+                        <div className="md:col-span-1">
+                          <label className="block text-sm mb-1">İl</label>
+                          <select
+                            className="w-full p-2 border rounded-md"
+                            onChange={(e) => {
+                              handleProvinceChange(e.target.value)
+                              setProvinceChanged(true)
+                            }}
+                            value={locksmith?.provinceid || ""}
                           >
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Sertifika Yükle</DialogTitle>
-                                <DialogDescription>Yeni bir sertifika yüklemek için lütfen dosyayı seçin ve sertifika adını girin.</DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4 py-4">
-                                <Input type="file" accept="image/*,application/pdf" onChange={(e) => {
-                                  if (e.target.files && e.target.files.length > 0) {
-                                    const file = e.target.files[0];
-                                    memoizedHandleCertificateChange.fileChange(file);
-                                  }
-                                }} />
-                                <Input
-                                  type="text"
-                                  placeholder="Sertifika Adı"
-                                  value={newCertificate.name}
-                                  onChange={(e) => {
-                                    const value = e.target.value;
-                                    memoizedHandleCertificateChange.nameChange(value);
-                                  }}
-                                />
-                                {newCertificate.file && (
-                                  <div className="text-sm text-gray-500">
-                                    Dosya: {newCertificate.file.name} ({(newCertificate.file.size / 1024 / 1024).toFixed(2)} MB)
+                            <option value="">İl Seçiniz</option>
+                            {provinces.map((il) => (
+                              <option key={il.id} value={il.id}>{il.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="md:col-span-1">
+                          <label className="block text-sm mb-1">İlçe</label>
+                          <select
+                            className="w-full p-2 border rounded-md"
+                            onChange={(e) => handleLocksmithDataChange('districtid', parseInt(e.target.value))}
+                            value={locksmith?.districtid || ""}
+                            disabled={!locksmith?.provinceid}
+                          >
+                            <option value="">İlçe Seçiniz</option>
+                            {districts.map((ilce) => (
+                              <option key={ilce.id} value={ilce.id}>{ilce.name}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Tam Adres */}
+                        <div className="md:col-span-2">
+                          <label className="block text-sm mb-1">Konum ve Adres</label>
+                          {isLoaded ? (
+                            <div className="w-full mb-2">
+                              <Autocomplete
+                                onLoad={(autocomplete) => { autocompleteRef.current = autocomplete; }}
+                                onPlaceChanged={onPlaceChanged}
+                              >
+                                <div className="relative">
+                                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                  <input
+                                    type="text"
+                                    className="w-full pl-10 p-2 border rounded-md mb-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                    placeholder="Adres ara..."
+                                    defaultValue=""
+                                  />
+                                </div>
+                              </Autocomplete>
+
+                              <div className="h-[300px] w-full rounded-md overflow-hidden border">
+                                <GoogleMap
+                                  mapContainerStyle={{ width: '100%', height: '100%' }}
+                                  center={mapCenter}
+                                  zoom={15}
+                                  onLoad={onMapLoad}
+                                  onClick={onMapClick}
+                                >
+                                  <Marker
+                                    position={mapCenter}
+                                    draggable={true}
+                                    onDragEnd={onMarkerDragEnd}
+                                  />
+                                </GoogleMap>
+                              </div>
+
+                              <div className="mt-2 text-sm text-gray-500 flex items-center space-x-2">
+                                {isMapLoading ? (
+                                  <div className="flex items-center">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
+                                    <span>Adres yükleniyor...</span>
                                   </div>
+                                ) : (
+                                  <>
+                                    <MapPin className="h-4 w-4 text-blue-500" />
+                                    <span>Adres aramak için yukarıdaki kutuyu kullanın veya haritada bir konuma tıklayın</span>
+                                  </>
                                 )}
                               </div>
-                              <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsCertificateDialogOpen(false)}>İptal</Button>
-                                <Button onClick={handleAddCertificate} disabled={isUploadingCertificate}>
-                                  {isUploadingCertificate ? (
-                                    <>
-                                      <span className="animate-spin mr-2">&#9696;</span>
-                                      Yükleniyor...
-                                    </>
-                                  ) : 'Yükle'}
-                                </Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          </Dialog>
-                        )}
-
-                        {/* Sertifika Silme Modalı */}
-                        {isDeleteCertificateModalOpen && (
-                          <Dialog
-                            open={isDeleteCertificateModalOpen}
-                            onOpenChange={setIsDeleteCertificateModalOpen}
-                          >
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Sertifikayı Sil</DialogTitle>
-                                <DialogDescription>
-                                  "{certificateToDelete?.name}" sertifikasını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
-                                </DialogDescription>
-                              </DialogHeader>
-                              <DialogFooter>
-                                <Button variant="outline" onClick={cancelDeleteCertificate}>İptal</Button>
-                                <Button variant="destructive" onClick={confirmDeleteCertificate} disabled={isDeletingCertificate}>
-                                  {isDeletingCertificate ? (
-                                    <>
-                                      <span className="animate-spin mr-2">&#9696;</span>
-                                      Siliniyor...
-                                    </>
-                                  ) : 'Sil'}
-                                </Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          </Dialog>
-                        )}
-
-                        {/* Mevcut Sertifikalar */}
-                        {certificates.length > 0 ? (
-                          <div className="mt-4">
-                            <h5 className="font-medium mb-3">Mevcut Sertifikalar ({certificates.length}/5)</h5>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                              {certificates.map((cert) => (
-                                <div key={cert.id} className="relative group">
-                                  <div className="aspect-square overflow-hidden rounded-lg hover:border hover:transition-all hover:duration-100 hover:border-blue-500">
-                                    {/* Dosya tipine göre ikon göster */}
-                                    <div
-                                      onClick={() => handleViewCertificate(cert)}
-                                      className="w-full h-full flex items-center justify-center bg-gray-100 border-2 cursor-pointer"
-                                    >
-                                      <div className="text-center">
-                                        {cert.fileurl?.includes('.pdf') ? (
-                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                            <polyline points="14 2 14 8 20 8" />
-                                            <line x1="16" y1="13" x2="8" y2="13" />
-                                            <line x1="16" y1="17" x2="8" y2="17" />
-                                            <polyline points="10 9 9 9 8 9" />
-                                          </svg>
-                                        ) : (
-                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                                            <circle cx="8.5" cy="8.5" r="1.5" />
-                                            <polyline points="21 15 16 10 5 21" />
-                                          </svg>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <h3 className="text-sm text-center font-medium mt-2 truncate">{cert.name}</h3>
-                                  <button
-                                    onClick={() => handleRemoveCertificate(cert)}
-                                    className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-md border border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    title="Sertifikayı Sil"
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="mt-4">
-                            <div className="flex items-center justify-center gap-2 p-8 bg-gray-50 rounded-lg border border-gray-200">
-                              <Info className="h-5 w-5 text-gray-400" />
-                              <p className="text-sm text-gray-500">Henüz sertifika yüklemediniz. İşletmenizin güvenilirliğini artırmak için sertifikalarınızı ekleyin.</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="border-t border-gray-200 my-6" />
-
-                    {/* İşletme Fotoğrafları */}
-                    <div className="mt-6">
-                      <h4 className="font-medium mb-4">İşletme Fotoğrafları</h4>
-                      <div className="space-y-4">
-                        {/* Fotoğraf Yükleme Alanı */}
-                        <div
-                          className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50 hover:bg-gray-100 transition cursor-pointer"
-                          onDrop={handleDrop}
-                          onDragOver={(e) => e.preventDefault()}
-                          onDragEnter={(e) => {
-                            e.preventDefault();
-                            e.currentTarget.classList.add('border-blue-400', 'bg-blue-50');
-                          }}
-                          onDragLeave={(e) => {
-                            e.preventDefault();
-                            e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
-                          }}
-                        >
-                          {isUploading ? (
-                            <div className="flex flex-col items-center justify-center">
-                              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-2"></div>
-                              <p className="text-gray-500">Yükleniyor...</p>
                             </div>
                           ) : (
-                            <label htmlFor="businessImages" className="cursor-pointer flex flex-col items-center justify-center">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              <p className="text-gray-500 mb-1">Fotoğrafları buraya sürükleyin veya</p>
-                              <Button
-                                onClick={() => document.getElementById('businessImages').click()}
-                                variant="outline" size="sm" className="mt-2">Dosya Seç</Button>
-                              <p className="text-sm text-gray-500 mt-2">En fazla 10 resim, her biri 5MB'dan küçük (JPEG, PNG)</p>
-                              <input
-                                id="businessImages"
-                                type="file"
-                                multiple
-                                accept="image/*"
-                                className="hidden"
-                                onChange={handleImageUpload}
-                              />
-                            </label>
+                            <div className="flex items-center justify-center h-[300px] bg-gray-100 rounded-md">
+                              <div className="text-center">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                                <p className="text-gray-500">Google Haritalar yükleniyor...</p>
+                              </div>
+                            </div>
+                          )}
+                          <label className="block text-sm mb-1">Açık Adres</label>
+                          <textarea
+                            className="w-full min-h-[100px] p-2 border rounded-md"
+                            value={locksmith?.fulladdress || ""}
+                            onChange={(e) => handleLocksmithDataChange('fulladdress', e.target.value)}
+                            placeholder="Adres haritada görüntülenmiyorsa manuel olarak yazabilirsiniz"
+                          ></textarea>
+                        </div>
+
+                        {/*tagline*/}
+                        <div className="md:col-span-2">
+                          <div className="flex justify-between items-center mb-2">
+                            <label className="block text-sm mb-1">Kısa Tanıtım {locksmith?.tagline?.length}/150</label>
+                            <AiAssistButton
+                              onClick={() => handleAiAssist('tagline')}
+                              loading={isLoadingAi.tagline}
+                              className="text-xs py-1 px-2"
+                            />
+                          </div>
+                          <Input
+                            maxLength={150}
+                            value={locksmith?.tagline || ""}
+                            onChange={(e) => handleLocksmithDataChange('tagline', e.target.value)}
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            İşletme Hakkında ({locksmith?.abouttext?.length || 0}/1000)
+                          </label>
+                          <TiptapEditor
+                            content={locksmith?.abouttext || ""}
+                            onChange={(content) => handleLocksmithDataChange('abouttext', content)}
+                            placeholder="İşletmeniz hakkında detaylı bilgi verin..."
+                            maxLength={1000}
+                            showAiAssist={true}
+                            aiAssistField="hakkinda"
+                            className="mt-2"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Maksimum müşteri sayısı */}
+                      <div>
+                        <h4 className="font-medium mb-4 mt-6">Bir saat içinde maksimum kaç müşteriye hizmet verebilirsiniz?</h4>
+                        <div className="flex items-center space-x-2">
+                          <p className="text-sm text-gray-500">Maksimum müşteri sayısı</p>
+                          <Input
+                            className="w-24"
+                            type="number"
+                            value={locksmith?.customerlimitperhour > 0 ? locksmith?.customerlimitperhour : 0}
+                            onChange={(e) => handleLocksmithDataChange('customerlimitperhour', e.target.value)}
+                            placeholder="Örn: 10" />
+                          <p className="text-sm text-gray-500">/saat</p>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-gray-200 my-6" />
+
+                      {/* Çalışma Saatleri */}
+                      <div>
+                        <h4 className="font-medium mb-4 mt-6">Çalışma Saatleri</h4>
+                        <div className="space-y-4">
+                          {dailyHours.map((day) => (
+                            <div key={day.dayofweek} className="flex md:items-center items-start md:flex-row flex-col justify-between border p-3 rounded-md bg-gray-50">
+                              <div className="flex items-center space-x-3">
+                                <Checkbox
+                                  id={`workday-${day.dayofweek}`}
+                                  checked={day.isworking}
+                                  onCheckedChange={(checked) => {
+                                    handleWorkDayToggle(day.dayofweek, !!checked);
+                                  }}
+                                />
+                                <label
+                                  htmlFor={`workday-${day.dayofweek}`}
+                                  className={`font-medium ${!day.isworking ? "text-gray-400" : ""}`}
+                                >
+                                  {day.dayofweek == 0 ? "Pazartesi" : day.dayofweek == 1 ? "Salı" : day.dayofweek == 2 ? "Çarşamba" : day.dayofweek == 3 ? "Perşembe" : day.dayofweek == 4 ? "Cuma" : day.dayofweek == 5 ? "Cumartesi" : "Pazar"}
+                                </label>
+                              </div>
+                              <div className="flex items-center space-x-2 md:mt-0 mt-2">
+                                <div className="flex items-center space-x-2 mr-4">
+                                  <Checkbox
+                                    id={`24hours-${day.dayofweek}`}
+                                    checked={day.isworking && day.is24hopen}
+                                    onCheckedChange={(checked) => {
+                                      handle24HourToggle(day.dayofweek, !!checked);
+                                    }}
+                                    disabled={!day.isworking}
+                                  />
+                                  <label
+                                    htmlFor={`24hours-${day.dayofweek}`}
+                                    className={`text-sm ${!day.isworking ? "text-gray-400" : ""}`}
+                                  >
+                                    24 Saat
+                                  </label>
+                                </div>
+                                <Input
+                                  type="time"
+                                  value={day.opentime ? day.opentime.substring(0, 5) : "09:00"}
+                                  onChange={(e) => {
+                                    handleTimeChange(day.dayofweek, 'start', e.target.value);
+                                  }}
+                                  disabled={!day.isworking || day.is24hopen}
+                                  className={`w-24 ${(!day.isworking || day.is24hopen) ? "bg-gray-100 text-gray-400" : ""}`}
+                                />
+                                <span className={!day.isworking ? "text-gray-400" : ""}>-</span>
+                                <Input
+                                  type="time"
+                                  value={day.closetime ? day.closetime.substring(0, 5) : "18:00"}
+                                  onChange={(e) => {
+                                    handleTimeChange(day.dayofweek, 'end', e.target.value);
+                                  }}
+                                  disabled={!day.isworking || day.is24hopen}
+                                  className={`w-24 ${(!day.isworking || day.is24hopen) ? "bg-gray-100 text-gray-400" : ""}`}
+                                />
+                                <span className={`ml-2 text-sm ${day.isworking ? "text-green-600" : "text-red-500"}`}>
+                                  {day.isworking ? "Açık" : "Kapalı"}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                          <div className="flex justify-end mt-4">
+                            <Button
+                              onClick={handleWorkingHoursUpdate}
+                              disabled={isWorkingHoursUpdating}
+                              className="bg-blue-600 hover:bg-blue-700 text-white"
+                            >
+                              Çalışma Saatlerini Kaydet
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-gray-200 my-6" />
+
+                      {/* Sertifikalar */}
+                      <div className="mt-6">
+                        <h4 className="font-medium mb-4">Sertifikalar</h4>
+                        <div className="space-y-4">
+                          {/* Sertifika Yükleme Butonu */}
+                          <Button
+                            onClick={() => setIsCertificateDialogOpen(true)}
+                            disabled={certificates.length >= 5}
+                          >
+                            Sertifika Yükle {certificates.length >= 5 && "(Limit Dolu)"}
+                          </Button>
+
+                          {/* Sertifika Yükleme Dialogu */}
+                          {isCertificateDialogOpen && (
+                            <Dialog
+                              open={isCertificateDialogOpen}
+                              onOpenChange={setIsCertificateDialogOpen}
+                            >
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Sertifika Yükle</DialogTitle>
+                                  <DialogDescription>Yeni bir sertifika yüklemek için lütfen dosyayı seçin ve sertifika adını girin.</DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4">
+                                  <Input type="file" accept="image/*,application/pdf" onChange={(e) => {
+                                    if (e.target.files && e.target.files.length > 0) {
+                                      const file = e.target.files[0];
+                                      memoizedHandleCertificateChange.fileChange(file);
+                                    }
+                                  }} />
+                                  <Input
+                                    type="text"
+                                    placeholder="Sertifika Adı"
+                                    value={newCertificate.name}
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      memoizedHandleCertificateChange.nameChange(value);
+                                    }}
+                                  />
+                                  {newCertificate.file && (
+                                    <div className="text-sm text-gray-500">
+                                      Dosya: {newCertificate.file.name} ({(newCertificate.file.size / 1024 / 1024).toFixed(2)} MB)
+                                    </div>
+                                  )}
+                                </div>
+                                <DialogFooter>
+                                  <Button variant="outline" onClick={() => setIsCertificateDialogOpen(false)}>İptal</Button>
+                                  <Button onClick={handleAddCertificate} disabled={isUploadingCertificate}>
+                                    {isUploadingCertificate ? (
+                                      <>
+                                        <span className="animate-spin mr-2">&#9696;</span>
+                                        Yükleniyor...
+                                      </>
+                                    ) : 'Yükle'}
+                                  </Button>
+                                </DialogFooter>
+                              </DialogContent>
+                            </Dialog>
+                          )}
+
+                          {/* Sertifika Silme Modalı */}
+                          {isDeleteCertificateModalOpen && (
+                            <Dialog
+                              open={isDeleteCertificateModalOpen}
+                              onOpenChange={setIsDeleteCertificateModalOpen}
+                            >
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Sertifikayı Sil</DialogTitle>
+                                  <DialogDescription>
+                                    "{certificateToDelete?.name}" sertifikasını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <DialogFooter>
+                                  <Button variant="outline" onClick={cancelDeleteCertificate}>İptal</Button>
+                                  <Button variant="destructive" onClick={confirmDeleteCertificate} disabled={isDeletingCertificate}>
+                                    {isDeletingCertificate ? (
+                                      <>
+                                        <span className="animate-spin mr-2">&#9696;</span>
+                                        Siliniyor...
+                                      </>
+                                    ) : 'Sil'}
+                                  </Button>
+                                </DialogFooter>
+                              </DialogContent>
+                            </Dialog>
+                          )}
+
+                          {/* Mevcut Sertifikalar */}
+                          {certificates.length > 0 ? (
+                            <div className="mt-4">
+                              <h5 className="font-medium mb-3">Mevcut Sertifikalar ({certificates.length}/5)</h5>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                {certificates.map((cert) => (
+                                  <div key={cert.id} className="relative group">
+                                    <div className="aspect-square overflow-hidden rounded-lg hover:border hover:transition-all hover:duration-100 hover:border-blue-500">
+                                      {/* Dosya tipine göre ikon göster */}
+                                      <div
+                                        onClick={() => handleViewCertificate(cert)}
+                                        className="w-full h-full flex items-center justify-center bg-gray-100 border-2 cursor-pointer"
+                                      >
+                                        <div className="text-center">
+                                          {cert.fileurl?.includes('.pdf') ? (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                              <polyline points="14 2 14 8 20 8" />
+                                              <line x1="16" y1="13" x2="8" y2="13" />
+                                              <line x1="16" y1="17" x2="8" y2="17" />
+                                              <polyline points="10 9 9 9 8 9" />
+                                            </svg>
+                                          ) : (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                              <circle cx="8.5" cy="8.5" r="1.5" />
+                                              <polyline points="21 15 16 10 5 21" />
+                                            </svg>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <h3 className="text-sm text-center font-medium mt-2 truncate">{cert.name}</h3>
+                                    <button
+                                      onClick={() => handleRemoveCertificate(cert)}
+                                      className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-md border border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                                      title="Sertifikayı Sil"
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="mt-4">
+                              <div className="flex items-center justify-center gap-2 p-8 bg-gray-50 rounded-lg border border-gray-200">
+                                <Info className="h-5 w-5 text-gray-400" />
+                                <p className="text-sm text-gray-500">Henüz sertifika yüklemediniz. İşletmenizin güvenilirliğini artırmak için sertifikalarınızı ekleyin.</p>
+                              </div>
+                            </div>
                           )}
                         </div>
+                      </div>
 
-                        {/* Mevcut Fotoğraflar */}
-                        {businessImages.length > 0 ? (
-                          <div className="mt-4">
-                            <h5 className="font-medium mb-3">Mevcut Fotoğraflar ({businessImages.length}/10)</h5>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                              {businessImages.map((image, index) => (
-                                <div key={image.id} className="relative group">
-                                  <div className={`relative h-24 w-full overflow-hidden rounded-md ${image.is_main ? 'ring-2 ring-blue-500' : ''}`}>
-                                    <Image
-                                      src={image.image_url}
-                                      alt={`İşletme resmi ${index + 1}`}
-                                      className="object-cover"
-                                      fill
-                                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                    />
-                                  </div>
-                                  <div className="absolute top-1 right-1 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                    {!image.is_main && (
+                      <div className="border-t border-gray-200 my-6" />
+
+                      {/* İşletme Fotoğrafları */}
+                      <div className="mt-6">
+                        <h4 className="font-medium mb-4">İşletme Fotoğrafları</h4>
+                        <div className="space-y-4">
+                          {/* Fotoğraf Yükleme Alanı */}
+                          <div
+                            className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50 hover:bg-gray-100 transition cursor-pointer"
+                            onDrop={handleDrop}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDragEnter={(e) => {
+                              e.preventDefault();
+                              e.currentTarget.classList.add('border-blue-400', 'bg-blue-50');
+                            }}
+                            onDragLeave={(e) => {
+                              e.preventDefault();
+                              e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+                            }}
+                          >
+                            {isUploading ? (
+                              <div className="flex flex-col items-center justify-center">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-2"></div>
+                                <p className="text-gray-500">Yükleniyor...</p>
+                              </div>
+                            ) : (
+                              <label htmlFor="businessImages" className="cursor-pointer flex flex-col items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <p className="text-gray-500 mb-1">Fotoğrafları buraya sürükleyin veya</p>
+                                <Button
+                                  onClick={() => document.getElementById('businessImages').click()}
+                                  variant="outline" size="sm" className="mt-2">Dosya Seç</Button>
+                                <p className="text-sm text-gray-500 mt-2">En fazla 10 resim, her biri 5MB'dan küçük (JPEG, PNG)</p>
+                                <input
+                                  id="businessImages"
+                                  type="file"
+                                  multiple
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={handleImageUpload}
+                                />
+                              </label>
+                            )}
+                          </div>
+
+                          {/* Mevcut Fotoğraflar */}
+                          {businessImages.length > 0 ? (
+                            <div className="mt-4">
+                              <h5 className="font-medium mb-3">Mevcut Fotoğraflar ({businessImages.length}/10)</h5>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                {businessImages.map((image, index) => (
+                                  <div key={image.id} className="relative group">
+                                    <div className={`relative h-24 w-full overflow-hidden rounded-md ${image.is_main ? 'ring-2 ring-blue-500' : ''}`}>
+                                      <Image
+                                        src={image.image_url}
+                                        alt={`İşletme resmi ${index + 1}`}
+                                        className="object-cover"
+                                        fill
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                      />
+                                    </div>
+                                    <div className="absolute top-1 right-1 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                      {!image.is_main && (
+                                        <button
+                                          onClick={() => setMainImage(image.id)}
+                                          className="p-1 bg-blue-500 rounded-full hover:bg-blue-600 transition-colors"
+                                          title="Ana resim yap"
+                                        >
+                                          <Star className="h-3 w-3 text-white" />
+                                        </button>
+                                      )}
                                       <button
-                                        onClick={() => setMainImage(image.id)}
-                                        className="p-1 bg-blue-500 rounded-full hover:bg-blue-600 transition-colors"
-                                        title="Ana resim yap"
+                                        onClick={() => setProfileImage(image.id)}
+                                        className={`p-1 ${image.is_profile ? 'bg-green-500' : 'bg-gray-500'} rounded-full hover:bg-green-600 transition-colors`}
+                                        title={image.is_profile ? "Profil resmi" : "Profil resmi yap"}
                                       >
-                                        <Star className="h-3 w-3 text-white" />
+                                        <User className="h-3 w-3 text-white" />
                                       </button>
-                                    )}
-                                    <button
-                                      onClick={() => setProfileImage(image.id)}
-                                      className={`p-1 ${image.is_profile ? 'bg-green-500' : 'bg-gray-500'} rounded-full hover:bg-green-600 transition-colors`}
-                                      title={image.is_profile ? "Profil resmi" : "Profil resmi yap"}
-                                    >
-                                      <User className="h-3 w-3 text-white" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleRemoveImage(image.id)}
-                                      className="p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
-                                      title="Sil"
-                                    >
-                                      <Trash2 className="h-3 w-3 text-white" />
-                                    </button>
+                                      <button
+                                        onClick={() => handleRemoveImage(image.id)}
+                                        className="p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+                                        title="Sil"
+                                      >
+                                        <Trash2 className="h-3 w-3 text-white" />
+                                      </button>
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        ) :
-                          <div className="mt-4">
-                            <div className="flex items-center justify-center gap-2">
-                              <Info className="h-5 w-5 text-gray-400" />
-                              <p className="text-sm text-gray-500">Henüz fotoğraf yüklemediniz.</p>
+                          ) :
+                            <div className="mt-4">
+                              <div className="flex items-center justify-center gap-2">
+                                <Info className="h-5 w-5 text-gray-400" />
+                                <p className="text-sm text-gray-500">Henüz fotoğraf yüklemediniz.</p>
+                              </div>
                             </div>
+                          }
+                        </div>
+                      </div>
+
+
+                      <div className="border-t border-gray-200 my-6" />
+
+                      {/* Sosyal Medya Hesapları */}
+                      <h4 className="font-medium mb-4 mt-6">Sosyal Medya Hesapları</h4>
+                      <div className="space-y-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* Instagram */}
+                        <div className="pb-6">
+                          <div className="flex items-center mb-4">
+                            <Instagram className="h-6 w-6 text-pink-600 mr-2" />
+                            <h3 className="text-lg font-medium">Instagram</h3>
                           </div>
-                        }
+                          <div className="flex items-center space-x-4">
+                            <Input
+                              placeholder="Instagram profil linkiniz"
+                              value={locksmith?.instagram_url || ""}
+                              onChange={(e) => handleLocksmithDataChange('instagram_url', e.target.value)}
+                              className="flex-grow"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Facebook */}
+                        <div className="pb-6">
+                          <div className="flex items-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                            </svg>
+                            <h3 className="text-lg font-medium">Facebook</h3>
+                          </div>
+                          <div className="flex items-center space-x-4">
+                            <Input
+                              placeholder="Facebook profil linkiniz"
+                              value={locksmith?.facebook_url || ""}
+                              onChange={(e) => handleLocksmithDataChange('facebook_url', e.target.value)}
+                              className="flex-grow"
+                            />
+                          </div>
+                        </div>
+
+                        {/* YouTube */}
+                        <div className="pb-6">
+                          <div className="flex items-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                            </svg>
+                            <h3 className="text-lg font-medium">YouTube</h3>
+                          </div>
+                          <div className="flex items-center space-x-4">
+                            <Input
+                              placeholder="YouTube profil linkiniz"
+                              value={locksmith?.youtube_url || ""}
+                              onChange={(e) => handleLocksmithDataChange('youtube_url', e.target.value)}
+                              className="flex-grow"
+                            />
+                          </div>
+                        </div>
+
+                        {/* TikTok */}
+                        <div className="pb-6">
+                          <div className="flex items-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black mr-2" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
+                            </svg>
+                            <h3 className="text-lg font-medium">TikTok</h3>
+                          </div>
+                          <div className="flex items-center space-x-4">
+                            <Input
+                              placeholder="TikTok profil linkiniz"
+                              value={locksmith?.tiktok_url || ""}
+                              onChange={(e) => handleLocksmithDataChange('tiktok_url', e.target.value)}
+                              className="flex-grow"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-4">
+                        <Button
+                          onClick={() => handleUpdateLocksmithData()}
+                          disabled={isUpdatingProfile}
+                        >Değişiklikleri Kaydet</Button>
                       </div>
                     </div>
-
-
-                    <div className="border-t border-gray-200 my-6" />
-
-                    {/* Sosyal Medya Hesapları */}
-                    <h4 className="font-medium mb-4 mt-6">Sosyal Medya Hesapları</h4>
-                    <div className="space-y-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      {/* Instagram */}
-                      <div className="pb-6">
-                        <div className="flex items-center mb-4">
-                          <Instagram className="h-6 w-6 text-pink-600 mr-2" />
-                          <h3 className="text-lg font-medium">Instagram</h3>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          <Input
-                            placeholder="Instagram profil linkiniz"
-                            value={locksmith?.instagram_url || ""}
-                            onChange={(e) => handleLocksmithDataChange('instagram_url', e.target.value)}
-                            className="flex-grow"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Facebook */}
-                      <div className="pb-6">
-                        <div className="flex items-center mb-4">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                          </svg>
-                          <h3 className="text-lg font-medium">Facebook</h3>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          <Input
-                            placeholder="Facebook profil linkiniz"
-                            value={locksmith?.facebook_url || ""}
-                            onChange={(e) => handleLocksmithDataChange('facebook_url', e.target.value)}
-                            className="flex-grow"
-                          />
-                        </div>
-                      </div>
-
-                      {/* YouTube */}
-                      <div className="pb-6">
-                        <div className="flex items-center mb-4">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                          </svg>
-                          <h3 className="text-lg font-medium">YouTube</h3>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          <Input
-                            placeholder="YouTube profil linkiniz"
-                            value={locksmith?.youtube_url || ""}
-                            onChange={(e) => handleLocksmithDataChange('youtube_url', e.target.value)}
-                            className="flex-grow"
-                          />
-                        </div>
-                      </div>
-
-                      {/* TikTok */}
-                      <div className="pb-6">
-                        <div className="flex items-center mb-4">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black mr-2" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
-                          </svg>
-                          <h3 className="text-lg font-medium">TikTok</h3>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          <Input
-                            placeholder="TikTok profil linkiniz"
-                            value={locksmith?.tiktok_url || ""}
-                            onChange={(e) => handleLocksmithDataChange('tiktok_url', e.target.value)}
-                            className="flex-grow"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-4">
-                      <Button
-                        onClick={() => handleUpdateLocksmithData()}
-                        disabled={isUpdatingProfile}
-                      >Değişiklikleri Kaydet</Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             )}
 
             {activeTab === "services" && (
@@ -3087,6 +3137,189 @@ function CilingirPanelContent() {
                 </CardContent>
               </Card>
             )}
+
+            {activeTab === "ads" && (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <div>
+                        <CardTitle>Reklam Yönetimi</CardTitle>
+                        <CardDescription>Reklam bütçenizi ve kampanyalarınızı yönetin</CardDescription>
+                      </div>
+                      <Button onClick={() => setShowBalanceModal(true)} variant="outline" className="w-full sm:w-auto flex items-center gap-2">
+                        <Plus className="w-4 h-4" />
+                        Bakiye Yükle
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {/* Kalan Bakiye Kartı */}
+                      <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-100">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-blue-600">Kalan Bakiye</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-3xl font-bold text-blue-700">{balance.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}</div>
+                          <p className="text-sm text-blue-600 mt-2">
+                            Tahmini Bitiş: {calculateEstimatedEndDate()}
+                          </p>
+                        </CardContent>
+                      </Card>
+
+                      {/* Günlük Bütçe Kartı */}
+                      <Card className="bg-gradient-to-br from-green-50 to-white border-green-100">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-green-600">Günlük Reklam Bütçesi</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {isEditingDailyBudget ? (
+                            <div className="flex items-center gap-2">
+                              <div className="relative flex-1">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₺</span>
+                                <Input
+                                  type="number"
+                                  value={dailyBudget}
+                                  onChange={(e) => setDailyBudget(e.target.value)}
+                                  className="pl-8"
+                                  min="50"
+                                  step="10"
+                                />
+                              </div>
+                              <Button onClick={handleSaveDailyBudget} size="sm" className="whitespace-nowrap">
+                                Kaydet
+                              </Button>
+                              <Button onClick={() => setIsEditingDailyBudget(false)} variant="ghost" size="sm">
+                                İptal
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-4">
+                              <div className="text-3xl font-bold text-green-700">₺{dailyBudget}</div>
+                              <Button variant="outline" size="sm" onClick={() => setIsEditingDailyBudget(true)}>
+                                Düzenle
+                              </Button>
+                            </div>
+                          )}
+                          <p className="text-sm text-green-600 mt-2">
+                            Günlük ortalama tüketim: ₺{dailyBudget}
+                          </p>
+                        </CardContent>
+                      </Card>
+
+                      {/* Önerilen Bütçe Kartı */}
+                      <Card className="bg-gradient-to-br from-purple-50 to-white border-purple-100">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium text-purple-600">Önerilen Günlük Bütçe</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-3xl font-bold text-purple-700">₺330.00</div>
+                          <p className="text-sm text-purple-600 mt-2">
+                            Rekabet için önerilen optimum miktar
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    <div className="mt-8 bg-white rounded-lg p-6 border">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                        <h3 className="text-lg font-semibold">Bakiye Tüketim Analizi</h3>
+                        <div className="mt-2 sm:mt-0 text-sm text-gray-500">
+                          Son 7 günlük tüketim
+                        </div>
+                      </div>
+                      <div className="h-[300px] w-full">
+                        <ResponsiveLine
+                          data={[
+                            {
+                              id: "bakiye",
+                              data: [
+                                { x: "1 Mayıs", y: 200 },
+                                { x: "2 Mayıs", y: 310 },
+                                { x: "3 Mayıs", y: 260 },
+                                { x: "4 Mayıs", y: 110 },
+                                { x: "5 Mayıs", y: 300 },
+                                { x: "6 Mayıs", y: 250 },
+                              ],
+                            },
+                          ]}
+                          margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
+                          xScale={{ type: "point" }}
+                          yScale={{ type: "linear", min: "auto", max: "auto" }}
+                          axisTop={null}
+                          axisRight={null}
+                          axisBottom={{
+                            tickSize: 5,
+                            tickPadding: 5,
+                            tickRotation: -45,
+                          }}
+                          axisLeft={{
+                            tickSize: 5,
+                            tickPadding: 5,
+                            tickRotation: 0,
+                            format: (value) => `₺${value}`,
+                          }}
+                          pointSize={10}
+                          pointColor={{ theme: "background" }}
+                          pointBorderWidth={2}
+                          pointBorderColor={{ from: "serieColor" }}
+                          enableGridX={false}
+                          colors={["#6366f1"]}
+                          enableArea={true}
+                          areaOpacity={0.1}
+                          crosshairType="cross"
+                          useMesh={true}
+                          enableSlices="x"
+                          sliceTooltip={({ slice }) => (
+                            <div className="bg-white shadow-lg rounded-lg p-2 text-sm">
+                              <strong>{slice.points[0].data.x}</strong>
+                              <div className="text-blue-600">
+                                ₺{slice.points[0].data.y}
+                              </div>
+                            </div>
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-8">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Reklam Performans İpuçları</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            <div className="flex items-start gap-3">
+                              <div className="mt-1">
+                                <Info className="w-5 h-5 text-blue-600" />
+                              </div>
+                              <div>
+                                <h4 className="font-medium">Günlük Bütçe Önerisi</h4>
+                                <p className="text-sm text-gray-600">
+                                  Önerilen günlük bütçe olan ₺330 ile daha fazla potansiyel müşteriye ulaşabilirsiniz.
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                              <div className="mt-1">
+                                <AlertCircle className="w-5 h-5 text-yellow-600" />
+                              </div>
+                              <div>
+                                <h4 className="font-medium">Bakiye Durumu</h4>
+                                <p className="text-sm text-gray-600">
+                                  Mevcut tüketim hızınızla bakiyeniz yaklaşık {Math.floor(1250 / parseFloat(dailyBudget))} gün daha yetecek.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -3140,6 +3373,43 @@ function CilingirPanelContent() {
           </div>
         )
       }
+      {showBalanceModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Bakiye Yükle</h3>
+              <button onClick={() => setShowBalanceModal(false)} className="text-gray-500 hover:text-gray-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleBalanceSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Yüklenecek Tutar (₺)
+                </label>
+                <Input
+                  type="number"
+                  min="100"
+                  step="100"
+                  value={balanceAmount}
+                  onChange={(e) => setBalanceAmount(e.target.value)}
+                  placeholder="Minimum ₺100"
+                  required
+                  className="w-full"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setShowBalanceModal(false)}>
+                  İptal
+                </Button>
+                <Button type="submit" disabled={!balanceAmount || parseFloat(balanceAmount) < 100}>
+                  Talep Oluştur
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div >
   );
 } 
