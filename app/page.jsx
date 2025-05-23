@@ -4,12 +4,11 @@ import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "../components/ui/button";
-import { Checkbox } from "../components/ui/checkbox";
 import Hero from "../components/Hero";
 import SearchForm from "../components/SearchForm";
 import { useToast } from "../components/ToastContext";
 import { useDispatch, useSelector } from 'react-redux'
-import { searchLocksmiths, setSelectedValues as setReduxSelectedValues } from '../redux/features/searchSlice';
+import { setSelectedValues as setReduxSelectedValues } from '../redux/features/searchSlice';
 import { useRouter } from "next/navigation";
 import { RatingModal } from "../components/RatingModal";
 import LocksmithCard from "../components/ui/locksmith-card";
@@ -86,24 +85,13 @@ export default function Home() {
   } = useSelector(state => state.search) || {};
 
   // Lokal state - Redux tarafından yönetilecek alanlar için artık iskeleti tutuyoruz
-  const [showFilters, setShowFilters] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedLocksmith, setSelectedLocksmith] = useState(null);
 
   // Local state tanımlamaları - serviceList burada tanımlıyoruz
-  const [loading, setLoading] = useState(false);
   const [serviceList, setServiceList] = useState([]);
-  const [isLoadingServices, setIsLoadingServices] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState(null);
 
-  // Arama sonuçları için state
-  const [searchResults, setSearchResults] = useState({
-    locksmiths: [],
-    isLoading: false,
-    error: null,
-    showResults: false,
-    hasSearched: false
-  });
 
   // Form değerleri için local state - Redux store ile senkronize çalışacak
   const [selectedValues, setSelectedValues] = useState({
@@ -469,119 +457,6 @@ export default function Home() {
     return null;
   };
 
-  const handleCallLocksmith = async (locksmith, index = 0) => {
-    setSelectedLocksmith(locksmith);
-
-    try {
-      // API üzerinden doğrudan aktivite kaydı oluştur
-      const response = await fetch('/api/public/user/activity', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          activitytype: 'call_request',
-          level: 1,
-          data: JSON.stringify({
-            locksmithId: locksmith.id,
-            searchProvinceId: reduxSelectedValues.provinceId,
-            searchDistrictId: reduxSelectedValues.districtId,
-            searchServiceId: reduxSelectedValues.serviceId
-          }),
-          userId: localStorage.getItem('userId'),
-          sessionId: localStorage.getItem('sessionId'),
-          userAgent: navigator.userAgent || ''
-        }),
-      });
-
-      if (!response.ok) {
-        console.error('Aktivite log hatası:', await response.text());
-      }
-    } catch (error) {
-      console.error('Aktivite log hatası:', error);
-    }
-
-    // Telefon numarasını çağırma işlemi
-    if (locksmith.phone) {
-      window.location.href = `tel:${locksmith.phone}`;
-    } else {
-      showToast("Bu çilingirin telefon numarası bulunamadı", "error", 3000);
-    }
-
-    setTimeout(() => {
-      setShowRatingModal(true);
-    }, 1500);
-  };
-
-
-  const handleWhatsappMessage = async (locksmith, index) => {
-    try {
-      setSelectedLocksmith(locksmith);
-
-      const response = await fetch('/api/public/user/activity', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          activitytype: 'whatsapp_message',
-          level: 1,
-          data: JSON.stringify({
-            locksmithId: locksmith.id,
-            searchProvinceId: reduxSelectedValues.provinceId,
-            searchDistrictId: reduxSelectedValues.districtId,
-            searchServiceId: reduxSelectedValues.serviceId
-          }),
-          userId: localStorage.getItem('userId'),
-          sessionId: localStorage.getItem('sessionId'),
-          userAgent: navigator.userAgent || ''
-        }),
-      });
-
-      if (!response.ok) {
-        console.error('Aktivite log hatası:', await response.text());
-      }
-
-      // WhatsApp numarasını formatlama ve yönlendirme
-      if (locksmith.phone) {
-        let formattedNumber = locksmith.phone.replace(/\s+/g, '');
-        if (formattedNumber.startsWith('+')) {
-          formattedNumber = formattedNumber.substring(1);
-        }
-
-        if (!formattedNumber.startsWith('90') && !formattedNumber.startsWith('0')) {
-          formattedNumber = '90' + formattedNumber;
-        } else if (formattedNumber.startsWith('0')) {
-          formattedNumber = '90' + formattedNumber.substring(1);
-        }
-
-        const defaultMessage = encodeURIComponent("Merhaba, Bi Çilingir uygulamasından ulaşıyorum. Çilingir hizmetine ihtiyacım var.");
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        const whatsappUrl = `https://wa.me/${formattedNumber}?text=${defaultMessage}`;
-        const iosWhatsappUrl = `whatsapp://send?phone=${formattedNumber}&text=${defaultMessage}`;
-
-        try {
-          if (isMobile) {
-            window.location = iosWhatsappUrl;
-          } else {
-            window.open(whatsappUrl, '_blank');
-          }
-        } catch (e) {
-          const linkElement = document.createElement('a');
-          linkElement.setAttribute('href', whatsappUrl);
-          linkElement.setAttribute('target', '_blank');
-          linkElement.setAttribute('rel', 'noopener noreferrer');
-          linkElement.click();
-        }
-      } else {
-        showToast("Bu çilingirin WhatsApp numarası bulunamadı", "error", 3000);
-      }
-    } catch (error) {
-      console.error('WhatsApp mesaj gönderme hatası:', error);
-      showToast("WhatsApp mesajı gönderilirken bir hata oluştu", "error", 3000);
-    }
-  };
-
   const handleRatingSubmit = async ({ rating, comment }) => {
     try {
       if (!selectedLocksmith) {
@@ -661,73 +536,18 @@ export default function Home() {
 
   // Çilingir detay butonuna tıklama - aktivite kaydı ekle
   const router = useRouter();
-  const handleViewDetails = async (id, slug) => {
-    // Sadece ilgili çilingir için yükleniyor durumunu güncelle
-    const updatedLoadingStates = { ...loadingLocksmithIds };
-    updatedLoadingStates[id] = true;
-    setLoadingLocksmithIds(updatedLoadingStates);
 
-    try {
-      // API üzerinden doğrudan aktivite kaydı oluştur
-      const response = await fetch('/api/public/user/activity', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          activitytype: 'locksmith_detail_view',
-          level: 1,
-          data: JSON.stringify({
-            locksmithId: id,
-            searchProvinceId: reduxSelectedValues.provinceId,
-            searchDistrictId: reduxSelectedValues.districtId,
-            searchServiceId: reduxSelectedValues.serviceId
-          }),
-          userId: localStorage.getItem('userId'),
-          sessionId: localStorage.getItem('sessionId'),
-          userAgent: navigator.userAgent || ''
-        }),
-      });
 
-      if (!response.ok) {
-        console.error('Aktivite log hatası:', await response.text());
-      }
-    } catch (error) {
-      console.error('Aktivite log hatası:', error);
-    }
-
-    // Detay sayfasına yönlendir, scroll davranışını engellemek için scroll=false
-    router.push(`/cilingirler/${slug}?fromDetail=true`, undefined, { scroll: false });
-  };
-
-  // Servisleri çek (geçici olarak statik servis listesi kullanıyoruz)
   useEffect(() => {
-    // Geçici statik servis listesi
-    // const staticServices = [
-    //   { id: 1, name: "Acil", slug: "acil-cilingir" },
-    //   { id: 2, name: "7/24", slug: "7-24-cilingir" },
-    //   { id: 3, name: "Ev", slug: "ev-cilingir" },
-    //   { id: 4, name: "Otomobil", slug: "otomobil-cilingir" },
-    //   { id: 5, name: "Kasa", slug: "kasa-cilingir" },
-    // ];
-
-    // setServiceList(staticServices);
-    // setIsLoadingServices(false);
-
-    /* API çağrısını geçici olarak yorum satırına alıyoruz */
     const fetchServices = async () => {
       try {
-        setIsLoadingServices(true);
         const response = await fetch("/api/public/services");
         const data = await response.json();
 
         setServiceList(data.services);
-        setIsLoadingServices(false);
       } catch (error) {
         console.error("Hizmetler yüklenirken hata:", error);
         showToast("Hizmetler yüklenirken bir sorun oluştu", "error", 3000);
-      } finally {
-        setIsLoadingServices(false);
       }
     };
 

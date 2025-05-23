@@ -136,65 +136,6 @@ CREATE TABLE locksmith_districts (
     PRIMARY KEY (locksmithId, districtId)
 );
 
-
--- Çilingir Paketleri Tablosu
-CREATE TABLE key_packages (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name TEXT NOT NULL,
-    description TEXT,
-    keyAmount INTEGER NOT NULL,
-    price NUMERIC(10,2) NOT NULL,
-    isUnlimited BOOLEAN DEFAULT FALSE,
-    startDate DATE,
-    endDate DATE,
-    isActive BOOLEAN DEFAULT TRUE,
-    createdAt TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Çilingir Key Bakiyesi Tablosu
-CREATE TABLE key_balance (
-    locksmithId UUID PRIMARY KEY REFERENCES locksmiths(id),
-    totalKeyBalance INTEGER DEFAULT 0,
-    lastUpdated TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Günlük Key Tercihleri Tablosu
-CREATE TABLE daily_key_preferences (
-    locksmithId UUID REFERENCES locksmiths(id),
-    dayOfWeek INTEGER CHECK (dayOfWeek BETWEEN 0 AND 6),
-    keyAmount INTEGER DEFAULT 0,
-    PRIMARY KEY (locksmithId, dayOfWeek)
-);
-
--- Key İşlemleri Tablosu
-CREATE TABLE key_transactions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    locksmithId UUID NOT NULL REFERENCES locksmiths(id),
-    packageId UUID REFERENCES key_packages(id),
-    keyAmount INTEGER NOT NULL,
-    transactionType TEXT NOT NULL CHECK (
-        transactionType IN ('purchase', 'bonus', 'refund', 'system_adjustment')
-    ),
-    paidAmount NUMERIC(10,2),
-    balanceBefore INTEGER NOT NULL,
-    balanceAfter INTEGER NOT NULL,
-    status TEXT NOT NULL DEFAULT 'pending' CHECK (
-        status IN ('pending', 'approved', 'rejected', 'completed', 'cancelled') --approved -> onayladım, completed -> ödeme yapıldı ve bakiye yüklendi
-    ),
-    requestNote TEXT,
-    adminNote TEXT,
-    reviewedBy UUID REFERENCES auth.users(id),
-    reviewedAt TIMESTAMPTZ,
-    paymentMethod TEXT CHECK (
-        paymentMethod IN ('nakit', 'eft', 'havale', 'kredi_kartı', 'manuel')
-    ),
-    paymentReference TEXT,
-    paymentMethodDetails TEXT,
-    referralid UUID REFERENCES referrals(id),
-    createdAt TIMESTAMPTZ DEFAULT NOW(),
-    updatedAt TIMESTAMPTZ DEFAULT NOW()
-);
-
 -- İncelemeler Tablosu
 CREATE TABLE reviews (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -268,68 +209,11 @@ CREATE TABLE user_activity_logs (
     deviceType TEXT,
 
     keyAmount INTEGER NOT NULL,
-    usageTypeId UUID REFERENCES key_usage_types(id),
     systemNote TEXT,
     
     createdAt TIMESTAMPTZ DEFAULT NOW() 
 );
 
-
-
--- Anahtar Kullanım Tipleri Tablosu
-CREATE TABLE key_usage_types (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name TEXT NOT NULL,
-    level INTEGER,
-    keyAmount INTEGER NOT NULL,
-    description TEXT,
-    isActive BOOLEAN DEFAULT TRUE,
-    createdAt TIMESTAMPTZ DEFAULT NOW(),
-    updatedAt TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(name, level)
-);
-
-
-
--- Çilingir Aktivite Türleri
-CREATE TYPE locksmith_activity_type_enum AS ENUM (
-    'account_created',
-    'account_activated',
-    'account_deactivated',
-    'account_deleted',
-    'package_purchase',
-    'profile_update',
-    'certificate_upload',
-    'document_upload',
-    'service_add',
-    'service_remove',
-    'working_hours_update',
-    'login',
-    'logout',
-    'password_reset'
-);
-
--- Çilingir Aktivite Logları Tablosu
-CREATE TABLE locksmith_activity_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    locksmithId UUID NOT NULL REFERENCES locksmiths(id),
-    userIp INET,
-    userAgent TEXT,
-    sessionId UUID,
-    
-    activityType locksmith_activity_type_enum NOT NULL,
-    
-    additionalInfo JSONB,
-    createdAt TIMESTAMPTZ DEFAULT NOW()
-);
-
-
-CREATE TABLE referrals (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  referrerid UUID NOT NULL REFERENCES locksmiths(id),
-  referredid UUID NOT NULL UNIQUE REFERENCES locksmiths(id),
-  createdat TIMESTAMP DEFAULT now()
-);
 
 -- Sertifikalar tablosu
 CREATE TABLE locksmith_certificates (
@@ -373,33 +257,28 @@ CREATE TABLE public.contact_form (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now())
 );
 
-
--- Abonelikler tablosu
-create table subscriptions (
+create table locksmith_balances (
   id uuid primary key default gen_random_uuid(),
-  locksmith_id uuid not null references locksmiths(id) on delete cascade,
-  package_id uuid not null references packages(id),
-  package_name text not null,
-  price numeric(10,2) not null,
-  start_date date not null default current_date,
-  end_date date,
-  is_active boolean not null default true,
-  status text not null default 'pending',
-  admin_note text,
-  created_at timestamp with time zone default now(),
-  updated_at timestamp with time zone default now()
+  locksmith_id uuid references locksmiths(id) on delete cascade,
+  balance numeric(12, 2) not null default 0, -- mevcut bakiye
+  daily_spent_limit numeric(12, 2) not null default 0, -- günlük maksimum reklam harcaması
+  suggested_daily_limit numeric(12, 2) not null default 0, -- sistemin önerdiği günlük limit
+  updated_at timestamp with time zone default now(),
+  created_at timestamp with time zone default now()
 );
 
-create table packages (
+
+create table locksmith_transactions (
   id uuid primary key default gen_random_uuid(),
-  name text not null,
-  price numeric(10,2) not null,
-  customer_multiplier int not null default 1,
-  is_popular boolean not null default false,
-  description text,
-  features jsonb not null,
-  color text, -- örneğin: "border-blue-200 bg-blue-50"
-  is_active boolean not null default true,
-  created_at timestamp with time zone default now(),
-  updated_at timestamp with time zone default now()
+  locksmith_id uuid references locksmiths(id) on delete cascade,
+  amount numeric(12, 2) not null, -- pozitif (yükleme/düzeltme), negatif (harcama) olabilir
+  transaction_type text not null check (transaction_type in (
+    'manual_topup',        -- kullanıcı yüklemesi
+    'system_adjustment',   -- sistem düzeltmesi
+    'ad_spend',            -- günlük reklam harcaması
+    'refund',              -- geri ödeme
+    'other'                -- diğer işlemler
+  )),
+  description text, -- açıklama alanı (isteğe bağlı)
+  created_at timestamp with time zone default now()
 );

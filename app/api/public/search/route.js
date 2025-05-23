@@ -2,15 +2,62 @@ import { NextResponse } from 'next/server';
 import { createRouteClient } from '../../utils';
 
 export async function GET(request) {
+
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+  console.log('Arama isteği alındı...');
+
+
   try {
     const { searchParams } = new URL(request.url);
 
-    
-    
+
+
     const serviceId = searchParams.get('serviceId');
     const districtId = searchParams.get('districtId');
     const provinceId = searchParams.get('provinceId');
-    
+
 
     if (!serviceId) {
       return NextResponse.json({ error: "Bir hizmet seçmelisiniz" }, { status: 400 });
@@ -25,8 +72,8 @@ export async function GET(request) {
     // Şu anki gün ve saat bilgisini al
     const now = new Date();
     const currentDayOfWeek = now.getDay(); // 0 = Pazar, 6 = Cumartesi
-    const currentTime = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`; 
-    
+    const currentTime = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+
     // Bugünün tam tarihini al (YYYY-MM-DD formatında)
     const today = new Date().toISOString().split('T')[0];
 
@@ -73,12 +120,12 @@ export async function GET(request) {
 
     // Çilingir ID'lerini çıkar
     const locksmithIds = serviceLocksmiths.map(item => item.locksmiths.id);
-    
+
     if (locksmithIds.length === 0) {
-      return NextResponse.json({ 
-        locksmiths: [], 
+      return NextResponse.json({
+        locksmiths: [],
         totalCount: 0,
-        message: "Bu hizmeti sunan çilingir bulunamadı" 
+        message: "Bu hizmeti sunan çilingir bulunamadı"
       });
     }
 
@@ -89,26 +136,26 @@ export async function GET(request) {
       .select('locksmithid, districtid, isdayactive, isnightactive')
       .in('locksmithid', locksmithIds)
       .eq('districtid', districtId);
-    
+
     if (targetDistrictError) {
       console.error("Hedef ilçe sorgulamasında hata:", targetDistrictError);
       return NextResponse.json({ error: "Hizmet bölgeleri kontrol edilirken bir hata oluştu" }, { status: 500 });
     }
-    
+
     // İl içindeki diğer ilçeleri bulalım
     const { data: provinceDistrictIds, error: provinceDistricsError } = await supabase
       .from('districts')
       .select('id')
       .eq('province_id', provinceId);
-    
+
     if (provinceDistricsError) {
       console.error("İl ilçeleri sorgulamasında hata:", provinceDistricsError);
       return NextResponse.json({ error: "İl ilçeleri getirilirken bir hata oluştu" }, { status: 500 });
     }
-    
+
     // İlçe ID'lerini bir listeye dönüştürelim
     const provinceDistrictIdList = provinceDistrictIds?.map(d => d.id) || [];
-    
+
     // Hedef ilçe dışındaki diğer ilçelerde hizmet veren çilingirleri bulalım
     const { data: provinceServices, error: provinceServicesError } = await supabase
       .from('locksmith_districts')
@@ -116,12 +163,12 @@ export async function GET(request) {
       .in('locksmithid', locksmithIds)
       .in('districtid', provinceDistrictIdList)
       .neq('districtid', districtId); // Hedef ilçeyi tekrar dahil etmemek için
-    
+
     if (provinceServicesError) {
       console.error("İl hizmetleri sorgulamasında hata:", provinceServicesError);
       return NextResponse.json({ error: "İl hizmetleri getirilirken bir hata oluştu" }, { status: 500 });
     }
-    
+
     // İki sorgu sonucunu birleştir
     const districtServices = [...(targetDistrictServices || []), ...(provinceServices || [])];
 
@@ -137,7 +184,7 @@ export async function GET(request) {
 
     // İlçe ve illere göre grupla
     const districtServicesMap = {};
-    
+
     districtServices.forEach(service => {
       if (!districtServicesMap[service.locksmithid]) {
         districtServicesMap[service.locksmithid] = {
@@ -145,17 +192,17 @@ export async function GET(request) {
           inProvince: false
         };
       }
-      
+
       if (parseInt(service.districtid) === parseInt(districtId)) {
         districtServicesMap[service.locksmithid].inTargetDistrict = true;
       } else {
-        districtServicesMap[service.locksmithid].inProvince = true; 
+        districtServicesMap[service.locksmithid].inProvince = true;
       }
     });
-    
+
     // Anahtar bakiyelerini eşle
     const keyBalanceMap = {};
-    
+
     if (keyBalances) {
       keyBalances.forEach(balance => {
         keyBalanceMap[balance.locksmithid] = balance.totalkeybalance || 0;
@@ -166,21 +213,21 @@ export async function GET(request) {
     const { data: provinces, error: provinceError } = await supabase
       .from('provinces')
       .select('id, name');
-      
+
     const { data: districts, error: districtNameError } = await supabase
       .from('districts')
       .select('id, name, province_id');
-    
+
     // İl ve ilçe isimlerini eşle
     const provinceMap = {};
     const districtMap = {};
-    
+
     if (provinces) {
       provinces.forEach(province => {
         provinceMap[province.id] = province.name;
       });
     }
-    
+
     if (districts) {
       districts.forEach(district => {
         districtMap[district.id] = district.name;
@@ -192,10 +239,10 @@ export async function GET(request) {
       const locksmith = item.locksmiths;
       const districtService = districtServicesMap[locksmith.id] || { inTargetDistrict: false, inProvince: false };
       const keyBalance = keyBalanceMap[locksmith.id] || 0;
-      
+
       // Öncelik grubu hesapla
       let positionGroup = 9; // Varsayılan en düşük öncelik
-      
+
       if (keyBalance > 0 && districtService.inTargetDistrict) {
         positionGroup = 1; // Anahtar bakiyesi var ve ilçede hizmet veriyor
       } else if (keyBalance > 0 && districtService.inProvince) {
@@ -214,33 +261,33 @@ export async function GET(request) {
         - 24:00 / 09:00 (Gece)
        */
 
-        const now = new Date();
-        const hour = now.getHours();
+      const now = new Date();
+      const hour = now.getHours();
 
-        let priceType;
-        let price = {
-            min: 0,
-            max: 0
-        };
+      let priceType;
+      let price = {
+        min: 0,
+        max: 0
+      };
 
 
-        if (hour >= 9 && hour <= 16) {
+      if (hour >= 9 && hour <= 16) {
         priceType = "mesai"; // 09:00 - 16:59
         price.min = locksmith.services.find(service => service.id === serviceId).minPriceMesai;
         price.max = locksmith.services.find(service => service.id === serviceId).maxPriceMesai;
-        } else if (hour >= 17 && hour <= 20) {
+      } else if (hour >= 17 && hour <= 20) {
         priceType = "aksam"; // 17:00 - 20:59
         price.min = locksmith.services.find(service => service.id === serviceId).minPriceAksam;
         price.max = locksmith.services.find(service => service.id === serviceId).maxPriceAksam;
-        } else {
+      } else {
         priceType = "gece";  // 21:00 - 08:59
         price.min = locksmith.services.find(service => service.id === serviceId).minPriceGece;
         price.max = locksmith.services.find(service => service.id === serviceId).maxPriceGece;
-        }
+      }
 
-        
-      
-      
+
+
+
       return {
         id: locksmith.id,
         name: locksmith.businessname || "İsimsiz Çilingir",
@@ -256,9 +303,9 @@ export async function GET(request) {
         isOpen: true, // Şimdilik hepsi açık varsayılıyor
         businessHours: '09:00 - 18:00', // Şimdilik sabit değer
         slug: locksmith.slug,
-        price:{
-            min: price.min,
-            max: price.max
+        price: {
+          min: price.min,
+          max: price.max
         },
         serviceNames: locksmith.services.map(service => service.name),
         coverageType: districtService.inTargetDistrict ? 'İlçede Hizmet Veriyor' : 'İlde Hizmet Veriyor',
@@ -268,7 +315,7 @@ export async function GET(request) {
         }
       };
     });
-    
+
     // Öncelik grubuna göre sırala
     enrichedLocksmiths.sort((a, b) => {
       // Önce pozisyon grubuna göre
@@ -282,12 +329,12 @@ export async function GET(request) {
       // Puan da aynıysa yorum sayısına göre
       return b.reviewCount - a.reviewCount;
     });
-    
+
     // Sadece ilk 3 çilingiri gönder
     const topLocksmiths = enrichedLocksmiths.slice(0, 3);
 
-    return NextResponse.json({ 
-      locksmiths: topLocksmiths, 
+    return NextResponse.json({
+      locksmiths: topLocksmiths,
       totalCount: enrichedLocksmiths.length,
       debug: {
         filters: {
@@ -299,7 +346,7 @@ export async function GET(request) {
         }
       }
     });
-    
+
   } catch (error) {
     console.error("Çilingirler listelenirken hata:", error);
     return NextResponse.json({ error: "Beklenmeyen bir hata oluştu" }, { status: 500 });

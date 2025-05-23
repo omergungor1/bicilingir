@@ -3,7 +3,8 @@ import authReducer from '../features/authSlice';
 import userReducer from '../features/userSlice';
 import searchReducer from '../features/searchSlice';
 
-export const store = configureStore({
+// Store yapılandırması
+const store = configureStore({
   reducer: {
     auth: authReducer,
     user: userReducer,
@@ -14,4 +15,8 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: false, // Supabase nesneleri için
     }),
-}); 
+  // DevTools sadece development ortamında aktif olsun
+  devTools: process.env.NODE_ENV === 'development',
+});
+
+export { store }; 

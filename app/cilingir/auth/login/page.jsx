@@ -56,15 +56,12 @@ export default function CilingirLogin() {
 
   // Kullanıcı giriş yapmışsa, rolüne göre yönlendir
   useEffect(() => {
-    console.log("useEffect: Auth durumu değişti", { isAuthenticated, role, user });
 
     if (isAuthenticated && user && role) {
       if (role === 'admin') {
         showToast("Admin olarak giriş yaptınız", "success");
-        console.log("useEffect: Admin yönlendirmesi yapılıyor...");
         router.push('/admin');
       } else if (role === 'cilingir') {
-        console.log("useEffect: Çilingir yönlendirmesi yapılıyor...");
         router.push('/cilingir');
       } else {
         console.log("Bilinmeyen rol:", role);
@@ -109,10 +106,8 @@ export default function CilingirLogin() {
     }))
       .then((action) => {
         // Fulfilled durumunda
-        console.log("Login işlemi sonucu:", action.meta.requestStatus, action.payload);
         if (action.meta.requestStatus === 'fulfilled') {
           const result = action.payload;
-          console.log("Login başarılı, sonuç:", result);
 
           if (result && result.role) {
             if (result.role === 'admin') {

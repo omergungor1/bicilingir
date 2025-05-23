@@ -3,54 +3,17 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 // Çilingir arama için async thunk
 export const searchLocksmiths = createAsyncThunk(
   'search/searchLocksmiths',
-  async ({ selectedValues, userAgent, shouldLog = true }, { getState, rejectWithValue }) => {
+  async ({ selectedValues }, { rejectWithValue }) => {
     try {
-      // Kullanıcı bilgilerini ve oturum kimliğini al
-      const userId = localStorage.getItem('userId');
-      const sessionId = localStorage.getItem('sessionId');
-
-      // shouldLog true ise aktivite logu oluştur
-      if (shouldLog && userId && sessionId) {
-        // Önce arama aktivitesini logla
-        try {
-          const activityResponse = await fetch('/api/public/user/activity', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              activitytype: 'search',
-              data: JSON.stringify({
-                districtId: selectedValues.districtId,
-                provinceId: selectedValues.provinceId,
-                serviceId: selectedValues.serviceId
-              }),
-              userId,
-              sessionId,
-              userAgent
-            }),
-          });
-
-          if (!activityResponse.ok) {
-            console.error('Arama aktivite log hatası:', await activityResponse.text());
-          } else {
-            //console.log('Arama aktivitesi kaydedildi');
-          }
-        } catch (error) {
-          console.error('Arama aktivite log hatası:', error);
-        }
-      } else {
-        //console.log('shouldLog=false olduğu için arama aktivitesi loglanmadı');
-      }
-
       // Çilingir verilerini GET ile getir
       const queryParams = new URLSearchParams({
-        serviceId: selectedValues.serviceId,
-        districtId: selectedValues.districtId,
-        provinceId: selectedValues.provinceId
+        serviceId: selectedValues.serviceId || '',
+        districtId: selectedValues.districtId || '',
+        provinceId: selectedValues.provinceId || '',
+        count: 3
       }).toString();
 
-      const response = await fetch(`/api/public/search?${queryParams}`, {
+      const response = await fetch(`/api/locksmiths?${queryParams}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -63,98 +26,7 @@ export const searchLocksmiths = createAsyncThunk(
 
       const data = await response.json();
 
-      // Çilingir görüntüleme aktivitelerini logla - seviyelerine göre (shouldLog true ise)
-      if (shouldLog && userId && sessionId && data.locksmiths && data.locksmiths.length > 0) {
-        //console.log(`${data.locksmiths.length} çilingir için görüntüleme aktiviteleri loglanıyor...`);
-
-        try {
-          // İlk çilingir - seviye 1
-          if (data.locksmiths.length >= 1) {
-            const firstLocksmithResponse = await fetch('/api/public/user/activity', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                activitytype: 'locksmith_list_view',
-                level: 1,
-                data: JSON.stringify({
-                  locksmithId: data.locksmiths[0].id,
-                  searchProvinceId: selectedValues.provinceId,
-                  searchDistrictId: selectedValues.districtId,
-                  searchServiceId: selectedValues.serviceId,
-                  position: 1
-                }),
-                userId,
-                sessionId,
-                userAgent
-              }),
-            });
-
-            if (!firstLocksmithResponse.ok) {
-              console.error('1. çilingir aktivite log hatası:', await firstLocksmithResponse.text());
-            }
-          }
-
-          // İkinci çilingir - seviye 2
-          if (data.locksmiths.length >= 2) {
-            const secondLocksmithResponse = await fetch('/api/public/user/activity', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                activitytype: 'locksmith_list_view',
-                level: 2,
-                data: JSON.stringify({
-                  locksmithId: data.locksmiths[1].id,
-                  searchProvinceId: selectedValues.provinceId,
-                  searchDistrictId: selectedValues.districtId,
-                  searchServiceId: selectedValues.serviceId,
-                  position: 2
-                }),
-                userId,
-                sessionId,
-                userAgent
-              }),
-            });
-
-            if (!secondLocksmithResponse.ok) {
-              console.error('2. çilingir aktivite log hatası:', await secondLocksmithResponse.text());
-            }
-          }
-
-          // Diğer tüm çilingirler - seviye 3
-          for (let i = 2; i < data.locksmiths.length; i++) {
-            const otherLocksmithResponse = await fetch('/api/public/user/activity', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                activitytype: 'locksmith_list_view',
-                level: 3,
-                data: JSON.stringify({
-                  locksmithId: data.locksmiths[i].id,
-                  searchProvinceId: selectedValues.provinceId,
-                  searchDistrictId: selectedValues.districtId,
-                  searchServiceId: selectedValues.serviceId,
-                  position: i + 1
-                }),
-                userId,
-                sessionId,
-                userAgent
-              }),
-            });
-
-            if (!otherLocksmithResponse.ok) {
-              console.error(`${i + 1}. çilingir aktivite log hatası:`, await otherLocksmithResponse.text());
-            }
-          }
-
-          //console.log('Tüm çilingir görüntüleme aktiviteleri loglandı.');
-        } catch (error) {
-          console.error('Çilingir görüntüleme aktivitesi log hatası:', error);
-        }
-      } else if (!shouldLog) {
-        //console.log('shouldLog=false olduğu için çilingir görüntüleme aktiviteleri loglanmadı');
-      }
-
-      // Seçilen değerleri de yanıtta gönder
+      // Seçilen değerleri ve çilingir verilerini döndür
       return {
         locksmiths: data.locksmiths || [],
         selectedValues
@@ -172,48 +44,78 @@ const searchSlice = createSlice({
   initialState: {
     selectedValues: {
       serviceId: null,
+      serviceSlug: null,
       districtId: null,
-      provinceId: null
+      provinceId: null,
+      districtName: null,
+      provinceName: null
     },
     locksmiths: [],
     isLoading: false,
     error: null,
     showResults: false,
-    hasSearched: false
+    hasSearched: false,
+    lastSearchTimestamp: null
   },
   reducers: {
-    // Seçili değerleri güncelle
     setSelectedValues: (state, action) => {
       state.selectedValues = {
         ...state.selectedValues,
         ...action.payload
       };
+      state.lastSearchTimestamp = Date.now();
+
+      // Local storage'a kaydet
+      localStorage.setItem('searchState', JSON.stringify({
+        selectedValues: state.selectedValues,
+        lastSearchTimestamp: state.lastSearchTimestamp
+      }));
     },
-    // Aramaları temizle ve başlangıç durumuna dön
     clearSearch: (state) => {
       state.locksmiths = [];
       state.error = null;
       state.showResults = false;
       state.hasSearched = false;
+      state.lastSearchTimestamp = null;
+      localStorage.removeItem('searchState');
+    },
+    restoreSearchState: (state) => {
+      const savedState = localStorage.getItem('searchState');
+      if (savedState) {
+        const parsedState = JSON.parse(savedState);
+        // Son aramadan bu yana 1 saat geçmediyse durumu geri yükle
+        const oneHour = 60 * 60 * 1000;
+        if (Date.now() - parsedState.lastSearchTimestamp < oneHour) {
+          state.selectedValues = parsedState.selectedValues;
+          state.lastSearchTimestamp = parsedState.lastSearchTimestamp;
+        } else {
+          localStorage.removeItem('searchState');
+        }
+      }
     }
   },
   extraReducers: (builder) => {
     builder
-      // Arama işlemi başladığında
       .addCase(searchLocksmiths.pending, (state) => {
         state.isLoading = true;
         state.error = null;
         state.showResults = true;
       })
-      // Arama başarılı olduğunda
       .addCase(searchLocksmiths.fulfilled, (state, action) => {
         state.isLoading = false;
         state.locksmiths = action.payload.locksmiths;
         state.selectedValues = action.payload.selectedValues;
         state.showResults = true;
         state.hasSearched = true;
+        state.lastSearchTimestamp = Date.now();
+
+        // Local storage'a kaydet
+        localStorage.setItem('searchState', JSON.stringify({
+          selectedValues: state.selectedValues,
+          locksmiths: state.locksmiths,
+          lastSearchTimestamp: state.lastSearchTimestamp
+        }));
       })
-      // Arama başarısız olduğunda
       .addCase(searchLocksmiths.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
@@ -223,5 +125,5 @@ const searchSlice = createSlice({
   },
 });
 
-export const { setSelectedValues, clearSearch } = searchSlice.actions;
+export const { setSelectedValues, clearSearch, restoreSearchState } = searchSlice.actions;
 export default searchSlice.reducer; 

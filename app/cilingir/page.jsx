@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Checkbox } from "../../components/ui/checkbox";
-import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X, Footprints, File, ExternalLinkIcon, Clock, Search, CheckCircle, AlertTriangle, AlertCircle, Bell, User, Trash2, MessageCircle, Globe, MapPin, Key, ShoppingCart, Mail, Plus, ArrowRight } from "lucide-react";
+import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X, Footprints, File, ExternalLinkIcon, Clock, Search, CheckCircle, AlertTriangle, AlertCircle, Bell, User, Trash2, MessageCircle, Globe, MapPin, Key, ShoppingCart, Mail, Plus, ArrowRight, Edit, Save, Copy } from "lucide-react";
 import { useToast } from "../../components/ToastContext";
 import Link from "next/link";
 import Image from "next/image";
@@ -31,7 +31,6 @@ import { formatPhoneNumber } from "../../lib/utils";
 import { checkAuthState } from "../../redux/features/authSlice";
 import { AiAssistButton } from "../../components/ui/ai-assist-button";
 import { TiptapEditor } from "../../components/ui/tiptap-editor";
-import SubscriptionPackages from "../../components/ui/subscription-packages";
 import { useJsApiLoader, GoogleMap, Marker, Autocomplete } from '@react-google-maps/api';
 import { ResponsiveLine } from '@nivo/line'
 
@@ -1413,7 +1412,12 @@ function CilingirPanelContent() {
   const [isEditingDailyBudget, setIsEditingDailyBudget] = useState(false);
   const [dailyBudget, setDailyBudget] = useState("200");
   const [balance, setBalance] = useState(1250);
+  const [paymentMethod, setPaymentMethod] = useState("eft");
   const [suggestedBudget] = useState("330");
+  const [transferCode] = useState(() => {
+    const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    return `BC${randomCode}`;
+  });
 
   // Günlük bütçe kaydetme fonksiyonu
   const handleSaveDailyBudget = () => {
@@ -1440,14 +1444,6 @@ function CilingirPanelContent() {
     });
   };
 
-  // Bakiye yükleme işlemi için yeni fonksiyon
-  const handleBalanceSubmit = async (e) => {
-    e.preventDefault();
-    // API entegrasyonu yapılacak
-    showToast(`₺${balanceAmount} tutarındaki bakiye yükleme talebiniz alındı. Admin onayından sonra bakiyenize yansıyacaktır.`, "success");
-    setShowBalanceModal(false);
-    setBalanceAmount("");
-  };
 
   // Önerilen bütçeyi uygulama fonksiyonu
   const handleApplySuggestedBudget = () => {
@@ -1646,14 +1642,6 @@ function CilingirPanelContent() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                     </svg>
                     <span>Panel</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleTabChange("subscription")}
-                    className={`flex items-center space-x-3 p-3 rounded-lg text-left cursor-pointer transition-colors ${activeTab === "subscription" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
-                  >
-                    <ShoppingCart className="h-5 w-5" />
-                    <span>Abonelik</span>
                   </button>
                   <button
                     onClick={() => handleTabChange("ads")}
@@ -2071,25 +2059,6 @@ function CilingirPanelContent() {
                         </div>
                       )}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {activeTab === "subscription" && (
-              <Card>
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle>Reklam</CardTitle>
-                      <CardDescription>BiÇilingir platformunda öne çıkmak için reklam seçin</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {/* Paket Reklamları */}
-                  <div className="overflow-hidden">
-                    <SubscriptionPackages />
                   </div>
                 </CardContent>
               </Card>
@@ -3147,15 +3116,9 @@ function CilingirPanelContent() {
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                      <div>
-                        <CardTitle>Reklam Yönetimi</CardTitle>
-                        <CardDescription>Reklam bütçenizi ve kampanyalarınızı yönetin</CardDescription>
-                      </div>
-                      <Button onClick={() => setShowBalanceModal(true)} variant="outline" className="w-full sm:w-auto flex items-center gap-2">
-                        <Plus className="w-4 h-4" />
-                        Bakiye Yükle
-                      </Button>
+                    <div className="flex flex-col items-start gap-2">
+                      <CardTitle>Reklam Yönetimi</CardTitle>
+                      <CardDescription>Reklam bütçenizi ve kampanyalarınızı yönetin</CardDescription>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -3166,10 +3129,26 @@ function CilingirPanelContent() {
                           <CardTitle className="text-sm font-medium text-blue-600">Kalan Bakiye</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="text-3xl font-bold text-blue-700">{balance.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}</div>
-                          <p className="text-sm text-blue-600 mt-2">
-                            Tahmini Bitiş: {calculateEstimatedEndDate()}
-                          </p>
+                          <div className="flex flex-col gap-4">
+                            <div>
+                              <div className="text-3xl font-bold text-blue-700">{balance.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}</div>
+                              <p className="text-sm text-blue-600 mt-2">
+                                Tahmini Bitiş: {calculateEstimatedEndDate()}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                onClick={() => setShowBalanceModal(true)}
+                                variant="outline"
+                                className="w-full text-blue-700 border-blue-200 hover:bg-blue-50"
+                              >
+                                <span className="flex items-center gap-2">
+                                  <Plus className="h-4 w-4" />
+                                  Bakiye Yükle
+                                </span>
+                              </Button>
+                            </div>
+                          </div>
                         </CardContent>
                       </Card>
 
@@ -3179,37 +3158,66 @@ function CilingirPanelContent() {
                           <CardTitle className="text-sm font-medium text-green-600">Günlük Reklam Bütçesi</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          {isEditingDailyBudget ? (
+                          <div className="flex flex-col gap-4">
+                            <div>
+                              {isEditingDailyBudget ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="relative flex-1">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₺</span>
+                                    <Input
+                                      type="number"
+                                      value={dailyBudget}
+                                      onChange={(e) => setDailyBudget(e.target.value)}
+                                      className="pl-8"
+                                      min="50"
+                                      step="10"
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="text-3xl font-bold text-green-700">₺{dailyBudget}</div>
+                                  <p className="text-sm text-green-600 mt-2">
+                                    Günlük ortalama tüketim: ₺{dailyBudget}
+                                  </p>
+                                </>
+                              )}
+                            </div>
                             <div className="flex items-center gap-2">
-                              <div className="relative flex-1">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₺</span>
-                                <Input
-                                  type="number"
-                                  value={dailyBudget}
-                                  onChange={(e) => setDailyBudget(e.target.value)}
-                                  className="pl-8"
-                                  min="50"
-                                  step="10"
-                                />
-                              </div>
-                              <Button onClick={handleSaveDailyBudget} size="sm" className="whitespace-nowrap">
-                                Kaydet
-                              </Button>
-                              <Button onClick={() => setIsEditingDailyBudget(false)} variant="ghost" size="sm">
-                                İptal
-                              </Button>
+                              {isEditingDailyBudget ? (
+                                <>
+                                  <Button
+                                    onClick={handleSaveDailyBudget}
+                                    variant="outline"
+                                    className="w-full text-green-700 border-green-200 hover:bg-green-50"
+                                  >
+                                    <span className="flex items-center gap-2">
+                                      <Save className="h-4 w-4" />
+                                      Kaydet
+                                    </span>
+                                  </Button>
+                                  <Button
+                                    onClick={() => setIsEditingDailyBudget(false)}
+                                    variant="ghost"
+                                    className="w-auto"
+                                  >
+                                    İptal
+                                  </Button>
+                                </>
+                              ) : (
+                                <Button
+                                  onClick={() => setIsEditingDailyBudget(true)}
+                                  variant="outline"
+                                  className="w-full text-green-700 border-green-200 hover:bg-green-50"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <Edit className="h-4 w-4" />
+                                    Düzenle
+                                  </span>
+                                </Button>
+                              )}
                             </div>
-                          ) : (
-                            <div className="flex items-center gap-4">
-                              <div className="text-3xl font-bold text-green-700">₺{dailyBudget}</div>
-                              <Button variant="outline" size="sm" onClick={() => setIsEditingDailyBudget(true)}>
-                                Düzenle
-                              </Button>
-                            </div>
-                          )}
-                          <p className="text-sm text-green-600 mt-2">
-                            Günlük ortalama tüketim: ₺{dailyBudget}
-                          </p>
+                          </div>
                         </CardContent>
                       </Card>
 
@@ -3403,42 +3411,141 @@ function CilingirPanelContent() {
         )
       }
       {showBalanceModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md">
+            <div className="flex justify-between items-center p-4 border-b">
               <h3 className="text-lg font-semibold">Bakiye Yükle</h3>
               <button onClick={() => setShowBalanceModal(false)} className="text-gray-500 hover:text-gray-700">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <form onSubmit={handleBalanceSubmit}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Yüklenecek Tutar (₺)
-                </label>
-                <Input
-                  type="number"
-                  min="100"
-                  step="100"
-                  value={balanceAmount}
-                  onChange={(e) => setBalanceAmount(e.target.value)}
-                  placeholder="Minimum ₺100"
-                  required
-                  className="w-full"
-                />
+            <div className="overflow-y-auto max-h-[calc(100vh-200px)] p-4">
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <Info className="w-5 h-5 text-blue-500 mt-0.5" />
+                  <p className="text-sm text-blue-700">
+                    EFT/Havale özelliği geliştirme aşamasındadır. Şu anda test amaçlı kullanılmaktadır.
+                  </p>
+                </div>
               </div>
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setShowBalanceModal(false)}>
-                  İptal
-                </Button>
-                <Button type="submit" disabled={!balanceAmount || parseFloat(balanceAmount) < 100}>
-                  Talep Oluştur
-                </Button>
+              <div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ödeme Yöntemi
+                    </label>
+                    <div className="space-y-2">
+                      <div className="flex items-center p-3 border rounded-lg bg-blue-50 border-blue-200">
+                        <input
+                          type="radio"
+                          id="eft"
+                          name="paymentMethod"
+                          value="eft"
+                          checked={paymentMethod === "eft"}
+                          onChange={(e) => setPaymentMethod(e.target.value)}
+                          className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                        />
+                        <label htmlFor="eft" className="ml-3 flex flex-col cursor-pointer">
+                          <span className="text-sm font-medium text-gray-900">EFT / Havale</span>
+                          <span className="text-xs text-gray-500">Banka hesabınızdan güvenli transfer</span>
+                        </label>
+                      </div>
+                      <div className="flex items-center p-3 border rounded-lg bg-gray-50 border-gray-200">
+                        <input
+                          type="radio"
+                          id="credit"
+                          name="paymentMethod"
+                          value="credit"
+                          disabled
+                          className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                        />
+                        <label htmlFor="credit" className="ml-3 flex flex-col cursor-not-allowed opacity-50">
+                          <span className="text-sm font-medium text-gray-900">Kredi Kartı</span>
+                          <span className="text-xs text-gray-500">Yakında aktif olacak</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {paymentMethod === "eft" && (
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-yellow-800 mb-1">
+                          Alıcı IBAN
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <code className="flex-1 p-2 bg-white rounded border border-yellow-200 text-yellow-900 font-mono text-sm break-all">
+                            TR00 0000 0000 0000 0000 0000 00
+                          </code>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="text-yellow-800 border-yellow-300 hover:bg-yellow-100 shrink-0"
+                            onClick={() => {
+                              navigator.clipboard.writeText('TR000000000000000000000000');
+                              showToast('IBAN kopyalandı', 'success');
+                            }}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <p className="mt-1 text-xs text-yellow-800">
+                          BiÇilingir Teknoloji A.Ş.
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-yellow-800 mb-1">
+                          Açıklama Kodu
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <code className="flex-1 p-2 bg-white rounded border border-yellow-200 text-yellow-900 font-mono text-sm">
+                            {transferCode}
+                          </code>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="text-yellow-800 border-yellow-300 hover:bg-yellow-100 shrink-0"
+                            onClick={() => {
+                              navigator.clipboard.writeText(transferCode);
+                              showToast('Açıklama kodu kopyalandı', 'success');
+                            }}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="text-sm text-yellow-800">
+                        <p className="font-medium">Önemli Notlar:</p>
+                        <ul className="list-disc list-inside space-y-1 mt-1 text-xs">
+                          <li>Açıklama kısmına sadece yukarıdaki kodu yazınız</li>
+                          <li>EFT/Havale işleminiz 24 saat içinde kontrol edilip onaylanacaktır</li>
+                          <li>Mesai saatleri dışında yapılan ödemeler bir sonraki iş günü işleme alınacaktır</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-center mt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowBalanceModal(false)}
+                    className="w-full sm:w-auto"
+                  >
+                    Kapat
+                  </Button>
+                </div>
               </div>
-            </form>
+            </div>
           </div>
         </div>
-      )}
+      )
+      }
     </div >
   );
 } 
