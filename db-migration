@@ -208,7 +208,6 @@ CREATE TABLE user_activity_logs (
     sessionId UUID,
     deviceType TEXT,
 
-    keyAmount INTEGER NOT NULL,
     systemNote TEXT,
     
     createdAt TIMESTAMPTZ DEFAULT NOW() 

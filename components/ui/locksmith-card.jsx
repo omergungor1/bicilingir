@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "..//ui/button";
 import { ChevronRight, Info } from "lucide-react";
@@ -18,6 +18,9 @@ export default function LocksmithCard({ locksmith, index }) {
     const { showToast } = useToast();
     const [loadingLocksmithIds, setLoadingLocksmithIds] = useState({});
     const [searchValues, setSearchValues] = useState(null);
+    // useRef'i buraya taşıyoruz - component'in en üst seviyesine
+    const isLogged = useRef(false);
+
     // Mevcut mesai dilimini belirle
     const [currentTimeFrame, setCurrentTimeFrame] = useState(() => {
         const now = new Date();
@@ -49,6 +52,9 @@ export default function LocksmithCard({ locksmith, index }) {
     //artık loglama yapılıyor
     useEffect(() => {
         const logLocksmithView = () => {
+            // Eğer bu kart daha önce loglandıysa, tekrar loglama
+            if (isLogged.current) return;
+
             try {
                 const logData = {
                     activitytype: 'locksmith_list_view',
@@ -66,19 +72,19 @@ export default function LocksmithCard({ locksmith, index }) {
                     userAgent: navigator.userAgent || ''
                 };
 
-                // SendBeacon API ile loglama - at ve unut yaklaşımı
+                // Loglama işlemi yapıldıktan sonra ref'i true yap
+                isLogged.current = true;
+
                 if (navigator.sendBeacon) {
                     const blob = new Blob([JSON.stringify(logData)], { type: 'application/json' });
                     navigator.sendBeacon('/api/public/user/activity', blob);
                 } else {
-                    // Fallback - SendBeacon yoksa async fetch kullan ve cevabı bekleme
                     fetch('/api/public/user/activity', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify(logData),
-                        // keepalive özelliği sayfa kapanırken bile isteğin tamamlanmasını sağlar
                         keepalive: true
                     }).catch(error => {
                         console.error('Liste görüntüleme log hatası:', error);
@@ -89,18 +95,19 @@ export default function LocksmithCard({ locksmith, index }) {
             }
         };
 
-        // Çilingir verisi yüklendiğinde loglama işlemini gerçekleştir
         if (locksmith && locksmith.id) {
-            // requestIdleCallback kullan (tarayıcı boştayken çalıştır)
-            // Tarayıcı desteği yoksa setTimeout fallback kullan
             if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
                 window.requestIdleCallback(() => logLocksmithView(), { timeout: 2000 });
             } else {
-                // Fallback: Sayfa yüklendikten 500ms sonra çalıştır
                 setTimeout(logLocksmithView, 500);
             }
         }
-    }, [locksmith.id, index, searchValues]);
+
+        // Cleanup fonksiyonu
+        return () => {
+            isLogged.current = false;
+        };
+    }, [locksmith.id, searchValues]);
 
     const RatingStars = ({ rating }) => {
         return (
