@@ -130,6 +130,23 @@ export async function POST(request) {
     //   );
     // }
 
+    //YEni eklendi hata var mı kontrol et
+    const { data: locksmithBalancesData, error: locksmithBalancesError } = await supabase
+      .from('locksmith_balances')
+      .insert([
+        { locksmith_id: locksmithId, balance: 0, daily_spent_limit: 0, suggested_daily_limit: 0 }
+      ])
+      .select();
+
+    if (locksmithBalancesError) {
+      console.error('Çilingir bakiyesi kaydı hatası:', locksmithBalancesError);
+      return NextResponse.json(
+        { error: locksmithBalancesError.message },
+        { status: 500 }
+      );
+    }
+
+
     //locksmith_traffic insert
     const { data: locksmithTrafficData, error: locksmithTrafficError } = await supabase
       .from('locksmith_traffic')

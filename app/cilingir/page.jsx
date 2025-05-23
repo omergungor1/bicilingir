@@ -404,6 +404,32 @@ function CilingirPanelContent() {
     }
   };
 
+  const fetchBalanceData = async () => {
+    try {
+      const response = await fetch(`/api/locksmith/balance`, {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Bakiye bilgileri alınamadı');
+      }
+      const data = await response.json();
+      setBalance(data.balance || 0);
+      setDailyBudget(data.daily_spent_limit || 0);
+      setSuggestedBudget(data.suggested_daily_limit || 0);
+    } catch (error) {
+      console.error('Bakiye bilgileri çekilirken hata:', error);
+      showToast("Bakiye bilgileri yüklenemedi", "error");
+    }
+  };
+
+  const fetchTransactionData = async () => {
+    const response = await fetch('/api/locksmith/transactions', {
+      credentials: 'include'
+    });
+    const data = await response.json();
+    setTransactionData(data.transactions);
+  };
+
 
 
   useEffect(() => {
@@ -418,7 +444,9 @@ function CilingirPanelContent() {
       fetchDistricts(),
       fetchBusinessImages(),
       fetchServiceDistricts(),
-      fetchCertificates(), // Sertifikaları getir
+      fetchCertificates(),
+      fetchBalanceData(),
+      fetchTransactionData(),
     ]);
   }, []);
 
@@ -1408,31 +1436,47 @@ function CilingirPanelContent() {
   }, [isLoaded, locksmith?.lat, locksmith?.lng]);
 
   const [showBalanceModal, setShowBalanceModal] = useState(false);
-  const [balanceAmount, setBalanceAmount] = useState("");
   const [isEditingDailyBudget, setIsEditingDailyBudget] = useState(false);
-  const [dailyBudget, setDailyBudget] = useState("200");
-  const [balance, setBalance] = useState(1250);
+
+  const [dailyBudget, setDailyBudget] = useState(0);
+  const [balance, setBalance] = useState(0);
+  const [suggestedBudget, setSuggestedBudget] = useState(0);
+  const [transactionData, setTransactionData] = useState({ id: "Bakiyes harcama", data: [] });
+
   const [paymentMethod, setPaymentMethod] = useState("eft");
-  const [suggestedBudget] = useState("330");
   const [transferCode] = useState(() => {
     const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     return `BC${randomCode}`;
   });
 
   // Günlük bütçe kaydetme fonksiyonu
-  const handleSaveDailyBudget = () => {
-    // API entegrasyonu yapılacak
-    // toast({
-    //   title: "Günlük Bütçe Güncellendi",
-    //   description: `Günlük reklam bütçeniz ₺${dailyBudget} olarak güncellendi.`,
-    // });
-    showToast(`Günlük reklam bütçeniz ₺${dailyBudget} olarak güncellendi.`, "success");
-    setIsEditingDailyBudget(false);
+  const handleSaveDailyBudget = async () => {
+    try {
+      const response = await fetch('/api/locksmith/daily-budget', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ daily_spent_limit: Number(dailyBudget) })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Günlük bütçe güncellenirken bir hata oluştu');
+      }
+
+      showToast('Günlük bütçe başarıyla güncellendi', 'success');
+      setIsEditingDailyBudget(false);
+    } catch (error) {
+      console.error('Günlük bütçe güncelleme hatası:', error);
+      showToast(error.message, 'error');
+    }
   };
 
   // Tahmini bitiş tarihi hesaplama
   const calculateEstimatedEndDate = () => {
-    const currentBalance = 1250; // API'den gelecek
+    const currentBalance = balance; // API'den gelecek
     const daily = parseFloat(dailyBudget);
     const daysLeft = Math.floor(currentBalance / daily);
     const endDate = new Date();
@@ -1446,9 +1490,28 @@ function CilingirPanelContent() {
 
 
   // Önerilen bütçeyi uygulama fonksiyonu
-  const handleApplySuggestedBudget = () => {
-    setDailyBudget(suggestedBudget);
-    showToast(`Günlük reklam bütçeniz önerilen miktar olan ₺${suggestedBudget} olarak güncellendi.`, "success");
+  const handleApplySuggestedBudget = async () => {
+    try {
+      const response = await fetch('/api/locksmith/daily-budget', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ daily_spent_limit: Number(suggestedBudget) })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Önerilen bütçe uygulanırken bir hata oluştu');
+      }
+
+      setDailyBudget(Number(suggestedBudget));
+      showToast('Önerilen bütçe başarıyla uygulandı', 'success');
+    } catch (error) {
+      console.error('Önerilen bütçe uygulama hatası:', error);
+      showToast(error.message, 'error');
+    }
   };
 
   return (
@@ -3155,7 +3218,7 @@ function CilingirPanelContent() {
                       {/* Günlük Bütçe Kartı */}
                       <Card className="bg-gradient-to-br from-green-50 to-white border-green-100">
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-medium text-green-600">Günlük Reklam Bütçesi</CardTitle>
+                          <CardTitle className="text-sm font-medium text-green-600">Günlük Reklam Limiti</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="flex flex-col gap-4">
@@ -3263,57 +3326,56 @@ function CilingirPanelContent() {
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
                         <h3 className="text-lg font-semibold">Bakiye Tüketim Analizi</h3>
                         <div className="mt-2 sm:mt-0 text-sm text-gray-500">
-                          Son 7 günlük tüketim
+                          Geçmiş bakiye tüketimleri
                         </div>
                       </div>
                       <div className="h-[300px] w-full">
+                        {console.log('transactionData:', transactionData)}
                         <ResponsiveLine
-                          data={[
-                            {
-                              id: "bakiye",
-                              data: [
-                                { x: "1 Mayıs", y: 200 },
-                                { x: "2 Mayıs", y: 310 },
-                                { x: "3 Mayıs", y: 260 },
-                                { x: "4 Mayıs", y: 110 },
-                                { x: "5 Mayıs", y: 300 },
-                                { x: "6 Mayıs", y: 250 },
-                              ],
-                            },
-                          ]}
+                          data={[transactionData]}
                           margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
-                          xScale={{ type: "point" }}
-                          yScale={{ type: "linear", min: "auto", max: "auto" }}
+                          xScale={{ type: 'point' }}
+                          yScale={{
+                            type: 'linear',
+                            min: 'auto',
+                            max: 'auto',
+                            stacked: false,
+                            reverse: false
+                          }}
                           axisTop={null}
                           axisRight={null}
                           axisBottom={{
                             tickSize: 5,
                             tickPadding: 5,
                             tickRotation: -45,
+                            legend: 'Tarih',
+                            legendOffset: 36,
+                            legendPosition: 'middle'
                           }}
                           axisLeft={{
                             tickSize: 5,
                             tickPadding: 5,
                             tickRotation: 0,
-                            format: (value) => `₺${value}`,
+                            legend: 'Tüketim (₺)',
+                            legendOffset: -40,
+                            legendPosition: 'middle',
+                            format: value => `${value}₺`
                           }}
-                          pointSize={10}
-                          pointColor={{ theme: "background" }}
-                          pointBorderWidth={2}
-                          pointBorderColor={{ from: "serieColor" }}
-                          enableGridX={false}
-                          colors={["#6366f1"]}
+                          enablePoints={false}
                           enableArea={true}
-                          areaOpacity={0.1}
-                          crosshairType="cross"
+                          areaOpacity={0.15}
+                          enableGridX={false}
+                          colors={['#4169E1']}
+                          pointSize={10}
+                          pointColor={{ theme: 'background' }}
+                          pointBorderWidth={2}
+                          pointBorderColor={{ from: 'serieColor' }}
+                          pointLabelYOffset={-12}
                           useMesh={true}
-                          enableSlices="x"
-                          sliceTooltip={({ slice }) => (
-                            <div className="bg-white shadow-lg rounded-lg p-2 text-sm">
-                              <strong>{slice.points[0].data.x}</strong>
-                              <div className="text-blue-600">
-                                ₺{slice.points[0].data.y}
-                              </div>
+                          tooltip={({ point }) => (
+                            <div className="bg-white p-2 shadow-lg rounded-lg border border-gray-200">
+                              <div className="font-medium text-gray-800">{point.data.x}</div>
+                              <div className="text-blue-600 font-medium">{point.data.y}₺</div>
                             </div>
                           )}
                         />
@@ -3345,7 +3407,7 @@ function CilingirPanelContent() {
                               <div>
                                 <h4 className="font-medium">Bakiye Durumu</h4>
                                 <p className="text-sm text-gray-600">
-                                  Mevcut tüketim hızınızla bakiyeniz yaklaşık {Math.floor(1250 / parseFloat(dailyBudget))} gün daha yetecek.
+                                  Mevcut tüketim hızınızla bakiyeniz yaklaşık {Math.floor(balance / parseFloat(dailyBudget))} gün daha yetecek.
                                 </p>
                               </div>
                             </div>
