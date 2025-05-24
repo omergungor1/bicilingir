@@ -10,17 +10,16 @@ export default function Providers({ children }) {
   useEffect(() => {
     // Kullanıcı oturumunu başlat
     store.dispatch(initUserSession());
-    
+
     // Kimlik doğrulama durumunu kontrol et - sadece ilk yüklemede
     store.dispatch(checkAuthState());
-    
-    // Oturum kontrolü için interval - 5 dakikada bir yap
-    // Böylece her dakikada bir yenileme sorunu ortadan kalkacak
+
+    // Oturum kontrolü için interval - 30 dakikada bir sessiz kontrol yap
+    // Sadece session durumunu kontrol eder, sayfayı yenilemez
     const authCheckInterval = setInterval(() => {
-      // Sadece token kontrolü yap, tam sayfa yenileme olmadan
       store.dispatch(checkAuthState({ silent: true }));
-    }, 300000); // 5 dakikaya çıkarıldı (300000 ms)
-    
+    }, 1800000); // 30 dakika (1800000 ms)
+
     return () => clearInterval(authCheckInterval);
   }, []);
 

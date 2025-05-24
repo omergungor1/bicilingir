@@ -184,15 +184,15 @@ export const checkAuthState = createAsyncThunk(
 
       const { data: { session } } = await supabase.auth.getSession();
 
-      if (!session) return null;
-
-      // Eğer sessiz modda çalışıyorsak ve oturum varsa ek sorguları yapmaya gerek yok
-      if (silent && session) {
-        return { sessionActive: true };
+      // Sessiz modda çalışıyorsa sadece session kontrolü yap
+      if (silent) {
+        return session ? { sessionActive: true } : null;
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
+      // Normal modda tam kontrol yap
+      if (!session) return null;
 
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
       // Önce metadata'daki rol bilgisini kontrol et
@@ -203,7 +203,7 @@ export const checkAuthState = createAsyncThunk(
         };
       }
 
-      // Metadata'da rol yoksa veritabanından al
+      // Metadata'da rol yoksa veritabanından çek
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
@@ -211,32 +211,17 @@ export const checkAuthState = createAsyncThunk(
         .single();
 
       if (roleError) {
-        console.log('Rol sorgusu hatası:', roleError);
-        return rejectWithValue("Kullanıcı rolü alınamadı.");
+        console.error('Rol sorgusu hatası:', roleError);
+        return rejectWithValue("Kullanıcı rolü alınamadı");
       }
-
-      // Rol bilgisini user_metadata'ya ekle (API isteklerinde kullanmak için)
-      await supabase.auth.updateUser({
-        data: { role: roleData.role }
-      });
 
       return {
         user,
         role: roleData.role
       };
     } catch (error) {
-      console.log('Auth state kontrol hatası:', error);
-
-      // Hata objesini string'e dönüştürüyoruz
-      let errorMessage = "Oturum kontrolü yapılırken bir hata oluştu";
-
-      if (typeof error === 'string') {
-        errorMessage = error;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      return rejectWithValue(errorMessage);
+      console.error('Auth state kontrolü hatası:', error);
+      return rejectWithValue(error.message);
     }
   }
 );

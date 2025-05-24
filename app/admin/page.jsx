@@ -78,6 +78,12 @@ function AdminPanelContent() {
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [packageToDelete, setPackageToDelete] = useState(null);
   const [activeDashboardFilter, setActiveDashboardFilter] = useState('today');
+  const [editingSuggestedLimit, setEditingSuggestedLimit] = useState(null);
+  const [tempSuggestedLimit, setTempSuggestedLimit] = useState(null);
+  const [editingBalance, setEditingBalance] = useState(null);
+  const [tempBalance, setTempBalance] = useState(null);
+  const [adSpendInputs, setAdSpendInputs] = useState({});
+  const [districtAdSpends, setDistrictAdSpends] = useState({});
 
   const [activeReviewFilter, setActiveReviewFilter] = useState("pending");
   const [reviews, setReviews] = useState([]);
@@ -412,11 +418,6 @@ function AdminPanelContent() {
     }
   }, [selectedProvince, selectedDate]);
 
-  // State'leri ekle
-  const [editingSuggestedLimit, setEditingSuggestedLimit] = useState(null);
-  const [tempSuggestedLimit, setTempSuggestedLimit] = useState(null);
-  const [adSpendInputs, setAdSpendInputs] = useState({});
-
   // Fonksiyonları güncelle
   const handleSuggestedLimitUpdate = async (locksmithId) => {
     try {
@@ -485,35 +486,32 @@ function AdminPanelContent() {
     }
   };
 
-  // State'lere ekle
-  const [districtAdSpends, setDistrictAdSpends] = useState({});
+  // // Yeni fonksiyonları ekle
+  // const calculateLocksmithAdSpends = (district, totalAmount) => {
+  //   const locksmiths = district.locksmiths;
+  //   if (!locksmiths || locksmiths.length === 0) return {};
 
-  // Yeni fonksiyonları ekle
-  const calculateLocksmithAdSpends = (district, totalAmount) => {
-    const locksmiths = district.locksmiths;
-    if (!locksmiths || locksmiths.length === 0) return {};
+  //   // Komisyonlu tutarı hesapla (1.2 ile çarp)
+  //   const totalAmountWithCommission = totalAmount * 1.2;
 
-    // Komisyonlu tutarı hesapla (1.2 ile çarp)
-    const totalAmountWithCommission = totalAmount * 1.2;
+  //   // Toplam günlük limit hesapla
+  //   const totalDailyLimit = locksmiths.reduce((sum, locksmith) =>
+  //     sum + (locksmith.locksmith_balances?.[0]?.daily_spent_limit || 0), 0);
 
-    // Toplam günlük limit hesapla
-    const totalDailyLimit = locksmiths.reduce((sum, locksmith) =>
-      sum + (locksmith.locksmith_balances?.[0]?.daily_spent_limit || 0), 0);
+  //   if (totalDailyLimit === 0) return {};
 
-    if (totalDailyLimit === 0) return {};
+  //   // Her çilingir için orantılı harcama hesapla
+  //   const newAdSpends = {};
+  //   locksmiths.forEach(locksmith => {
+  //     const dailyLimit = locksmith.locksmith_balances?.[0]?.daily_spent_limit || 0;
+  //     if (dailyLimit > 0) {
+  //       const ratio = dailyLimit / totalDailyLimit;
+  //       newAdSpends[locksmith.id] = Math.round(totalAmountWithCommission * ratio * 100) / 100; // 2 decimal
+  //     }
+  //   });
 
-    // Her çilingir için orantılı harcama hesapla
-    const newAdSpends = {};
-    locksmiths.forEach(locksmith => {
-      const dailyLimit = locksmith.locksmith_balances?.[0]?.daily_spent_limit || 0;
-      if (dailyLimit > 0) {
-        const ratio = dailyLimit / totalDailyLimit;
-        newAdSpends[locksmith.id] = Math.round(totalAmountWithCommission * ratio * 100) / 100; // 2 decimal
-      }
-    });
-
-    return newAdSpends;
-  };
+  //   return newAdSpends;
+  // };
 
   const handleDistrictAdSpendChange = (districtId, value) => {
     const district = advertisingData.find(d => d.id === districtId);
@@ -545,6 +543,80 @@ function AdminPanelContent() {
       ...prev,
       ...newAdSpends
     }));
+  };
+
+  const handleBalanceTopup = async (locksmithId) => {
+    try {
+      const response = await fetch('/api/admin/balance/topup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          locksmithId,
+          amount: Number(tempBalance)
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        showToast("Bakiye başarıyla yüklendi", "success");
+        fetchAdvertisingData();
+        setEditingBalance(null);
+        setTempBalance(null);
+      } else {
+        showToast("Bakiye yüklenemedi", "error");
+      }
+    } catch (error) {
+      console.error('Bakiye yükleme hatası:', error);
+      showToast("Bakiye yüklenemedi", "error");
+    }
+  };
+
+  // Sidebar'a Timeline sekmesini ekle
+  const [selectedTimelineDate, setSelectedTimelineDate] = useState(new Date().toISOString().split('T')[0]);
+  const [timelineData, setTimelineData] = useState([]);
+  const [isTimelineLoading, setIsTimelineLoading] = useState(false);
+  const [isTimelineRefreshing, setIsTimelineRefreshing] = useState(false);
+
+  // Fonksiyonları ekle
+  const fetchTimelineData = async () => {
+    setIsTimelineLoading(true);
+    try {
+      const response = await fetch(`/api/admin/timeline?date=${selectedTimelineDate}`);
+      const data = await response.json();
+      if (data.success) {
+        setTimelineData(data.data);
+      } else {
+        showToast("Timeline verisi alınamadı", "error");
+      }
+    } catch (error) {
+      console.error('Timeline verisi alınırken hata:', error);
+      showToast("Timeline verisi alınamadı", "error");
+    } finally {
+      setIsTimelineLoading(false);
+    }
+  };
+
+  // useEffect ekle
+  useEffect(() => {
+    if (activeTab === "timeline") {
+      fetchTimelineData();
+    }
+  }, [activeTab, selectedTimelineDate]);
+
+  // Fonksiyonları ekle
+  const handleTimelineRefresh = async () => {
+    setIsTimelineRefreshing(true);
+    try {
+      await fetchTimelineData();
+      showToast("Timeline güncellendi", "success");
+    } catch (error) {
+      console.error('Timeline yenilenirken hata:', error);
+      showToast("Timeline güncellenemedi", "error");
+    } finally {
+      setIsTimelineRefreshing(false);
+    }
   };
 
   return (
@@ -588,6 +660,24 @@ function AdminPanelContent() {
                       <LayoutDashboard className="h-5 w-5" />
                       <span>Dashboard</span>
                       <ChevronRight className={`h-5 w-5 ml-auto transition-transform ${activeTab === "dashboard" ? "rotate-90" : ""}`} />
+                    </button>
+
+                    <button
+                      onClick={() => handleTabChange("timeline")}
+                      className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "timeline" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
+                    >
+                      <Clock className="h-5 w-5" />
+                      <span>Timeline</span>
+                      <ChevronRight className={`h-5 w-5 ml-auto transition-transform ${activeTab === "timeline" ? "rotate-90" : ""}`} />
+                    </button>
+
+                    <button
+                      onClick={() => handleTabChange("advertising")}
+                      className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "advertising" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
+                    >
+                      <Package className="h-5 w-5" />
+                      <span>Reklam Bütçe</span>
+                      <ChevronRight className={`h-5 w-5 ml-auto transition-transform ${activeTab === "advertising" ? "rotate-90" : ""}`} />
                     </button>
 
                     <button
@@ -642,15 +732,6 @@ function AdminPanelContent() {
                       <Settings className="h-5 w-5" />
                       <span>Site Ayarları</span>
                       <ChevronRight className={`h-5 w-5 ml-auto transition-transform ${activeTab === "settings" ? "rotate-90" : ""}`} />
-                    </button>
-
-                    <button
-                      onClick={() => handleTabChange("advertising")}
-                      className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "advertising" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
-                    >
-                      <Package className="h-5 w-5" />
-                      <span>Reklam Yönetimi</span>
-                      <ChevronRight className={`h-5 w-5 ml-auto transition-transform ${activeTab === "advertising" ? "rotate-90" : ""}`} />
                     </button>
 
                     <div className="border-t my-2"></div>
@@ -2070,6 +2151,47 @@ function AdminPanelContent() {
                                             <div className="flex items-center">
                                               <span className="text-sm text-gray-500 mr-2">Bakiye:</span>
                                               <span className="font-medium text-green-600">{locksmith.locksmith_balances?.[0]?.balance || 0}₺</span>
+                                              {editingBalance === locksmith.id ? (
+                                                <div className="flex items-center space-x-2 ml-2">
+                                                  <Input
+                                                    type="number"
+                                                    className="w-24"
+                                                    value={tempBalance}
+                                                    onChange={(e) => setTempBalance(e.target.value)}
+                                                    placeholder="Miktar"
+                                                  />
+                                                  <Button
+                                                    size="sm"
+                                                    onClick={() => handleBalanceTopup(locksmith.id)}
+                                                    className="bg-green-600 hover:bg-green-700"
+                                                    disabled={!tempBalance || tempBalance <= 0}
+                                                  >
+                                                    <CheckCircle className="h-4 w-4" />
+                                                  </Button>
+                                                  <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                      setEditingBalance(null);
+                                                      setTempBalance(null);
+                                                    }}
+                                                  >
+                                                    <X className="h-4 w-4" />
+                                                  </Button>
+                                                </div>
+                                              ) : (
+                                                <Button
+                                                  size="sm"
+                                                  variant="outline"
+                                                  className="text-green-600 border-green-200 hover:bg-green-50 ml-2"
+                                                  onClick={() => {
+                                                    setEditingBalance(locksmith.id);
+                                                    setTempBalance('');
+                                                  }}
+                                                >
+                                                  <Plus className="h-4 w-4" />
+                                                </Button>
+                                              )}
                                             </div>
                                             <div className="flex items-center">
                                               <span className="text-sm text-gray-500 mr-2">Limit:</span>
@@ -2187,6 +2309,120 @@ function AdminPanelContent() {
                     ) : (
                       <div className="text-center py-12">
                         <p className="text-gray-500">Lütfen bir il seçin</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {activeTab === "timeline" && (
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center space-x-2">
+                      <Clock className="h-6 w-6 text-blue-600" />
+                      <div>
+                        <CardTitle>Timeline</CardTitle>
+                        <CardDescription>Günlük aktivite akışı</CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="mb-6">
+                      <label className="block text-sm font-medium mb-2">Tarih Seçin</label>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="date"
+                          value={selectedTimelineDate}
+                          onChange={(e) => setSelectedTimelineDate(e.target.value)}
+                          className="max-w-xs"
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={handleTimelineRefresh}
+                          className={`transition-all duration-200 ${isTimelineRefreshing ? 'opacity-50' : 'hover:text-blue-600 hover:border-blue-600'}`}
+                          disabled={isTimelineRefreshing}
+                        >
+                          <svg
+                            className={`h-4 w-4 ${isTimelineRefreshing ? 'animate-spin' : ''}`}
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                          </svg>
+                        </Button>
+                      </div>
+                    </div>
+
+                    {isTimelineLoading ? (
+                      <div className="flex justify-center items-center p-12">
+                        <Loader2 className="h-8 w-8 animate-spin" />
+                      </div>
+                    ) : timelineData.length > 0 ? (
+                      <div className="relative">
+                        {/* Timeline çizgisi */}
+                        <div className="absolute left-6 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-100 via-green-100 to-blue-100"></div>
+
+                        <div className="space-y-4">
+                          {timelineData.map((activity) => (
+                            <div key={activity.id} className="relative pl-14">
+                              {/* Timeline noktası */}
+                              <div className={`absolute left-3.5 w-7 h-7 rounded-full flex items-center justify-center transform transition-all duration-200 hover:scale-110 ${activity.activitytype === 'call_request'
+                                ? 'bg-gradient-to-br from-green-100 to-green-200 shadow-lg shadow-green-100/50'
+                                : 'bg-gradient-to-br from-blue-100 to-blue-200 shadow-lg shadow-blue-100/50'
+                                }`}>
+                                {activity.activitytype === 'call_request' ? (
+                                  <PhoneCall className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <MessageCircle className="h-4 w-4 text-blue-600" />
+                                )}
+                              </div>
+
+                              <div className="bg-white p-3 rounded-lg border border-gray-100 hover:shadow-md transition-all duration-200 hover:border-gray-200 group">
+                                <div className="flex items-center justify-between gap-4">
+                                  <div>
+                                    <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                                      {activity.activitytype === 'call_request' ? (
+                                        <>
+                                          <span className="text-green-600">Arama Talebi</span>
+                                          <span className="h-1.5 w-1.5 rounded-full bg-gray-200"></span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <span className="text-blue-600">WhatsApp Mesajı</span>
+                                          <span className="h-1.5 w-1.5 rounded-full bg-gray-200"></span>
+                                        </>
+                                      )}
+                                      <time className="text-sm text-gray-400 group-hover:text-gray-600 transition-colors">
+                                        {new Date(activity.createdat).toLocaleTimeString('tr-TR', {
+                                          hour: '2-digit',
+                                          minute: '2-digit',
+                                          timeZone: 'UTC'
+                                        })}
+                                      </time>
+                                    </h4>
+                                    <p className="text-sm text-gray-500 mt-0.5">
+                                      {activity.locksmiths.businessname} - {activity.locksmiths.provinces.name}/{activity.locksmiths.districts.name}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 bg-gray-50 rounded-xl">
+                        <Clock className="mx-auto h-12 w-12 text-gray-400" />
+                        <h3 className="mt-2 text-sm font-medium text-gray-900">Aktivite bulunamadı</h3>
+                        <p className="mt-1 text-sm text-gray-500">Bu tarihte henüz bir aktivite bulunmuyor.</p>
                       </div>
                     )}
                   </CardContent>
