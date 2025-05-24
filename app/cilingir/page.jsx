@@ -1444,10 +1444,6 @@ function CilingirPanelContent() {
   const [transactionData, setTransactionData] = useState({ id: "Bakiyes harcama", data: [] });
 
   const [paymentMethod, setPaymentMethod] = useState("eft");
-  const [transferCode] = useState(() => {
-    const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    return `BC${randomCode}`;
-  });
 
   // Günlük bütçe kaydetme fonksiyonu
   const handleSaveDailyBudget = async () => {
@@ -3562,7 +3558,7 @@ function CilingirPanelContent() {
                         </label>
                         <div className="flex items-center gap-2">
                           <code className="flex-1 p-2 bg-white rounded border border-yellow-200 text-yellow-900 font-mono text-sm">
-                            {transferCode}
+                            {locksmith?.transaction_code}
                           </code>
                           <Button
                             type="button"
@@ -3570,7 +3566,7 @@ function CilingirPanelContent() {
                             size="sm"
                             className="text-yellow-800 border-yellow-300 hover:bg-yellow-100 shrink-0"
                             onClick={() => {
-                              navigator.clipboard.writeText(transferCode);
+                              navigator.clipboard.writeText(locksmith?.transaction_code);
                               showToast('Açıklama kodu kopyalandı', 'success');
                             }}
                           >

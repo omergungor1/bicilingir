@@ -449,7 +449,7 @@ function AdminPanelContent() {
   const handleAdSpendInputChange = (locksmithId, value) => {
     setAdSpendInputs(prev => ({
       ...prev,
-      [locksmithId]: Math.round(value / 1.2 * 100) / 100 // Toplam tutardan reklam tutarını hesapla
+      [locksmithId]: Math.round(value / 1.25 * 100) / 100 // Toplam tutardan reklam tutarını hesapla
     }));
   };
 
@@ -459,7 +459,7 @@ function AdminPanelContent() {
         .filter(([_, amount]) => Number(amount) > 0)
         .map(([locksmithId, amount]) => ({
           locksmithId,
-          adSpendAmount: Math.round(amount * 1.2 * 100) / 100 // Komisyonlu toplam tutarı gönder
+          adSpendAmount: Math.round(amount * 1.25 * 100) / 100 // Komisyonlu toplam tutarı gönder
         }));
 
       if (validSpends.length === 0) {
@@ -486,33 +486,6 @@ function AdminPanelContent() {
       showToast("Reklam harcamaları kaydedilemedi", "error");
     }
   };
-
-  // // Yeni fonksiyonları ekle
-  // const calculateLocksmithAdSpends = (district, totalAmount) => {
-  //   const locksmiths = district.locksmiths;
-  //   if (!locksmiths || locksmiths.length === 0) return {};
-
-  //   // Komisyonlu tutarı hesapla (1.2 ile çarp)
-  //   const totalAmountWithCommission = totalAmount * 1.2;
-
-  //   // Toplam günlük limit hesapla
-  //   const totalDailyLimit = locksmiths.reduce((sum, locksmith) =>
-  //     sum + (locksmith.locksmith_balances?.[0]?.daily_spent_limit || 0), 0);
-
-  //   if (totalDailyLimit === 0) return {};
-
-  //   // Her çilingir için orantılı harcama hesapla
-  //   const newAdSpends = {};
-  //   locksmiths.forEach(locksmith => {
-  //     const dailyLimit = locksmith.locksmith_balances?.[0]?.daily_spent_limit || 0;
-  //     if (dailyLimit > 0) {
-  //       const ratio = dailyLimit / totalDailyLimit;
-  //       newAdSpends[locksmith.id] = Math.round(totalAmountWithCommission * ratio * 100) / 100; // 2 decimal
-  //     }
-  //   });
-
-  //   return newAdSpends;
-  // };
 
   const handleDistrictAdSpendChange = (districtId, value) => {
     const district = advertisingData.find(d => d.id === districtId);
@@ -2163,7 +2136,7 @@ function AdminPanelContent() {
                                     <span className="text-sm text-gray-500 font-normal ml-2">
                                       ({district.locksmiths.length} çilingir | Ads Limit: {
                                         district.locksmiths.reduce((sum, locksmith) =>
-                                          sum + (locksmith.locksmith_balances?.[0]?.daily_spent_limit * 5 / 6 || 0), 0
+                                          sum + (locksmith.locksmith_balances?.[0]?.daily_spent_limit * 4 / 5 || 0), 0
                                         ).toFixed(2)
                                       }₺)
                                     </span>
@@ -2185,12 +2158,12 @@ function AdminPanelContent() {
                                     {districtAdSpends[district.id] > 0 && (
                                       <>
                                         <div className="flex justify-between w-full items-center space-x-4 mt-1">
-                                          <span className="text-sm font-medium whitespace-nowrap">Komisyon (%20):</span>
-                                          <span className="text-sm font-medium text-orange-600">{Math.round(districtAdSpends[district.id] * 0.2 * 100) / 100}₺</span>
+                                          <span className="text-sm font-medium whitespace-nowrap">Komisyon (%25):</span>
+                                          <span className="text-sm font-medium text-orange-600">{Math.round(districtAdSpends[district.id] * 0.25 * 100) / 100}₺</span>
                                         </div>
                                         <div className="flex justify-between w-full items-center space-x-4 mt-2">
                                           <span className="text-sm font-medium whitespace-nowrap">Toplam:</span>
-                                          <span className="text-sm font-medium text-red-600">{Math.round(districtAdSpends[district.id] * 1.2 * 100) / 100}₺</span>
+                                          <span className="text-sm font-medium text-red-600">{Math.round(districtAdSpends[district.id] * 1.25 * 100) / 100}₺</span>
                                         </div>
                                       </>
                                     )}
@@ -2356,7 +2329,7 @@ function AdminPanelContent() {
                                         </div>
                                         <div className="flex items-center space-x-2 w-full lg:w-auto">
                                           <div className="flex flex-col items-start space-x-4">
-                                            <div className="flex justify-between w-full items-center space-x-2">
+                                            {/* <div className="flex justify-between w-full items-center space-x-2">
                                               <span className="text-sm whitespace-nowrap">Reklam:</span>
                                               <span className="text-sm font-medium text-gray-700 bg-gray-50 px-3 py-1 rounded-md min-w-[96px] inline-block text-right">
                                                 {(adSpendInputs[locksmith.id] || 0).toFixed(2)}₺
@@ -2365,9 +2338,9 @@ function AdminPanelContent() {
                                             <div className="flex justify-between w-full items-center space-x-2">
                                               <span className="text-sm whitespace-nowrap">Komisyon:</span>
                                               <span className="text-sm font-medium text-orange-600 bg-gray-50 px-3 py-1 rounded-md min-w-[96px] inline-block text-right">
-                                                {((adSpendInputs[locksmith.id] || 0) * 0.2).toFixed(2)}₺
+                                                {((adSpendInputs[locksmith.id] || 0) * 0.25).toFixed(2)}₺
                                               </span>
-                                            </div>
+                                            </div> */}
                                             <div className="flex justify-between w-full items-center space-x-2">
                                               <div className="flex flex-col items-start">
                                                 <span className="text-sm whitespace-nowrap">Toplam:</span>
@@ -2381,7 +2354,7 @@ function AdminPanelContent() {
                                                 type="number"
                                                 className="w-24"
                                                 placeholder="0"
-                                                value={adSpendInputs[locksmith.id] ? (adSpendInputs[locksmith.id] * 1.2).toFixed(2) : ''}
+                                                value={adSpendInputs[locksmith.id] ? (adSpendInputs[locksmith.id] * 1.25).toFixed(2) : ''}
                                                 onChange={(e) => {
                                                   const totalValue = parseFloat(e.target.value) || 0;
                                                   handleAdSpendInputChange(locksmith.id, totalValue);
