@@ -279,5 +279,8 @@ create table locksmith_transactions (
     'other'                -- diğer işlemler
   )),
   description text, -- açıklama alanı (isteğe bağlı)
+  previous_balance NUMERIC,
+  new_balance NUMERIC,
   created_at timestamp with time zone default now()
 );
+

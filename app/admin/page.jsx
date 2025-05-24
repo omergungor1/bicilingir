@@ -48,6 +48,7 @@ import {
   Footprints,
   MessageCircle,
   Globe,
+  Save,
 } from "lucide-react";
 import Image from "next/image";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
@@ -357,6 +358,194 @@ function AdminPanelContent() {
     router.push('/cilingir/auth/login');
   };
 
+  // Yeni state'leri ekle (AdminPanelContent fonksiyonunun başına)
+  const [provinces, setProvinces] = useState([]);
+  const [selectedProvince, setSelectedProvince] = useState("16");
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [advertisingData, setAdvertisingData] = useState([]);
+  const [isAdvertisingLoading, setIsAdvertisingLoading] = useState(false);
+
+  // Yeni fonksiyonları ekle (diğer fonksiyonların yanına)
+  const fetchProvinces = async () => {
+    try {
+      const response = await fetch('/api/admin/provinces');
+      const data = await response.json();
+      if (data.success) {
+        setProvinces(data.data);
+      }
+    } catch (error) {
+      console.error('İller alınırken hata:', error);
+      showToast("İller alınamadı", "error");
+    }
+  };
+
+  const fetchAdvertisingData = async () => {
+    if (!selectedProvince) return;
+
+    setIsAdvertisingLoading(true);
+    try {
+      const response = await fetch(`/api/admin/advertising?provinceId=${selectedProvince}&date=${selectedDate}`);
+      const data = await response.json();
+      if (data.success) {
+        setAdvertisingData(data.data);
+      }
+    } catch (error) {
+      console.error('Reklam verisi alınırken hata:', error);
+      showToast("Reklam verisi alınamadı", "error");
+    } finally {
+      setIsAdvertisingLoading(false);
+    }
+  };
+
+  // useEffect ekle (diğer useEffect'lerin yanına)
+  useEffect(() => {
+    if (activeTab === "advertising") {
+      fetchProvinces();
+      // Bursa seçili olduğu için direkt verileri çek
+      fetchAdvertisingData();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (selectedProvince) {
+      fetchAdvertisingData();
+    }
+  }, [selectedProvince, selectedDate]);
+
+  // State'leri ekle
+  const [editingSuggestedLimit, setEditingSuggestedLimit] = useState(null);
+  const [tempSuggestedLimit, setTempSuggestedLimit] = useState(null);
+  const [adSpendInputs, setAdSpendInputs] = useState({});
+
+  // Fonksiyonları güncelle
+  const handleSuggestedLimitUpdate = async (locksmithId) => {
+    try {
+      const response = await fetch('/api/admin/advertising', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          locksmithId,
+          suggestedDailyLimit: Number(tempSuggestedLimit)
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        showToast("Önerilen limit güncellendi", "success");
+        fetchAdvertisingData();
+        setEditingSuggestedLimit(null);
+        setTempSuggestedLimit(null);
+      }
+    } catch (error) {
+      console.error('Önerilen limit güncellenirken hata:', error);
+      showToast("Önerilen limit güncellenemedi", "error");
+    }
+  };
+
+  const handleAdSpendInputChange = (locksmithId, value) => {
+    setAdSpendInputs(prev => ({
+      ...prev,
+      [locksmithId]: Math.round(value / 1.2 * 100) / 100 // Toplam tutardan reklam tutarını hesapla
+    }));
+  };
+
+  const handleSaveAllAdSpends = async () => {
+    try {
+      const validSpends = Object.entries(adSpendInputs)
+        .filter(([_, amount]) => Number(amount) > 0)
+        .map(([locksmithId, amount]) => ({
+          locksmithId,
+          adSpendAmount: Math.round(amount * 1.2 * 100) / 100 // Komisyonlu toplam tutarı gönder
+        }));
+
+      if (validSpends.length === 0) {
+        showToast("Kaydedilecek reklam harcaması bulunamadı", "warning");
+        return;
+      }
+
+      const response = await fetch('/api/admin/advertising/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ spends: validSpends })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        showToast("Reklam harcamaları kaydedildi", "success");
+        setAdSpendInputs({});
+        fetchAdvertisingData();
+      }
+    } catch (error) {
+      console.error('Reklam harcamaları kaydedilirken hata:', error);
+      showToast("Reklam harcamaları kaydedilemedi", "error");
+    }
+  };
+
+  // State'lere ekle
+  const [districtAdSpends, setDistrictAdSpends] = useState({});
+
+  // Yeni fonksiyonları ekle
+  const calculateLocksmithAdSpends = (district, totalAmount) => {
+    const locksmiths = district.locksmiths;
+    if (!locksmiths || locksmiths.length === 0) return {};
+
+    // Komisyonlu tutarı hesapla (1.2 ile çarp)
+    const totalAmountWithCommission = totalAmount * 1.2;
+
+    // Toplam günlük limit hesapla
+    const totalDailyLimit = locksmiths.reduce((sum, locksmith) =>
+      sum + (locksmith.locksmith_balances?.[0]?.daily_spent_limit || 0), 0);
+
+    if (totalDailyLimit === 0) return {};
+
+    // Her çilingir için orantılı harcama hesapla
+    const newAdSpends = {};
+    locksmiths.forEach(locksmith => {
+      const dailyLimit = locksmith.locksmith_balances?.[0]?.daily_spent_limit || 0;
+      if (dailyLimit > 0) {
+        const ratio = dailyLimit / totalDailyLimit;
+        newAdSpends[locksmith.id] = Math.round(totalAmountWithCommission * ratio * 100) / 100; // 2 decimal
+      }
+    });
+
+    return newAdSpends;
+  };
+
+  const handleDistrictAdSpendChange = (districtId, value) => {
+    const district = advertisingData.find(d => d.id === districtId);
+    if (!district) return;
+
+    const amount = parseFloat(value) || 0;
+    setDistrictAdSpends(prev => ({
+      ...prev,
+      [districtId]: amount
+    }));
+
+    // Toplam günlük limit hesapla
+    const totalDailyLimit = district.locksmiths.reduce((sum, locksmith) =>
+      sum + (locksmith.locksmith_balances?.[0]?.daily_spent_limit || 0), 0);
+
+    if (totalDailyLimit === 0) return;
+
+    // Her çilingir için orantılı harcama hesapla
+    const newAdSpends = {};
+    district.locksmiths.forEach(locksmith => {
+      const dailyLimit = locksmith.locksmith_balances?.[0]?.daily_spent_limit || 0;
+      if (dailyLimit > 0) {
+        const ratio = dailyLimit / totalDailyLimit;
+        newAdSpends[locksmith.id] = Math.round(amount * ratio * 100) / 100; // 2 decimal
+      }
+    });
+
+    setAdSpendInputs(prev => ({
+      ...prev,
+      ...newAdSpends
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -453,6 +642,15 @@ function AdminPanelContent() {
                       <Settings className="h-5 w-5" />
                       <span>Site Ayarları</span>
                       <ChevronRight className={`h-5 w-5 ml-auto transition-transform ${activeTab === "settings" ? "rotate-90" : ""}`} />
+                    </button>
+
+                    <button
+                      onClick={() => handleTabChange("advertising")}
+                      className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${activeTab === "advertising" ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"}`}
+                    >
+                      <Package className="h-5 w-5" />
+                      <span>Reklam Yönetimi</span>
+                      <ChevronRight className={`h-5 w-5 ml-auto transition-transform ${activeTab === "advertising" ? "rotate-90" : ""}`} />
                     </button>
 
                     <div className="border-t my-2"></div>
@@ -1111,26 +1309,6 @@ function AdminPanelContent() {
                                 ))}
                               </div>
                             </div>
-                            {/* <div className="flex flex-wrap gap-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
-                              >
-                                Tüm Yıldızlar
-                              </Button>
-                              {[5, 4, 3, 2, 1].map((star) => (
-                                <Button 
-                                  key={star}
-                                  variant="outline" 
-                                  size="sm"
-                                  className="hover:bg-yellow-50"
-                                >
-                                  <Star className="h-3.5 w-3.5 mr-1 text-yellow-400 fill-yellow-400" />
-                                  {star}
-                                </Button>
-                              ))}
-                            </div> */}
                           </div>
                         </CardContent>
                       </Card>
@@ -1775,6 +1953,242 @@ function AdminPanelContent() {
                         <Button>Değişiklikleri Kaydet</Button>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {activeTab === "advertising" && (
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center space-x-2">
+                      <Package className="h-6 w-6 text-blue-600" />
+                      <div>
+                        <CardTitle>Reklam Yönetimi</CardTitle>
+                        <CardDescription>Çilingir reklam harcamalarını yönetin</CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">İl Seçin</label>
+                        <Select defaultValue={selectedProvince} onValueChange={setSelectedProvince}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="İl seçin" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {provinces.map(province => (
+                              <SelectItem key={province.id} value={province.id}>
+                                {province.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Tarih Seçin</label>
+                        <Input
+                          type="date"
+                          value={selectedDate}
+                          onChange={(e) => setSelectedDate(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    {isAdvertisingLoading ? (
+                      <div className="flex justify-center items-center p-12">
+                        <Loader2 className="h-8 w-8 animate-spin" />
+                      </div>
+                    ) : advertisingData.length > 0 ? (
+                      <>
+                        <div className="space-y-6">
+                          {advertisingData.map(district => (
+                            <Card key={district.id} className="hover:shadow-md transition-all">
+                              <CardHeader className="pb-2">
+                                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                                  <h3 className="text-lg font-semibold">
+                                    {district.name}
+                                    <span className="text-sm text-gray-500 font-normal ml-2">
+                                      ({district.locksmiths.length} çilingir | Ads Limit: {
+                                        district.locksmiths.reduce((sum, locksmith) =>
+                                          sum + (locksmith.locksmith_balances?.[0]?.daily_spent_limit * 5 / 6 || 0), 0
+                                        ).toFixed(2)
+                                      }₺)
+                                    </span>
+                                  </h3>
+
+                                  {/* İlçe başlığı altındaki input alanı */}
+                                  {district.locksmiths.length > 0 && <div className="flex flex-col items-start space-x-4">
+                                    <div className="flex justify-between w-full items-center space-x-2">
+                                      <span className="text-sm font-medium whitespace-nowrap">Ads Toplam:</span>
+                                      <Input
+                                        type="number"
+                                        className="w-32"
+                                        placeholder="0"
+                                        value={districtAdSpends[district.id] || ''}
+                                        onChange={(e) => handleDistrictAdSpendChange(district.id, e.target.value)}
+                                      />
+                                      <span className="text-sm">₺</span>
+                                    </div>
+                                    {districtAdSpends[district.id] > 0 && (
+                                      <>
+                                        <div className="flex justify-between w-full items-center space-x-4 mt-1">
+                                          <span className="text-sm font-medium whitespace-nowrap">Komisyon (%20):</span>
+                                          <span className="text-sm font-medium text-orange-600">{Math.round(districtAdSpends[district.id] * 0.2 * 100) / 100}₺</span>
+                                        </div>
+                                        <div className="flex justify-between w-full items-center space-x-4 mt-2">
+                                          <span className="text-sm font-medium whitespace-nowrap">Toplam:</span>
+                                          <span className="text-sm font-medium text-red-600">{Math.round(districtAdSpends[district.id] * 1.2 * 100) / 100}₺</span>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>}
+                                </div>
+                              </CardHeader>
+                              <CardContent>
+                                {district.locksmiths.length > 0 ? (
+                                  <div className="space-y-4">
+                                    {district.locksmiths.map(locksmith => (
+                                      <div key={locksmith.id} className="flex flex-col lg:flex-row justify-between items-start lg:items-center p-4 bg-gray-50 rounded-lg gap-4">
+                                        <div className="flex-grow">
+                                          <h4 className="font-medium text-lg">{locksmith.businessname}</h4>
+                                          <div className="flex flex-wrap gap-4 mt-2">
+                                            <div className="flex items-center">
+                                              <Eye className="h-4 w-4 mr-1 text-gray-500" />
+                                              <span className="text-sm">{locksmith.activity.list_views}</span>
+                                            </div>
+                                            <div className="flex items-center">
+                                              <PhoneCall className="h-4 w-4 mr-1 text-gray-500" />
+                                              <span className="text-sm">{locksmith.activity.calls}</span>
+                                            </div>
+                                            <div className="flex items-center">
+                                              <MessageCircle className="h-4 w-4 mr-1 text-gray-500" />
+                                              <span className="text-sm">{locksmith.activity.whatsapp}</span>
+                                            </div>
+                                          </div>
+                                          <div className="flex flex-wrap gap-4 mt-3">
+                                            <div className="flex items-center">
+                                              <span className="text-sm text-gray-500 mr-2">Bakiye:</span>
+                                              <span className="font-medium text-green-600">{locksmith.locksmith_balances?.[0]?.balance || 0}₺</span>
+                                            </div>
+                                            <div className="flex items-center">
+                                              <span className="text-sm text-gray-500 mr-2">Limit:</span>
+                                              <span className="font-medium text-blue-600">{locksmith.locksmith_balances?.[0]?.daily_spent_limit || 0}₺</span>
+                                            </div>
+                                            <div className="flex items-center">
+                                              <span className="text-sm text-gray-500 mr-2">Önerilen:</span>
+                                              {editingSuggestedLimit === locksmith.id ? (
+                                                <div className="flex items-center space-x-2">
+                                                  <Input
+                                                    type="number"
+                                                    className="w-24"
+                                                    value={tempSuggestedLimit}
+                                                    onChange={(e) => setTempSuggestedLimit(e.target.value)}
+                                                  />
+                                                  <Button
+                                                    size="sm"
+                                                    onClick={() => handleSuggestedLimitUpdate(locksmith.id)}
+                                                    className="bg-green-600 hover:bg-green-700"
+                                                  >
+                                                    <CheckCircle className="h-4 w-4" />
+                                                  </Button>
+                                                  <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                      setEditingSuggestedLimit(null);
+                                                      setTempSuggestedLimit(null);
+                                                    }}
+                                                  >
+                                                    <X className="h-4 w-4" />
+                                                  </Button>
+                                                </div>
+                                              ) : (
+                                                <div className="flex items-center space-x-2">
+                                                  <span className="font-medium text-purple-600">{locksmith.locksmith_balances?.[0]?.suggested_daily_limit || 0}₺</span>
+                                                  <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                      setEditingSuggestedLimit(locksmith.id);
+                                                      setTempSuggestedLimit(locksmith.locksmith_balances?.[0]?.suggested_daily_limit || 0);
+                                                    }}
+                                                  >
+                                                    <Edit className="h-4 w-4" />
+                                                  </Button>
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center space-x-2 w-full lg:w-auto">
+                                          <div className="flex flex-col items-start space-x-4">
+                                            <div className="flex justify-between w-full items-center space-x-2">
+                                              <span className="text-sm whitespace-nowrap">Reklam:</span>
+                                              <span className="text-sm font-medium text-gray-700 bg-gray-50 px-3 py-1 rounded-md min-w-[96px] inline-block text-right">
+                                                {(adSpendInputs[locksmith.id] || 0).toFixed(2)}₺
+                                              </span>
+                                            </div>
+                                            <div className="flex justify-between w-full items-center space-x-2">
+                                              <span className="text-sm whitespace-nowrap">Komisyon:</span>
+                                              <span className="text-sm font-medium text-orange-600 bg-gray-50 px-3 py-1 rounded-md min-w-[96px] inline-block text-right">
+                                                {((adSpendInputs[locksmith.id] || 0) * 0.2).toFixed(2)}₺
+                                              </span>
+                                            </div>
+                                            <div className="flex justify-between w-full items-center space-x-2">
+                                              <div className="flex flex-col items-start">
+                                                <span className="text-sm whitespace-nowrap">Toplam:</span>
+                                                {locksmith.locksmith_balances?.[0]?.daily_spent_limit > 0 && (
+                                                  <span className="text-xs text-gray-500">
+                                                    (Limit: {locksmith.locksmith_balances[0].daily_spent_limit}₺)
+                                                  </span>
+                                                )}
+                                              </div>
+                                              <Input
+                                                type="number"
+                                                className="w-24"
+                                                placeholder="0"
+                                                value={adSpendInputs[locksmith.id] ? (adSpendInputs[locksmith.id] * 1.2).toFixed(2) : ''}
+                                                onChange={(e) => {
+                                                  const totalValue = parseFloat(e.target.value) || 0;
+                                                  handleAdSpendInputChange(locksmith.id, totalValue);
+                                                }}
+                                              />
+                                              <span className="text-sm">₺</span>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="text-center py-4 text-gray-500">
+                                    Bu ilçede aktif çilingir bulunmuyor
+                                  </div>
+                                )}
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                        <div className="mt-6 flex justify-center">
+                          <Button
+                            onClick={handleSaveAllAdSpends}
+                            className="bg-blue-600 hover:bg-blue-700 px-8 py-2 text-lg"
+                          >
+                            <Save className="h-5 w-5 mr-2" />
+                            Tüm Reklam Harcamalarını Kaydet
+                          </Button>
+                        </div>
+                      </>
+                    ) : selectedProvince ? (
+                      <div className="text-center py-12">
+                        <p className="text-gray-500">Seçili il için veri bulunamadı</p>
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <p className="text-gray-500">Lütfen bir il seçin</p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
