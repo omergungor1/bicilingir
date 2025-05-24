@@ -3330,7 +3330,6 @@ function CilingirPanelContent() {
                         </div>
                       </div>
                       <div className="h-[300px] w-full">
-                        {console.log('transactionData:', transactionData)}
                         <ResponsiveLine
                           data={[transactionData]}
                           margin={{ top: 20, right: 20, bottom: 50, left: 60 }}

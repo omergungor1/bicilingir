@@ -134,7 +134,7 @@ export async function POST(request) {
     const { data: locksmithBalancesData, error: locksmithBalancesError } = await supabase
       .from('locksmith_balances')
       .insert([
-        { locksmith_id: locksmithId, balance: 0, daily_spent_limit: 0, suggested_daily_limit: 0 }
+        { locksmith_id: locksmithId, balance: 0, daily_spent_limit: 0, suggested_daily_limit: 200 }
       ])
       .select();
 

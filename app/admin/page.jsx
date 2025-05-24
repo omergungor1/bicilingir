@@ -59,6 +59,7 @@ import { Checkbox } from "../../components/ui/checkbox";
 import { useSelector } from "react-redux";
 import { getSupabaseClient } from "../../lib/supabase";
 import { Textarea } from "../../components/ui/textarea";
+import { Label } from "../../components/ui/label";
 
 function AdminPanelContent() {
   const supabase = getSupabaseClient();
@@ -616,6 +617,68 @@ function AdminPanelContent() {
       showToast("Timeline güncellenemedi", "error");
     } finally {
       setIsTimelineRefreshing(false);
+    }
+  };
+
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [transactionCode, setTransactionCode] = useState('');
+  const [transactionAmount, setTransactionAmount] = useState('');
+  const [successMessage, setSuccessMessage] = useState(null);
+
+  const handleTransactionSubmit = async () => {
+    try {
+      const response = await fetch('/api/admin/add-balance-by-transaction', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          transactionCode,
+          amount: parseFloat(transactionAmount)
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccessMessage(data.message);
+        setTransactionCode('');
+        setTransactionAmount('');
+        // 3 saniye sonra modalı kapat
+        setTimeout(() => {
+          setShowTransactionModal(false);
+          setSuccessMessage(null);
+        }, 3000);
+      } else {
+        throw new Error(data.error || 'Bir hata oluştu');
+      }
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const [editingDailyLimit, setEditingDailyLimit] = useState(null);
+  const [tempDailyLimit, setTempDailyLimit] = useState(null);
+
+  const handleDailyLimitUpdate = async (locksmithId) => {
+    try {
+      const { data, error } = await supabase
+        .from('locksmith_balances')
+        .update({ daily_spent_limit: parseFloat(tempDailyLimit) })
+        .eq('locksmith_id', locksmithId);
+
+      if (error) throw error;
+
+      // Reklam verilerini güncelle
+      await fetchAdvertisingData();
+
+      setEditingDailyLimit(null);
+      setTempDailyLimit(null);
+      showToast("Günlük limit başarıyla güncellendi.", "success");
+
+    } catch (error) {
+      console.error('Günlük limit güncelleme hatası:', error);
+      showToast("Günlük limit güncellenirken bir hata oluştu.", "error");
     }
   };
 
@@ -2043,9 +2106,17 @@ function AdminPanelContent() {
                   <CardHeader>
                     <div className="flex items-center space-x-2">
                       <Package className="h-6 w-6 text-blue-600" />
-                      <div>
-                        <CardTitle>Reklam Yönetimi</CardTitle>
-                        <CardDescription>Çilingir reklam harcamalarını yönetin</CardDescription>
+                      <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:justify-between w-full">
+                        <div className="flex flex-col gap-2">
+                          <CardTitle>Reklam Yönetimi</CardTitle>
+                          <CardDescription>Çilingir reklam harcamalarını yönetin</CardDescription>
+                        </div>
+                        <Button
+                          onClick={() => setShowTransactionModal(true)}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          <Plus className="h-4 w-4 mr-2" /> Havale ile Bakiye Ekle
+                        </Button>
                       </div>
                     </div>
                   </CardHeader>
@@ -2195,7 +2266,47 @@ function AdminPanelContent() {
                                             </div>
                                             <div className="flex items-center">
                                               <span className="text-sm text-gray-500 mr-2">Limit:</span>
-                                              <span className="font-medium text-blue-600">{locksmith.locksmith_balances?.[0]?.daily_spent_limit || 0}₺</span>
+                                              {editingDailyLimit === locksmith.id ? (
+                                                <div className="flex items-center space-x-2">
+                                                  <Input
+                                                    type="number"
+                                                    className="w-24"
+                                                    value={tempDailyLimit}
+                                                    onChange={(e) => setTempDailyLimit(e.target.value)}
+                                                  />
+                                                  <Button
+                                                    size="sm"
+                                                    onClick={() => handleDailyLimitUpdate(locksmith.id)}
+                                                    className="bg-green-600 hover:bg-green-700"
+                                                  >
+                                                    <CheckCircle className="h-4 w-4" />
+                                                  </Button>
+                                                  <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                      setEditingDailyLimit(null);
+                                                      setTempDailyLimit(null);
+                                                    }}
+                                                  >
+                                                    <X className="h-4 w-4" />
+                                                  </Button>
+                                                </div>
+                                              ) : (
+                                                <div className="flex items-center space-x-2">
+                                                  <span className="font-medium text-blue-600">{locksmith.locksmith_balances?.[0]?.daily_spent_limit || 0}₺</span>
+                                                  <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                      setEditingDailyLimit(locksmith.id);
+                                                      setTempDailyLimit(locksmith.locksmith_balances?.[0]?.daily_spent_limit || 0);
+                                                    }}
+                                                  >
+                                                    <Edit className="h-4 w-4" />
+                                                  </Button>
+                                                </div>
+                                              )}
                                             </div>
                                             <div className="flex items-center">
                                               <span className="text-sm text-gray-500 mr-2">Önerilen:</span>
@@ -2577,6 +2688,71 @@ function AdminPanelContent() {
               className={!isNewServiceValid() ? "opacity-50 cursor-not-allowed" : ""}
             >
               Kaydet
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal */}
+      <Dialog open={showTransactionModal} onOpenChange={setShowTransactionModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Havale ile Bakiye Yükleme</DialogTitle>
+            <DialogDescription>
+              Havale işlem kodu ile bakiye yükleyin
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="transaction_code">İşlem Kodu</Label>
+              <Input
+                id="transaction_code"
+                value={transactionCode}
+                onChange={(e) => setTransactionCode(e.target.value)}
+                placeholder="Havale işlem kodunu girin"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="amount">Miktar (TL)</Label>
+              <Input
+                id="amount"
+                type="number"
+                value={transactionAmount}
+                onChange={(e) => setTransactionAmount(e.target.value)}
+                placeholder="Yüklenecek miktar"
+              />
+            </div>
+          </div>
+          {successMessage && (
+            <div className="bg-green-50 p-4 rounded-md mb-4 flex justify-between items-center">
+              <span className="text-green-700">{successMessage}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSuccessMessage(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowTransactionModal(false);
+                setTransactionCode('');
+                setTransactionAmount('');
+                setSuccessMessage(null);
+              }}
+            >
+              İptal
+            </Button>
+            <Button
+              onClick={handleTransactionSubmit}
+              className="bg-green-600 hover:bg-green-700"
+              disabled={!transactionCode || !transactionAmount || transactionAmount <= 0}
+            >
+              Bakiye Yükle
             </Button>
           </DialogFooter>
         </DialogContent>
