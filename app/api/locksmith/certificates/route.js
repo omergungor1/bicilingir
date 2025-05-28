@@ -11,9 +11,7 @@ export async function GET(request) {
     const { locksmithId, supabase } = await checkAuth(request);
 
     if (!locksmithId) {
-        return NextResponse.json({
-            error: 'Yetkilendirme hatası'
-        }, { status: 401 });
+        return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
     }
 
     try {
@@ -46,9 +44,7 @@ export async function POST(request) {
     const { locksmithId, supabase } = await checkAuth(request);
 
     if (!locksmithId) {
-        return NextResponse.json({
-            error: 'Yetkilendirme hatası'
-        }, { status: 401 });
+        return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
     }
 
     // Supabase storage işlemleri için admin client kullan
@@ -163,9 +159,7 @@ export async function DELETE(request) {
     const { locksmithId, supabase } = await checkAuth(request);
 
     if (!locksmithId) {
-        return NextResponse.json({
-            error: 'Yetkilendirme hatası'
-        }, { status: 401 });
+        return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
     }
 
     // Supabase storage işlemleri için admin client kullan

@@ -5,6 +5,10 @@ export async function GET(request) {
   try {
     const { locksmithId, supabase } = await checkAuth(request);
 
+    if (!locksmithId) {
+      return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
+    }
+
     // Çilingir bilgilerini getir
     const { data: locksmith, error: locksmithError } = await supabase
       .from('locksmiths')
@@ -46,19 +50,20 @@ export async function PUT(request) {
   try {
     const { locksmithId, supabase } = await checkAuth(request);
 
+    if (!locksmithId) {
+      return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
+    }
+
     // Gelen verileri al
     const requestData = await request.json();
 
     // Hangi tablo için hangi alanların güncelleneceğini belirle
     const locksmithFields = [
-      'businessname', 'fullname', 'tagline', 'email', 'phonenumber', 'whatsappnumber',
-      'customerlimitperhour', 'provinceid', 'districtid'
+      'businessname', 'fullname', 'tagline', 'email', 'phonenumber', 'whatsappnumber', 'provinceid', 'districtid'
     ];
 
     const detailFields = [
-      'abouttext', 'taxnumber', 'fulladdress', 'websiteurl',
-      'instagram_url', 'facebook_url', 'tiktok_url', 'youtube_url',
-      'lat', 'lng'
+      'abouttext', 'taxnumber', 'fulladdress', 'websiteurl', 'lat', 'lng'
     ];
 
     // locksmiths tablosu için güncelleme verileri

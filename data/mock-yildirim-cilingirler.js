@@ -108,12 +108,6 @@ export const mockLocksmiths = [
             }
         ],
         "foundingDate": "2007-01-01",
-        "socialProfiles": {
-            "facebook": null,
-            "instagram": null,
-            "youtube": null,
-            "tiktok": null
-        },
         "serviceList": [
             {
                 "name": "Acil Çilingir",
@@ -379,12 +373,6 @@ export const mockLocksmiths = [
             }
         ],
         "foundingDate": "2010-01-01",
-        "socialProfiles": {
-            "facebook": null,
-            "instagram": null,
-            "youtube": null,
-            "tiktok": null
-        },
         "serviceList": [
             {
                 "name": "Acil Çilingir",

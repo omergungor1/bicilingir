@@ -6,12 +6,12 @@ export async function GET(request) {
     const { supabase } = await checkAdminAuth(request);
 
     const { data: servicesData, error } = await supabase
-    .from('services')
-    .select(`
+      .from('services')
+      .select(`
       *
     `)
-    .order('name', { ascending: false });
-  
+      .order('name', { ascending: false });
+
 
     if (error) {
       throw error;
@@ -33,60 +33,60 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const { supabase } = await checkAdminAuth(request); 
+    const { supabase } = await checkAdminAuth(request);
 
     const data = await request.json();
 
 
-    if (data.id){
-        //update
-        const { data: servicesData, error } = await supabase
+    if (data.id) {
+      //update
+      const { data: servicesData, error } = await supabase
         .from('services')
         .update({
-            name: data.name,
-            minPriceMesai: data.minPriceMesai,
-            maxPriceMesai: data.maxPriceMesai,
-            minPriceAksam: data.minPriceMesai*1.5,
-            maxPriceAksam: data.maxPriceMesai*1.5,
-            minPriceGece: data.minPriceMesai*2,
-            maxPriceGece: data.maxPriceMesai*2,
-            isActive: data.isActive
+          name: data.name,
+          minPriceMesai: data.minPriceMesai,
+          maxPriceMesai: data.maxPriceMesai,
+          minPriceAksam: data.minPriceMesai * 1.5,
+          maxPriceAksam: data.maxPriceMesai * 1.5,
+          minPriceGece: data.minPriceMesai * 2,
+          maxPriceGece: data.maxPriceMesai * 2,
+          isActive: data.isActive
         })
         .eq('id', data.id)
         .select()
         .single();
 
-        if (error) {
-            throw error;
-        }
+      if (error) {
+        throw error;
+      }
 
-        return NextResponse.json({
-            success: true,
-        });
+      return NextResponse.json({
+        success: true,
+      });
     } else {
-        //insert
-        const { data: servicesData, error } = await supabase
+      //insert
+      const { data: servicesData, error } = await supabase
         .from('services')
         .insert({
-            name: data.name,
-            minPriceMesai: data.minPriceMesai,
-            maxPriceMesai: data.maxPriceMesai,
-            minPriceAksam: data.minPriceMesai*1.5,
-            maxPriceAksam: data.maxPriceMesai*1.5,
-            minPriceGece: data.minPriceMesai*2,
-            maxPriceGece: data.maxPriceMesai*2,
-            isActive: data.isActive
+          name: data.name,
+          minPriceMesai: data.minPriceMesai,
+          maxPriceMesai: data.maxPriceMesai,
+          minPriceAksam: data.minPriceMesai * 1.5,
+          maxPriceAksam: data.maxPriceMesai * 1.5,
+          minPriceGece: data.minPriceMesai * 2,
+          maxPriceGece: data.maxPriceMesai * 2,
+          isActive: data.isActive
         })
         .select()
         .single();
 
-        if (error) {
-            throw error;
-        }
+      if (error) {
+        throw error;
+      }
 
-        return NextResponse.json({
-            success: true,
-        });
+      return NextResponse.json({
+        success: true,
+      });
     }
 
   } catch (error) {

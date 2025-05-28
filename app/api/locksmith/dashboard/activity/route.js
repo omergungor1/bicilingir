@@ -5,13 +5,19 @@ const PAGE_SIZE = 10;
 
 export async function GET(request) {
   try {
-      const { locksmithId, supabase } = await checkAuth(request);
+    console.log('locksmith/dashboard/activity/route.js');
+    console.log(request);
+
+    const { locksmithId, supabase } = await checkAuth(request);
+
+    if (!locksmithId) {
+      return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
+    }
+
     // URL'den period ve locksmithId parametrelerini al
     const period = request.nextUrl.searchParams.get('period') || 'today';
     const page = request.nextUrl.searchParams.get('page') || 1;
-    // console.log(locksmithId,'locksmithId');
-    // console.log(period,'period');
-    // console.log(page,'page');
+
 
     //periods: today, yesterday, last7days, last30days, all
 
@@ -23,15 +29,13 @@ export async function GET(request) {
     startDate.setDate(startDate.getDate() - (period === 'today' ? 0 : period === 'yesterday' ? 1 : period === 'last7days' ? 7 : period === 'last30days' ? 30 : period === 'all' ? 365 : 0));
     const startDateString = startDate.toISOString().split('T')[0];
 
-
     let query = supabase
-    .from('user_activity_logs')
-    .select('activitytype,createdat, districts(name), services(name), reviews(rating,comment)')
-    .eq('locksmithid', locksmithId);
-
+      .from('user_activity_logs')
+      .select('activitytype,createdat, districts(name), services(name), reviews(rating,comment)')
+      .eq('locksmithid', locksmithId);
 
     if (period !== 'all') {
-        query = query.gte('createdat', startDateString);
+      query = query.gte('createdat', startDateString);
     }
 
     query = query.order('createdat', { ascending: false });
@@ -44,12 +48,12 @@ export async function GET(request) {
     }
 
     let query2 = supabase
-    .from('user_activity_logs')
-    .select('*',{ count: 'exact' })
-    .eq('locksmithid', locksmithId);
+      .from('user_activity_logs')
+      .select('*', { count: 'exact' })
+      .eq('locksmithid', locksmithId);
 
     if (period !== 'all') {
-        query2 = query2.gte('createdat', startDateString);
+      query2 = query2.gte('createdat', startDateString);
     }
 
     const { data: totalRecords, error: totalError } = await query2;
@@ -81,34 +85,33 @@ export async function GET(request) {
     };
 
     totalRecords.map(item => {
-        if(item.activitytype == 'locksmith_list_view'){
-            formattedStats.see++;
-        }
-        if(item.activitytype == 'locksmith_detail_view'){
-            formattedStats.visit++;
-        }
-        if(item.activitytype == 'call_request'){
-            formattedStats.call++;
-        }
-        if(item.activitytype == 'review_submit'){
-            formattedStats.review++;
-        }
-        if(item.activitytype == 'whatsapp_call'){
-            formattedStats.whatsapp++;
-        }
-        if(item.activitytype == 'website_visit'){
-            formattedStats.website_visit++;
-        }
+      if (item.activitytype == 'locksmith_list_view') {
+        formattedStats.see++;
+      }
+      if (item.activitytype == 'locksmith_detail_view') {
+        formattedStats.visit++;
+      }
+      if (item.activitytype == 'call_request') {
+        formattedStats.call++;
+      }
+      if (item.activitytype == 'review_submit') {
+        formattedStats.review++;
+      }
+      if (item.activitytype == 'whatsapp_call') {
+        formattedStats.whatsapp++;
+      }
+      if (item.activitytype == 'website_visit') {
+        formattedStats.website_visit++;
+      }
     });
 
-
     return NextResponse.json({
-        success: true,
-        stats: formattedStats,
-        list: data,
-        totalPages: Math.ceil(total / PAGE_SIZE),
-        currentPage: page,
-        totalRecords: total
+      success: true,
+      stats: formattedStats,
+      list: data,
+      totalPages: Math.ceil(total / PAGE_SIZE),
+      currentPage: page,
+      totalRecords: total
     });
   } catch (error) {
     console.error("API hatası:", error);

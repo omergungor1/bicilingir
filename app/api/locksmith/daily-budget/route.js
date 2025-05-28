@@ -6,6 +6,9 @@ export async function PUT(request) {
 
         const { locksmithId, supabase } = await checkAuth(request);
 
+        if (!locksmithId) {
+            return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
+        }
 
         const { daily_spent_limit } = await request.json();
 

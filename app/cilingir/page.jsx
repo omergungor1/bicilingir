@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Checkbox } from "../../components/ui/checkbox";
-import { Info, Phone, Star, Eye, PhoneCall, Instagram, Menu, X, Footprints, File, ExternalLinkIcon, Clock, Search, CheckCircle, AlertTriangle, AlertCircle, Bell, User, Trash2, MessageCircle, Globe, MapPin, Key, ShoppingCart, Mail, Plus, ArrowRight, Edit, Save, Copy } from "lucide-react";
+import { Info, Phone, Star, Eye, PhoneCall, Menu, X, Footprints, File, ExternalLinkIcon, Clock, Search, CheckCircle, AlertTriangle, AlertCircle, Bell, User, Trash2, MessageCircle, Globe, MapPin, Key, Mail, Plus, ArrowRight, Edit, Save, Copy } from "lucide-react";
 import { useToast } from "../../components/ToastContext";
 import Link from "next/link";
 import Image from "next/image";
@@ -31,8 +31,10 @@ import { formatPhoneNumber } from "../../lib/utils";
 import { checkAuthState } from "../../redux/features/authSlice";
 import { AiAssistButton } from "../../components/ui/ai-assist-button";
 import { TiptapEditor } from "../../components/ui/tiptap-editor";
-import { useJsApiLoader, GoogleMap, Marker, Autocomplete } from '@react-google-maps/api';
+// import { useJsApiLoader, GoogleMap, Marker, Autocomplete } from '@react-google-maps/api';
 import { ResponsiveLine } from '@nivo/line'
+import { useMaps } from '../contexts/MapsContext';
+import { GoogleMap, Marker, Autocomplete } from '@react-google-maps/api';
 
 
 export default function CilingirPanel() {
@@ -147,7 +149,6 @@ function CilingirPanelContent() {
     avgrating: 0,
     businessname: "",
     certificates: [],
-    customerlimitperhour: 0,
     districtid: 0,
     provinceid: 0,
     documents: [],
@@ -161,10 +162,6 @@ function CilingirPanelContent() {
     isphoneverified: "",
     isverified: "",
     profileimageurl: "",
-    instagram_url: "",
-    facebook_url: "",
-    tiktok_url: "",
-    youtube_url: "",
     status: "",
     tagline: "",
     taxnumber: "",
@@ -246,6 +243,7 @@ function CilingirPanelContent() {
         }
       );
       const data = await response.json();
+
       setDashboardStats(data.stats);
       setActivityList(data.list);
       setCurrentPageActivities(data.currentPage);
@@ -1336,10 +1334,7 @@ function CilingirPanelContent() {
   }, []); // Boş dependency array ile sadece bir kere oluşturulacak
 
   // Google Maps API yükleme durumu
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'GOOGLE_MAPS_API_KEY',
-    libraries: ['places'],
-  });
+  const { isLoaded } = useMaps();
 
   // Google Maps için state
   const [map, setMap] = useState(null);
@@ -2342,21 +2337,6 @@ function CilingirPanelContent() {
                         </div>
                       </div>
 
-                      {/* Maksimum müşteri sayısı */}
-                      <div>
-                        <h4 className="font-medium mb-4 mt-6">Bir saat içinde maksimum kaç müşteriye hizmet verebilirsiniz?</h4>
-                        <div className="flex items-center space-x-2">
-                          <p className="text-sm text-gray-500">Maksimum müşteri sayısı</p>
-                          <Input
-                            className="w-24"
-                            type="number"
-                            value={locksmith?.customerlimitperhour > 0 ? locksmith?.customerlimitperhour : 0}
-                            onChange={(e) => handleLocksmithDataChange('customerlimitperhour', e.target.value)}
-                            placeholder="Örn: 10" />
-                          <p className="text-sm text-gray-500">/saat</p>
-                        </div>
-                      </div>
-
                       <div className="border-t border-gray-200 my-6" />
 
                       {/* Çalışma Saatleri */}
@@ -2681,83 +2661,6 @@ function CilingirPanelContent() {
                               </div>
                             </div>
                           }
-                        </div>
-                      </div>
-
-
-                      <div className="border-t border-gray-200 my-6" />
-
-                      {/* Sosyal Medya Hesapları */}
-                      <h4 className="font-medium mb-4 mt-6">Sosyal Medya Hesapları</h4>
-                      <div className="space-y-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {/* Instagram */}
-                        <div className="pb-6">
-                          <div className="flex items-center mb-4">
-                            <Instagram className="h-6 w-6 text-pink-600 mr-2" />
-                            <h3 className="text-lg font-medium">Instagram</h3>
-                          </div>
-                          <div className="flex items-center space-x-4">
-                            <Input
-                              placeholder="Instagram profil linkiniz"
-                              value={locksmith?.instagram_url || ""}
-                              onChange={(e) => handleLocksmithDataChange('instagram_url', e.target.value)}
-                              className="flex-grow"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Facebook */}
-                        <div className="pb-6">
-                          <div className="flex items-center mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                            </svg>
-                            <h3 className="text-lg font-medium">Facebook</h3>
-                          </div>
-                          <div className="flex items-center space-x-4">
-                            <Input
-                              placeholder="Facebook profil linkiniz"
-                              value={locksmith?.facebook_url || ""}
-                              onChange={(e) => handleLocksmithDataChange('facebook_url', e.target.value)}
-                              className="flex-grow"
-                            />
-                          </div>
-                        </div>
-
-                        {/* YouTube */}
-                        <div className="pb-6">
-                          <div className="flex items-center mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                            </svg>
-                            <h3 className="text-lg font-medium">YouTube</h3>
-                          </div>
-                          <div className="flex items-center space-x-4">
-                            <Input
-                              placeholder="YouTube profil linkiniz"
-                              value={locksmith?.youtube_url || ""}
-                              onChange={(e) => handleLocksmithDataChange('youtube_url', e.target.value)}
-                              className="flex-grow"
-                            />
-                          </div>
-                        </div>
-
-                        {/* TikTok */}
-                        <div className="pb-6">
-                          <div className="flex items-center mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black mr-2" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
-                            </svg>
-                            <h3 className="text-lg font-medium">TikTok</h3>
-                          </div>
-                          <div className="flex items-center space-x-4">
-                            <Input
-                              placeholder="TikTok profil linkiniz"
-                              value={locksmith?.tiktok_url || ""}
-                              onChange={(e) => handleLocksmithDataChange('tiktok_url', e.target.value)}
-                              className="flex-grow"
-                            />
-                          </div>
                         </div>
                       </div>
 

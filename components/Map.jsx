@@ -1,9 +1,10 @@
 "use client";
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, InfoWindow } from '@react-google-maps/api';
 import Image from 'next/image';
 import { Button } from '../components/ui/button';
 import { Phone } from 'lucide-react';
+import { useMaps } from '../app/contexts/MapsContext';
 
 const containerStyle = {
     width: '100%',
@@ -42,16 +43,12 @@ const suppressConsoleWarnings = () => {
     };
 };
 
-const Map = ({ center, zoom = 14, markers = [] }) => {
-    const { isLoaded } = useJsApiLoader({
-        id: 'google-map-script',
-        googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
-    });
-
+const Map = ({ center, zoom = 14, markers = [], onMarkerClick, selectedLocksmith }) => {
+    const { isLoaded } = useMaps();
     const [map, setMap] = useState(null);
     const [selectedMarker, setSelectedMarker] = useState(null);
     const [mapMarkers, setMapMarkers] = useState([]);
-
+    const mapRef = useRef(null);
 
     // Uyarıları bastırma
     useEffect(() => {
@@ -60,10 +57,12 @@ const Map = ({ center, zoom = 14, markers = [] }) => {
     }, []);
 
     const onLoad = useCallback(function callback(map) {
+        mapRef.current = map;
         setMap(map);
     }, []);
 
     const onUnmount = useCallback(function callback() {
+        mapRef.current = null;
         setMap(null);
     }, []);
 
@@ -90,8 +89,14 @@ const Map = ({ center, zoom = 14, markers = [] }) => {
 
         // Yeni markerları oluştur
         const newMarkers = markers.map((markerData) => {
+            const lat = parseFloat(markerData.position?.lat);
+            const lng = parseFloat(markerData.position?.lng);
+
+            // Geçersiz koordinatları atla
+            if (isNaN(lat) || isNaN(lng)) return null;
+
             const marker = new window.google.maps.Marker({
-                position: markerData.position,
+                position: { lat, lng },
                 map: map,
                 icon: {
                     url: '/images/map-marker.png',
@@ -104,7 +109,7 @@ const Map = ({ center, zoom = 14, markers = [] }) => {
             });
 
             return marker;
-        });
+        }).filter(Boolean); // null değerleri filtrele
 
         setMapMarkers(newMarkers);
 
@@ -122,6 +127,31 @@ const Map = ({ center, zoom = 14, markers = [] }) => {
             map.panTo(center);
         }
     }, [map, center]);
+
+    useEffect(() => {
+        if (markers && markers.length > 0 && isLoaded && window.google) {
+            try {
+                // Haritayı markerların ortasına konumlandır
+                const bounds = new window.google.maps.LatLngBounds();
+                markers.forEach(marker => {
+                    const lat = parseFloat(marker.lat);
+                    const lng = parseFloat(marker.lng);
+
+                    // Geçerli koordinat kontrolü
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        bounds.extend({ lat, lng });
+                    }
+                });
+
+                // En az bir geçerli marker varsa haritayı güncelle
+                if (mapRef.current && bounds.getNorthEast().equals(bounds.getSouthWest()) === false) {
+                    mapRef.current.fitBounds(bounds);
+                }
+            } catch (error) {
+                console.error('Harita sınırları ayarlanırken hata oluştu:', error);
+            }
+        }
+    }, [markers, isLoaded]);
 
     if (!isLoaded || !center) {
         return <div className="bg-gray-200 animate-pulse rounded-xl" style={containerStyle} />;
@@ -168,6 +198,18 @@ const Map = ({ center, zoom = 14, markers = [] }) => {
                                 />
                             </div>
                         )}
+                    </div>
+                </InfoWindow>
+            )}
+
+            {selectedLocksmith && (
+                <InfoWindow
+                    position={{ lat: selectedLocksmith.lat, lng: selectedLocksmith.lng }}
+                    onCloseClick={() => onMarkerClick(null)}
+                >
+                    <div>
+                        <h3>{selectedLocksmith.businessname}</h3>
+                        <p>{selectedLocksmith.address}</p>
                     </div>
                 </InfoWindow>
             )}

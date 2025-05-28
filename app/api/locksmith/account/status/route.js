@@ -6,6 +6,10 @@ import { checkAuth } from '../../../utils';
 export async function PUT(request) {
   const { locksmithId, supabase } = await checkAuth(request);
 
+  if (!locksmithId) {
+    return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
+  }
+
   //çilingirin status='approved ise güncelle
   const { data, error } = await supabase
     .from('locksmiths')
@@ -21,7 +25,7 @@ export async function PUT(request) {
   const locksmithStatus = data.status;
   const locksmithIsActive = data.isactive;
 
-  if(locksmithStatus!='approved'){
+  if (locksmithStatus != 'approved') {
     return NextResponse.json({
       success: false,
       message: "Hesabınız henüz onaylanmamıştır.",

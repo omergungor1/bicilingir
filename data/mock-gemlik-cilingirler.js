@@ -84,12 +84,6 @@ export const mockLocksmiths = [
             }
         ],
         "foundingDate": "2019-01-01",
-        "socialProfiles": {
-            "facebook": null,
-            "instagram": "https://www.instagram.com/cilingirgemlik/",
-            "youtube": null,
-            "tiktok": null
-        },
         "serviceList": [
             {
                 "name": "Ev Çilingir",
@@ -259,12 +253,6 @@ export const mockLocksmiths = [
             }
         ],
         "foundingDate": "2019-01-01",
-        "socialProfiles": {
-            "facebook": null,
-            "instagram": null,
-            "youtube": null,
-            "tiktok": null
-        },
         "serviceList": [
             {
                 "name": "Ev Çilingir",

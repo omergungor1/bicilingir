@@ -116,6 +116,18 @@ setInterval(() => {
 }, 5 * 60 * 1000); // Her 5 dakikada bir temizlik
 
 export async function middleware(req) {
+  // CORS Headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+
+  // OPTIONS isteklerini yanıtla
+  if (req.method === 'OPTIONS') {
+    return NextResponse.json({}, { headers });
+  }
+
   // Gerçek IP adresini alın (varsa proxy arkasından)
   const ip = req.headers.get('x-forwarded-for') || req.ip || 'unknown';
   const userAgent = req.headers.get('user-agent') || '';
@@ -137,6 +149,7 @@ export async function middleware(req) {
         {
           status: 429,
           headers: {
+            ...headers,
             'Retry-After': '60',
             'X-RateLimit-Limit': '100',
             'X-RateLimit-Remaining': '0',
@@ -187,7 +200,10 @@ export async function middleware(req) {
     if (limited) {
       return NextResponse.json(
         { error: 'Çok fazla istek gönderdiniz. Lütfen daha sonra tekrar deneyin.' },
-        { status: 429 }
+        {
+          status: 429,
+          headers
+        }
       );
     }
   }
@@ -323,13 +339,23 @@ export async function middleware(req) {
       }
     }
 
+    // API yanıtlarına CORS header'larını ekle
+    if (pathname.startsWith('/api/')) {
+      Object.entries(headers).forEach(([key, value]) => {
+        res.headers.set(key, value);
+      });
+    }
+
     return res;
   } catch (error) {
     console.error('Middleware hatası:', error);
 
     // API hata durumları için
     if (req.nextUrl.pathname.startsWith('/api/')) {
-      return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 });
+      return NextResponse.json({ error: 'Sunucu hatası' }, {
+        status: 500,
+        headers
+      });
     }
 
     // Hata durumunda güvenli yönlendirme
@@ -347,6 +373,7 @@ export async function middleware(req) {
   }
 }
 
+// Tek bir config tanımı
 export const config = {
   matcher: [
     // Admin ve çilingir sayfaları için matcher

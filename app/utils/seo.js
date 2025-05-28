@@ -336,15 +336,6 @@ async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, servicetype
                 });
             }
 
-            // Sosyal medya linkleri
-            const sameAs = [];
-            if (locksmith.socialProfiles) {
-                if (locksmith.socialProfiles.facebook) sameAs.push(locksmith.socialProfiles.facebook);
-                if (locksmith.socialProfiles.instagram) sameAs.push(locksmith.socialProfiles.instagram);
-                if (locksmith.socialProfiles.youtube) sameAs.push(locksmith.socialProfiles.youtube);
-                if (locksmith.socialProfiles.tiktok) sameAs.push(locksmith.socialProfiles.tiktok);
-            }
-
             // Ödeme seçenekleri
             const paymentAccepted = ["Cash", "Credit Card", "Debit Card"];
 
@@ -377,7 +368,6 @@ async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, servicetype
                 "aggregateRating": aggregateRating,
                 "url": locksmith.url,
                 "geo": geo,
-                "sameAs": sameAs.length > 0 ? sameAs : undefined,
                 "founder": locksmith.fullname,
                 "foundingDate": locksmith.foundingDate || "2019-01-01",
                 "paymentAccepted": paymentAccepted,

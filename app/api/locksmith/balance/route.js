@@ -5,7 +5,6 @@ export async function GET(request) {
     try {
         const { locksmithId, supabase } = await checkAuth(request);
 
-
         if (!locksmithId) {
             return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
         }

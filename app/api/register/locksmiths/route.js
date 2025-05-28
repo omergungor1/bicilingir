@@ -36,7 +36,6 @@ export async function POST(request) {
           email: locksmithInsertData.email,
           phonenumber: locksmithInsertData.phonenumber,
           whatsappnumber: locksmithInsertData.phonenumber,
-          customerlimitperhour: locksmithInsertData.customerlimitperhour || 5,
           profileimageurl: locksmithInsertData.profileimageurl,
           isverified: locksmithInsertData.isverified || false,
           isactive: locksmithInsertData.isactive || false,
@@ -92,10 +91,6 @@ export async function POST(request) {
           taxnumber: locksmithDetailsInsertData.taxnumber,
           fulladdress: locksmithDetailsInsertData.fulladdress,
           abouttext: locksmithDetailsInsertData.abouttext,
-          instagram_url: locksmithDetailsInsertData.instagram_url,
-          facebook_url: locksmithDetailsInsertData.facebook_url,
-          tiktok_url: locksmithDetailsInsertData.tiktok_url,
-          youtube_url: locksmithDetailsInsertData.youtube_url,
           websiteurl: locksmithDetailsInsertData.websiteurl,
           startdate: locksmithDetailsInsertData.startdate,
           createdat: new Date().toISOString()

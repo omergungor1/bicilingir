@@ -1,25 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
-/**
- * Supabase URL'inden proje referansını çıkarır
- * @param {string} url - Supabase URL'i (ör: https://xxxx.supabase.co)
- * @returns {string} Proje referansı
- */
-function extractProjectRef(url) {
-  if (!url) return '';
-  // URL formatı genelde: https://xxxx.supabase.co veya https://xxxx.supabase.co/
-  try {
-    const hostname = new URL(url).hostname;
-    const parts = hostname.split('.');
-    return parts[0] || '';
-  } catch (e) {
-    console.error("Supabase URL parse hatası:", e);
-    // Basit bir alternatif, sadece güvenlik için
-    const match = url.match(/https:\/\/([^.]+)/);
-    return match ? match[1] : '';
-  }
-}
 
 /**
  * API route içinde Supabase istemcisi oluşturur
@@ -69,146 +50,6 @@ export function createRouteClient(request) {
   return { supabase };
 }
 
-/**
- * Session'dan kullanıcı rolünü alır
- * @param {Object} supabase - Supabase istemcisi
- * @param {Object} session - Kullanıcı session bilgisi
- * @returns {Promise<String|null>} Çilingir id'si veya null
- */
-export async function getLocksmithIdFromSession(supabase, session) {
-  try {
-    if (!session || !session.user) return null;
-
-    // Veritabanından id al
-    const { data: idData, error: idError } = await supabase
-      .from('locksmiths')
-      .select('id')
-      .eq('authId', session.user.id)
-      .single();
-
-    if (idError || !idData) return null;
-
-    return idData.id;
-  } catch (error) {
-    console.error("Çilingir id alınamadı:", error);
-    return null;
-  }
-}
-
-/**
- * Session'dan kullanıcı rolünü alır
- * @param {Object} supabase - Supabase istemcisi
- * @param {Object} session - Kullanıcı session bilgisi
- * @returns {Promise<String|null>} Kullanıcı rolü veya null
- */
-export async function getUserRoleFromSession(supabase, session) {
-  try {
-    if (!session || !session.user) return null;
-
-    // Veritabanından rol bilgisini al
-    const { data: roleData, error: roleError } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', session.user.id)
-      .single();
-
-    if (roleError || !roleData) return null;
-
-    return roleData.role;
-  } catch (error) {
-    console.error("Rol bilgisi alınamadı:", error);
-    return null;
-  }
-}
-
-/**
- * API route'lar için basit yetki kontrolü yapar
- * @param {Request} request - Next.js request nesnesi
- * @param {Array} allowedRoles - İzin verilen roller dizisi
- * @returns {Promise<{error: Object|null, user: Object|null, userRole: string|null, supabase: Object}>}
- */
-export async function checkApiAuth(request, allowedRoles = ['admin', 'cilingir']) {
-  // 1. Supabase istemcisi oluştur
-  const { supabase, response } = createRouteClient(request);
-
-  // 2. Debug için request headers'ı kontrol et
-  const cookieHeader = request.headers.get('cookie');
-  // console.log('API Auth - Cookie Header:', cookieHeader ? 'Mevcut' : 'Yok');
-
-  try {
-    // 3. Oturum kontrolü
-    // console.log('API Auth - Oturum kontrolü yapılıyor...');
-    const { data } = await supabase.auth.getSession();
-
-    // 4. Session kontrol
-    const session = data?.session;
-    // console.log('API Auth - Session:', session ? 'Bulundu' : 'Bulunamadı');
-
-    if (!session || !session.user) {
-      // console.log('API Auth - Oturum bulunamadı veya geçersiz');
-      return {
-        error: NextResponse.json({ error: 'Oturum açmalısınız' }, { status: 401 }),
-        user: null,
-        userRole: null,
-        supabase,
-        response
-      };
-    }
-
-    // 5. Kullanıcı bilgisi log
-    // console.log('API Auth - Kullanıcı ID:', session.user.id);
-    // console.log('API Auth - Kullanıcı Email:', session.user.email);
-
-    // 6. Kullanıcı rolünü kontrol et
-    // console.log('API Auth - Kullanıcı rolü kontrol ediliyor...');
-    const userRole = await getUserRoleFromSession(supabase, session);
-    // console.log('API Auth - Kullanıcı Rolü:', userRole || 'Bulunamadı');
-
-    // 7. Rol yetkisi kontrolü
-    if (!userRole) {
-      // console.log('API Auth - Kullanıcı rolü bulunamadı');
-      return {
-        error: NextResponse.json({ error: 'Kullanıcı rolü bulunamadı' }, { status: 403 }),
-        user: session.user,
-        userRole: null,
-        supabase,
-        response
-      };
-    }
-
-    if (!allowedRoles.includes(userRole)) {
-      // console.log(`API Auth - '${userRole}' rolü erişim için yetkili değil. İzin verilen roller: ${allowedRoles.join(', ')}`);
-      return {
-        error: NextResponse.json({ error: 'Bu API için yetkiniz yok' }, { status: 403 }),
-        user: session.user,
-        userRole,
-        supabase,
-        response
-      };
-    }
-
-    // 8. Başarılı kimlik doğrulama
-    // console.log('API Auth - Kimlik doğrulama başarılı');
-    return {
-      error: null,
-      user: session.user,
-      userRole,
-      supabase,
-      response
-    };
-  } catch (error) {
-    // 9. Hata durumu log
-    // console.error('API Auth - Hata:', error.message);
-    return {
-      error: NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 }),
-      user: null,
-      userRole: null,
-      supabase,
-      response
-    };
-  }
-}
-
 
 
 export async function checkAuth(request) {
@@ -220,6 +61,9 @@ export async function checkAuth(request) {
     const supabaseCookieMatch = cookieHeader && cookieHeader.match(/sb-\w+-auth-token=([^;]+)/);
     const supabaseCookieValue = supabaseCookieMatch ? supabaseCookieMatch[1] : null;
 
+    if (!cookieHeader || !supabaseCookieValue) {
+      return NextResponse.json({ error: 'Oturum bulunamadı' }, { status: 401 });
+    }
 
     let parsedCookieValue = null;
     try {
@@ -232,6 +76,7 @@ export async function checkAuth(request) {
       }
     } catch (e) {
       console.error('Cookie parse hatası:', e);
+      return NextResponse.json({ error: 'Oturum bilgisi geçersiz' }, { status: 401 });
     }
 
     // Özel bir supabase istemcisi oluşturalım
@@ -275,7 +120,6 @@ export async function checkAuth(request) {
       const accessToken = parsedCookieValue[0];
       const refreshToken = parsedCookieValue[1];
 
-
       // Session'ı manuel olarak ayarla
       const { data, error } = await supabase.auth.setSession({
         access_token: accessToken,
@@ -284,38 +128,23 @@ export async function checkAuth(request) {
 
       if (error) {
         console.error('Manuel session ayarlama hatası:', error.message);
+        return NextResponse.json({ error: 'Oturum yenilenemedi' }, { status: 401 });
       }
     }
 
     // Şimdi session'ı al
-    const { data: authData } = await supabase.auth.getSession();
+    const { data: authData, error: sessionError } = await supabase.auth.getSession();
 
-    const session = authData?.session;
+    if (sessionError) {
+      console.error('Session alma hatası:', sessionError);
+      return NextResponse.json({ error: 'Oturum bilgisi alınamadı' }, { status: 401 });
+    }
 
-    // Kullanıcı ID'sini al
-    const userId = session.user.id;
+    if (!authData?.session?.user) {
+      return NextResponse.json({ error: 'Oturum bulunamadı' }, { status: 401 });
+    }
 
-
-    // // Kullanıcı rolünü kontrol et
-    // const { data: roleData, error: roleError } = await supabase
-    //     .from('user_roles')
-    //     .select('role')
-    //     .eq('user_id', userId)
-    //     .single();
-
-    // if (roleError) {
-    //     return NextResponse.json({ error: 'Rol bilgisi alınamadı' }, { status: 500 });
-    // }
-
-    // if (!roleData) {
-    //     return NextResponse.json({ error: 'Rol kaydınız bulunamadı' }, { status: 403 });
-    // }
-
-    // const userRole = roleData.role;
-
-    // if (userRole !== 'cilingir' && userRole !== 'admin') {
-    //     return NextResponse.json({ error: 'Bu API sadece çilingirler tarafından kullanılabilir' }, { status: 403 });
-    // }
+    const userId = authData.session.user.id;
 
     // Çilingir ID'sini al
     const { data: locksmithData, error: locksmithError } = await supabase
@@ -337,8 +166,6 @@ export async function checkAuth(request) {
     return NextResponse.json({ error: 'Çilingir bilgileriniz bulunamadı' }, { status: 404 });
   }
 }
-
-
 
 export async function checkAdminAuth(request) {
   try {
@@ -816,8 +643,6 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
 
     if (additionalData.reviewId) insertData.reviewid = additionalData.reviewId;
 
-
-    console.log('Loglandı ****');
 
     const { data, error } = await supabase
       .from('user_activity_logs')

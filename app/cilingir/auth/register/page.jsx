@@ -25,7 +25,6 @@ import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import Placeholder from '@tiptap/extension-placeholder';
 import Image from '@tiptap/extension-image';
-import { Instagram } from 'lucide-react';
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../../../../redux/features/authSlice";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../../../components/ui/dialog";
@@ -514,8 +513,6 @@ export default function CilingirKayit() {
     sifre: "",
     sifreTekrari: "",
     isletmeAdi: "",
-    personelSayisi: "1", //Default Dolu
-    maxMusteriLimiti: "5", //Default Dolu
     vergiNo: "", // Opsiyonel
     websiteUrl: "", // Opsiyonel
     tagline: "", // Şirket sloganı
@@ -527,12 +524,6 @@ export default function CilingirKayit() {
     startDate: "",
     hizmetBolgeleri: [],
     hizmetler: [],
-    sosyalMedya: {
-      instagram: "",
-      facebook: "",
-      youtube: "",
-      tiktok: ""
-    },
     termsAccepted: false,
     privacyAccepted: false,
     marketingAccepted: false,
@@ -578,82 +569,6 @@ export default function CilingirKayit() {
     setFormData({
       ...formData,
       [name]: value
-    });
-  };
-
-  const handleSosyalMedyaChange = (e) => {
-    const { name, value } = e.target;
-
-    // Sosyal medya alanı adını parçalama (örn: sosyalMedya.instagram -> instagram)
-    const platform = name.split('.')[1];
-
-    // Hata temizleme
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
-    }
-
-    // URL doğrulama
-    if (value && value.trim() !== '') {
-      // URL formatını doğrula
-      if (!value.startsWith('https://')) {
-        setErrors(prev => ({
-          ...prev,
-          [name]: 'URL https:// ile başlamalıdır'
-        }));
-      }
-      else {
-        // Platform spesifik doğrulama
-        let isValid = true;
-
-        if (platform === 'instagram' && !value.includes('instagram.com')) {
-          isValid = false;
-          setErrors(prev => ({
-            ...prev,
-            [name]: 'Geçerli bir Instagram URL\'i girin'
-          }));
-        }
-        else if (platform === 'facebook' && !value.includes('facebook.com')) {
-          isValid = false;
-          setErrors(prev => ({
-            ...prev,
-            [name]: 'Geçerli bir Facebook URL\'i girin'
-          }));
-        }
-        else if (platform === 'youtube' && !value.includes('youtube.com')) {
-          isValid = false;
-          setErrors(prev => ({
-            ...prev,
-            [name]: 'Geçerli bir YouTube URL\'i girin'
-          }));
-        }
-        else if (platform === 'tiktok' && !value.includes('tiktok.com')) {
-          isValid = false;
-          setErrors(prev => ({
-            ...prev,
-            [name]: 'Geçerli bir TikTok URL\'i girin'
-          }));
-        }
-
-        if (isValid) {
-          try {
-            new URL(value); // URL geçerli mi kontrol et
-          } catch (err) {
-            setErrors(prev => ({
-              ...prev,
-              [name]: 'Geçerli bir URL formatı değil'
-            }));
-          }
-        }
-      }
-    }
-
-    // Güncelleme
-    setFormData({
-      ...formData,
-      sosyalMedya: {
-        ...formData.sosyalMedya,
-        [platform]: value
-      }
     });
   };
 
@@ -1154,33 +1069,6 @@ export default function CilingirKayit() {
         newErrors.acikAdres = 'Açık adres alanı zorunludur';
         return 'Açık adres alanı zorunludur';
       }
-
-      // Sosyal medya URL'lerini doğrula (boş olan URL'leri atla)
-      const validateSocialMediaURL = (url, platform, fieldName) => {
-        if (url && url.trim() !== '') {
-          if (!url.startsWith('https://')) {
-            newErrors[fieldName] = 'URL https:// ile başlamalıdır';
-            return 'URL https:// ile başlamalıdır';
-          }
-          else if (!url.includes(`${platform}.com`)) {
-            newErrors[fieldName] = `Geçerli bir ${platform} URL'i girin`;
-            return `Geçerli bir ${platform} URL'i girin`;
-          }
-          else {
-            try {
-              new URL(url);
-            } catch (err) {
-              newErrors[fieldName] = 'Geçerli bir URL formatı değil';
-              return 'Geçerli bir URL formatı değil';
-            }
-          }
-        }
-      };
-
-      validateSocialMediaURL(formData.sosyalMedya.instagram, 'instagram', 'sosyalMedya.instagram');
-      validateSocialMediaURL(formData.sosyalMedya.facebook, 'facebook', 'sosyalMedya.facebook');
-      validateSocialMediaURL(formData.sosyalMedya.youtube, 'youtube', 'sosyalMedya.youtube');
-      validateSocialMediaURL(formData.sosyalMedya.tiktok, 'tiktok', 'sosyalMedya.tiktok');
     }
 
     // Adım 3: Hizmet bölgeleri doğrulaması
@@ -1394,7 +1282,6 @@ export default function CilingirKayit() {
         tagline: formData.tagline,
         email: formData.email,
         phonenumber: formData.telefon,
-        customerlimitperhour: formData.maxMusteriLimiti,
         profileimageurl: null,
         isverified: false,
         isactive: false,
@@ -1404,10 +1291,6 @@ export default function CilingirKayit() {
         taxnumber: formData.vergiNo || null,
         fulladdress: formData.acikAdres,
         abouttext: formData.hakkinda,
-        instagram_url: formData.sosyalMedya.instagram || null,
-        facebook_url: formData.sosyalMedya.facebook || null,
-        tiktok_url: formData.sosyalMedya.tiktok || null,
-        youtube_url: formData.sosyalMedya.youtube || null,
         websiteurl: formData.websiteUrl || null,
         startdate: `${formData.startDate}-01-01`,
       }
@@ -1874,29 +1757,6 @@ export default function CilingirKayit() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Personel Sayısı</label>
-                      <Input
-                        name="personelSayisi"
-                        value={formData.personelSayisi}
-                        onChange={handleChange}
-                        placeholder="Örn: 2"
-                        type="number"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Bir Saatte max Kaç Müşteriye Hizmet Verebilirsiniz?</label>
-                      <Input
-                        name="maxMusteriLimiti"
-                        value={formData.maxMusteriLimiti}
-                        onChange={handleChange}
-                        placeholder="Örn: 5"
-                        type="number"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="mb-4">
                       <label
                         htmlFor="il"
@@ -2038,118 +1898,6 @@ export default function CilingirKayit() {
                       ))}
                     </div>
                   </div>
-
-                  {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    // Sosyal Medya Linkleri 
-                    <div className="md:col-span-2 mt-4">
-                      <h3 className="text-lg font-medium mb-3">Sosyal Medya Hesaplarınız</h3>
-                      <p className="text-sm text-gray-500 mb-4">
-                        İşletmenizin sosyal medya hesaplarını ekleyebilirsiniz. Bu alanlar opsiyoneldir.
-                      </p>
-                    </div>
-
-                    <div className="mb-4">
-                      <div className="flex items-center mb-4">
-                        <Instagram className="h-6 w-6 text-pink-600 mr-2" />
-                        <label
-                          htmlFor="instagram"
-                          className="block text-sm font-medium text-gray-700 mb-1">
-                          Instagram Linki
-                        </label>
-                      </div>
-                      <input
-                        type="text"
-                        id="instagram"
-                        name="sosyalMedya.instagram"
-                        value={formData.sosyalMedya.instagram}
-                        onChange={handleSosyalMedyaChange}
-                        placeholder="https://www.instagram.com/kullaniciadi"
-                        className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                        ${errors['sosyalMedya.instagram'] ? 'border-red-500' : 'border-gray-300'}`}
-                      />
-                      {errors['sosyalMedya.instagram'] && (
-                        <p className="mt-1 text-sm text-red-600">{errors['sosyalMedya.instagram']}</p>
-                      )}
-                    </div>
-
-                    <div className="mb-4">
-                      <div className="flex items-center mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                        </svg>
-                        <label
-                          htmlFor="facebook"
-                          className="block text-sm font-medium text-gray-700 mb-1">
-                          Facebook Linki
-                        </label>
-                      </div>
-                      <input
-                        type="text"
-                        id="facebook"
-                        name="sosyalMedya.facebook"
-                        value={formData.sosyalMedya.facebook}
-                        onChange={handleSosyalMedyaChange}
-                        placeholder="https://www.facebook.com/sayfaadi"
-                        className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                        ${errors['sosyalMedya.facebook'] ? 'border-red-500' : 'border-gray-300'}`}
-                      />
-                      {errors['sosyalMedya.facebook'] && (
-                        <p className="mt-1 text-sm text-red-600">{errors['sosyalMedya.facebook']}</p>
-                      )}
-                    </div>
-
-                    <div className="mb-4">
-                      <div className="flex items-center mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                        </svg>
-                        <label
-                          htmlFor="youtube"
-                          className="block text-sm font-medium text-gray-700 mb-1">
-                          YouTube Linki
-                        </label>
-                      </div>
-                      <input
-                        type="text"
-                        id="youtube"
-                        name="sosyalMedya.youtube"
-                        value={formData.sosyalMedya.youtube}
-                        onChange={handleSosyalMedyaChange}
-                        placeholder="https://www.youtube.com/c/kanaladi"
-                        className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                        ${errors['sosyalMedya.youtube'] ? 'border-red-500' : 'border-gray-300'}`}
-                      />
-                      {errors['sosyalMedya.youtube'] && (
-                        <p className="mt-1 text-sm text-red-600">{errors['sosyalMedya.youtube']}</p>
-                      )}
-                    </div>
-
-                    <div className="mb-4">
-                      <div className="flex items-center mb-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-black mr-2" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
-                        </svg>
-                        <label
-                          htmlFor="tiktok"
-                          className="block text-sm font-medium text-gray-700 mb-1">
-                          TikTok Linki
-                        </label>
-                      </div>
-                      <input
-                        type="text"
-                        id="tiktok"
-                        name="sosyalMedya.tiktok"
-                        value={formData.sosyalMedya.tiktok}
-                        onChange={handleSosyalMedyaChange}
-                        placeholder="https://www.tiktok.com/@kullaniciadi"
-                        className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm
-                        ${errors['sosyalMedya.tiktok'] ? 'border-red-500' : 'border-gray-300'}`}
-                      />
-                      {errors['sosyalMedya.tiktok'] && (
-                        <p className="mt-1 text-sm text-red-600">{errors['sosyalMedya.tiktok']}</p>
-                      )}
-                    </div>
-                  </div> */}
 
                   <div className="flex justify-between mt-8">
                     <Button type="button" variant="outline" onClick={prevStep}>Geri</Button>

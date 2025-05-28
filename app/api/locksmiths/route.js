@@ -235,7 +235,7 @@ export async function GET(request) {
                 id, 
                 businessname,
                 fullname,
-                locksmith_details: locksmith_details(fulladdress,postal_code,facebook_url,instagram_url,youtube_url,tiktok_url,lat,lng,startdate),
+                locksmith_details: locksmith_details(fulladdress,postal_code,lat,lng,startdate),
                 locksmith_working_hours: locksmith_working_hours(dayofweek,is24hopen,isworking,opentime,closetime),
                 phonenumber,
                 whatsappnumber,
@@ -291,12 +291,6 @@ export async function GET(request) {
             locksmith_districts: item.locksmith_districts,
             workingHours: item.locksmith_working_hours,
             foundingDate: item.locksmith_details.startdate,
-            socialProfiles: {
-                facebook: item.locksmith_details.facebook_url,
-                instagram: item.locksmith_details.instagram_url,
-                youtube: item.locksmith_details.youtube_url,
-                tiktok: item.locksmith_details.tiktok_url
-            },
             serviceList: item.locksmith_services?.map(service => ({
                 name: service.name,
                 price1: {
