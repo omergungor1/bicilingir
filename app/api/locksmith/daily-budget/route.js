@@ -35,11 +35,6 @@ export async function GET(request) {
 }
 
 export async function PUT(request) {
-    console.log('PUT request received at /api/locksmith/daily-budget');
-    return NextResponse.json(
-        { message: 'başarıyla güncellendi mi?' },
-        { status: 200 }
-    );
     try {
         // CORS middleware'ini çalıştır
         console.log('Running CORS middleware...');
