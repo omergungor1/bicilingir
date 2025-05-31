@@ -1,18 +1,28 @@
 import { NextResponse } from 'next/server';
 import { getLocksmithId } from '../../utils';
 
-export async function PUT(request) {
-    const headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'PUT, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Auth-Token',
-    };
+// CORS headers tanımı
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Auth-Token, x-auth-token',
+    'Access-Control-Max-Age': '86400',
+};
 
+// OPTIONS metodu için handler
+export async function OPTIONS() {
+    return NextResponse.json({}, { headers: corsHeaders });
+}
+
+export async function PUT(request) {
     try {
         const { locksmithId, supabase } = await getLocksmithId(request);
 
         if (!locksmithId) {
-            return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400, headers });
+            return NextResponse.json(
+                { error: 'Çilingir ID\'si gerekli' },
+                { status: 400, headers: corsHeaders }
+            );
         }
 
         const { daily_spent_limit } = await request.json();
@@ -21,7 +31,7 @@ export async function PUT(request) {
         if (typeof daily_spent_limit !== 'number' || daily_spent_limit < 0) {
             return NextResponse.json(
                 { error: 'Geçersiz günlük bütçe değeri' },
-                { status: 400, headers }
+                { status: 400, headers: corsHeaders }
             );
         }
 
@@ -36,30 +46,25 @@ export async function PUT(request) {
             console.error('Günlük bütçe güncelleme hatası:', error);
             return NextResponse.json(
                 { error: 'Günlük bütçe güncellenirken bir hata oluştu' },
-                { status: 500, headers }
+                { status: 500, headers: corsHeaders }
             );
         }
 
         return NextResponse.json({
             message: 'Günlük bütçe başarıyla güncellendi',
             data: data[0]
-        });
+        }, { headers: corsHeaders });
 
     } catch (error) {
         console.error('Günlük bütçe güncelleme hatası:', error);
         return NextResponse.json(
             { error: 'Günlük bütçe güncellenirken bir hata oluştu' },
-            { status: 500, headers }
+            { status: 500, headers: corsHeaders }
         );
     }
 }
 
-export async function OPTIONS(request) {
-    return new Response(null, {
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'PUT, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Auth-Token',
-        }
-    });
-} 
+// Runtime yapılandırması
+export const config = {
+    runtime: 'nodejs',
+}; 
