@@ -794,15 +794,18 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
 
 export async function getLocksmithId(request) {
   try {
-    // Bearer token'ı al
-    const authHeader = request.headers.get('authorization');
+    // x-auth-token'ı al, yoksa diğer alternatiflere bak
+    const authHeader = request.headers.get('x-auth-token') ||
+      request.headers.get('authorization') ||
+      request.headers.get('Authorization') ||
+      request.headers.get('token');
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Yetkilendirme başlığı bulunamadı' }, { status: 401 });
+    if (!authHeader) {
+      return { error: 'Yetkilendirme başlığı bulunamadı', status: 401 };
     }
 
-    // Token'ı ayıkla
-    const token = authHeader.split(' ')[1];
+    // Token'ı Bearer prefix'i ile veya direkt olarak kabul et
+    const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
 
     // Özel bir supabase istemcisi oluştur
     const supabase = createServerClient(
@@ -833,11 +836,11 @@ export async function getLocksmithId(request) {
 
     if (sessionError) {
       console.error('Session hatası:', sessionError);
-      return NextResponse.json({ error: 'Geçersiz token' }, { status: 401 });
+      return { error: 'Geçersiz token', status: 401 };
     }
 
     if (!user) {
-      return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 401 });
+      return { error: 'Kullanıcı bulunamadı', status: 401 };
     }
 
     const userId = user.id;
@@ -851,7 +854,7 @@ export async function getLocksmithId(request) {
 
     if (locksmithError) {
       console.error('Çilingir ID alınamadı:', locksmithError);
-      return NextResponse.json({ error: 'Çilingir bilgileriniz bulunamadı' }, { status: 404 });
+      return { error: 'Çilingir bilgileriniz bulunamadı', status: 404 };
     }
 
     const locksmithId = locksmithData?.id || null;
@@ -859,6 +862,6 @@ export async function getLocksmithId(request) {
     return { locksmithId, supabase };
   } catch (error) {
     console.error('Çilingir ID alınamadı:', error);
-    return NextResponse.json({ error: 'Çilingir bilgileriniz bulunamadı' }, { status: 404 });
+    return { error: 'Çilingir bilgileriniz bulunamadı', status: 404 };
   }
 }

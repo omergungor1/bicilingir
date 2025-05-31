@@ -166,19 +166,11 @@ export async function middleware(req) {
 
     // API Yetkilendirme Kontrolü - Bearer Token
     if (pathname.startsWith('/api/locksmith/')) {
-      const authHeader = req.headers.get('authorization') ||
+      // Öncelikle x-auth-token'ı kontrol et, yoksa diğer alternatiflere bak
+      const authHeader = req.headers.get('x-auth-token') ||
+        req.headers.get('authorization') ||
         req.headers.get('Authorization') ||
-        req.headers.get('x-auth-token') ||
-        req.headers.get('x-access-token') ||
         req.headers.get('token');
-
-      console.log('Trying to find token in headers:');
-      console.log('authorization:', req.headers.get('authorization'));
-      console.log('Authorization:', req.headers.get('Authorization'));
-      console.log('x-auth-token:', req.headers.get('x-auth-token'));
-      console.log('x-access-token:', req.headers.get('x-access-token'));
-      console.log('token:', req.headers.get('token'));
-      console.log('All Headers:', Object.fromEntries(req.headers.entries()));
 
       if (!authHeader) {
         return NextResponse.json({ error: 'Yetkilendirme başlığı bulunamadı' }, {
