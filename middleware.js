@@ -116,6 +116,10 @@ setInterval(() => {
 }, 5 * 60 * 1000); // Her 5 dakikada bir temizlik
 
 export async function middleware(req) {
+
+  console.log(req);
+  console.log('test');
+  return NextResponse.next();
   // CORS Headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
