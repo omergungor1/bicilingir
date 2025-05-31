@@ -116,11 +116,16 @@ setInterval(() => {
 }, 5 * 60 * 1000); // Her 5 dakikada bir temizlik
 
 export async function middleware(req) {
+  // İstek detaylarını logla
+  console.log('Request Method:', req.method);
+  console.log('Request Path:', req.nextUrl.pathname);
+  console.log('Request Headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
+
   // CORS Headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Auth-Token, X-Requested-With, x-auth-token',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Auth-Token, x-auth-token',
     'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Max-Age': '86400',
     'Access-Control-Expose-Headers': 'Authorization, X-Auth-Token'
@@ -128,7 +133,29 @@ export async function middleware(req) {
 
   // OPTIONS isteklerini yanıtla
   if (req.method === 'OPTIONS') {
+    console.log('OPTIONS request received');
     return NextResponse.json({}, { headers });
+  }
+
+  // POST/PUT istekleri için özel kontrol
+  if ((req.method === 'POST' || req.method === 'PUT') && req.nextUrl.pathname.startsWith('/api/')) {
+    console.log('POST/PUT request to API endpoint');
+
+    // İsteğin body'sini loglamaya çalış
+    try {
+      const clonedReq = req.clone();
+      const body = await clonedReq.text();
+      console.log('Request Body:', body);
+    } catch (error) {
+      console.log('Body could not be read:', error.message);
+    }
+
+    const res = NextResponse.next();
+    // CORS headers'ı ekle
+    Object.entries(headers).forEach(([key, value]) => {
+      res.headers.set(key, value);
+    });
+    return res;
   }
 
   const ip = req.headers.get('x-forwarded-for') || req.ip || 'unknown';
@@ -142,10 +169,18 @@ export async function middleware(req) {
 
   // API istekleri için daha sıkı limitler uygula
   if (pathname.startsWith('/api/')) {
+    console.log('API request received:', {
+      method: req.method,
+      path: pathname,
+      ip: ip,
+      userAgent: userAgent
+    });
+
     // Genel API limiti (dakikada 100 istek)
     const { limited, remaining } = checkIPRateLimit(ip, 100, 60 * 1000, userAgent);
 
     if (limited) {
+      console.log('Rate limit exceeded for IP:', ip);
       return NextResponse.json(
         { error: 'Çok fazla istek gönderdiniz. Lütfen daha sonra tekrar deneyin.' },
         {
@@ -163,11 +198,15 @@ export async function middleware(req) {
 
     // API Yetkilendirme Kontrolü - Bearer Token
     if (pathname.startsWith('/api/locksmith/')) {
+      console.log('Locksmith API request, checking auth...');
+
       // Öncelikle x-auth-token'ı kontrol et, yoksa diğer alternatiflere bak
       const authHeader = req.headers.get('x-auth-token') ||
         req.headers.get('authorization') ||
         req.headers.get('Authorization') ||
         req.headers.get('token');
+
+      console.log('Auth header found:', authHeader ? 'Yes' : 'No');
 
       if (!authHeader) {
         return NextResponse.json({ error: 'Yetkilendirme başlığı bulunamadı' }, {
