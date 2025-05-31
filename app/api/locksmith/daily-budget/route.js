@@ -3,7 +3,6 @@ import { getLocksmithId } from '../../utils';
 
 export async function PUT(request) {
     try {
-
         const { locksmithId, supabase } = await getLocksmithId(request);
 
         if (!locksmithId) {
@@ -11,9 +10,6 @@ export async function PUT(request) {
         }
 
         const { daily_spent_limit } = await request.json();
-
-        console.log(daily_spent_limit);
-        console.log(typeof daily_spent_limit);
 
         // Günlük bütçe değeri kontrolü
         if (typeof daily_spent_limit !== 'number' || daily_spent_limit < 0) {

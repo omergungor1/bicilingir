@@ -120,14 +120,11 @@ export async function middleware(req) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Auth-Token, X-Requested-With, x-auth-token',
     'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Expose-Headers': 'Authorization'
+    'Access-Control-Max-Age': '86400',
+    'Access-Control-Expose-Headers': 'Authorization, X-Auth-Token'
   };
-
-  console.log('Req Start');
-  console.log(req);
-  console.log('Req End');
 
   // OPTIONS isteklerini yanıtla
   if (req.method === 'OPTIONS') {
