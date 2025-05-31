@@ -173,15 +173,16 @@ export async function middleware(req) {
 
       try {
         // Supabase istemcisi oluştur
+        const res = NextResponse.next();
         const supabase = createMiddlewareClient({
           req,
-          res: NextResponse.next()
+          res
         });
 
         // Token ile kullanıcı bilgisini al
-        const { data, error } = await supabase.auth.getUser(token);
+        const { data: { user }, error } = await supabase.auth.getUser(token);
 
-        if (error || !data.user) {
+        if (error || !user) {
           console.error('Token doğrulama hatası:', error?.message);
           return NextResponse.json({ error: 'Geçersiz token' }, {
             status: 401,
@@ -189,51 +190,10 @@ export async function middleware(req) {
           });
         }
 
-        const user = data.user;
-
-        // Kullanıcı rolünü kontrol et
-        const { data: roleData, error: roleError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single();
-
-        if (roleError || !roleData) {
-          console.error('Rol bilgisi alınamadı:', roleError?.message);
-          return NextResponse.json({ error: 'Rol bilgisi alınamadı' }, {
-            status: 500,
-            headers
-          });
-        }
-
-        if (roleData.role !== 'cilingir' && roleData.role !== 'admin') {
-          return NextResponse.json({ error: 'Bu API sadece çilingirler tarafından kullanılabilir' }, {
-            status: 403,
-            headers
-          });
-        }
-
-        // Rate limit kontrolü - kullanıcı bazlı
-        const { limited: userLimited } = checkTokenRateLimit(user.id, 300, 60 * 1000, userAgent);
-        if (userLimited) {
-          return NextResponse.json(
-            { error: 'Kullanıcı bazlı istek limitiniz aşıldı. Lütfen daha sonra tekrar deneyin.' },
-            {
-              status: 429,
-              headers
-            }
-          );
-        }
-
-        const response = NextResponse.next();
-        // CORS headerlarını ekle
-        Object.entries(headers).forEach(([key, value]) => {
-          response.headers.set(key, value);
-        });
-
-        return response;
+        // Token geçerliyse isteği devam ettir
+        return res;
       } catch (error) {
-        console.error('Middleware hatası:', error?.message);
+        console.error('Middleware token kontrolü hatası:', error);
         return NextResponse.json({ error: 'Token doğrulama hatası' }, {
           status: 401,
           headers
