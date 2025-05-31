@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { checkAuth } from '../../../utils';
+import { getLocksmithId } from '../../../utils';
 
 export async function GET(request) {
   try {
-    const { locksmithId, supabase } = await checkAuth(request);
+    const { locksmithId, supabase } = await getLocksmithId(request);
 
     if (!locksmithId) {
       return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
@@ -35,14 +35,15 @@ export async function GET(request) {
 
 export async function PUT(request) {
   try {
-    const { locksmithId, supabase } = await checkAuth(request);
+    const { locksmithId, supabase } = await getLocksmithId(request);
 
     if (!locksmithId) {
       return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
     }
 
     // Gelen JSON verisini analiz et
-    const updatedWorkingHours = await request.json();
+    const data = await request.json();
+    const updatedWorkingHours = data.updatedWorkingHours;
 
     if (!Array.isArray(updatedWorkingHours)) {
       return NextResponse.json({ error: 'Geçersiz veri formatı' }, { status: 400 });
@@ -86,9 +87,7 @@ export async function PUT(request) {
     // Tüm güncellemeleri tamamla
     await Promise.all(updatePromises);
 
-    return NextResponse.json({
-      message: 'Çalışma saatleri başarıyla güncellendi'
-    });
+    return NextResponse.json({ message: 'Çalışma saatleri başarıyla güncellendi' }, { status: 200 });
   } catch (error) {
     console.error('Çalışma saatleri güncellenirken bir hata oluştu:', error);
     return NextResponse.json({

@@ -1,117 +1,181 @@
 import { NextResponse } from 'next/server';
-import { checkAuth } from '../../../utils';
+import { getLocksmithId } from '../../../utils';
 
 const PAGE_SIZE = 10;
 
+const getCount = async (type, locksmithId, startDate, endDate, period, supabase) => {
+  let query = supabase
+    .from('user_activity_logs')
+    .select('*', { count: 'exact', head: true }) // sadece sayım
+    .eq('locksmithid', locksmithId)
+    .eq('activitytype', type)
+
+  if (period !== 'all') {
+    query = query.gte('createdat', startDate.toISOString())
+      .lte('createdat', endDate.toISOString());
+  }
+
+  const { count } = await query;
+
+  return count || 0;
+};
+
 export async function GET(request) {
   try {
-    console.log('locksmith/dashboard/activity/route.js');
-    console.log(request);
 
-    const { locksmithId, supabase } = await checkAuth(request);
+    // Bearer token ile auth kontrolü
+    const { locksmithId, supabase } = await getLocksmithId(request);
 
     if (!locksmithId) {
-      return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
+      return NextResponse.json({ error: 'Çilingir bilgisi bulunamadı' }, { status: 404 });
     }
 
-    // URL'den period ve locksmithId parametrelerini al
-    const period = request.nextUrl.searchParams.get('period') || 'today';
-    const page = request.nextUrl.searchParams.get('page') || 1;
+    // URL'den period ve page parametrelerini al
+    const { searchParams } = new URL(request.url);
+    const period = searchParams.get('period') || 'today';
+    const page = parseInt(searchParams.get('page')) || 1;
+    const type = searchParams.get('type') || 'all';
 
+    // Tarih aralığını hesapla
+    let startDate = new Date();
+    let endDate = new Date();
 
-    //periods: today, yesterday, last7days, last30days, all
+    // UTC'ye çevir
+    startDate.setMinutes(startDate.getMinutes() - startDate.getTimezoneOffset());
+    endDate.setMinutes(endDate.getMinutes() - endDate.getTimezoneOffset());
 
-    const start = (page - 1) * PAGE_SIZE;
-    const end = start + PAGE_SIZE - 1;
+    switch (period) {
+      case 'today':
+        startDate.setUTCHours(0, 0, 0, 0);
+        endDate.setUTCHours(23, 59, 59, 999);
+        break;
+      case 'yesterday':
+        startDate.setUTCDate(startDate.getUTCDate() - 1);
+        startDate.setUTCHours(0, 0, 0, 0);
+        endDate = new Date(startDate);
+        endDate.setUTCHours(23, 59, 59, 999);
+        break;
+      case 'last7days':
+        startDate.setUTCDate(startDate.getUTCDate() - 7);
+        startDate.setUTCHours(0, 0, 0, 0);
+        endDate.setUTCHours(23, 59, 59, 999);
+        break;
+      case 'last30days':
+        startDate.setUTCMonth(startDate.getUTCMonth() - 1);
+        startDate.setUTCHours(0, 0, 0, 0);
+        endDate.setUTCHours(23, 59, 59, 999);
+        break;
+      default:
+        startDate.setUTCHours(0, 0, 0, 0);
+        endDate.setUTCHours(23, 59, 59, 999);
+    }
 
-    //calculate start date
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - (period === 'today' ? 0 : period === 'yesterday' ? 1 : period === 'last7days' ? 7 : period === 'last30days' ? 30 : period === 'all' ? 365 : 0));
-    const startDateString = startDate.toISOString().split('T')[0];
-
+    // Aktiviteleri getir
     let query = supabase
       .from('user_activity_logs')
-      .select('activitytype,createdat, districts(name), services(name), reviews(rating,comment)')
-      .eq('locksmithid', locksmithId);
+      .select('*', { count: 'exact' })
+      .eq('locksmithid', locksmithId)
+      .order('createdat', { ascending: false })
+      .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
 
     if (period !== 'all') {
-      query = query.gte('createdat', startDateString);
+      query = query.gte('createdat', startDate.toISOString())
+        .lte('createdat', endDate.toISOString());
     }
 
-    query = query.order('createdat', { ascending: false });
+    if (type !== 'all') {
+      query = query.eq('activitytype', type);
+    }
 
-    const { data, error } = await query.range(start, end);
+    const { data: activities, count, error } = await query;
 
     if (error) {
-      console.error('Activity logs error:', error);
-      return NextResponse.json({ error: 'Activity logs error' }, { status: 500 });
+      console.error('Aktivite verisi alınamadı:', error);
+      return NextResponse.json({ error: 'Aktivite verisi alınamadı' }, { status: 500 });
     }
 
-    let query2 = supabase
-      .from('user_activity_logs')
-      .select('*', { count: 'exact' })
-      .eq('locksmithid', locksmithId);
+    // Toplam sayfa sayısını hesapla
+    const totalPages = Math.ceil(count / PAGE_SIZE);
 
-    if (period !== 'all') {
-      query2 = query2.gte('createdat', startDateString);
-    }
-
-    const { data: totalRecords, error: totalError } = await query2;
-
-    if (totalError) {
-      console.error('Total records error:', totalError);
-      return NextResponse.json({ error: 'Total records error' }, { status: 500 });
-    }
-
-    const total = totalRecords.length;
-
-    //Stats için tüm aktiviteleri çekiyor. Verim için sadece countlarını alınmalı.
-    //Yüzde hesaplaması eksik.
-    //DAHA SONRA GÜNCELLENECEK
 
     const formattedStats = {
-      see: 0,
-      see_percent: 0,
-      call: 0,
-      call_percent: 0,
-      visit: 0,
-      visit_percent: 0,
-      review: 0,
-      review_percent: 0,
-      whatsapp: 0,
-      whatsapp_percent: 0,
-      website_visit: 0,
-      website_visit_percent: 0,
+      see: await getCount('locksmith_list_view', locksmithId, startDate, endDate, period, supabase),
+      call: await getCount('call_request', locksmithId, startDate, endDate, period, supabase),
+      visit: await getCount('locksmith_detail_view', locksmithId, startDate, endDate, period, supabase),
+      whatsapp: await getCount('whatsapp_message', locksmithId, startDate, endDate, period, supabase),
     };
 
-    totalRecords.map(item => {
-      if (item.activitytype == 'locksmith_list_view') {
-        formattedStats.see++;
-      }
-      if (item.activitytype == 'locksmith_detail_view') {
-        formattedStats.visit++;
-      }
-      if (item.activitytype == 'call_request') {
-        formattedStats.call++;
-      }
-      if (item.activitytype == 'review_submit') {
-        formattedStats.review++;
-      }
-      if (item.activitytype == 'whatsapp_call') {
-        formattedStats.whatsapp++;
-      }
-      if (item.activitytype == 'website_visit') {
-        formattedStats.website_visit++;
-      }
-    });
+    // const { data: statsData, error: statsError } = await supabase
+    // .from('user_activity_logs')
+    // .select('activitytype', { count: 'exact' }) // sadece gerekli alanı çekiyoruz
+    // .eq('locksmithid', locksmithId)
+    // .gte('createdat', startDate.toISOString())
+    // .lte('createdat', endDate.toISOString())
+    // .in('activitytype', [
+    //   'locksmith_list_view',
+    //   'call_request',
+    //   'whatsapp_message',
+    //   'locksmith_detail_view',
+    // ]);
+
+    // if (statsError) {
+    //   console.error('Stats error:', statsError);
+    // }
+
+    // console.log(statsData);
+
+
+    // if (statsData) {
+    //   for (const item of statsData) {
+    //     switch (item.activitytype) {
+    //       case 'locksmith_list_view':
+    //         formattedStats.see++;
+    //         break;
+    //       case 'call_request':
+    //         formattedStats.call++;
+    //         break;
+    //       case 'whatsapp_message':
+    //         formattedStats.whatsapp++;
+    //         break;
+    //       case 'locksmith_detail_view':
+    //         formattedStats.visit++;
+    //         break;
+    //     }
+    //   }
+    // }
+
+
+    // activities.map(item => {
+    //   if (item.activitytype == 'locksmith_list_view') {
+    //     formattedStats.see++;
+    //   }
+    //   if (item.activitytype == 'locksmith_detail_view') {
+    //     formattedStats.visit++;
+    //   }
+    //   if (item.activitytype == 'call_request') {
+    //     formattedStats.call++;
+    //   }
+    //   if (item.activitytype == 'review_submit') {
+    //     formattedStats.review++;
+    //   }
+    //   if (item.activitytype == 'whatsapp_call') {
+    //     formattedStats.whatsapp++;
+    //   }
+    //   if (item.activitytype == 'website_visit') {
+    //     formattedStats.website_visit++;
+    //   }
+    // });
 
     return NextResponse.json({
       success: true,
       stats: formattedStats,
-      list: data,
-      totalPages: Math.ceil(total / PAGE_SIZE),
-      currentPage: page,
-      totalRecords: total
+      activities,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems: count,
+        hasMore: page < totalPages
+      }
     });
   } catch (error) {
     console.error("API hatası:", error);

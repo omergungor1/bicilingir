@@ -523,15 +523,10 @@ function CilingirPanelContent() {
   };
 
 
-  const handleDistrictActiveChange = async (districtId, type, isActive) => {
+  const handleDistrictActiveChange = async (districtId, isActive) => {
     setServiceDistricts(prev => prev.map(district =>
       district.id === districtId
-        ? isActive
-          ? { ...district, isDayActive: true, isNightActive: true }
-          : {
-            ...district,
-            [type === 'day' ? 'isDayActive' : 'isNightActive']: false
-          }
+        ? { ...district, isActive }
         : district
     ));
   };
@@ -541,8 +536,7 @@ function CilingirPanelContent() {
     const districtIds = serviceDistricts.map(district => ({
       districtid: district.id,
       provinceid: district.province_id,
-      isdayactive: district.isDayActive || false,
-      isnightactive: district.isNightActive || false
+      isactive: district.isActive || false
     }));
 
     //supabase ile güncelle
@@ -947,7 +941,7 @@ function CilingirPanelContent() {
         }
 
         // İl bilgisi
-        const location = districts.filter(district => district.isDayActive).map(district => district.name).join(', ');
+        const location = districts.filter(district => district.isActive).map(district => district.name).join(', ');
 
         // Seçilen hizmetlerin isimlerini al
         const selectedServices = serviceList.filter(service => service.isactive).map(service => service.name);
@@ -989,7 +983,7 @@ function CilingirPanelContent() {
         }
 
         // İl bilgisi
-        const location = districts.filter(district => district.isDayActive).map(district => district.name).join(', ');
+        const location = districts.filter(district => district.isActive).map(district => district.name).join(', ');
 
         // Seçilen hizmetlerin isimlerini al
         const selectedServices = serviceList.filter(service => service.isactive).map(service => service.name);
@@ -2799,51 +2793,27 @@ function CilingirPanelContent() {
                                   {district.name}
                                 </label>
 
-                                {(!district.isDayActive && !district.isNightActive) && (
+                                {!district.isActive && (
                                   <span className="ml-auto text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-600">Aktif Değil</span>
                                 )}
-
-                                {(district.isDayActive && district.isNightActive) && (
-                                  <span className="ml-auto text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-600">24 Saat Aktif</span>
-                                )}
-
-                                {(district.isDayActive && !district.isNightActive) && (
-                                  <span className="ml-auto text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-600">Gündüz Aktif</span>
-                                )}
-
-                                {(!district.isDayActive && district.isNightActive) && (
-                                  <span className="ml-auto text-xs px-2 py-1 rounded-full bg-indigo-100 text-indigo-600">Gece Aktif</span>
+                                {district.isActive && (
+                                  <span className="ml-auto text-xs px-2 py-1 rounded-full bg-green-200 text-green-600">Aktif</span>
                                 )}
                               </div>
 
                               {/* Gündüz ve Gece Seçenekleri */}
                               <div className="flex flex-col sm:flex-row">
-                                <div className="flex items-center p-4 flex-1 border-b sm:border-b-0 sm:border-r border-gray-100 cursor-pointer" onClick={() => handleDistrictActiveChange(district.id, 'day', !district.isDayActive)}>
+                                <div className="flex items-center p-4 flex-1 border-b sm:border-b-0 sm:border-r border-gray-100 cursor-pointer" onClick={() => handleDistrictActiveChange(district.id, !district.isActive)}>
                                   <div className="flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
                                       <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
                                     </svg>
-                                    <label className="text-md font-medium mr-3 cursor-pointer">Gündüz</label>
+                                    <label className="text-md font-medium mr-3 cursor-pointer">Hizmet Alanı</label>
                                   </div>
                                   <Checkbox
                                     id={`district-day-${district.id}`}
-                                    checked={district.isDayActive || false}
-                                    onCheckedChange={(checked) => handleDistrictActiveChange(district.id, 'day', checked)}
-                                    className="ml-auto h-5 w-5"
-                                  />
-                                </div>
-
-                                <div className="flex items-center p-4 flex-1 cursor-pointer" onClick={() => handleDistrictActiveChange(district.id, 'night', !district.isNightActive)}>
-                                  <div className="flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-600 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                      <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-                                    </svg>
-                                    <label htmlFor={`district-night-${district.id}`} className="text-md font-medium mr-3 cursor-pointer">Gece</label>
-                                  </div>
-                                  <Checkbox
-                                    id={`district-night-${district.id}`}
-                                    checked={district.isNightActive || false}
-                                    onCheckedChange={(checked) => handleDistrictActiveChange(district.id, 'night', checked)}
+                                    checked={district.isActive || false}
+                                    onCheckedChange={(checked) => handleDistrictActiveChange(district.id, checked)}
                                     className="ml-auto h-5 w-5"
                                   />
                                 </div>

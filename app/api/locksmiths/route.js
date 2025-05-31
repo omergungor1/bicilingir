@@ -9,15 +9,6 @@ function createSupabaseClient() {
     return getSupabaseServer();
 }
 
-/**
- * Şu anki saat mesai saati mi yoksa gece saati mi kontrol et
- * @returns {Boolean} Mesai saati içinde mi?
- */
-function isDayTime() {
-    const currentHour = new Date().getHours();
-    // 09:00 - 19:00 arası mesai saati
-    return currentHour >= 9 && currentHour < 19;
-}
 
 /**
  * Şu anki saat belirtilen aralıkta mı kontrol et
@@ -57,9 +48,6 @@ export async function GET(request) {
 
         const count = searchParams.get('count') > 5 ? 2 : searchParams.get('count') || 2;
 
-        // Şu anki saate göre gündüz/gece durumunu kontrol et
-        const isDaytime = isDayTime();
-        const activeTimeField = isDaytime ? 'isdayactive' : 'isnightactive';
 
         // Supabase bağlantısı oluştur
         const supabase = createSupabaseClient();
@@ -115,7 +103,7 @@ export async function GET(request) {
                 .select('locksmithid')
                 .eq('districtid', districtId)
                 .eq('provinceid', cityId)
-                .eq(activeTimeField, true) // Şu anki saate göre aktif çilingirleri getir
+                .eq('isactive', true)
                 .in('locksmithid', locksmithIds);
 
             if (locksmithDistrictsData) {
@@ -225,8 +213,6 @@ export async function GET(request) {
             }
         }
 
-
-        //select locksmithid, districtid,provinceid from locksmith_districts where isdayactive='true'
 
         // Çilingir listesini çek
         let locksmithQuery = supabase

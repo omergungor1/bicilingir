@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { checkAuth } from '../../utils';
+import { getLocksmithId } from '../../utils';
 
 
 // Çilingirin aktif ilçelerini getir
 export async function GET(request) {
   try {
-    const { locksmithId, supabase } = await checkAuth(request);
+    const { locksmithId, supabase } = await getLocksmithId(request);
 
     if (!locksmithId) {
       return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
@@ -14,7 +14,7 @@ export async function GET(request) {
     // Çilingirin aktif ilçelerini getir
     const { data: activeDistrictRecords, error: activeDistrictsError } = await supabase
       .from('locksmith_districts')
-      .select('districtid, isdayactive, isnightactive')
+      .select('districtid, isactive')
       .eq('locksmithid', locksmithId);
 
     if (activeDistrictsError) {
@@ -45,13 +45,12 @@ export async function GET(request) {
       return NextResponse.json({ error: 'İlçeler yüklenirken bir hata oluştu' }, { status: 500 });
     }
 
-    // İlçeleri döngüye al ve gündüz/gece aktiflik durumlarını ekle
+    // İlçeleri döngüye al ve aktiflik durumunu ekle
     districts.forEach(district => {
       const activeRecord = activeDistrictRecords.find(record => record.districtid === district.id);
-      district.isDayActive = activeRecord ? activeRecord.isdayactive || false : false;
-      district.isNightActive = activeRecord ? activeRecord.isnightactive || false : false;
+      district.isActive = activeRecord ? activeRecord.isactive || false : false;
       // Geriye dönük uyumluluk için
-      district.isLocksmithActive = activeRecord ? (activeRecord.isdayactive || activeRecord.isnightactive) : false;
+      district.isLocksmithActive = district.isActive;
     });
 
 
@@ -69,7 +68,7 @@ export async function GET(request) {
 // Çilingirin aktif servislerini güncelle
 export async function PUT(request) {
   try {
-    const { locksmithId, supabase } = await checkAuth(request);
+    const { locksmithId, supabase } = await getLocksmithId(request);
 
     if (!locksmithId) {
       return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
@@ -77,7 +76,41 @@ export async function PUT(request) {
 
     //request body'sini parse et
     const body = await request.json();
-    const districtIds = body.districtIds;
+    const provinceid = body.provinceid;
+    const districtid = body.districtid;
+    const isactive = body.isactive;
+
+    if (isactive) {
+      //insert edilecek
+      const { data: insertData, error: insertError } = await supabase
+        .from('locksmith_districts')
+        .insert({
+          locksmithid: locksmithId,
+          provinceid: provinceid,
+          districtid: districtid,
+          isactive: true
+        });
+
+      if (insertError) {
+        console.error('İlçeler güncellenirken bir hata oluştu:', insertError);
+        return NextResponse.json({ error: 'İlçeler güncellenirken bir hata oluştu' }, { status: 500 });
+      }
+    } else {
+      //mevcut kayıtları sil
+      const { data: deleteData, error: deleteError } = await supabase
+        .from('locksmith_districts')
+        .delete()
+        .eq('locksmithid', locksmithId)
+        .eq('provinceid', provinceid)
+        .eq('districtid', districtid);
+
+      if (deleteError) {
+        console.error('İlçeler silinirken bir hata oluştu:', deleteError);
+        return NextResponse.json({ error: 'İlçeler silinirken bir hata oluştu' }, { status: 500 });
+      }
+    }
+
+    return NextResponse.json({ message: 'İlçeler güncellendi' }, { status: 200 });
 
     //mevcut kayıtları sil
     const { data: deleteData, error: deleteError } = await supabase
@@ -90,16 +123,17 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'İlçeler silinirken bir hata oluştu' }, { status: 500 });
     }
 
-    //en az bir zaman diliminde aktif olan ilçeleri al (gündüz veya gece)
-    const activeDistricts = districtIds.filter(district => district.isdayactive || district.isnightactive);
+    //aktif olan ilçeleri al
+    const activeDistricts = districtIds.filter(district => district.isactive);
+
+    console.log(activeDistricts);
 
     const insertData = activeDistricts.map(district => {
       return {
         locksmithid: locksmithId,
         provinceid: district.provinceid,
         districtid: district.districtid,
-        isdayactive: district.isdayactive || false,
-        isnightactive: district.isnightactive || false
+        isactive: district.isactive || false
       }
     });
 

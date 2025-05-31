@@ -183,8 +183,8 @@ export async function POST(request) {
       locksmithid: locksmithId,
       provinceid: locksmithDistrictsInsertData.provinceid,
       districtid: districtId,
-      isdayactive: true,
-      isnightactive: true
+      isactive: true,
+      createdat: new Date().toISOString()
     }));
 
 

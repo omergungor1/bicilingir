@@ -57,6 +57,7 @@ export async function checkAuth(request) {
     // Request headers'ını ve cookie'yi detaylı inceleyelim
     const cookieHeader = request.headers.get('cookie');
 
+
     // Özellikle supabase auth token cookie'sini izole edelim
     const supabaseCookieMatch = cookieHeader && cookieHeader.match(/sb-\w+-auth-token=([^;]+)/);
     const supabaseCookieValue = supabaseCookieMatch ? supabaseCookieMatch[1] : null;
@@ -788,5 +789,76 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
   } catch (error) {
     console.error('Aktivite kaydetme hatası:', error);
     throw error;
+  }
+}
+
+export async function getLocksmithId(request) {
+  try {
+    // Bearer token'ı al
+    const authHeader = request.headers.get('authorization');
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Yetkilendirme başlığı bulunamadı' }, { status: 401 });
+    }
+
+    // Token'ı ayıkla
+    const token = authHeader.split(' ')[1];
+
+    // Özel bir supabase istemcisi oluştur
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          get: (name) => {
+            return undefined; // API çağrılarında cookie kullanmıyoruz
+          },
+          set: (name, value, options) => {
+            // API çağrılarında cookie set etmiyoruz
+          },
+          remove: (name, options) => {
+            // API çağrılarında cookie silmiyoruz
+          }
+        },
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      }
+    );
+
+    // Token ile kullanıcı bilgisini al
+    const { data: { user }, error: sessionError } = await supabase.auth.getUser(token);
+
+    if (sessionError) {
+      console.error('Session hatası:', sessionError);
+      return NextResponse.json({ error: 'Geçersiz token' }, { status: 401 });
+    }
+
+    if (!user) {
+      return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 401 });
+    }
+
+    const userId = user.id;
+
+    // Çilingir ID'sini al
+    const { data: locksmithData, error: locksmithError } = await supabase
+      .from('locksmiths')
+      .select('id')
+      .eq('authid', userId)
+      .single();
+
+    if (locksmithError) {
+      console.error('Çilingir ID alınamadı:', locksmithError);
+      return NextResponse.json({ error: 'Çilingir bilgileriniz bulunamadı' }, { status: 404 });
+    }
+
+    const locksmithId = locksmithData?.id || null;
+
+    return { locksmithId, supabase };
+  } catch (error) {
+    console.error('Çilingir ID alınamadı:', error);
+    return NextResponse.json({ error: 'Çilingir bilgileriniz bulunamadı' }, { status: 404 });
   }
 }

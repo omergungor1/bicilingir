@@ -128,7 +128,6 @@ export async function middleware(req) {
     return NextResponse.json({}, { headers });
   }
 
-  // Gerçek IP adresini alın (varsa proxy arkasından)
   const ip = req.headers.get('x-forwarded-for') || req.ip || 'unknown';
   const userAgent = req.headers.get('user-agent') || '';
   const pathname = req.nextUrl.pathname;
@@ -159,47 +158,100 @@ export async function middleware(req) {
       );
     }
 
-    // Özel API limitleri
-    // Admin API'leri için daha yüksek limitler
+    // API Yetkilendirme Kontrolü - Bearer Token
+    if (pathname.startsWith('/api/locksmith/')) {
+      const authHeader = req.headers.get('authorization');
+
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return NextResponse.json({ error: 'Yetkilendirme başlığı bulunamadı' }, {
+          status: 401,
+          headers
+        });
+      }
+
+      const token = authHeader.split(' ')[1];
+
+      try {
+        // Supabase istemcisi oluştur
+        const supabase = createMiddlewareClient({
+          req,
+          res: NextResponse.next()
+        });
+
+        // Token ile kullanıcı bilgisini al
+        const { data, error } = await supabase.auth.getUser(token);
+
+        if (error || !data.user) {
+          console.error('Token doğrulama hatası:', error?.message);
+          return NextResponse.json({ error: 'Geçersiz token' }, {
+            status: 401,
+            headers
+          });
+        }
+
+        const user = data.user;
+
+        // Kullanıcı rolünü kontrol et
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+
+        if (roleError || !roleData) {
+          console.error('Rol bilgisi alınamadı:', roleError?.message);
+          return NextResponse.json({ error: 'Rol bilgisi alınamadı' }, {
+            status: 500,
+            headers
+          });
+        }
+
+        if (roleData.role !== 'cilingir' && roleData.role !== 'admin') {
+          return NextResponse.json({ error: 'Bu API sadece çilingirler tarafından kullanılabilir' }, {
+            status: 403,
+            headers
+          });
+        }
+
+        // Rate limit kontrolü - kullanıcı bazlı
+        const { limited: userLimited } = checkTokenRateLimit(user.id, 300, 60 * 1000, userAgent);
+        if (userLimited) {
+          return NextResponse.json(
+            { error: 'Kullanıcı bazlı istek limitiniz aşıldı. Lütfen daha sonra tekrar deneyin.' },
+            {
+              status: 429,
+              headers
+            }
+          );
+        }
+
+        const response = NextResponse.next();
+        // CORS headerlarını ekle
+        Object.entries(headers).forEach(([key, value]) => {
+          response.headers.set(key, value);
+        });
+
+        return response;
+      } catch (error) {
+        console.error('Middleware hatası:', error?.message);
+        return NextResponse.json({ error: 'Token doğrulama hatası' }, {
+          status: 401,
+          headers
+        });
+      }
+    }
+
+    // Admin API'leri için kontrol
     if (pathname.startsWith('/api/admin/')) {
-      const adminLimit = checkIPRateLimit(ip + '-admin', 200, 60 * 1000, userAgent);
-      if (adminLimit.limited) {
-        return NextResponse.json(
-          { error: 'Admin API istek limiti aşıldı. Lütfen daha sonra tekrar deneyin.' },
-          { status: 429 }
-        );
-      }
+      // Admin API kontrollerini burada yapabilirsiniz
+      // Benzer şekilde Bearer token kontrolü eklenebilir
     }
 
-    // Locksmith API'leri için normal limitler
-    else if (pathname.startsWith('/api/locksmith/')) {
-      const locksmithLimit = checkIPRateLimit(ip + '-locksmith', 150, 60 * 1000, userAgent);
-      if (locksmithLimit.limited) {
-        return NextResponse.json(
-          { error: 'Çilingir API istek limiti aşıldı. Lütfen daha sonra tekrar deneyin.' },
-          { status: 429 }
-        );
-      }
-    }
-
-    // Diğer public API'ler için daha düşük limitler
-    else {
-      const publicLimit = checkIPRateLimit(ip + '-public', 50, 60 * 1000 * 2, userAgent);
-      if (publicLimit.limited) {
-        return NextResponse.json(
-          { error: 'Public API istek limiti aşıldı. Lütfen daha sonra tekrar deneyin.' },
-          { status: 429 }
-        );
-      }
-    }
-  }
-
-  // Normal sayfa istekleri için daha gevşek limitler (dakikada 200 istek)
-  else {
-    const { limited } = checkIPRateLimit(ip + '-pages', 200, 60 * 1000, userAgent);
-    if (limited) {
+    // Public API'ler için rate limit
+    const publicLimit = checkIPRateLimit(ip + '-public', 50, 60 * 1000 * 2, userAgent);
+    if (publicLimit.limited) {
       return NextResponse.json(
-        { error: 'Çok fazla istek gönderdiniz. Lütfen daha sonra tekrar deneyin.' },
+        { error: 'Public API istek limiti aşıldı. Lütfen daha sonra tekrar deneyin.' },
         {
           status: 429,
           headers
@@ -208,169 +260,72 @@ export async function middleware(req) {
     }
   }
 
-  // Cookie header'ını kontrol et
-  const cookieHeader = req.headers.get('cookie');
+  // Web sayfaları için cookie bazlı auth kontrolü
+  if (!pathname.startsWith('/api/')) {
+    try {
+      const res = NextResponse.next();
+      const supabase = createMiddlewareClient({ req, res });
+      const { data: { session } } = await supabase.auth.getSession();
 
-  // Önce yeni bir response objesi oluştur
-  const res = NextResponse.next();
+      // Login sayfasına erişim kontrolü - session varsa yönlendir
+      if (session && (pathname === '/cilingir/auth/login' || pathname.startsWith('/cilingir/auth/login'))) {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
 
-  try {
-    // Supabase istemcisi oluştur
-    const supabase = createMiddlewareClient({ req, res });
+        const userRole = roleData?.role;
 
-    // Auth durumunu kontrol et
-    const { data } = await supabase.auth.getSession();
-
-    const session = data?.session;
-
-    // Session varsa token bazlı rate limiting uygula (kullanıcı bazlı)
-    if (session) {
-      const userId = session.user.id;
-      const { limited } = checkTokenRateLimit(userId, 300, 60 * 1000, userAgent); // Oturum açmış kullanıcılar için daha yüksek limit
-
-      if (limited) {
-        return NextResponse.json(
-          { error: 'Kullanıcı bazlı istek limitiniz aşıldı. Lütfen daha sonra tekrar deneyin.' },
-          { status: 429 }
-        );
+        if (userRole === 'admin') {
+          return NextResponse.redirect(new URL('/admin', req.url));
+        } else if (userRole === 'cilingir') {
+          return NextResponse.redirect(new URL('/cilingir', req.url));
+        }
       }
-    }
 
-    // API Yetkilendirme Kontrolü
-    if (pathname.startsWith('/api/locksmith/')) {
-
-      // Oturum kontrolü
+      // Korumalı sayfalara erişim kontrolü
       if (!session) {
-        return NextResponse.json({ error: 'Oturum açmalısınız' }, { status: 401 });
+        if (pathname.startsWith('/admin')) {
+          return NextResponse.redirect(new URL('/cilingir/auth/login', req.url));
+        }
+        if (pathname.startsWith('/cilingir') && !pathname.startsWith('/cilingir/auth')) {
+          return NextResponse.redirect(new URL('/cilingir/auth/login', req.url));
+        }
+      } else {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+
+        const userRole = roleData?.role;
+
+        if (pathname.startsWith('/admin') && userRole !== 'admin') {
+          return NextResponse.redirect(new URL('/cilingir', req.url));
+        }
+
+        if (pathname.startsWith('/cilingir') &&
+          !pathname.startsWith('/cilingir/auth') &&
+          !(userRole === 'cilingir' || userRole === 'admin')) {
+          return NextResponse.redirect(new URL('/', req.url));
+        }
       }
 
-      // Yetki doğrulamasını geçti, API'ye erişim izni ver
-
-      // Cookie'leri yanıta ekle
-      const newResponse = NextResponse.next();
-      // Supabase cookie'lerini koru
-      const supabaseCookies = res.cookies.getAll();
-      for (const cookie of supabaseCookies) {
-        newResponse.cookies.set(cookie.name, cookie.value, cookie);
-      }
-
-      return newResponse;
-    }
-
-    // API Yetkilendirme Kontrolü
-    if (pathname.startsWith('/api/admin/')) {
-      // Oturum kontrolü
-      if (!session) {
-        return NextResponse.json({ error: 'Oturum açmalısınız' }, { status: 401 });
-      }
-
-      // Kullanıcı rolünü kontrol et
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id)
-        .single();
-
-      if (roleError || !roleData) {
-        return NextResponse.json({ error: 'Rol bilgisi alınamadı' }, { status: 500 });
-      }
-
-      const userRole = roleData.role;
-
-      // Admin API'leri sadece admin rollerine açık
-      if (userRole !== 'admin') {
-        return NextResponse.json({ error: 'Bu API sadece adminler tarafından kullanılabilir' }, { status: 403 });
-      }
-
-      // Yetki doğrulamasını geçti, API'ye erişim izni ver
       return res;
-    }
-
-    // Login sayfasına erişim kontrolü - session varsa yönlendir
-    if (session && (pathname === '/cilingir/auth/login' || pathname.startsWith('/cilingir/auth/login'))) {
-      // Kullanıcının rolünü veritabanından al
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id)
-        .single();
-
-      const userRole = roleData?.role;
-
-      if (userRole === 'admin') {
-        return NextResponse.redirect(new URL('/admin', req.url));
-      } else if (userRole === 'cilingir') {
-        return NextResponse.redirect(new URL('/cilingir', req.url));
-      }
-    }
-
-    // Korumalı sayfalara erişim kontrolü
-    if (!session) {
-      // Admin sayfalarına erişim kontrolü
+    } catch (error) {
+      console.error('Web auth hatası:', error);
       if (pathname.startsWith('/admin')) {
         return NextResponse.redirect(new URL('/cilingir/auth/login', req.url));
       }
-
-      // Çilingir sayfalarına erişim kontrolü (login sayfası hariç)
       if (pathname.startsWith('/cilingir') && !pathname.startsWith('/cilingir/auth')) {
         return NextResponse.redirect(new URL('/cilingir/auth/login', req.url));
       }
+      return NextResponse.next();
     }
-    else if (session) {
-      // Kullanıcının rolünü veritabanından al
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id)
-        .single();
-
-      const userRole = roleData?.role;
-
-      // Admin sayfalarına erişim kontrolü
-      if (pathname.startsWith('/admin') && userRole !== 'admin') {
-        return NextResponse.redirect(new URL('/cilingir', req.url));
-      }
-
-      // Çilingir sayfalarına erişim kontrolü (admin ve çilingir rolüne izin ver)
-      if (pathname.startsWith('/cilingir') &&
-        !pathname.startsWith('/cilingir/auth') &&
-        !(userRole === 'cilingir' || userRole === 'admin')) {
-        return NextResponse.redirect(new URL('/', req.url));
-      }
-    }
-
-    // API yanıtlarına CORS header'larını ekle
-    if (pathname.startsWith('/api/')) {
-      Object.entries(headers).forEach(([key, value]) => {
-        res.headers.set(key, value);
-      });
-    }
-
-    return res;
-  } catch (error) {
-    console.error('Middleware hatası:', error);
-
-    // API hata durumları için
-    if (req.nextUrl.pathname.startsWith('/api/')) {
-      return NextResponse.json({ error: 'Sunucu hatası' }, {
-        status: 500,
-        headers
-      });
-    }
-
-    // Hata durumunda güvenli yönlendirme
-    const pathname = req.nextUrl.pathname;
-
-    if (pathname.startsWith('/admin')) {
-      return NextResponse.redirect(new URL('/cilingir/auth/login', req.url));
-    }
-
-    if (pathname.startsWith('/cilingir') && !pathname.startsWith('/cilingir/auth')) {
-      return NextResponse.redirect(new URL('/cilingir/auth/login', req.url));
-    }
-
-    return res;
   }
+
+  return NextResponse.next();
 }
 
 // Tek bir config tanımı

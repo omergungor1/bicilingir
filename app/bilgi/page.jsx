@@ -159,7 +159,7 @@ export default function CilingirlerPage() {
         title="Çilingir Ağımıza Katılın"
         description="Türkiye'nin ilk ve tek çilingir arama platformuna katılarak işinizi büyütün, daha fazla müşteriye ulaşın ve kazancınızı artırın."
       >
-        <div className="container mx-auto text-center flex flex-col items-center">
+        {/* <div className="container mx-auto text-center flex flex-col items-center">
           <div className="flex space-x-3">
             <Link href="/cilingir/auth/login" className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded transition-colors">
               Giriş Yap
@@ -168,7 +168,7 @@ export default function CilingirlerPage() {
               Kayıt Ol
             </Link>
           </div>
-        </div>
+        </div> */}
       </Hero>
 
       {/* Avantajlar Bölümü */}

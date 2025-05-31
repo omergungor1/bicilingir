@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { checkAuth } from '../../../utils';
+import { getLocksmithId } from '../../../utils';
 
 // Supabase storage'a resim yükleme işlemi
 export async function POST(request) {
   try {
-    const { locksmithId, supabase } = await checkAuth(request);
+    const { locksmithId, supabase } = await getLocksmithId(request);
 
     if (!locksmithId) {
       return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
@@ -12,10 +12,11 @@ export async function POST(request) {
 
     // FormData olarak yüklenen dosyayı al
     const formData = await request.formData();
-    const file = formData.get('file');
-    const isProfile = formData.get('isProfile') === 'true';
-    const isMain = formData.get('isMain') === 'true';
-    const displayOrder = parseInt(formData.get('displayOrder') || '0');
+    const file = formData.get('image')
+    // const file = formData.get('file');
+    const isProfile = false; //formData.get('isProfile') === 'true';
+    const isMain = false; //formData.get('isMain') === 'true';
+    const displayOrder = 0; //parseInt(formData.get('displayOrder') || '0');
 
     if (!file) {
       return NextResponse.json({ error: 'Dosya bulunamadı' }, { status: 400 });
@@ -114,7 +115,7 @@ export async function POST(request) {
 // İşletme resimlerini getir 
 export async function GET(request) {
   try {
-    const { locksmithId, supabase } = await checkAuth(request);
+    const { locksmithId, supabase } = await getLocksmithId(request);
 
     if (!locksmithId) {
       return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
@@ -147,7 +148,7 @@ export async function GET(request) {
 // Güncelleme (ana/profil resmi ayarlama)
 export async function PUT(request) {
   try {
-    const { locksmithId, supabase } = await checkAuth(request);
+    const { locksmithId, supabase } = await getLocksmithId(request);
 
     if (!locksmithId) {
       return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
@@ -233,12 +234,13 @@ export async function PUT(request) {
 // Resim silme
 export async function DELETE(request) {
   try {
-    const { locksmithId, supabase } = await checkAuth(request);
+    const { locksmithId, supabase } = await getLocksmithId(request);
 
     if (!locksmithId) {
       return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
     }
 
+    const { imageId } = await request.json();
     // Silinecek resmin URL'sini ve ID'sini al
     const { data: imageData, error: imageDataError } = await supabase
       .from('locksmith_images')
@@ -287,32 +289,32 @@ export async function DELETE(request) {
       }
     }
 
-    // Eğer silinen resim ana resim veya profil resmiyse, başka bir resmi bu rollere atayalım
-    if (imageData.is_main || imageData.is_profile) {
-      const { data: otherImages, error: otherImagesError } = await supabase
-        .from('locksmith_images')
-        .select('id')
-        .eq('locksmith_id', locksmithId)
-        .order('created_at', { ascending: false })
-        .limit(1);
+    // // Eğer silinen resim ana resim veya profil resmiyse, başka bir resmi bu rollere atayalım
+    // if (imageData.is_main || imageData.is_profile) {
+    //   const { data: otherImages, error: otherImagesError } = await supabase
+    //     .from('locksmith_images')
+    //     .select('id')
+    //     .eq('locksmith_id', locksmithId)
+    //     .order('created_at', { ascending: false })
+    //     .limit(1);
 
-      if (!otherImagesError && otherImages && otherImages.length > 0) {
-        const updateData = {};
+    //   if (!otherImagesError && otherImages && otherImages.length > 0) {
+    //     const updateData = {};
 
-        if (imageData.is_main) {
-          updateData.is_main = true;
-        }
+    //     if (imageData.is_main) {
+    //       updateData.is_main = true;
+    //     }
 
-        if (imageData.is_profile) {
-          updateData.is_profile = true;
-        }
+    //     if (imageData.is_profile) {
+    //       updateData.is_profile = true;
+    //     }
 
-        await supabase
-          .from('locksmith_images')
-          .update(updateData)
-          .eq('id', otherImages[0].id);
-      }
-    }
+    //     await supabase
+    //       .from('locksmith_images')
+    //       .update(updateData)
+    //       .eq('id', otherImages[0].id);
+    //   }
+    // }
 
     return NextResponse.json({
       success: true,

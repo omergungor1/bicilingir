@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { checkAuth } from '../../utils';
+import { getLocksmithId } from '../../utils';
 
 export async function GET(request) {
   try {
-    const { locksmithId, supabase } = await checkAuth(request);
+    const { locksmithId, supabase } = await getLocksmithId(request);
 
     if (!locksmithId) {
       return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
@@ -35,7 +35,7 @@ export async function GET(request) {
 
 export async function PUT(request) {
   try {
-    const { locksmithId, supabase } = await checkAuth(request);
+    const { locksmithId, supabase } = await getLocksmithId(request);
 
     if (!locksmithId) {
       return NextResponse.json({ error: 'Çilingir ID\'si gerekli' }, { status: 400 });
