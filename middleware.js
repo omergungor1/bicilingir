@@ -116,15 +116,13 @@ setInterval(() => {
 }, 5 * 60 * 1000); // Her 5 dakikada bir temizlik
 
 export async function middleware(req) {
-
-  console.log(req);
-  console.log('test');
-  return NextResponse.next();
   // CORS Headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+    'Access-Control-Allow-Credentials': 'true',
+    'Access-Control-Expose-Headers': 'Authorization'
   };
 
   // OPTIONS isteklerini yanıtla
@@ -164,7 +162,12 @@ export async function middleware(req) {
 
     // API Yetkilendirme Kontrolü - Bearer Token
     if (pathname.startsWith('/api/locksmith/')) {
-      const authHeader = req.headers.get('authorization');
+      const authHeader = req.headers.get('authorization') ||
+        req.headers.get('Authorization') ||
+        req.headers.get('x-authorization');
+
+      console.log('Auth Header:', authHeader);
+      console.log('All Headers:', Object.fromEntries(req.headers.entries()));
 
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return NextResponse.json({ error: 'Yetkilendirme başlığı bulunamadı' }, {
@@ -178,6 +181,10 @@ export async function middleware(req) {
       try {
         // Supabase istemcisi oluştur
         const res = NextResponse.next();
+        Object.entries(headers).forEach(([key, value]) => {
+          res.headers.set(key, value);
+        });
+
         const supabase = createMiddlewareClient({
           req,
           res
@@ -194,7 +201,6 @@ export async function middleware(req) {
           });
         }
 
-        // Token geçerliyse isteği devam ettir
         return res;
       } catch (error) {
         console.error('Middleware token kontrolü hatası:', error);
