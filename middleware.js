@@ -125,6 +125,10 @@ export async function middleware(req) {
     'Access-Control-Expose-Headers': 'Authorization'
   };
 
+  console.log('Req Start');
+  console.log(req);
+  console.log('Req End');
+
   // OPTIONS isteklerini yanıtla
   if (req.method === 'OPTIONS') {
     return NextResponse.json({}, { headers });
@@ -164,19 +168,27 @@ export async function middleware(req) {
     if (pathname.startsWith('/api/locksmith/')) {
       const authHeader = req.headers.get('authorization') ||
         req.headers.get('Authorization') ||
-        req.headers.get('x-authorization');
+        req.headers.get('x-auth-token') ||
+        req.headers.get('x-access-token') ||
+        req.headers.get('token');
 
-      console.log('Auth Header:', authHeader);
+      console.log('Trying to find token in headers:');
+      console.log('authorization:', req.headers.get('authorization'));
+      console.log('Authorization:', req.headers.get('Authorization'));
+      console.log('x-auth-token:', req.headers.get('x-auth-token'));
+      console.log('x-access-token:', req.headers.get('x-access-token'));
+      console.log('token:', req.headers.get('token'));
       console.log('All Headers:', Object.fromEntries(req.headers.entries()));
 
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      if (!authHeader) {
         return NextResponse.json({ error: 'Yetkilendirme başlığı bulunamadı' }, {
           status: 401,
           headers
         });
       }
 
-      const token = authHeader.split(' ')[1];
+      // Token'ı Bearer prefix'i ile veya direkt olarak kabul et
+      const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
 
       try {
         // Supabase istemcisi oluştur
