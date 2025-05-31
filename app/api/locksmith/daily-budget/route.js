@@ -1,27 +1,44 @@
 import { NextResponse } from 'next/server';
 import { getLocksmithId } from '../../utils';
+import Cors from 'cors';
 
-// CORS headers tanımı
-const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Auth-Token, x-auth-token',
-    'Access-Control-Max-Age': '86400',
-};
+// CORS middleware'ini başlat
+const cors = Cors({
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true,
+    origin: '*',
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Auth-Token', 'x-auth-token']
+});
+
+// Middleware'i Promise olarak çalıştırmak için yardımcı fonksiyon
+function runMiddleware(request, middleware) {
+    return new Promise((resolve, reject) => {
+        middleware(request, {}, (result) => {
+            if (result instanceof Error) {
+                return reject(result);
+            }
+            return resolve(result);
+        });
+    });
+}
 
 // OPTIONS metodu için handler
-export async function OPTIONS() {
-    return NextResponse.json({}, { headers: corsHeaders });
+export async function OPTIONS(request) {
+    await runMiddleware(request, cors);
+    return new NextResponse(null, { status: 204 });
 }
 
 export async function PUT(request) {
     try {
+        // CORS middleware'ini çalıştır
+        await runMiddleware(request, cors);
+
         const { locksmithId, supabase } = await getLocksmithId(request);
 
         if (!locksmithId) {
             return NextResponse.json(
                 { error: 'Çilingir ID\'si gerekli' },
-                { status: 400, headers: corsHeaders }
+                { status: 400 }
             );
         }
 
@@ -31,7 +48,7 @@ export async function PUT(request) {
         if (typeof daily_spent_limit !== 'number' || daily_spent_limit < 0) {
             return NextResponse.json(
                 { error: 'Geçersiz günlük bütçe değeri' },
-                { status: 400, headers: corsHeaders }
+                { status: 400 }
             );
         }
 
@@ -46,20 +63,20 @@ export async function PUT(request) {
             console.error('Günlük bütçe güncelleme hatası:', error);
             return NextResponse.json(
                 { error: 'Günlük bütçe güncellenirken bir hata oluştu' },
-                { status: 500, headers: corsHeaders }
+                { status: 500 }
             );
         }
 
         return NextResponse.json({
             message: 'Günlük bütçe başarıyla güncellendi',
             data: data[0]
-        }, { headers: corsHeaders });
+        });
 
     } catch (error) {
         console.error('Günlük bütçe güncelleme hatası:', error);
         return NextResponse.json(
             { error: 'Günlük bütçe güncellenirken bir hata oluştu' },
-            { status: 500, headers: corsHeaders }
+            { status: 500 }
         );
     }
 }
