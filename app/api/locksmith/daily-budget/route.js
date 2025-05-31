@@ -65,6 +65,7 @@ export async function PUT(request) {
 }
 
 // Runtime yapılandırması
-export const config = {
-    runtime: 'nodejs',
-}; 
+export const runtime = 'nodejs';
+// export const config = {
+//     runtime: 'nodejs',
+// }; 
