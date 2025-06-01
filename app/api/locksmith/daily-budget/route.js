@@ -1,47 +1,31 @@
 import { NextResponse } from 'next/server';
 import { getLocksmithId } from '../../utils';
-import Cors from 'cors';
 
-// CORS middleware'ini başlat
-const cors = Cors({
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    credentials: true,
-    origin: '*',
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Auth-Token', 'x-auth-token']
-});
-
-// Middleware'i Promise olarak çalıştırmak için yardımcı fonksiyon
-function runMiddleware(request, middleware) {
-    return new Promise((resolve, reject) => {
-        middleware(request, {}, (result) => {
-            if (result instanceof Error) {
-                return reject(result);
-            }
-            return resolve(result);
-        });
-    });
-}
+// CORS headers'ı tanımla
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Auth-Token, x-auth-token',
+    'Access-Control-Max-Age': '86400'
+};
 
 // OPTIONS metodu için handler
-export async function OPTIONS(request) {
-    await runMiddleware(request, cors);
-    return new NextResponse(null, { status: 204 });
+export async function OPTIONS() {
+    return NextResponse.json({}, { headers: corsHeaders });
 }
 
 //test get api endpoint
 export async function GET(request) {
-    await runMiddleware(request, cors);
-    return NextResponse.json({ message: 'Hello, world!' }, { status: 200 });
+    return NextResponse.json({ message: 'Hello, world!' }, {
+        status: 200,
+        headers: corsHeaders
+    });
 }
 
 export async function PUT(request) {
     try {
-        // CORS middleware'ini çalıştır
-        console.log('Running CORS middleware...');
-        await runMiddleware(request, cors);
-        console.log('CORS middleware completed');
+        console.log('Running PUT request handler...');
 
-        console.log('Getting locksmith ID...');
         const { locksmithId, supabase } = await getLocksmithId(request);
         console.log('Locksmith ID:', locksmithId);
 
@@ -49,7 +33,7 @@ export async function PUT(request) {
             console.log('No locksmith ID found');
             return NextResponse.json(
                 { error: 'Çilingir ID\'si gerekli' },
-                { status: 400 }
+                { status: 400, headers: corsHeaders }
             );
         }
 
@@ -62,7 +46,7 @@ export async function PUT(request) {
             console.log('Invalid daily spent limit value');
             return NextResponse.json(
                 { error: 'Geçersiz günlük bütçe değeri' },
-                { status: 400 }
+                { status: 400, headers: corsHeaders }
             );
         }
 
@@ -78,7 +62,7 @@ export async function PUT(request) {
             console.error('Database update error:', error);
             return NextResponse.json(
                 { error: 'Günlük bütçe güncellenirken bir hata oluştu' },
-                { status: 500 }
+                { status: 500, headers: corsHeaders }
             );
         }
 
@@ -86,14 +70,14 @@ export async function PUT(request) {
         return NextResponse.json({
             message: 'Günlük bütçe başarıyla güncellendi',
             data: data[0]
-        });
+        }, { headers: corsHeaders });
 
     } catch (error) {
         console.error('PUT request error:', error);
         console.error('Error stack:', error.stack);
         return NextResponse.json(
             { error: 'Günlük bütçe güncellenirken bir hata oluştu' },
-            { status: 500 }
+            { status: 500, headers: corsHeaders }
         );
     }
 }
