@@ -116,157 +116,61 @@ setInterval(() => {
 }, 5 * 60 * 1000); // Her 5 dakikada bir temizlik
 
 export async function middleware(req) {
-  // İstek detaylarını logla
-  console.log('Request Method:', req.method);
-  console.log('Request Path:', req.nextUrl.pathname);
-  console.log('Request Headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
-
-  // CORS Headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Auth-Token, x-auth-token',
     'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Max-Age': '86400',
-    'Access-Control-Expose-Headers': 'Authorization, X-Auth-Token'
   };
 
-  // OPTIONS isteklerini yanıtla
   if (req.method === 'OPTIONS') {
-    console.log('OPTIONS request received');
     return NextResponse.json({}, { headers });
   }
 
-  // POST/PUT istekleri için özel kontrol
-  if ((req.method === 'POST' || req.method === 'PUT') && req.nextUrl.pathname.startsWith('/api/')) {
-    console.log('POST/PUT request to API endpoint');
-
-    // İsteğin body'sini loglamaya çalış
-    try {
-      const clonedReq = req.clone();
-      const body = await clonedReq.text();
-      console.log('Request Body:', body);
-    } catch (error) {
-      console.log('Body could not be read:', error.message);
-    }
-
-    const res = NextResponse.next();
-    // CORS headers'ı ekle
-    Object.entries(headers).forEach(([key, value]) => {
-      res.headers.set(key, value);
-    });
-    return res;
-  }
-
-  const ip = req.headers.get('x-forwarded-for') || req.ip || 'unknown';
-  const userAgent = req.headers.get('user-agent') || '';
   const pathname = req.nextUrl.pathname;
 
-  // Arama motoru botlarını doğrudan geçir
-  if (isSearchBot(userAgent)) {
-    return NextResponse.next();
-  }
+  // API istekleri için yetkilendirme kontrolü
+  if (pathname.startsWith('/api/locksmith/')) {
+    const authHeader = req.headers.get('x-auth-token') ||
+      req.headers.get('authorization') ||
+      req.headers.get('Authorization') ||
+      req.headers.get('token');
 
-  // API istekleri için daha sıkı limitler uygula
-  if (pathname.startsWith('/api/')) {
-    console.log('API request received:', {
-      method: req.method,
-      path: pathname,
-      ip: ip,
-      userAgent: userAgent
-    });
-
-    // Genel API limiti (dakikada 100 istek)
-    const { limited, remaining } = checkIPRateLimit(ip, 100, 60 * 1000, userAgent);
-
-    if (limited) {
-      console.log('Rate limit exceeded for IP:', ip);
-      return NextResponse.json(
-        { error: 'Çok fazla istek gönderdiniz. Lütfen daha sonra tekrar deneyin.' },
-        {
-          status: 429,
-          headers: {
-            ...headers,
-            'Retry-After': '60',
-            'X-RateLimit-Limit': '100',
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': Math.ceil(Date.now() / 1000) + 60
-          }
-        }
-      );
+    if (!authHeader) {
+      return NextResponse.json({ error: 'Yetkilendirme başlığı bulunamadı' }, {
+        status: 401,
+        headers
+      });
     }
 
-    // API Yetkilendirme Kontrolü - Bearer Token
-    if (pathname.startsWith('/api/locksmith/')) {
-      console.log('Locksmith API request, checking auth...');
+    const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
 
-      // Öncelikle x-auth-token'ı kontrol et, yoksa diğer alternatiflere bak
-      const authHeader = req.headers.get('x-auth-token') ||
-        req.headers.get('authorization') ||
-        req.headers.get('Authorization') ||
-        req.headers.get('token');
+    try {
+      const res = NextResponse.next();
+      Object.entries(headers).forEach(([key, value]) => {
+        res.headers.set(key, value);
+      });
 
-      console.log('Auth header found:', authHeader ? 'Yes' : 'No');
+      const supabase = createMiddlewareClient({
+        req,
+        res
+      });
 
-      if (!authHeader) {
-        return NextResponse.json({ error: 'Yetkilendirme başlığı bulunamadı' }, {
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+
+      if (error || !user) {
+        return NextResponse.json({ error: 'Geçersiz token' }, {
           status: 401,
           headers
         });
       }
 
-      // Token'ı Bearer prefix'i ile veya direkt olarak kabul et
-      const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
-
-      try {
-        // Supabase istemcisi oluştur
-        const res = NextResponse.next();
-        Object.entries(headers).forEach(([key, value]) => {
-          res.headers.set(key, value);
-        });
-
-        const supabase = createMiddlewareClient({
-          req,
-          res
-        });
-
-        // Token ile kullanıcı bilgisini al
-        const { data: { user }, error } = await supabase.auth.getUser(token);
-
-        if (error || !user) {
-          console.error('Token doğrulama hatası:', error?.message);
-          return NextResponse.json({ error: 'Geçersiz token' }, {
-            status: 401,
-            headers
-          });
-        }
-
-        return res;
-      } catch (error) {
-        console.error('Middleware token kontrolü hatası:', error);
-        return NextResponse.json({ error: 'Token doğrulama hatası' }, {
-          status: 401,
-          headers
-        });
-      }
-    }
-
-    // Admin API'leri için kontrol
-    if (pathname.startsWith('/api/admin/')) {
-      // Admin API kontrollerini burada yapabilirsiniz
-      // Benzer şekilde Bearer token kontrolü eklenebilir
-    }
-
-    // Public API'ler için rate limit
-    const publicLimit = checkIPRateLimit(ip + '-public', 50, 60 * 1000 * 2, userAgent);
-    if (publicLimit.limited) {
-      return NextResponse.json(
-        { error: 'Public API istek limiti aşıldı. Lütfen daha sonra tekrar deneyin.' },
-        {
-          status: 429,
-          headers
-        }
-      );
+      return res;
+    } catch (error) {
+      return NextResponse.json({ error: 'Token doğrulama hatası' }, {
+        status: 401,
+        headers
+      });
     }
   }
 
@@ -277,7 +181,6 @@ export async function middleware(req) {
       const supabase = createMiddlewareClient({ req, res });
       const { data: { session } } = await supabase.auth.getSession();
 
-      // Login sayfasına erişim kontrolü - session varsa yönlendir
       if (session && (pathname === '/cilingir/auth/login' || pathname.startsWith('/cilingir/auth/login'))) {
         const { data: roleData } = await supabase
           .from('user_roles')
@@ -294,7 +197,6 @@ export async function middleware(req) {
         }
       }
 
-      // Korumalı sayfalara erişim kontrolü
       if (!session) {
         if (pathname.startsWith('/admin')) {
           return NextResponse.redirect(new URL('/cilingir/auth/login', req.url));
@@ -324,7 +226,6 @@ export async function middleware(req) {
 
       return res;
     } catch (error) {
-      console.error('Web auth hatası:', error);
       if (pathname.startsWith('/admin')) {
         return NextResponse.redirect(new URL('/cilingir/auth/login', req.url));
       }
@@ -338,16 +239,12 @@ export async function middleware(req) {
   return NextResponse.next();
 }
 
-// Tek bir config tanımı
 export const config = {
   matcher: [
-    // Admin ve çilingir sayfaları için matcher
     '/admin/:path*',
     '/cilingir/:path*',
-    // API route'ları için matcher
     '/api/locksmith/:path*',
     '/api/admin/:path*',
-    // Diğer tüm API'ler için
     '/api/:path*'
   ],
 } 
