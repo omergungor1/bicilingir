@@ -12,8 +12,8 @@ export async function POST(request) {
 
         // Tüm harcamaları tek seferde ekle
         const transactions = spends.map(spend => ({
-            locksmith_id: spend.locksmithId,
-            amount: -Math.abs(spend.adSpendAmount), // Negatif değer olarak kaydet
+            locksmith_id: spend.locksmith_id,
+            amount: -Math.abs(spend.amount), // Negatif değer olarak kaydet
             transaction_type: 'ad_spend',
             description: 'Günlük reklam harcaması'
         }));

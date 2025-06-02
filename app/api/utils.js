@@ -170,88 +170,55 @@ export async function checkAuth(request) {
 
 export async function checkAdminAuth(request) {
   try {
-    // Request headers'ını ve cookie'yi detaylı inceleyelim
-    const cookieHeader = request.headers.get('cookie');
+    // x-auth-token'ı al, yoksa diğer alternatiflere bak
+    const authHeader = request.headers.get('x-auth-token') ||
+      request.headers.get('authorization') ||
+      request.headers.get('Authorization') ||
+      request.headers.get('token');
 
-    // Özellikle supabase auth token cookie'sini izole edelim
-    const supabaseCookieMatch = cookieHeader && cookieHeader.match(/sb-\w+-auth-token=([^;]+)/);
-    const supabaseCookieValue = supabaseCookieMatch ? supabaseCookieMatch[1] : null;
-
-
-    let parsedCookieValue = null;
-    try {
-      // Cookie URL-encoded olduğu için decode edilmeli
-      const decodedCookie = supabaseCookieValue ? decodeURIComponent(supabaseCookieValue) : null;
-
-      // JSON formatında mı kontrol et
-      if (decodedCookie && decodedCookie.startsWith('[') && decodedCookie.endsWith(']')) {
-        parsedCookieValue = JSON.parse(decodedCookie);
-      }
-    } catch (e) {
-      console.error('Cookie parse hatası:', e);
+    if (!authHeader) {
+      return { error: 'Yetkilendirme başlığı bulunamadı', status: 401 };
     }
 
-    // Özel bir supabase istemcisi oluşturalım
-    let response = NextResponse.next();
+    // Token'ı Bearer prefix'i ile veya direkt olarak kabul et
+    const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
+
+    // Özel bir supabase istemcisi oluştur
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
-          get(name) {
-            // Eğer supabase auth token isteniyorsa ve parse ettiğimiz değer varsa
-            if (name.includes('auth-token') && parsedCookieValue) {
-              return JSON.stringify(parsedCookieValue);
-            }
-
-            // Diğer durumlar için normal cookie'yi al
-            const cookie = request.cookies.get(name)?.value;
-            return cookie;
+          get: (name) => {
+            return undefined; // API çağrılarında cookie kullanmıyoruz
           },
-          set(name, value, options) {
-            response.cookies.set({
-              name,
-              value,
-              ...options
-            });
+          set: (name, value, options) => {
+            // API çağrılarında cookie set etmiyoruz
           },
-          remove(name, options) {
-            response.cookies.set({
-              name,
-              value: '',
-              ...options,
-              maxAge: 0
-            });
+          remove: (name, options) => {
+            // API çağrılarında cookie silmiyoruz
           }
         },
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
       }
     );
 
-    // Manuel olarak getSession() fonksiyonunu çağırmadan önce token'ları ayarlayalım
-    if (parsedCookieValue && Array.isArray(parsedCookieValue) && parsedCookieValue.length >= 2) {
-      const accessToken = parsedCookieValue[0];
-      const refreshToken = parsedCookieValue[1];
+    // Token ile kullanıcı bilgisini al
+    const { data: { user }, error: sessionError } = await supabase.auth.getUser(token);
 
-
-      // Session'ı manuel olarak ayarla
-      const { data, error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken
-      });
-
-      if (error) {
-        console.error('Manuel session ayarlama hatası:', error.message);
-      }
+    if (sessionError) {
+      return { error: 'Geçersiz token', status: 401 };
     }
 
-    // Şimdi session'ı al
-    const { data: authData } = await supabase.auth.getSession();
+    if (!user) {
+      return { error: 'Kullanıcı bulunamadı', status: 401 };
+    }
 
-    const session = authData?.session;
-
-    // Kullanıcı ID'sini al
-    const userId = session.user.id;
-
+    const userId = user.id;
 
     // Kullanıcı rolünü kontrol et
     const { data: roleData, error: roleError } = await supabase
@@ -261,24 +228,22 @@ export async function checkAdminAuth(request) {
       .single();
 
     if (roleError) {
-      return NextResponse.json({ error: 'Rol bilgisi alınamadı' }, { status: 500 });
+      return { error: 'Rol bilgisi alınamadı', status: 500 };
     }
 
     if (!roleData) {
-      return NextResponse.json({ error: 'Rol kaydınız bulunamadı' }, { status: 403 });
+      return { error: 'Rol kaydınız bulunamadı', status: 403 };
     }
 
     const userRole = roleData.role;
 
     if (userRole !== 'admin') {
-      return NextResponse.json({ error: 'Bu API sadece admin tarafından kullanılabilir' }, { status: 403 });
+      return { error: 'Bu API sadece admin tarafından kullanılabilir', status: 403 };
     }
-
 
     return { supabase };
   } catch (error) {
-    console.error('Çilingir ID alınamadı:', error);
-    return NextResponse.json({ error: 'Çilingir bilgileriniz bulunamadı' }, { status: 404 });
+    return { error: 'Yetkilendirme hatası', status: 500 };
   }
 }
 

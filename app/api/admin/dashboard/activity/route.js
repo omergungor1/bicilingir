@@ -9,10 +9,7 @@ export async function GET(request) {
         // URL'den period ve locksmithId parametrelerini al
         const period = request.nextUrl.searchParams.get('period') || 'today';
         const page = request.nextUrl.searchParams.get('page') || 1;
-        // console.log(locksmithId,'locksmithId');
-        // console.log(period,'period');
-        // console.log(page,'page');
-
+        const type = request.nextUrl.searchParams.get('type') || 'all';
         //periods: today, yesterday, last7days, last30days, all
 
         const start = (page - 1) * PAGE_SIZE;
@@ -26,11 +23,15 @@ export async function GET(request) {
 
         let query = supabase
             .from('user_activity_logs')
-            .select('activitytype,createdat, districts(name), services(name), reviews(rating,comment)');
+            .select('activitytype,createdat, districts(name), services(name), reviews(rating,comment),locksmiths(businessname)');
 
 
         if (period !== 'all') {
             query = query.gte('createdat', startDateString);
+        }
+
+        if (type !== 'all' && type !== 'new_locksmith') {
+            query = query.eq('activitytype', type);
         }
 
         query = query.order('createdat', { ascending: false });
@@ -139,7 +140,7 @@ export async function GET(request) {
             return NextResponse.json({ error: 'Locksmiths error' }, { status: 500 });
         }
 
-        formattedStats.total_locksmiths = LocksmithsCount;
+        formattedStats.total_locksmiths = (type == 'new_locksmith' || type == 'all') ? LocksmithsCount : 0;
 
         let UsersQuery = supabase
             .from('users')
