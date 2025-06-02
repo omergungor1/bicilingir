@@ -11,6 +11,8 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Geçersiz işlem kodu veya miktar' }, { status: 400 });
         }
 
+        console.log(transactionCode, amount, 'transactionCode, amount');
+
         // Transaction code'a göre çilingir detayını bul
         const { data: locksmithDetail, error: detailError } = await supabase
             .from('locksmith_details')
@@ -33,6 +35,20 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Çilingir bilgileri bulunamadı' }, { status: 404 });
         }
 
+        //eski balance
+        const { data: oldBalance, error: oldBalanceError } = await supabase
+            .from('locksmith_balances')
+            .select('balance')
+            .eq('locksmith_id', locksmithDetail.locksmithid)
+            .single();
+
+        if (oldBalanceError || !oldBalance) {
+            return NextResponse.json({ error: 'Eski bakiye bulunamadı' }, { status: 404 });
+        }
+
+        //yeni balance
+        const newBalance = oldBalance.balance + amount;
+
         // Transactions tablosuna kayıt ekle
         const { error: transactionError } = await supabase
             .from('locksmith_transactions')
@@ -47,7 +63,8 @@ export async function POST(request) {
         }
 
         return NextResponse.json({
-            message: `${locksmith.businessname} (${locksmith.fullname}) hesabına ${amount}₺ bakiye yüklenmiştir.`
+            message: `${locksmith.businessname} (${locksmith.fullname}) hesabına ${amount}₺ bakiye yüklenmiştir. Güncel bakiye: ${newBalance}₺`,
+            success: true
         });
 
     } catch (error) {

@@ -11,7 +11,8 @@ export async function GET(request) {
       *,
       locksmith_details ( * ),
       provinces ( * ),
-      districts!locksmiths_districtid_fkey ( * )
+      districts!locksmiths_districtid_fkey ( * ),
+      locksmith_balances ( balance, daily_spent_limit )
     `)
       .order('createdat', { ascending: false });
 
