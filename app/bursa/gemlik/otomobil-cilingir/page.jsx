@@ -26,6 +26,9 @@ export default function GemlikOtomobilCilingirPage() {
             {/* Sayfa başlığı */}
             <div className="mb-3">
                 <h1 className="text-xl font-bold mb-2">Gemlik Otomobil Çilingiri</h1>
+                <a data-gtm="ilce-secimi" href="/" className="inline-block text-blue-600 hover:text-blue-800 mb-3">
+                    📍 Başka ilçede misin? İlçeni seç!
+                </a>
                 <p className="text-sm md:text-base text-gray-700">
                     Gemlik'te araç kapısı açma, anahtar yapımı ve kontak tamiri konusunda uzman çilingirler. Tüm marka araçlar için hizmet veriliyor. Bilgi için hemen arayın!
                 </p>

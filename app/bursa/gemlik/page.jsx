@@ -25,6 +25,9 @@ export default function GemlikCilingirPage() {
         <div className="min-h-screen bg-gray-50 overflow-x-hidden touch-pan-y px-4 md:px-16 lg:px-32 pt-2 pb-8">
             {/* Sayfa başlığı */}
             <h1 className="text-xl font-bold mb-2">Gemlik 7/24 Acil Çilingirler</h1>
+            <a data-gtm="ilce-secimi" href="/" className="inline-block text-blue-600 hover:text-blue-800 mb-3">
+                📍 Başka ilçede misin? İlçeni seç!
+            </a>
             <p className="text-sm md:text-base text-gray-600 mb-3">Gemlik 7/24 çalışan acil çilingirler aşağıda listelenmiştir. Hemen arayıp bilgi alabilirsiniz.</p>
 
             <div className="grid grid-cols-1 gap-6 mb-8">

@@ -20,23 +20,20 @@ export async function POST(request) {
 
     const { data: locksmithData, error: locksmithError } = await supabase
       .from('locksmiths')
-      .select('email,phonenumber,whatsappnumber')
-      // .eq('email', email)
-      // .eq('phonenumber', phone)
-      // .eq('whatsappnumber', phone)
-      .or(`email.eq.${email},phonenumber.eq.${phone},whatsappnumber.eq.${phone}`)
+      .select('email,phonenumber')
+      .or(`email.eq.${email},phonenumber.eq.${phone}`)
       .limit(1);
 
     if (locksmithError) {
       console.error('Çilingir e-posta kontrolü sırasında hata:', locksmithError);
-    } else {
-      // Locksmiths tablosunda e-posta adresi varsa exists=true olarak güncelle
-      if (locksmithData && locksmithData.length > 0) {
-        return NextResponse.json({ exists: true });
-      } else {
-        return NextResponse.json({ exists: false });
-      }
+      return NextResponse.json({ exists: false });
     }
+
+    if (locksmithData && locksmithData.length > 0) {
+      return NextResponse.json({ exists: true });
+    }
+
+    return NextResponse.json({ exists: false });
   } catch (error) {
     console.error('E-posta kontrolü sırasında beklenmeyen hata:', error);
     return NextResponse.json(

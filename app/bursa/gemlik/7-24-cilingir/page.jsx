@@ -26,6 +26,9 @@ export default function Gemlik724CilingirPage() {
             {/* Sayfa başlığı */}
             <div className="mb-3">
                 <h1 className="text-xl font-bold mb-2">Gemlik 7/24 Çilingirler</h1>
+                <a data-gtm="ilce-secimi" href="/" className="inline-block text-blue-600 hover:text-blue-800 mb-3">
+                    📍 Başka ilçede misin? İlçeni seç!
+                </a>
                 <p className="text-sm md:text-base text-gray-700">
                     Gemlik'te 7 gün 24 saat çalışan çilingirler listelenmiştir. Bilgi için hemen arayın!
                 </p>
