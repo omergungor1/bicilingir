@@ -129,6 +129,11 @@ export async function middleware(req) {
 
   const pathname = req.nextUrl.pathname;
 
+  // Şifre sıfırlama endpoint'i için auth kontrolü yapma
+  if (pathname === '/api/locksmith/account/forgot-password' || pathname === '/api/locksmith/account/reset-password') {
+    return NextResponse.next();
+  }
+
   // API istekleri için yetkilendirme kontrolü
   if (pathname.startsWith('/api/locksmith/')) {
     const authHeader = req.headers.get('x-auth-token') ||

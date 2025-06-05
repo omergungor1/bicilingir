@@ -21,6 +21,7 @@ export async function POST(request) {
       );
     }
 
+
     // Locksmiths tablosuna kayıt
     const { data, error } = await supabase
       .from('locksmiths')
@@ -184,7 +185,7 @@ export async function POST(request) {
       provinceid: locksmithDistrictsInsertData.provinceid,
       districtid: districtId,
       isactive: true,
-      createdat: new Date().toISOString()
+      // createdat: new Date().toISOString()
     }));
 
 
@@ -334,7 +335,7 @@ export async function PUT(request) {
     const {
       locksmithid,
       locksmithImagesInsertData,
-      locksmithCertificatesInsertData,
+      // locksmithCertificatesInsertData,
       locksmithDocumentsInsertData
     } = await request.json();
 
@@ -362,27 +363,27 @@ export async function PUT(request) {
       );
     }
 
-    const certificatesObjects = locksmithCertificatesInsertData?.certificates?.map(certificate => ({
-      locksmithid: locksmithid,
-      name: certificate.name || 'Yok',
-      fileurl: certificate.url,
-      createdat: new Date().toISOString()
-    }));
+    // const certificatesObjects = locksmithCertificatesInsertData?.certificates?.map(certificate => ({
+    //   locksmithid: locksmithid,
+    //   name: certificate.name || 'Yok',
+    //   fileurl: certificate.url,
+    //   createdat: new Date().toISOString()
+    // }));
 
 
-    // locksmith_certificates tablosuna kayıt
-    const { data: locksmithCertificatesData, error: locksmithCertificatesError } = await supabase
-      .from('locksmith_certificates')
-      .insert(certificatesObjects)
-      .select();
+    // // locksmith_certificates tablosuna kayıt
+    // const { data: locksmithCertificatesData, error: locksmithCertificatesError } = await supabase
+    //   .from('locksmith_certificates')
+    //   .insert(certificatesObjects)
+    //   .select();
 
-    if (locksmithCertificatesError) {
-      console.error('Çilingir sertifikaları kaydı hatası:', locksmithCertificatesError);
-      return NextResponse.json(
-        { error: locksmithCertificatesError.message },
-        { status: 500 }
-      );
-    }
+    // if (locksmithCertificatesError) {
+    //   console.error('Çilingir sertifikaları kaydı hatası:', locksmithCertificatesError);
+    //   return NextResponse.json(
+    //     { error: locksmithCertificatesError.message },
+    //     { status: 500 }
+    //   );
+    // }
 
 
     const documentsObjects = {

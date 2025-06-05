@@ -29,6 +29,7 @@ export async function POST(request) {
       );
     }
 
+
     // Service role ile kullanıcı oluştur (e-posta doğrulaması olmadan)
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,

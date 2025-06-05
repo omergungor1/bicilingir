@@ -278,3 +278,13 @@ create table locksmith_transactions (
   created_at timestamp with time zone default now()
 );
 
+
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    locksmith_id UUID NOT NULL REFERENCES locksmiths(id) ON DELETE CASCADE,
+    token TEXT NOT NULL UNIQUE,
+    used BOOLEAN DEFAULT FALSE,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
