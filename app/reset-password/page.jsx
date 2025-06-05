@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-export default function ResetPasswordPage() {
+// Ana form komponenti
+function ResetPasswordForm() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -151,5 +152,29 @@ export default function ResetPasswordPage() {
                 </form>
             </div>
         </div>
+    );
+}
+
+// Loading komponenti
+function LoadingState() {
+    return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+            <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
+                <div className="animate-pulse flex flex-col items-center">
+                    <div className="h-8 bg-gray-200 rounded w-3/4 mb-8"></div>
+                    <div className="h-4 bg-gray-200 rounded w-full mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// Ana sayfa komponenti
+export default function ResetPasswordPage() {
+    return (
+        <Suspense fallback={<LoadingState />}>
+            <ResetPasswordForm />
+        </Suspense>
     );
 } 
