@@ -10,16 +10,6 @@ export async function POST(request) {
     const requestData = await request.json();
     const { sessionId, userId, userIp, userAgent } = requestData;
 
-
-    //Silinecek
-    return NextResponse.json({
-      userId,
-      sessionId,
-      isNewUser: false
-    });
-
-    // console.log('User Track API', { sessionId, userId, userIp, userAgent });
-
     // Session ID kontrolü
     if (!sessionId) {
       return NextResponse.json({
@@ -29,9 +19,7 @@ export async function POST(request) {
 
     // Kullanıcı oluştur veya güncelle
     try {
-      // Önce userId var mı ve users tablosunda mevcut mu kontrol et
-      let newUserId = userId;
-      let isNewUser = false;
+      let existingUser = null;
 
       // Eğer userId varsa, veritabanında kontrol et
       if (userId) {
@@ -43,32 +31,24 @@ export async function POST(request) {
 
         if (userError) {
           console.error('Kullanıcı kontrolü sırasında hata:', userError);
-        }
-
-        // Kullanıcı bulunamadıysa, createOrUpdateUser fonksiyonunu çağır
-        if (!userData || userData.length === 0) {
-          console.log(`Belirtilen kullanıcı ID (${userId}) veritabanında bulunamadı, yeni kayıt oluşturulacak`);
-          const result = await createOrUpdateUser(supabase, null, sessionId, userIp, userAgent);
-          newUserId = result.userId;
-          isNewUser = result.isNewUser;
         } else {
-          console.log(`Kullanıcı ID (${userId}) bulundu, güncelleniyor...`);
-          const result = await createOrUpdateUser(supabase, userId, sessionId, userIp, userAgent);
-          newUserId = result.userId;
-          isNewUser = false; // Kullanıcı zaten var, yeni değil
+          existingUser = userData?.[0];
         }
-      } else {
-        // userId yoksa yeni bir kullanıcı oluştur
-        console.log('Kullanıcı ID yok, yeni kullanıcı oluşturuluyor...');
-        const result = await createOrUpdateUser(supabase, null, sessionId, userIp, userAgent);
-        newUserId = result.userId;
-        isNewUser = result.isNewUser;
       }
 
-      return NextResponse.json({
-        userId: newUserId,
+      // Kullanıcı yoksa veya bulunamadıysa null, varsa userId kullan
+      const result = await createOrUpdateUser(
+        supabase,
+        existingUser?.id || null,
         sessionId,
-        isNewUser
+        userIp,
+        userAgent
+      );
+
+      return NextResponse.json({
+        userId: result.userId,
+        sessionId,
+        isNewUser: !existingUser
       });
     } catch (error) {
       console.error('Kullanıcı bilgileri işlenirken hata:', error);
