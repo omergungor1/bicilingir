@@ -278,6 +278,40 @@ export async function checkSuspiciousIP(supabase, ip) {
 }
 
 /**
+ * Şüpheli kullanıcının IP adresini ip_ignore tablosuna ekler
+ * @param {Object} supabase - Supabase istemcisi
+ * @param {string} userIp - Kullanıcı IP adresi
+ * @param {string} userId - Kullanıcı ID
+ * @param {boolean} isSuspicious - Kullanıcının şüpheli olup olmadığı
+ * @returns {Promise<void>}
+ */
+async function addSuspiciousIpToIgnoreList(supabase, userIp, userId, isSuspicious) {
+  if (isSuspicious && userIp) {
+    const { data: existingIp } = await supabase
+      .from('ip_ignore')
+      .select('id')
+      .eq('ip', userIp)
+      .single();
+
+    // IP henüz ip_ignore tablosunda yoksa ekle
+    if (!existingIp) {
+      const { error: ipError } = await supabase
+        .from('ip_ignore')
+        .insert({
+          ip: userIp,
+          userid: userId,
+          reason: 'Şüpheli kullanıcının yeni IP adresi',
+          isactive: true
+        });
+
+      if (ipError) {
+        console.error('IP ignore tablosuna ekleme hatası:', ipError);
+      }
+    }
+  }
+}
+
+/**
  * Kullanıcının şüpheli davranış gösterip göstermediğini kontrol eder
  * @param {Object} supabase - Supabase istemcisi
  * @param {string} ip - Kullanıcı IP adresi
@@ -397,37 +431,6 @@ export async function checkSuspiciousBehavior(supabase, ip, fingerprintId) {
         }
       }
 
-      // Şüpheli kullanıcıların tüm IP'lerini kontrol et ve kaydet
-      const { data: userIps, error: userIpsError } = await supabase
-        .from('users')
-        .select('userip')
-        .in('id', userIds)
-        .not('userip', 'is', null);
-
-      if (!userIpsError && userIps) {
-        const uniqueIps = [...new Set(userIps.map(u => u.userip))];
-
-        // Her bir IP için kontrol et ve kaydet
-        await Promise.all(uniqueIps.map(async (userIp) => {
-          const { data: existingUserIp } = await supabase
-            .from('ip_ignore')
-            .select('id')
-            .eq('ip', userIp)
-            .single();
-
-          if (!existingUserIp) {
-            await supabase
-              .from('ip_ignore')
-              .insert({
-                ip: userIp,
-                userid: userIds[0],
-                reason: `${suspiciousReason} (Kullanıcının ek IP'si)`,
-                isactive: true
-              });
-          }
-        }));
-      }
-
       return true;
     }
 
@@ -486,6 +489,8 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
           console.error('Kullanıcı güncelleme hatası:', updateError);
         }
 
+        await addSuspiciousIpToIgnoreList(supabase, userIp, newUserId, isSuspicious);
+
         return {
           userId: newUserId,
           isNewUser: false,
@@ -519,6 +524,8 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
         if (updateError) {
           console.error('Kullanıcı güncelleme hatası:', updateError);
         }
+
+        await addSuspiciousIpToIgnoreList(supabase, userIp, newUserId, isSuspicious);
 
         return {
           userId: newUserId,
@@ -563,6 +570,8 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
           .eq('id', newUserId);
       }
     }
+
+    await addSuspiciousIpToIgnoreList(supabase, userIp, newUserId, isSuspicious);
 
     return { userId: newUserId, isNewUser, isSuspicious };
   } catch (error) {
