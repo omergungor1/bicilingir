@@ -12,6 +12,7 @@ import { setSelectedValues as setReduxSelectedValues } from '../redux/features/s
 import { useRouter } from "next/navigation";
 import { RatingModal } from "../components/RatingModal";
 import LocksmithCard from "../components/ui/locksmith-card";
+import { useUserTracking } from '../hooks/useUserTracking';
 
 
 const styles = {
@@ -73,6 +74,9 @@ function SearchParamsWrapper({ children }) {
 }
 
 export default function Home() {
+  // Kullanıcı takibini başlat
+  useUserTracking();
+
   // Redux state ve dispatch
   const dispatch = useDispatch();
   const {

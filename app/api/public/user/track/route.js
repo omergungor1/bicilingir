@@ -8,7 +8,7 @@ export async function POST(request) {
 
     // İstek gövdesini al
     const requestData = await request.json();
-    const { sessionId, userId, userIp, userAgent } = requestData;
+    const { sessionId, userId, userIp, userAgent, fingerprintId } = requestData;
 
     // Session ID kontrolü
     if (!sessionId) {
@@ -17,38 +17,29 @@ export async function POST(request) {
       }, { status: 400 });
     }
 
-    // Kullanıcı oluştur veya güncelle
+    // FingerprintID kontrolü
+    if (!fingerprintId) {
+      return NextResponse.json({
+        error: "Fingerprint ID gerekli"
+      }, { status: 400 });
+    }
+
     try {
-      let existingUser = null;
-
-      // Eğer userId varsa, veritabanında kontrol et
-      if (userId) {
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('id')
-          .eq('id', userId)
-          .limit(1);
-
-        if (userError) {
-          console.error('Kullanıcı kontrolü sırasında hata:', userError);
-        } else {
-          existingUser = userData?.[0];
-        }
-      }
-
-      // Kullanıcı yoksa veya bulunamadıysa null, varsa userId kullan
+      // Kullanıcı oluştur veya güncelle
       const result = await createOrUpdateUser(
         supabase,
-        existingUser?.id || null,
+        userId,
         sessionId,
         userIp,
-        userAgent
+        userAgent,
+        fingerprintId
       );
 
       return NextResponse.json({
         userId: result.userId,
         sessionId,
-        isNewUser: !existingUser
+        isNewUser: result.isNewUser,
+        isSuspicious: result.isSuspicious
       });
     } catch (error) {
       console.error('Kullanıcı bilgileri işlenirken hata:', error);

@@ -248,80 +248,294 @@ export async function checkAdminAuth(request) {
 }
 
 /**
- * Veritabanında kullanıcı oluşturur veya günceller
+ * IP adresinin şüpheli olup olmadığını kontrol eder
+ * @param {Object} supabase - Supabase istemcisi
+ * @param {string} ip - Kontrol edilecek IP adresi
+ * @returns {Promise<{isSuspicious: boolean, reason: string}>}
+ */
+export async function checkSuspiciousIP(supabase, ip) {
+  try {
+    // IP'yi ip_ignore tablosunda kontrol et
+    const { data: ignoreData, error: ignoreError } = await supabase
+      .from('ip_ignore')
+      .select('reason')
+      .eq('ip', ip)
+      .eq('isactive', true)
+      .single();
+
+    if (ignoreError && ignoreError.code !== 'PGRST116') {
+      console.error('IP kontrol hatası:', ignoreError);
+    }
+
+    return {
+      isSuspicious: !!ignoreData,
+      reason: ignoreData?.reason || null
+    };
+  } catch (error) {
+    console.error('IP kontrol hatası:', error);
+    return { isSuspicious: false, reason: null };
+  }
+}
+
+/**
+ * Kullanıcının şüpheli davranış gösterip göstermediğini kontrol eder
+ * @param {Object} supabase - Supabase istemcisi
+ * @param {string} ip - Kullanıcı IP adresi
+ * @param {string} fingerprintId - Kullanıcı parmak izi
+ * @returns {Promise<boolean>}
+ */
+export async function checkSuspiciousBehavior(supabase, ip, fingerprintId) {
+  try {
+    const now = new Date();
+    const twentyFourHoursAgo = new Date(now - 24 * 60 * 60 * 1000);
+
+    // Önce IP veya fingerprintId ile ilişkili kullanıcıları bul
+    const { data: relatedUsers, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .or(`userip.eq.${ip},fingerprintid.eq.${fingerprintId}`);
+
+    if (userError) {
+      console.error('Kullanıcı arama hatası:', userError);
+      return false;
+    }
+    if (!relatedUsers || relatedUsers.length === 0) {
+      return false;
+    }
+
+    // Bulunan kullanıcıların aktivitelerini kontrol et
+    const userIds = relatedUsers.map(user => user.id);
+    const { data: activities, error } = await supabase
+      .from('user_activity_logs')
+      .select('createdat, activitytype')
+      .in('userid', userIds)
+      .gte('createdat', twentyFourHoursAgo.toISOString())
+      .order('createdat', { ascending: false });
+
+    if (error) {
+      console.error('Aktivite kontrol hatası:', error);
+      return false;
+    }
+
+    if (!activities || activities.length === 0) {
+      return false;
+    }
+
+    // Şüpheli davranış kuralları
+    const rules = {
+      maxVisitsIn24Hours: 5,
+      minTimeBetweenVisits: 2 * 60 * 60 * 1000,
+      maxSearchesPerDay: 3
+    };
+
+    let isSuspicious = false;
+    let suspiciousReason = '';
+
+    // 24 saat içindeki toplam ziyaret sayısı
+    const totalVisits = activities.length;
+    if (totalVisits > rules.maxVisitsIn24Hours) {
+      console.log('maxVisitsIn24Hours ');
+      isSuspicious = true;
+      suspiciousReason = `24 saat içinde çok fazla ziyaret (${totalVisits} ziyaret)`;
+    }
+
+    // Aramalar arası süre kontrolü
+    if (!isSuspicious) {
+      for (let i = 1; i < activities.length; i++) {
+        const timeDiff = new Date(activities[i - 1].createdat) - new Date(activities[i].createdat);
+        if (timeDiff < rules.minTimeBetweenVisits) {
+          console.log('minTimeBetweenVisits ');
+          isSuspicious = true;
+          suspiciousReason = 'Çok sık aralıklarla ziyaret';
+          break;
+        }
+      }
+    }
+
+    // Günlük arama sayısı kontrolü
+    if (!isSuspicious) {
+      const searchCount = activities.filter(a => a.activitytype === 'locksmith_list_view').length;
+      if (searchCount > rules.maxSearchesPerDay) {
+        console.log('maxSearchesPerDay aşıldı');
+        console.log('searchCount:', searchCount);
+        console.log('rules.maxSearchesPerDay:', rules.maxSearchesPerDay);
+        isSuspicious = true;
+        suspiciousReason = `Günlük arama limiti aşıldı (${searchCount} arama)`;
+      }
+    }
+
+    if (isSuspicious) {
+      // Kullanıcıları şüpheli olarak işaretle
+      await Promise.all(userIds.map(userId =>
+        supabase
+          .from('users')
+          .update({ issuspicious: true })
+          .eq('id', userId)
+      ));
+
+      // IP'yi ip_ignore tablosuna ekle
+      // Önce bu IP'nin zaten tabloda olup olmadığını kontrol et
+      const { data: existingIp } = await supabase
+        .from('ip_ignore')
+        .select('id')
+        .eq('ip', ip)
+        .single();
+
+      if (!existingIp) {
+        // IP'yi ip_ignore tablosuna ekle
+        const { error: ipError } = await supabase
+          .from('ip_ignore')
+          .insert({
+            ip: ip,
+            userid: userIds[0], // İlk kullanıcıyı referans olarak ekle
+            reason: suspiciousReason,
+            isactive: true
+          });
+
+        if (ipError) {
+          console.error('IP ignore tablosuna ekleme hatası:', ipError);
+        }
+      }
+
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Şüpheli davranış kontrolü hatası:', error);
+    return false;
+  }
+}
+
+/**
+ * Kullanıcıyı oluşturur veya günceller
  * @param {Object} supabase - Supabase istemcisi
  * @param {string} userId - Kullanıcı ID (varsa)
  * @param {string} sessionId - Oturum ID
  * @param {string} userIp - Kullanıcı IP adresi
  * @param {string} userAgent - Kullanıcı tarayıcı bilgisi
- * @returns {Promise<{userId: string, isNewUser: boolean}>} Kullanıcı bilgisi
+ * @param {string} fingerprintId - FingerprintJS visitor ID
+ * @returns {Promise<{userId: string, isNewUser: boolean, isSuspicious: boolean}>}
  */
-export async function createOrUpdateUser(supabase, userId, sessionId, userIp, userAgent) {
+export async function createOrUpdateUser(supabase, userId, sessionId, userIp, userAgent, fingerprintId = null) {
   try {
     let newUserId = userId;
     let isNewUser = false;
+    let isSuspicious = false;
 
-    // Eğer mevcut bir userId varsa, kullanıcıyı güncelle
-    if (userId) {
-      const updateData = {
-        userip: userIp,
-        updatedat: new Date().toISOString()
-      };
+    // IP kontrolü
+    const ipCheck = await checkSuspiciousIP(supabase, userIp);
+    if (ipCheck.isSuspicious) {
+      isSuspicious = true;
+    }
 
-      if (userAgent) {
-        updateData.useragent = userAgent;
-      }
-
-      const { data, error } = await supabase
+    // Önce fingerprintId ile kullanıcı ara
+    if (fingerprintId) {
+      const { data: fpUser } = await supabase
         .from('users')
-        .update(updateData)
-        .eq('id', userId)
-        .select();
+        .select('id, issuspicious')
+        .eq('fingerprintid', fingerprintId)
+        .single();
 
-      if (error) {
-        // Eğer kullanıcı bulunamazsa, yeni kullanıcı oluşturacağız
-        if (error.code === 'PGRST116') {
-          newUserId = null;
-        } else {
-          throw error;
+      if (fpUser) {
+        newUserId = fpUser.id;
+        isSuspicious = fpUser.issuspicious || isSuspicious;
+
+        // Mevcut kullanıcının IP ve user-agent bilgilerini güncelle
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({
+            userip: userIp,
+            useragent: userAgent,
+            updatedat: new Date().toISOString()
+          })
+          .eq('id', newUserId);
+
+        if (updateError) {
+          console.error('Kullanıcı güncelleme hatası:', updateError);
         }
+
+        return {
+          userId: newUserId,
+          isNewUser: false,
+          isSuspicious: isSuspicious || await checkSuspiciousBehavior(supabase, userIp, fingerprintId)
+        };
       }
     }
 
-    // Eğer userId yoksa veya bulunamadıysa, yeni bir kullanıcı oluştur
-    if (!newUserId) {
-      const { v4: uuidv4 } = await import('uuid');
-
-      const insertData = {
-        id: uuidv4(),
-        // sessionid: sessionId,
-        userip: userIp,
-        createdat: new Date().toISOString(),
-        updatedat: new Date().toISOString()
-      };
-
-      if (userAgent) {
-        insertData.useragent = userAgent;
-      }
-
-      const { data, error } = await supabase
+    // UserId ile kullanıcı ara
+    if (newUserId) {
+      const { data: existingUser } = await supabase
         .from('users')
-        .insert(insertData)
-        .select();
+        .select('id, issuspicious')
+        .eq('id', newUserId)
+        .single();
 
-      if (error) {
-        throw error;
-      }
+      if (existingUser) {
+        isSuspicious = existingUser.issuspicious || isSuspicious;
 
-      if (data && data.length > 0) {
-        newUserId = data[0].id;
-        isNewUser = true;
+        // Mevcut kullanıcının bilgilerini güncelle
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({
+            fingerprintid: fingerprintId,
+            userip: userIp,
+            useragent: userAgent,
+            updatedat: new Date().toISOString()
+          })
+          .eq('id', newUserId);
+
+        if (updateError) {
+          console.error('Kullanıcı güncelleme hatası:', updateError);
+        }
+
+        return {
+          userId: newUserId,
+          isNewUser: false,
+          isSuspicious: isSuspicious || await checkSuspiciousBehavior(supabase, userIp, fingerprintId)
+        };
       }
     }
 
-    return { userId: newUserId, isNewUser };
+    // Kullanıcı bulunamadı, yeni kullanıcı oluştur
+    const { v4: uuidv4 } = await import('uuid');
+    newUserId = newUserId || uuidv4();
+    isNewUser = true;
+
+    const insertData = {
+      id: newUserId,
+      fingerprintid: fingerprintId,
+      userip: userIp,
+      useragent: userAgent || 'Unknown',
+      createdat: new Date().toISOString(),
+      updatedat: new Date().toISOString(),
+      issuspicious: isSuspicious,
+      islocksmith: false
+    };
+
+    const { error: insertError } = await supabase
+      .from('users')
+      .insert(insertData);
+
+    if (insertError) {
+      console.error('Kullanıcı oluşturma hatası:', insertError);
+      throw insertError;
+    }
+
+    // Şüpheli davranış kontrolü
+    if (!isSuspicious) {
+      isSuspicious = await checkSuspiciousBehavior(supabase, userIp, fingerprintId);
+      if (isSuspicious) {
+        await supabase
+          .from('users')
+          .update({ issuspicious: true })
+          .eq('id', newUserId);
+      }
+    }
+
+    return { userId: newUserId, isNewUser, isSuspicious };
   } catch (error) {
-    console.error('Kullanıcı oluşturma/güncelleme hatası:', error);
+    console.error('Kullanıcı işleme hatası:', error);
     throw error;
   }
 }
@@ -341,227 +555,21 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
  */
 export async function logUserActivity(supabase, userId = '00000000-0000-0000-0000-000000000000', sessionId = '00000000-0000-0000-0000-000000000000', activitytype = 'search', details, entityId, entityType, additionalData = {}, level = 1) {
   try {
-    const { v4: uuidv4 } = await import('uuid');
-
-    /**
-    'search',
-    'locksmith_list_view',
-    'locksmith_detail_view',
-    'call_request',
-    'review_submit',
-    'whatsapp_message',
-    'website_visit',
-     */
-
     // User-Agent bilgisini al ve cihaz tipini belirle
     const userAgent = additionalData.userAgent || '';
     const deviceType = userAgent.includes('Mobile') ? 'mobile' : 'desktop';
 
-    // activitytype tipine göre level ayarı
-    let finalLevel = 1;
-
-
-    //18 mayıs 2025
-    // // Key usage bilgisini al
-    // const { data: keyUsageData, error: keyUsageError } = await supabase
-    //   .from('key_usage_types')
-    //   .select('id, keyamount')
-    //   .eq('name', activitytype)
-    //   .eq('level', finalLevel)
-    //   .limit(1);
-
-    // if (keyUsageError) {
-    //   console.error('Key usage bilgisi alınamadı:', keyUsageError);
-    // }
-
-
-    //18 mayıs 2025
-    // if (keyUsageData && keyUsageData.length > 0) {
-    //   keyAmount = keyUsageData[0].keyamount;
-    //   usageTypeId = keyUsageData[0].id;
-    //   // console.log(`Key usage bilgisi alındı: ${activitytype} (level: ${finalLevel}) - ${keyAmount} anahtar`);
-    // } else {
-    //   // console.warn(`Key usage bilgisi bulunamadı: ${activitytype} (level: ${finalLevel}). Varsayılan değer kullanılıyor.`);
-    //   // Varsayılan değer olarak 0 anahtar kullan
-    //   keyAmount = 0;
-    //   systemNote += '|Key usage bilgisi bulunamadı';
-    // }
-
-    //18 mayıs 2025
-    // try {
-    //   //count user_activity_logs with userId
-    //   const { count: userActivityLogsCount, error: userActivityLogsError } = await supabase
-    //     .from('user_activity_logs')
-    //     .select('id', { count: 'exact', head: true })
-    //     .eq('userid', userId)
-
-    //   if (userActivityLogsError) {
-    //     console.error('Kullanıcı aktivite kayıtları alınamadı:', userActivityLogsError);
-    //   }
-
-
-    //18 mayıs 2025
-    //   if (userActivityLogsCount > 10 && userId) {
-    //     //update users table issuspicious to true
-    //     const { error: updateError } = await supabase
-    //       .from('users')
-    //       .update({ issuspicious: true })
-    //       .eq('id', userId);
-
-    //     if (updateError) {
-    //       console.error('Kullanıcı güncellenemedi:', updateError);
-    //     }
-
-    //   }
-    // } catch (error) {
-    //   console.error('Kullanıcı aktivite kayıtları alınamadı:', error);
-    // }
-
-    // Kullanıcının varlığını kontrol et, yoksa yeni bir kullanıcı oluştur
-    // Bu adım, users tablosu boşaltıldığında foreign key hatası almanın önüne geçecek
-    if (userId) {
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('id', userId)
-        .limit(1);
-
-      if (userError) {
-        console.error('Kullanıcı kontrolü sırasında hata:', userError);
-      }
-      // try {
-
-      //   if (userData[0]?.islocksmith) {
-      //     keyAmount = 0;
-      //     systemNote += '|Çilingir kullanıcı';
-      //   }
-
-      //   if (userData[0]?.issuspicious) {
-      //     keyAmount = 0;
-      //     systemNote += '|Şüpheli kullanıcı';
-      //   }
-
-      // } catch (error) {
-      //   console.error('Kullanıcı bilgisi alınamadı:', error);
-      // }
-
-      // Kullanıcı bulunamadıysa yeni bir kullanıcı oluştur
-      if (!userData || userData.length === 0) {
-        console.log(`Kullanıcı bulunamadı, yeni kullanıcı oluşturuluyor...`);
-        const newUserData = {
-          id: userId, // Mevcut ID'yi koruyoruz
-          useragent: userAgent || 'Unknown',
-          userip: '0.0.0.0', // Varsayılan IP
-          createdat: new Date().toISOString(),
-          updatedat: new Date().toISOString(),
-          islocksmith: false
-        };
-
-        const { error: insertError } = await supabase
-          .from('users')
-          .insert(newUserData);
-
-        if (insertError) {
-          console.error('Kullanıcı oluşturma hatası:', insertError);
-          // Eski kullanıcı ID'si çakışma yarattıysa, yeni bir ID oluştur
-          if (insertError.code === '23505') { // Unique violation (çakışma)
-            userId = uuidv4();
-            newUserData.id = userId;
-
-            const { error: retryError } = await supabase
-              .from('users')
-              .insert(newUserData);
-
-            if (retryError) {
-              console.error('Yeni ID ile kullanıcı oluşturma hatası:', retryError);
-              // Bu noktada aktivite kaydı için geri dön
-              return null;
-            } else {
-              console.log(`Yeni kullanıcı ID ile başarıyla oluşturuldu: ${userId}`);
-            }
-          } else {
-            // Başka bir hata durumunda, aktivite kaydı için geri dön
-            return null;
-          }
-        } else {
-          console.log(`Kullanıcı başarıyla oluşturuldu: ${userId}`);
-        }
-      }
-    } else {
-      // userId yoksa yeni bir UUID oluştur
-      userId = uuidv4();
-
-      // Yeni kullanıcı ekle
-      const newUserData = {
-        id: userId,
-        useragent: userAgent || 'Unknown',
-        userip: '0.0.0.0', // Varsayılan IP
-        createdat: new Date().toISOString(),
-        updatedat: new Date().toISOString(),
-        islocksmith: false
-      };
-
-      const { error: insertError } = await supabase
-        .from('users')
-        .insert(newUserData);
-
-      if (insertError) {
-        console.error('Yeni kullanıcı oluşturma hatası:', insertError);
-        return null;
-      }
-
+    // Kullanıcı ID'si yoksa veya varsayılan değerse yeni bir kullanıcı oluştur
+    if (!userId || userId === '00000000-0000-0000-0000-000000000000') {
+      const result = await createOrUpdateUser(
+        supabase,
+        null,
+        sessionId,
+        '0.0.0.0',
+        userAgent
+      );
+      userId = result.userId;
     }
-
-    //18 mayıs 2025
-    // try {
-    //   if (additionalData.locksmithId) {
-    //     const { data: locksmithData, error: locksmithError } = await supabase
-    //       .from('locksmiths')
-    //       .select('provinceid')
-    //       .eq('id', additionalData.locksmithId)
-    //       .limit(1);
-
-    //     if (locksmithError) {
-    //       console.error('Çilingir bilgisi alınamadı:', locksmithError);
-    //     }
-
-
-    //     if (locksmithData && locksmithData.length > 0) {
-    //       if (locksmithData[0].provinceid !== additionalData.searchProvinceId) {
-    //         keyAmount = 0;
-    //         systemNote += '|Çilingir bu ilde çalışmıyor';
-    //       }
-    //     }
-    //   }
-    // } catch (error) {
-    //   console.error('Çilingir bilgisi alınamadı:', error);
-    // }
-
-
-    //18 mayıs 2025
-    // try {
-    //   if (additionalData.locksmithId && additionalData.searchServiceId) {
-    //     const { data: locksmithData, error: locksmithError } = await supabase
-    //       .from('locksmith_services')
-    //       .select('serviceid')
-    //       .eq('locksmithid', additionalData.locksmithId)
-    //       .eq('serviceid', additionalData.searchServiceId)
-    //       .eq('isactive', true)
-    //       .limit(1);
-
-    //     if (locksmithError) {
-    //       console.error('Çilingir bilgisi alınamadı:', locksmithError);
-    //     } else if (!locksmithData || locksmithData.length === 0) {
-    //       keyAmount = 0;
-    //       systemNote += '|Çilingir bu hizmeti vermiyor';
-    //     }
-    //   }
-
-    // } catch (error) {
-    //   console.error('Çilingir bilgisi alınamadı:', error);
-    // }
-
-
 
     const insertData = {
       userid: userId,
@@ -570,25 +578,15 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
       createdat: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
     };
 
-
-    //18 mayıs 2025
-    // // UsageTypeId varsa ekle
-    // if (usageTypeId) {
-    //   insertData.usagetypeid = usageTypeId;
-    // }
-
     // SessionId varsa ve UUID formatındaysa ekle
-    if (sessionId) {
+    if (sessionId && sessionId !== '00000000-0000-0000-0000-000000000000') {
       try {
-        // UUID formatını kontrol et (basit kontrol)
         const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
         if (uuidPattern.test(sessionId)) {
           insertData.sessionid = sessionId;
         } else {
-          // Geçerli bir UUID değilse, yeni bir UUID oluştur
+          const { v4: uuidv4 } = await import('uuid');
           insertData.sessionid = uuidv4();
-          // Metadata yoksa JSONB alan ekleyip düzenleyebiliriz
-          // console.log('SessionId UUID formatında değil, yeni UUID oluşturuluyor');
         }
       } catch (e) {
         console.error('SessionId işleme hatası:', e);
@@ -599,157 +597,21 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
     if (additionalData.searchProvinceId) insertData.searchprovinceid = additionalData.searchProvinceId;
     if (additionalData.searchDistrictId) insertData.searchdistrictid = additionalData.searchDistrictId;
     if (additionalData.searchServiceId) insertData.searchserviceid = additionalData.searchServiceId;
-
-    // Çilingir ID'sini ekle - entityType locksmith ise veya additionalData.locksmithId varsa
-    if (additionalData.locksmithId) {
-      insertData.locksmithid = additionalData.locksmithId;
-    } else if (entityType === 'locksmith' && entityId) {
-      insertData.locksmithid = entityId;
-    }
-
+    if (additionalData.locksmithId) insertData.locksmithid = additionalData.locksmithId;
     if (additionalData.reviewId) insertData.reviewid = additionalData.reviewId;
-
+    if (entityType === 'locksmith' && entityId) insertData.locksmithid = entityId;
 
     const { data, error } = await supabase
       .from('user_activity_logs')
       .insert(insertData)
       .select();
 
-
-    // Veritabaınına taşındı & trigger ile yapılacak -> 23 Mayıs 2025
-    // if (additionalData.locksmithId && activitytype === 'call_request') {
-    //   try {
-    //     // 1. Adım: mevcut call_count değerini alıyoruz
-    //     const { data: locksmithTrafficData, error: locksmithTrafficError } = await supabase
-    //       .from('locksmith_traffic')
-    //       .select('call_count,multiplier')
-    //       .eq('locksmith_id', additionalData.locksmithId)
-    //       .single();
-
-    //     if (locksmithTrafficError) {
-    //       console.error('Error fetching call_count:', locksmithTrafficError);
-    //       return;
-    //     }
-
-    //     // 2. Adım: call_count'ı 1 artırıp, priority hesaplıyoruz
-    //     const updatedCallCount = locksmithTrafficData.call_count + 1;
-    //     const updatedPriority = locksmithTrafficData.multiplier / updatedCallCount;
-
-    //     // 3. Adım: call_count ve priority'yi güncelliyoruz
-    //     const { error: updateError } = await supabase
-    //       .from('locksmith_traffic')
-    //       .update({ call_count: updatedCallCount, priority: updatedPriority })
-    //       .eq('locksmith_id', additionalData.locksmithId);
-
-    //     if (updateError) {
-    //       console.error('Error updating call_count and priority:', updateError);
-    //     }
-
-    //   } catch (error) {
-    //     console.error('Locksmith traffic güncellenemedi:', error);
-    //   }
-    // } else if (additionalData.locksmithId && activitytype === 'whatsapp_message') {
-    //   try {
-    //     // 1. Adım: mevcut call_count değerini alıyoruz
-    //     const { data: locksmithTrafficData, error: locksmithTrafficError } = await supabase
-    //       .from('locksmith_traffic')
-    //       .select('wp_count')
-    //       .eq('locksmith_id', additionalData.locksmithId)
-    //       .single();
-
-    //     if (locksmithTrafficError) {
-    //       console.error('Error fetching wp_count:', locksmithTrafficError);
-    //       return;
-    //     }
-
-    //     // 2. Adım: call_count'ı 1 artır
-    //     const updatedWpCount = locksmithTrafficData.wp_count + 1;
-
-    //     // 3. Adım: wp_count'ı güncelliyoruz
-    //     const { error: updateError } = await supabase
-    //       .from('locksmith_traffic')
-    //       .update({ wp_count: updatedWpCount })
-    //       .eq('locksmith_id', additionalData.locksmithId);
-
-    //     if (updateError) {
-    //       console.error('Error updating wp_count:', updateError);
-    //     }
-
-    //   } catch (error) {
-    //     console.error('Locksmith traffic güncellenemedi:', error);
-    //   }
-    // } else if (additionalData.locksmithId && activitytype === 'locksmith_list_view') {
-    //   try {
-    //     // 1. Adım: mevcut call_count değerini alıyoruz
-    //     const { data: locksmithTrafficData, error: locksmithTrafficError } = await supabase
-    //       .from('locksmith_traffic')
-    //       .select('list_count')
-    //       .eq('locksmith_id', additionalData.locksmithId)
-    //       .single();
-
-    //     if (locksmithTrafficError) {
-    //       console.error('Error fetching list_count:', locksmithTrafficError);
-    //       return;
-    //     }
-
-    //     // 2. Adım: call_count'ı 1 artırıp, priority hesaplıyoruz
-    //     const updatedListCount = locksmithTrafficData.list_count + 1;
-
-    //     // 3. Adım: call_count ve priority'yi güncelliyoruz
-    //     const { error: updateError } = await supabase
-    //       .from('locksmith_traffic')
-    //       .update({ list_count: updatedListCount })
-    //       .eq('locksmith_id', additionalData.locksmithId);
-
-    //     if (updateError) {
-    //       console.error('Error updating list_count:', updateError);
-    //     }
-
-    //   } catch (error) {
-    //     console.error('Locksmith traffic güncellenemedi:', error);
-    //   }
-    // } else if (additionalData.locksmithId && activitytype === 'locksmith_detail_view') {
-    //   try {
-    //     // 1. Adım: mevcut call_count değerini alıyoruz
-    //     const { data: locksmithTrafficData, error: locksmithTrafficError } = await supabase
-    //       .from('locksmith_traffic')
-    //       .select('visit_count')
-    //       .eq('locksmith_id', additionalData.locksmithId)
-    //       .single();
-
-    //     if (locksmithTrafficError) {
-    //       console.error('Error fetching visit_count:', locksmithTrafficError);
-    //       return;
-    //     }
-
-    //     // 2. Adım: call_count'ı 1 artırıp, priority hesaplıyoruz
-    //     const updatedVisitCount = locksmithTrafficData.visit_count + 1;
-
-    //     // 3. Adım: call_count ve priority'yi güncelliyoruz
-    //     const { error: updateError } = await supabase
-    //       .from('locksmith_traffic')
-    //       .update({ visit_count: updatedVisitCount })
-    //       .eq('locksmith_id', additionalData.locksmithId);
-
-    //     if (updateError) {
-    //       console.error('Error updating visit_count:', updateError);
-    //     }
-
-    //   } catch (error) {
-    //     console.error('Locksmith traffic güncellenemedi:', error);
-    //   }
-    // }
-
     if (error) {
       console.error('Aktivite ekleme SQL hatası:', error);
       throw error;
     }
 
-    let activityId = null;
-    if (data && data.length > 0) {
-      activityId = data[0].id;
-    }
-
+    let activityId = data?.[0]?.id || null;
     return activityId;
   } catch (error) {
     console.error('Aktivite kaydetme hatası:', error);

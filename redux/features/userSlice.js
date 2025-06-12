@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
+import FingerprintJS from '@fingerprintjs/fingerprintjs';
 
 // Kullanıcı oturum başlatma
 export const initUserSession = createAsyncThunk(
@@ -16,9 +17,15 @@ export const initUserSession = createAsyncThunk(
         localStorage.setItem('sessionId', sessionId);
       }
 
-      // console.log('[UserSlice] Oturum başlatılıyor...');
-      // console.log(`[UserSlice] SessionID: ${sessionId}`);
-      // console.log(`[UserSlice] UserID: ${userId || 'Yeni kullanıcı'}`);
+      // FingerprintJS'i yükle ve visitorId al
+      let fingerprintId = null;
+      try {
+        const fp = await FingerprintJS.load();
+        const result = await fp.get();
+        fingerprintId = result.visitorId;
+      } catch (fpError) {
+        console.error('[UserSlice] Fingerprint alınamadı:', fpError);
+      }
 
       // Kullanıcı IP adresini al
       let userIp = '0.0.0.0'; // Varsayılan değer
@@ -46,7 +53,8 @@ export const initUserSession = createAsyncThunk(
             sessionId,
             userId,
             userIp,
-            userAgent: navigator.userAgent
+            userAgent: navigator.userAgent,
+            fingerprintId
           }),
         });
 
@@ -58,6 +66,11 @@ export const initUserSession = createAsyncThunk(
             localStorage.setItem('userId', trackData.userId);
             userId = trackData.userId;
             // console.log(`[UserSlice] Kullanıcı ID güncellendi: ${userId}`);
+          }
+
+          // Eğer kullanıcı şüpheli olarak işaretlendiyse
+          if (trackData.isSuspicious) {
+            console.warn('[UserSlice] Kullanıcı şüpheli olarak işaretlendi');
           }
 
           // Eğer yeni bir kullanıcıysa, giriş aktivitesi kaydet
@@ -75,6 +88,7 @@ export const initUserSession = createAsyncThunk(
       return {
         sessionId,
         userId,
+        fingerprintId,
         isInitialized: true
       };
     } catch (error) {
@@ -194,6 +208,7 @@ const userSlice = createSlice({
   initialState: {
     userId: null,
     sessionId: null,
+    fingerprintId: null,
     isInitialized: false,
     isLoading: false,
     error: null,
@@ -211,12 +226,12 @@ const userSlice = createSlice({
         state.isLoading = false;
         state.userId = action.payload.userId;
         state.sessionId = action.payload.sessionId;
+        state.fingerprintId = action.payload.fingerprintId;
         state.isInitialized = true;
       })
       .addCase(initUserSession.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || action.error.message;
-        // Hata olsa bile, oturum aktif olarak işaretlenir (ama hata durumunu korur)
         state.isInitialized = true;
       })
 

@@ -164,6 +164,7 @@ CREATE TABLE notifications (
 
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    fingerprintId TEXT UNIQUE,
     userIp INET,              
     userAgent TEXT,          
     islocksmith BOOLEAN DEFAULT false,
@@ -240,7 +241,7 @@ CREATE TABLE newsletter_subscribers (
 
 
   -- İletişim Formu Tablosu
-CREATE TABLE public.contact_form (
+CREATE TABLE contact_form (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   type TEXT CHECK (type IN ('customer', 'locksmith')) NOT NULL,
   name TEXT NOT NULL,
@@ -287,4 +288,13 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE ip_ignore (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    ip INET NOT NULL UNIQUE,
+    userId UUID REFERENCES users(id) ON DELETE SET NULL, -- bağlantı
+    reason TEXT,
+    isActive BOOLEAN DEFAULT true,
+    createdAt TIMESTAMPTZ DEFAULT NOW()
 );
