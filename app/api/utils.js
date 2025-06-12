@@ -368,7 +368,6 @@ export async function checkSuspiciousBehavior(supabase, ip, fingerprintId) {
     // 24 saat içindeki toplam ziyaret sayısı
     const totalVisits = activities.length;
     if (totalVisits > rules.maxVisitsIn24Hours) {
-      console.log('maxVisitsIn24Hours ');
       isSuspicious = true;
       suspiciousReason = `24 saat içinde çok fazla ziyaret (${totalVisits} ziyaret)`;
     }
@@ -378,7 +377,6 @@ export async function checkSuspiciousBehavior(supabase, ip, fingerprintId) {
       for (let i = 1; i < activities.length; i++) {
         const timeDiff = new Date(activities[i - 1].createdat) - new Date(activities[i].createdat);
         if (timeDiff < rules.minTimeBetweenVisits) {
-          console.log('minTimeBetweenVisits ');
           isSuspicious = true;
           suspiciousReason = 'Çok sık aralıklarla ziyaret';
           break;
@@ -390,9 +388,6 @@ export async function checkSuspiciousBehavior(supabase, ip, fingerprintId) {
     if (!isSuspicious) {
       const searchCount = activities.filter(a => a.activitytype === 'locksmith_list_view').length;
       if (searchCount > rules.maxSearchesPerDay) {
-        console.log('maxSearchesPerDay aşıldı');
-        console.log('searchCount:', searchCount);
-        console.log('rules.maxSearchesPerDay:', rules.maxSearchesPerDay);
         isSuspicious = true;
         suspiciousReason = `Günlük arama limiti aşıldı (${searchCount} arama)`;
       }
@@ -556,6 +551,40 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
       .insert(insertData);
 
     if (insertError) {
+      // Eğer duplicate key hatası alındıysa (23505), kullanıcıyı tekrar çek
+      if (insertError.code === '23505') {
+        const { data: existingUser } = await supabase
+          .from('users')
+          .select('id, issuspicious')
+          .eq('id', newUserId)
+          .single();
+
+        if (existingUser) {
+          // Kullanıcı bulundu, bilgilerini güncelle
+          const { error: updateError } = await supabase
+            .from('users')
+            .update({
+              fingerprintid: fingerprintId,
+              userip: userIp,
+              useragent: userAgent,
+              updatedat: new Date().toISOString()
+            })
+            .eq('id', newUserId);
+
+          if (updateError) {
+            console.error('Kullanıcı güncelleme hatası:', updateError);
+          }
+
+          isSuspicious = existingUser.issuspicious || isSuspicious;
+          await addSuspiciousIpToIgnoreList(supabase, userIp, newUserId, isSuspicious);
+
+          return {
+            userId: newUserId,
+            isNewUser: false,
+            isSuspicious: isSuspicious || await checkSuspiciousBehavior(supabase, userIp, fingerprintId)
+          };
+        }
+      }
       console.error('Kullanıcı oluşturma hatası:', insertError);
       throw insertError;
     }
