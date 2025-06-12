@@ -249,7 +249,7 @@ export async function checkAdminAuth(request) {
 
 /**
  * IP adresinin şüpheli olup olmadığını kontrol eder
- * @param {Object} supabase - Supabase istemcisi
+ * @param {Object} supabase - Supabase istemci
  * @param {string} ip - Kontrol edilecek IP adresi
  * @returns {Promise<{isSuspicious: boolean, reason: string}>}
  */
@@ -279,7 +279,7 @@ export async function checkSuspiciousIP(supabase, ip) {
 
 /**
  * Şüpheli kullanıcının IP adresini ip_ignore tablosuna ekler
- * @param {Object} supabase - Supabase istemcisi
+ * @param {Object} supabase - Supabase istemci
  * @param {string} userIp - Kullanıcı IP adresi
  * @param {string} userId - Kullanıcı ID
  * @param {boolean} isSuspicious - Kullanıcının şüpheli olup olmadığı
@@ -313,7 +313,7 @@ async function addSuspiciousIpToIgnoreList(supabase, userIp, userId, isSuspiciou
 
 /**
  * Kullanıcının şüpheli davranış gösterip göstermediğini kontrol eder
- * @param {Object} supabase - Supabase istemcisi
+ * @param {Object} supabase - Supabase istemci
  * @param {string} ip - Kullanıcı IP adresi
  * @param {string} fingerprintId - Kullanıcı parmak izi
  * @returns {Promise<boolean>}
@@ -443,7 +443,7 @@ export async function checkSuspiciousBehavior(supabase, ip, fingerprintId) {
 
 /**
  * Kullanıcıyı oluşturur veya günceller
- * @param {Object} supabase - Supabase istemcisi
+ * @param {Object} supabase - Supabase istemci
  * @param {string} userId - Kullanıcı ID (varsa)
  * @param {string} sessionId - Oturum ID
  * @param {string} userIp - Kullanıcı IP adresi
@@ -582,7 +582,7 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
 
 /**
  * Kullanıcı aktivitesini kaydeder
- * @param {Object} supabase - Supabase istemcisi
+ * @param {Object} supabase - Supabase istemci
  * @param {string} userId - Kullanıcı ID
  * @param {string} sessionId - Oturum ID
  * @param {string} activitytype - Aktivite tipi (enum: search, locksmith_list_view, locksmith_detail_view, call_request, review_submit, profile_visit, whatsapp_message, website_visit)
@@ -593,7 +593,7 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
  * @param {number} level - Sıralama seviyesi (özellikle locksmith_list_view için, varsayılan: 1)
  * @returns {Promise<string>} Aktivite ID'si
  */
-export async function logUserActivity(supabase, userId = '00000000-0000-0000-0000-000000000000', sessionId = '00000000-0000-0000-0000-000000000000', activitytype = 'search', details, entityId, entityType, additionalData = {}, level = 1) {
+export async function logUserActivity(supabase, userId = '00000000-0000-0000-0000-000000000000', sessionId = '00000000-0000-0000-0000-000000000000', activitytype = 'website_visit', details, entityId, entityType, additionalData = {}, level = 1) {
   try {
     // User-Agent bilgisini al ve cihaz tipini belirle
     const userAgent = additionalData.userAgent || '';
@@ -609,6 +609,25 @@ export async function logUserActivity(supabase, userId = '00000000-0000-0000-000
         userAgent
       );
       userId = result.userId;
+    } else {
+      // Kullanıcının varlığını kontrol et
+      const { data: existingUser, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', userId)
+        .single();
+
+      if (!existingUser || userError) {
+        // Kullanıcı bulunamadıysa yeni oluştur
+        const result = await createOrUpdateUser(
+          supabase,
+          userId, // Mevcut userId'yi gönder
+          sessionId,
+          '0.0.0.0',
+          userAgent
+        );
+        userId = result.userId;
+      }
     }
 
     const insertData = {
