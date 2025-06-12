@@ -6,21 +6,37 @@ export async function POST(request) {
     // İstemci oluştur
     const { supabase } = createRouteClient(request);
 
-    // İstek gövdesini al
-    const requestData = await request.json();
-    const { sessionId, userId, userIp, userAgent, fingerprintId } = requestData;
-
-    // Session ID kontrolü
-    if (!sessionId) {
+    // İstek gövdesini kontrol et
+    if (!request.body) {
+      console.error('Boş istek gövdesi');
       return NextResponse.json({
-        error: "Session ID gerekli"
+        error: "Geçersiz istek: Boş gövde"
       }, { status: 400 });
     }
 
-    // FingerprintID kontrolü
-    if (!fingerprintId) {
+    // İstek gövdesini al ve hata kontrolü yap
+    let requestData;
+    try {
+      requestData = await request.json();
+    } catch (error) {
+      console.error('JSON parse hatası:', error);
       return NextResponse.json({
-        error: "Fingerprint ID gerekli"
+        error: "Geçersiz JSON formatı"
+      }, { status: 400 });
+    }
+
+    // Gerekli alanların varlığını kontrol et
+    const { sessionId, userId, userIp, userAgent, fingerprintId } = requestData;
+
+    // Zorunlu alanları kontrol et
+    if (!sessionId || !fingerprintId) {
+      const missingFields = [];
+      if (!sessionId) missingFields.push('sessionId');
+      if (!fingerprintId) missingFields.push('fingerprintId');
+
+      console.error('Eksik alanlar:', missingFields);
+      return NextResponse.json({
+        error: "Eksik alanlar: " + missingFields.join(', ')
       }, { status: 400 });
     }
 
@@ -30,8 +46,8 @@ export async function POST(request) {
         supabase,
         userId,
         sessionId,
-        userIp,
-        userAgent,
+        userIp || request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for'),
+        userAgent || request.headers.get('user-agent'),
         fingerprintId
       );
 
@@ -50,7 +66,8 @@ export async function POST(request) {
   } catch (error) {
     console.error('Kullanıcı takip hatası:', error);
     return NextResponse.json({
-      error: "Sunucu hatası"
+      error: "Sunucu hatası",
+      details: error.message
     }, { status: 500 });
   }
 } 
