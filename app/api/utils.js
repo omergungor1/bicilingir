@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { Resend } from 'resend';
 
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
  * API route içinde Supabase istemcisi oluşturur
@@ -278,34 +280,99 @@ export async function checkSuspiciousIP(supabase, ip) {
 }
 
 /**
- * Şüpheli kullanıcının IP adresini ip_ignore tablosuna ekler
+ * IP adresini ip_ignore tablosuna ekler (eğer zaten yoksa)
  * @param {Object} supabase - Supabase istemci
- * @param {string} userIp - Kullanıcı IP adresi
+ * @param {string} ip - IP adresi
  * @param {string} userId - Kullanıcı ID
- * @param {boolean} isSuspicious - Kullanıcının şüpheli olup olmadığı
+ * @param {string} reason - IP'nin engellenme sebebi
  * @returns {Promise<void>}
  */
-async function addSuspiciousIpToIgnoreList(supabase, userIp, userId, isSuspicious) {
-  if (isSuspicious && userIp) {
-    const { data: existingIp } = await supabase
-      .from('ip_ignore')
-      .select('id')
-      .eq('ip', userIp)
-      .single();
+async function addIpToIgnoreList(supabase, ip, userId, reason) {
+  if (!ip) return;
 
-    // IP henüz ip_ignore tablosunda yoksa ekle
-    if (!existingIp) {
-      const { error: ipError } = await supabase
-        .from('ip_ignore')
-        .insert({
-          ip: userIp,
-          userid: userId,
-          reason: 'Şüpheli kullanıcının yeni IP adresi',
-          isactive: true
+  const { data: existingIp } = await supabase
+    .from('ip_ignore')
+    .select('id')
+    .eq('ip', ip)
+    .single();
+
+  // IP henüz ip_ignore tablosunda yoksa ekle
+  if (!existingIp) {
+    const { error: ipError } = await supabase
+      .from('ip_ignore')
+      .insert({
+        ip: ip,
+        userid: userId,
+        reason: reason,
+        isactive: true
+      });
+
+    if (ipError) {
+      console.error('IP ignore tablosuna ekleme hatası:', ipError);
+    } else {
+      // IP başarıyla engellendiğinde mail gönder
+      try {
+        const currentDate = new Date().toLocaleString('tr-TR', {
+          timeZone: 'Europe/Istanbul',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
         });
 
-      if (ipError) {
-        console.error('IP ignore tablosuna ekleme hatası:', ipError);
+        await resend.emails.send({
+          from: 'BiÇilingir <noreply@bicilingir.com>',
+          to: 'info@bicilingir.com',
+          subject: 'Yeni IP Engelleme Bildirimi',
+          html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, sans-serif;">
+                <table role="presentation" style="width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; margin-top: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <tr>
+                        <td style="padding: 20px; text-align: center; background-color: #ffffff;">
+                            <img src="https://bicilingir.com/logo.png" alt="BiÇilingir Logo" style="width: 200px; height: auto; margin-bottom: 20px;">
+                            <h3 style="margin: 0; color: #666; font-size: 14px; font-weight: normal;">Türkiye'nin İlk ve Tek Çilingir Platformu</h3>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 30px;">
+                            <h2 style="color: #333; margin-bottom: 20px;">Yeni IP Engelleme Bildirimi</h2>
+                            <p style="color: #666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
+                                Aşağıdaki IP adresi sistem tarafından engellendi:
+                            </p>
+                            <div style="background-color: #f8f8f8; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                                <p style="margin: 0; color: #333; font-size: 14px;">
+                                    <strong>IP Adresi:</strong> ${ip}<br>
+                                    <strong>Kullanıcı ID:</strong> ${userId}<br>
+                                    <strong>Engellenme Sebebi:</strong> ${reason}<br>
+                                    <strong>Engellenme Tarihi:</strong> ${currentDate}
+                                </p>
+                            </div>
+                            <p style="color: #666; font-size: 14px;">
+                                Bu otomatik bir bilgilendirme mailidir. Lütfen bu maile cevap vermeyiniz.
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color: #f8f8f8; padding: 20px; text-align: center; border-top: 1px solid #eee;">
+                            <p style="color: #888; font-size: 12px; margin: 0;">
+                                © ${new Date().getFullYear()} BiÇilingir. Tüm hakları saklıdır.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+          `
+        });
+      } catch (error) {
+        console.error('IP engelleme bildirimi mail gönderme hatası:', error);
       }
     }
   }
@@ -403,28 +470,7 @@ export async function checkSuspiciousBehavior(supabase, ip, fingerprintId) {
       ));
 
       // IP'yi ip_ignore tablosuna ekle
-      // Önce bu IP'nin zaten tabloda olup olmadığını kontrol et
-      const { data: existingIp } = await supabase
-        .from('ip_ignore')
-        .select('id')
-        .eq('ip', ip)
-        .single();
-
-      if (!existingIp) {
-        // IP'yi ip_ignore tablosuna ekle
-        const { error: ipError } = await supabase
-          .from('ip_ignore')
-          .insert({
-            ip: ip,
-            userid: userIds[0], // İlk kullanıcıyı referans olarak ekle
-            reason: suspiciousReason,
-            isactive: true
-          });
-
-        if (ipError) {
-          console.error('IP ignore tablosuna ekleme hatası:', ipError);
-        }
-      }
+      await addIpToIgnoreList(supabase, ip, userIds[0], suspiciousReason);
 
       return true;
     }
@@ -484,7 +530,7 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
           console.error('Kullanıcı güncelleme hatası:', updateError);
         }
 
-        await addSuspiciousIpToIgnoreList(supabase, userIp, newUserId, isSuspicious);
+        await addIpToIgnoreList(supabase, userIp, newUserId, 'Şüpheli kullanıcının yeni IP adresi');
 
         return {
           userId: newUserId,
@@ -520,7 +566,7 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
           console.error('Kullanıcı güncelleme hatası:', updateError);
         }
 
-        await addSuspiciousIpToIgnoreList(supabase, userIp, newUserId, isSuspicious);
+        await addIpToIgnoreList(supabase, userIp, newUserId, 'Şüpheli kullanıcının yeni IP adresi');
 
         return {
           userId: newUserId,
@@ -576,7 +622,7 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
           }
 
           isSuspicious = existingUser.issuspicious || isSuspicious;
-          await addSuspiciousIpToIgnoreList(supabase, userIp, newUserId, isSuspicious);
+          await addIpToIgnoreList(supabase, userIp, newUserId, 'Şüpheli kullanıcının yeni IP adresi');
 
           return {
             userId: newUserId,
@@ -600,7 +646,7 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
       }
     }
 
-    await addSuspiciousIpToIgnoreList(supabase, userIp, newUserId, isSuspicious);
+    await addIpToIgnoreList(supabase, userIp, newUserId, 'Şüpheli kullanıcının yeni IP adresi');
 
     return { userId: newUserId, isNewUser, isSuspicious };
   } catch (error) {
