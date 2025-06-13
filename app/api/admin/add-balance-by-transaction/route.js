@@ -11,8 +11,6 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Geçersiz işlem kodu veya miktar' }, { status: 400 });
         }
 
-        console.log(transactionCode, amount, 'transactionCode, amount');
-
         // Transaction code'a göre çilingir detayını bul
         const { data: locksmithDetail, error: detailError } = await supabase
             .from('locksmith_details')
@@ -55,7 +53,7 @@ export async function POST(request) {
             .insert([{
                 locksmith_id: locksmithDetail.locksmithid,
                 amount: amount,
-                transaction_type: 'manual_topup'
+                transaction_type: 'manual_topup',
             }]);
 
         if (transactionError) {

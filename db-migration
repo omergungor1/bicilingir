@@ -268,6 +268,7 @@ create table locksmith_transactions (
   amount numeric(12, 2) not null, -- pozitif (yükleme/düzeltme), negatif (harcama) olabilir
   transaction_type text not null check (transaction_type in (
     'manual_topup',        -- kullanıcı yüklemesi
+    'user_request',        -- kullanıcı isteği
     'system_adjustment',   -- sistem düzeltmesi
     'ad_spend',            -- günlük reklam harcaması
     'refund',              -- geri ödeme
@@ -297,4 +298,19 @@ CREATE TABLE ip_ignore (
     reason TEXT,
     isActive BOOLEAN DEFAULT true,
     createdAt TIMESTAMPTZ DEFAULT NOW()
+);
+
+create table locksmith_topup_requests (
+    id uuid primary key default gen_random_uuid(),
+    locksmith_id uuid references locksmiths(id) on delete cascade,
+    amount numeric(12, 2) not null check (amount > 0),
+    description text,
+    status text not null check (status in (
+        'pending',    -- Beklemede
+        'approved',   -- Onaylandı
+        'rejected'    -- Reddedildi
+    )) default 'pending',
+    created_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now(),
+    admin_note text                        
 );

@@ -17,7 +17,7 @@ export async function POST(request) {
                 locksmith_id: locksmithId,
                 amount: amount,
                 transaction_type: 'manual_topup',
-                description: 'Admin panelinden manuel bakiye yükleme'
+                description: 'Admin panelinden manuel bakiye yükleme',
             });
 
         if (transactionError) throw transactionError;

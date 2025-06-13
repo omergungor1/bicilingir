@@ -156,7 +156,7 @@ export async function POST(request) {
                     locksmith_id: locksmithId,
                     amount: -Math.abs(adSpendAmount), // Negatif değer olarak kaydet
                     transaction_type: 'ad_spend',
-                    description: 'Günlük reklam harcaması'
+                    description: 'Günlük reklam harcaması',
                 });
 
             if (transactionError) throw transactionError;

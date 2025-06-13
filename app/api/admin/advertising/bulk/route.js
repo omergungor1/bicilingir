@@ -15,7 +15,7 @@ export async function POST(request) {
             locksmith_id: spend.locksmith_id,
             amount: -Math.abs(spend.amount), // Negatif değer olarak kaydet
             transaction_type: 'ad_spend',
-            description: 'Günlük reklam harcaması'
+            description: 'Günlük reklam harcaması',
         }));
 
         const { error: transactionError } = await supabase

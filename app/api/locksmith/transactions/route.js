@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getLocksmithId } from '../../utils';
 
+//For transaction history
+
 export async function GET(request) {
     try {
         const { locksmithId, supabase } = await getLocksmithId(request);
