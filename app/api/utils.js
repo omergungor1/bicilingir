@@ -285,9 +285,10 @@ export async function checkSuspiciousIP(supabase, ip) {
  * @param {string} ip - IP adresi
  * @param {string} userId - Kullanıcı ID
  * @param {string} reason - IP'nin engellenme sebebi
+ * @param {string} userAgent - Kullanıcının tarayıcı/cihaz bilgisi
  * @returns {Promise<void>}
  */
-async function addIpToIgnoreList(supabase, ip, userId, reason) {
+async function addIpToIgnoreList(supabase, ip, userId, reason, userAgent = 'Bilinmiyor') {
   if (!ip) return;
 
   const { data: existingIp } = await supabase
@@ -350,6 +351,7 @@ async function addIpToIgnoreList(supabase, ip, userId, reason) {
                                 <p style="margin: 0; color: #333; font-size: 14px;">
                                     <strong>IP Adresi:</strong> ${ip}<br>
                                     <strong>Kullanıcı ID:</strong> ${userId}<br>
+                                    <strong>Tarayıcı/Cihaz:</strong> ${userAgent}<br>
                                     <strong>Engellenme Sebebi:</strong> ${reason}<br>
                                     <strong>Engellenme Tarihi:</strong> ${currentDate}
                                 </p>
@@ -470,7 +472,7 @@ export async function checkSuspiciousBehavior(supabase, ip, fingerprintId) {
       ));
 
       // IP'yi ip_ignore tablosuna ekle
-      await addIpToIgnoreList(supabase, ip, userIds[0], suspiciousReason);
+      await addIpToIgnoreList(supabase, ip, userIds[0], suspiciousReason, 'Bilinmiyor');
 
       return true;
     }
@@ -530,7 +532,7 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
           console.error('Kullanıcı güncelleme hatası:', updateError);
         }
 
-        await addIpToIgnoreList(supabase, userIp, newUserId, 'Şüpheli kullanıcının yeni IP adresi');
+        await addIpToIgnoreList(supabase, userIp, newUserId, 'Şüpheli kullanıcının yeni IP adresi', userAgent);
 
         return {
           userId: newUserId,
@@ -566,7 +568,7 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
           console.error('Kullanıcı güncelleme hatası:', updateError);
         }
 
-        await addIpToIgnoreList(supabase, userIp, newUserId, 'Şüpheli kullanıcının yeni IP adresi');
+        await addIpToIgnoreList(supabase, userIp, newUserId, 'Şüpheli kullanıcının yeni IP adresi', userAgent);
 
         return {
           userId: newUserId,
@@ -622,7 +624,7 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
           }
 
           isSuspicious = existingUser.issuspicious || isSuspicious;
-          await addIpToIgnoreList(supabase, userIp, newUserId, 'Şüpheli kullanıcının yeni IP adresi');
+          await addIpToIgnoreList(supabase, userIp, newUserId, 'Şüpheli kullanıcının yeni IP adresi', userAgent);
 
           return {
             userId: newUserId,
@@ -646,7 +648,7 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
       }
     }
 
-    await addIpToIgnoreList(supabase, userIp, newUserId, 'Şüpheli kullanıcının yeni IP adresi');
+    await addIpToIgnoreList(supabase, userIp, newUserId, 'Şüpheli kullanıcının yeni IP adresi', userAgent);
 
     return { userId: newUserId, isNewUser, isSuspicious };
   } catch (error) {
