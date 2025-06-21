@@ -492,10 +492,26 @@ export async function checkSuspiciousBehavior(supabase, ip, fingerprintId) {
  * @param {string} userIp - Kullanıcı IP adresi
  * @param {string} userAgent - Kullanıcı tarayıcı bilgisi
  * @param {string} fingerprintId - FingerprintJS visitor ID
+ * @param {Object} locationData - Konum bilgileri (opsiyonel)
  * @returns {Promise<{userId: string, isNewUser: boolean, isSuspicious: boolean}>}
  */
-export async function createOrUpdateUser(supabase, userId, sessionId, userIp, userAgent, fingerprintId = null) {
+export async function createOrUpdateUser(supabase, userId, sessionId, userIp, userAgent, fingerprintId = null, locationData = null) {
   try {
+    const userData = {
+      userip: userIp,
+      useragent: userAgent,
+      fingerprintid: fingerprintId,
+      updatedat: new Date().toISOString()
+    };
+
+    // Konum bilgileri varsa ekle
+    if (locationData) {
+      userData.latitude = locationData.latitude;
+      userData.longitude = locationData.longitude;
+      userData.location_accuracy = Math.round(locationData.accuracy);
+      userData.location_source = 'browser_geolocation';
+    }
+
     let newUserId = userId;
     let isNewUser = false;
     let isSuspicious = false;
@@ -521,11 +537,7 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
         // Mevcut kullanıcının IP ve user-agent bilgilerini güncelle
         const { error: updateError } = await supabase
           .from('users')
-          .update({
-            userip: userIp,
-            useragent: userAgent,
-            updatedat: new Date().toISOString()
-          })
+          .update(userData)
           .eq('id', newUserId);
 
         if (updateError) {
@@ -556,12 +568,7 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
         // Mevcut kullanıcının bilgilerini güncelle
         const { error: updateError } = await supabase
           .from('users')
-          .update({
-            fingerprintid: fingerprintId,
-            userip: userIp,
-            useragent: userAgent,
-            updatedat: new Date().toISOString()
-          })
+          .update(userData)
           .eq('id', newUserId);
 
         if (updateError) {
@@ -591,7 +598,8 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
       createdat: new Date().toISOString(),
       updatedat: new Date().toISOString(),
       issuspicious: isSuspicious,
-      islocksmith: false
+      islocksmith: false,
+      ...userData
     };
 
     const { error: insertError } = await supabase
@@ -611,12 +619,7 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
           // Kullanıcı bulundu, bilgilerini güncelle
           const { error: updateError } = await supabase
             .from('users')
-            .update({
-              fingerprintid: fingerprintId,
-              userip: userIp,
-              useragent: userAgent,
-              updatedat: new Date().toISOString()
-            })
+            .update(userData)
             .eq('id', newUserId);
 
           if (updateError) {

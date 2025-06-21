@@ -1,7 +1,10 @@
 import "./globals.css";
 import Script from 'next/script';
 import { Inter } from 'next/font/google';
-import ClientLayout from './ClientLayout';
+import dynamic from 'next/dynamic';
+//import ClientLayout from './ClientLayout';
+
+const ClientLayout = dynamic(() => import('./ClientLayout'), { ssr: true });
 
 const inter = Inter({ subsets: ['latin'] });
 

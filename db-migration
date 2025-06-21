@@ -171,6 +171,10 @@ CREATE TABLE users (
     locksmithId UUID REFERENCES locksmiths(id),
     isSuspicious BOOLEAN DEFAULT false,
     isFraudulent BOOLEAN DEFAULT false,
+    latitude decimal(9,6),
+    longitude decimal(9,6),
+    location_accuracy integer,
+    location_source varchar(20),
     createdAt TIMESTAMPTZ DEFAULT NOW(),   
     updatedAt TIMESTAMPTZ DEFAULT NOW()    
 );

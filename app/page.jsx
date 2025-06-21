@@ -827,7 +827,7 @@ export default function Home() {
                       MH
                     </div>
                     <div className="ml-4">
-                      <h4 className="font-bold text-lg">Mehmet H.</h4>
+                      <h4 className="font-bold text-lg">Ramazan A.</h4>
                       <div className="flex text-yellow-500">
                         <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
                       </div>
