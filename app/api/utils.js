@@ -2,7 +2,15 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// const resend = new Resend(process.env.RESEND_API_KEY);
+let resend;
+try {
+  if (process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+} catch (error) {
+  console.error('Resend initialization error:', error);
+}
 
 /**
  * API route içinde Supabase istemcisi oluşturur
@@ -492,26 +500,10 @@ export async function checkSuspiciousBehavior(supabase, ip, fingerprintId) {
  * @param {string} userIp - Kullanıcı IP adresi
  * @param {string} userAgent - Kullanıcı tarayıcı bilgisi
  * @param {string} fingerprintId - FingerprintJS visitor ID
- * @param {Object} locationData - Konum bilgileri (opsiyonel)
  * @returns {Promise<{userId: string, isNewUser: boolean, isSuspicious: boolean}>}
  */
-export async function createOrUpdateUser(supabase, userId, sessionId, userIp, userAgent, fingerprintId = null, locationData = null) {
+export async function createOrUpdateUser(supabase, userId, sessionId, userIp, userAgent, fingerprintId = null) {
   try {
-    const userData = {
-      userip: userIp,
-      useragent: userAgent,
-      fingerprintid: fingerprintId,
-      updatedat: new Date().toISOString()
-    };
-
-    // Konum bilgileri varsa ekle
-    if (locationData) {
-      userData.latitude = locationData.latitude;
-      userData.longitude = locationData.longitude;
-      userData.location_accuracy = Math.round(locationData.accuracy);
-      userData.location_source = 'browser_geolocation';
-    }
-
     let newUserId = userId;
     let isNewUser = false;
     let isSuspicious = false;
@@ -537,7 +529,11 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
         // Mevcut kullanıcının IP ve user-agent bilgilerini güncelle
         const { error: updateError } = await supabase
           .from('users')
-          .update(userData)
+          .update({
+            userip: userIp,
+            useragent: userAgent,
+            updatedat: new Date().toISOString()
+          })
           .eq('id', newUserId);
 
         if (updateError) {
@@ -568,7 +564,12 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
         // Mevcut kullanıcının bilgilerini güncelle
         const { error: updateError } = await supabase
           .from('users')
-          .update(userData)
+          .update({
+            fingerprintid: fingerprintId,
+            userip: userIp,
+            useragent: userAgent,
+            updatedat: new Date().toISOString()
+          })
           .eq('id', newUserId);
 
         if (updateError) {
@@ -598,8 +599,7 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
       createdat: new Date().toISOString(),
       updatedat: new Date().toISOString(),
       issuspicious: isSuspicious,
-      islocksmith: false,
-      ...userData
+      islocksmith: false
     };
 
     const { error: insertError } = await supabase
@@ -619,7 +619,12 @@ export async function createOrUpdateUser(supabase, userId, sessionId, userIp, us
           // Kullanıcı bulundu, bilgilerini güncelle
           const { error: updateError } = await supabase
             .from('users')
-            .update(userData)
+            .update({
+              fingerprintid: fingerprintId,
+              userip: userIp,
+              useragent: userAgent,
+              updatedat: new Date().toISOString()
+            })
             .eq('id', newUserId);
 
           if (updateError) {
@@ -829,5 +834,46 @@ export async function getLocksmithId(request) {
   } catch (error) {
     console.error('Çilingir ID alınamadı:', error);
     return { error: 'Çilingir bilgileriniz bulunamadı', status: 404 };
+  }
+}
+
+/**
+ * Kullanıcının konum bilgisini günceller
+ * @param {Object} supabase - Supabase istemci
+ * @param {string} fingerprintId - Kullanıcı parmak izi
+ * @param {Object} location - Konum bilgisi {latitude, longitude, accuracy}
+ * @returns {Promise<Object>} Güncelleme sonucu
+ */
+export async function updateUserLocation(supabase, fingerprintId, location) {
+  console.log('updateUserLocation', fingerprintId, location);
+  console.log('FingerprintId', fingerprintId);
+  console.log('Location', location);
+
+  try {
+    if (!fingerprintId || !location) {
+      throw new Error('FingerprintId ve konum bilgisi gerekli');
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        location_accuracy: Math.round(location.accuracy),
+        location_source: 'browser',
+        updatedat: new Date().toISOString()
+      })
+      .eq('fingerprintid', fingerprintId)
+      .select();
+
+    if (error) {
+      console.error('Kullanıcı konum güncelleme hatası:', error);
+      throw error;
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    console.error('Konum güncelleme hatası:', error);
+    return { success: false, error: error.message };
   }
 }

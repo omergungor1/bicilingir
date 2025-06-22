@@ -1,11 +1,75 @@
 "use client";
 
+import { useEffect, useState } from 'react';
 import * as Dialog from "@radix-ui/react-dialog";
-import { Button } from "./button";
+import { Button } from './button';
+import { updateUserLocation } from '../../app/api/utils';
+import { getSupabaseClient } from '../../lib/supabase';
+import { useFingerprint } from '../../hooks/useFingerprint';
 
-export function LocationPermissionModal({ isOpen, onClose, onAccept }) {
+export function LocationPermissionModal() {
+    const { visitorId: fingerprintId } = useFingerprint();
+    const [isOpen, setIsOpen] = useState(false);
+    const [supabase, setSupabase] = useState(null);
+
+    useEffect(() => {
+        // Supabase client'ı sadece client-side'da oluştur
+        setSupabase(getSupabaseClient());
+
+        // localStorage'dan konum tercihini kontrol et
+        const locationPreference = localStorage.getItem('locationPermission');
+        if (!locationPreference && fingerprintId) {
+            setIsOpen(true);
+        }
+    }, [fingerprintId]);
+
+    const getCurrentPosition = () => {
+        console.log('getCurrentPosition 1');
+        if (!supabase) return;
+        console.log('getCurrentPosition 2');
+        if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const locationData = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    };
+                    console.log('getCurrentPosition 3');
+                    console.log(locationData, 'locationData');
+                    // Konum bilgisini güncelle
+                    const result = await updateUserLocation(supabase, fingerprintId, locationData);
+                    console.log('getCurrentPosition 4');
+                    if (result.success) {
+                        console.log('Konum başarıyla güncellendi');
+                    } else {
+                        console.error('Konum güncellenirken hata oluştu:', result.error);
+                    }
+                },
+                (error) => {
+                    console.error('Konum alınamadı:', error);
+                }
+            );
+        }
+    };
+
+    const handleAccept = () => {
+        localStorage.setItem('locationPermission', 'granted');
+        getCurrentPosition();
+        setIsOpen(false);
+    };
+
+    const handleReject = () => {
+        localStorage.setItem('locationPermission', 'denied');
+        setIsOpen(false);
+    };
+
+    if (!fingerprintId) {
+        return null;
+    }
+
     return (
-        <Dialog.Root open={isOpen} onOpenChange={onClose}>
+        <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
                 <Dialog.Content className="fixed left-[50%] top-[50%] max-h-[85vh] w-[90vw] max-w-[450px] translate-x-[-50%] translate-y-[-50%] rounded-[6px] bg-white p-[25px] shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,_hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] focus:outline-none">
@@ -23,10 +87,10 @@ export function LocationPermissionModal({ isOpen, onClose, onAccept }) {
                         </ul>
                     </div>
                     <div className="mt-6 flex justify-end space-x-4">
-                        <Button variant="outline" onClick={onClose}>
+                        <Button variant="outline" onClick={handleReject}>
                             Şimdi Değil
                         </Button>
-                        <Button onClick={onAccept}>
+                        <Button onClick={handleAccept}>
                             Konumumu Paylaş
                         </Button>
                     </div>
