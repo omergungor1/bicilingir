@@ -12,6 +12,40 @@ try {
   console.error('Resend initialization error:', error);
 }
 
+const { Configuration, OpenAIApi } = require('openai');
+
+// OpenAI yapılandırması
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
+
+/**
+ * IP bilgilerini analiz eder ve ChatGPT'den değerlendirme alır
+ * @param {Object} ipInfo - IP bilgileri
+ * @returns {Promise<string>} ChatGPT değerlendirmesi
+ */
+async function analyzeIpWithGPT(ipInfo) {
+  try {
+    const prompt = `Google Ads'de ilçelere özel reklam kampanyalarımız var ve sadece ilçedeki kullanıcılar görebilir. 
+    Bu IP adresi (${ipInfo.ip || 'Bilinmiyor'}) ${ipInfo.city || 'Bilinmiyor'}, ${ipInfo.region || 'Bilinmiyor'}, ${ipInfo.country || 'Bilinmiyor'} bölgesinden geliyor ve servis sağlayıcısı ${ipInfo.org || 'Bilinmiyor'}.
+    Bu IP kısa sürede birden fazla reklamımıza tıklamış, site içinde kısa süre vakit geçirmiş ve hiç dönüşüm yapmamıştır.
+    Bu IP adresi şüpheli midir ve engellenmeli midir? Lütfen "Evet, engelle çünkü..." veya "Hayır, engelleme çünkü..." şeklinde başlayarak kısa (1-2 cümle) bir açıklama yap.`;
+
+    const completion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 150,
+      temperature: 0.7,
+    });
+
+    return completion.data.choices[0].message.content.trim();
+  } catch (error) {
+    console.error('GPT analiz hatası:', error);
+    return null;
+  }
+}
+
 /**
  * API route içinde Supabase istemcisi oluşturur
  * @param {Request} request - Next.js route istek nesnesi
@@ -335,7 +369,6 @@ async function addIpToIgnoreList(supabase, ip, userId, reason, userAgent = 'Bili
     if (ipError) {
       console.error('IP ignore tablosuna ekleme hatası:', ipError);
     } else {
-      // IP başarıyla engellendiğinde mail gönder
       try {
         const currentDate = new Date().toLocaleString('tr-TR', {
           timeZone: 'Europe/Istanbul',
@@ -348,6 +381,9 @@ async function addIpToIgnoreList(supabase, ip, userId, reason, userAgent = 'Bili
 
         // IP bilgilerini al
         const ipInfo = await getIpInfo(ip);
+
+        // GPT analizi al
+        const gptAnalysis = await analyzeIpWithGPT(ipInfo);
 
         await resend.emails.send({
           from: 'BiÇilingir <noreply@bicilingir.com>',
@@ -381,6 +417,14 @@ async function addIpToIgnoreList(supabase, ip, userId, reason, userAgent = 'Bili
                                     <strong>Tarayıcı/Cihaz:</strong> ${userAgent}<br>
                                 </p>
                             </div>
+                            ${gptAnalysis ? `
+                            <div style="background-color: #f0f7ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #0066cc;">
+                                <h4 style="margin: 0 0 10px 0; color: #0066cc;">🤖 Yapay Zeka Analizi</h4>
+                                <p style="margin: 0; color: #333; font-size: 14px; line-height: 1.5;">
+                                    ${gptAnalysis}
+                                </p>
+                            </div>
+                            ` : ''}
                             <p style="color: #666; font-size: 14px;">
                                 Bu otomatik bir bilgilendirme mailidir. Lütfen bu maile cevap vermeyiniz.
                             </p>
