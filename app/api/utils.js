@@ -12,14 +12,6 @@ try {
   console.error('Resend initialization error:', error);
 }
 
-const { Configuration, OpenAIApi } = require('openai');
-
-// OpenAI yapılandırması
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-const openai = new OpenAIApi(configuration);
-
 /**
  * IP bilgilerini analiz eder ve ChatGPT'den değerlendirme alır
  * @param {Object} ipInfo - IP bilgileri
@@ -27,6 +19,14 @@ const openai = new OpenAIApi(configuration);
  */
 async function analyzeIpWithGPT(ipInfo) {
   try {
+    const { Configuration, OpenAIApi } = await import('openai');
+
+    const configuration = new Configuration({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
+    const openai = new OpenAIApi(configuration);
+
     const prompt = `Google Ads'de ilçelere özel reklam kampanyalarımız var ve sadece ilçedeki kullanıcılar görebilir. 
     Bu IP adresi (${ipInfo.ip || 'Bilinmiyor'}) ${ipInfo.city || 'Bilinmiyor'}, ${ipInfo.region || 'Bilinmiyor'}, ${ipInfo.country || 'Bilinmiyor'} bölgesinden geliyor ve servis sağlayıcısı ${ipInfo.org || 'Bilinmiyor'}.
     Bu IP kısa sürede birden fazla reklamımıza tıklamış, site içinde kısa süre vakit geçirmiş ve hiç dönüşüm yapmamıştır.
@@ -406,7 +406,7 @@ async function addIpToIgnoreList(supabase, ip, userId, reason, userAgent = 'Bili
                     <tr>
                         <td style="padding: 30px;">
                             <h2 style="color: #333; margin-bottom: 20px; text-align: center;">
-                                <span style="user-select: all; -webkit-user-select: all; -moz-user-select: all; -ms-user-select: all; cursor: text; padding: 8px 16px; border-radius: 4px;">${ip}</span>
+                                <code style="user-select: all; -webkit-user-select: all; -moz-user-select: all; -ms-user-select: all; cursor: text; padding: 8px 16px; border-radius: 4px; font-family: inherit; font-size: inherit; background: none; display: inline-block; white-space: nowrap;">${ip}</code>
                             </h2>
                             <div style="background-color: #f8f8f8; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                                 <p style="margin: 0; color: #333; font-size: 14px;">
