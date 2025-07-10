@@ -422,13 +422,13 @@ async function addIpToIgnoreList(supabase, ip, userId, reason, userAgent = 'Bili
             <body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, sans-serif;">
                 <table role="presentation" style="width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; margin-top: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                     <tr>
-                        <td style="padding: 20px; text-align: center; background-color: #ffffff;">
+                        <td style="padding: 12px; text-align: center; background-color: #ffffff;">
                             <h3 style="margin: 0; color: #666; font-size: 14px; font-weight: normal;">⚠️ Şüpheli IP Adresi Tespit Edildi</h3>
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding: 30px;">
-                            <h2 style="color: #333; margin-bottom: 20px; text-align: center;">
+                        <td style="padding: 12px 30px;">
+                            <h2 style="color: #333; margin: 0; text-align: center;">
                                 <code style="user-select: all; -webkit-user-select: all; -moz-user-select: all; -ms-user-select: all; cursor: text; padding: 8px 16px; border-radius: 4px; font-family: inherit; font-size: inherit; background: none; display: inline-block; white-space: nowrap;">${ip}</code>
                             </h2>
                             <div style="background-color: #f8f8f8; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
@@ -448,19 +448,19 @@ async function addIpToIgnoreList(supabase, ip, userId, reason, userAgent = 'Bili
                                 </p>
                             </div>
                             ` : ''}
-                            <p style="color: #666; font-size: 14px;">
-                                Bu otomatik bir bilgilendirme mailidir. Lütfen bu maile cevap vermeyiniz.
-                            </p>
                         </td>
                     </tr>
                     <tr>
                         <td style="background-color: #f8f8f8; padding: 20px; text-align: center; border-top: 1px solid #eee;">
-                            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
                                 <img src="https://bicilingir.com/logo.png" alt="BiÇilingir Logo" style="width: 80px; height: auto;">
                                 <p style="color: #888; font-size: 12px; margin: 0;">
                                     © ${new Date().getFullYear()} BiÇilingir. Tüm hakları saklıdır.
                                 </p>
                             </div>
+                            <p style="color: #888; font-size: 11px; margin: 0;">
+                                Bu otomatik bir bilgilendirme mailidir. Lütfen bu maile cevap vermeyiniz.
+                            </p>
                         </td>
                     </tr>
                 </table>
