@@ -301,7 +301,8 @@ CREATE TABLE ip_ignore (
     userId UUID REFERENCES users(id) ON DELETE SET NULL, -- bağlantı
     reason TEXT,
     isActive BOOLEAN DEFAULT true,
-    createdAt TIMESTAMPTZ DEFAULT NOW()
+    createdAt TIMESTAMPTZ DEFAULT NOW(),
+    updatedAt TIMESTAMPTZ DEFAULT NOW()
 );
 
 create table locksmith_topup_requests (
