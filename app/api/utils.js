@@ -19,29 +19,52 @@ try {
  */
 async function analyzeIpWithGPT(ipInfo) {
   try {
-    const { Configuration, OpenAIApi } = await import('openai');
+    console.log('GPT analizi başlatılıyor...', { ipInfo });
 
-    const configuration = new Configuration({
+    // OpenAI modülünü dinamik olarak import et
+    const OpenAI = await import('openai');
+    console.log('OpenAI modülü yüklendi:', { version: OpenAI.version });
+
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('OPENAI_API_KEY bulunamadı!');
+      return null;
+    }
+
+    // Yeni OpenAI istemcisi oluştur (v4 API)
+    const openai = new OpenAI.OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
-
-    const openai = new OpenAIApi(configuration);
+    console.log('OpenAI istemcisi oluşturuldu');
 
     const prompt = `Google Ads'de ilçelere özel reklam kampanyalarımız var ve sadece ilçedeki kullanıcılar görebilir. 
     Bu IP adresi (${ipInfo.ip || 'Bilinmiyor'}) ${ipInfo.city || 'Bilinmiyor'}, ${ipInfo.region || 'Bilinmiyor'}, ${ipInfo.country || 'Bilinmiyor'} bölgesinden geliyor ve servis sağlayıcısı ${ipInfo.org || 'Bilinmiyor'}.
     Bu IP kısa sürede birden fazla reklamımıza tıklamış, site içinde kısa süre vakit geçirmiş ve hiç dönüşüm yapmamıştır.
     Bu IP adresi şüpheli midir ve engellenmeli midir? Lütfen "Evet, engelle çünkü..." veya "Hayır, engelleme çünkü..." şeklinde başlayarak kısa (1-2 cümle) bir açıklama yap.`;
 
-    const completion = await openai.createChatCompletion({
+    console.log('GPT isteği gönderiliyor:', { prompt });
+
+    // Yeni API çağrısı formatı
+    const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 150,
       temperature: 0.7,
     });
 
-    return completion.data.choices[0].message.content.trim();
+    console.log('GPT yanıtı alındı:', { completion });
+
+    // Yanıt formatı değişti
+    const response = completion.choices[0].message.content.trim();
+    console.log('GPT analizi tamamlandı:', { response });
+
+    return response;
   } catch (error) {
-    console.error('GPT analiz hatası:', error);
+    console.error('GPT analiz hatası detayları:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      error
+    });
     return null;
   }
 }
