@@ -4,7 +4,8 @@ import Providers from './providers';
 import ToastProvider from '../components/ToastContext';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { LocationPermissionModal } from '../components/ui/location-permission-modal';
+// import { LocationPermissionModal } from '../components/ui/location-permission-modal';
+
 export default function ClientLayout({ children }) {
     return (<MapsProvider>
         <Providers>
@@ -17,7 +18,7 @@ export default function ClientLayout({ children }) {
                 <div className="custom-notification-container">
                 </div>{children}
                 <Footer />
-                <LocationPermissionModal />
+                {/* <LocationPermissionModal /> */}
             </ToastProvider>
         </Providers>
     </MapsProvider>);

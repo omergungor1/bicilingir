@@ -288,6 +288,22 @@ export async function checkSuspiciousIP(supabase, ip) {
 }
 
 /**
+ * IP bilgilerini ipinfo.io servisinden alır
+ * @param {string} ip - IP adresi
+ * @returns {Promise<Object>} IP bilgileri
+ */
+async function getIpInfo(ip) {
+  try {
+    const response = await fetch(`https://ipinfo.io/${ip}/json`);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('IP bilgileri alınamadı:', error);
+    return null;
+  }
+}
+
+/**
  * IP adresini ip_ignore tablosuna ekler (eğer zaten yoksa)
  * @param {Object} supabase - Supabase istemci
  * @param {string} ip - IP adresi
@@ -330,6 +346,9 @@ async function addIpToIgnoreList(supabase, ip, userId, reason, userAgent = 'Bili
           minute: '2-digit'
         });
 
+        // IP bilgilerini al
+        const ipInfo = await getIpInfo(ip);
+
         await resend.emails.send({
           from: 'BiÇilingir <noreply@bicilingir.com>',
           to: 'info@bicilingir.com',
@@ -345,23 +364,21 @@ async function addIpToIgnoreList(supabase, ip, userId, reason, userAgent = 'Bili
                 <table role="presentation" style="width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; margin-top: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                     <tr>
                         <td style="padding: 20px; text-align: center; background-color: #ffffff;">
-                            <img src="https://bicilingir.com/logo.png" alt="BiÇilingir Logo" style="width: 200px; height: auto; margin-bottom: 20px;">
-                            <h3 style="margin: 0; color: #666; font-size: 14px; font-weight: normal;">Türkiye'nin İlk ve Tek Çilingir Platformu</h3>
+                            <h3 style="margin: 0; color: #666; font-size: 14px; font-weight: normal;">⚠️ Şüpheli IP Adresi Tespit Edildi</h3>
                         </td>
                     </tr>
                     <tr>
                         <td style="padding: 30px;">
-                            <h2 style="color: #333; margin-bottom: 20px;">Yeni IP Engelleme Bildirimi</h2>
-                            <p style="color: #666; font-size: 16px; line-height: 1.5; margin-bottom: 20px;">
-                                Aşağıdaki IP adresi sistem tarafından engellendi:
-                            </p>
+                            <h2 style="color: #333; margin-bottom: 20px; text-align: center;">
+                                <span style="user-select: all; -webkit-user-select: all; -moz-user-select: all; -ms-user-select: all; cursor: text; padding: 8px 16px; border-radius: 4px;">${ip}</span>
+                            </h2>
                             <div style="background-color: #f8f8f8; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                                 <p style="margin: 0; color: #333; font-size: 14px;">
-                                    <strong>IP Adresi:</strong> ${ip}<br>
-                                    <strong>Kullanıcı ID:</strong> ${userId}<br>
+                                    <strong>Şehir:</strong> ${ipInfo?.city || 'Bilinmiyor'}<br>
+                                    <strong>Bölge:</strong> ${ipInfo?.region || 'Bilinmiyor'}<br>
+                                    <strong>Ülke:</strong> ${ipInfo?.country || 'Bilinmiyor'}<br>
+                                    <strong>Servis Sağlayıcı:</strong> ${ipInfo?.org || 'Bilinmiyor'}<br>
                                     <strong>Tarayıcı/Cihaz:</strong> ${userAgent}<br>
-                                    <strong>Engellenme Sebebi:</strong> ${reason}<br>
-                                    <strong>Engellenme Tarihi:</strong> ${currentDate}
                                 </p>
                             </div>
                             <p style="color: #666; font-size: 14px;">
@@ -371,9 +388,12 @@ async function addIpToIgnoreList(supabase, ip, userId, reason, userAgent = 'Bili
                     </tr>
                     <tr>
                         <td style="background-color: #f8f8f8; padding: 20px; text-align: center; border-top: 1px solid #eee;">
-                            <p style="color: #888; font-size: 12px; margin: 0;">
-                                © ${new Date().getFullYear()} BiÇilingir. Tüm hakları saklıdır.
-                            </p>
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                <img src="https://bicilingir.com/logo.png" alt="BiÇilingir Logo" style="width: 80px; height: auto;">
+                                <p style="color: #888; font-size: 12px; margin: 0;">
+                                    © ${new Date().getFullYear()} BiÇilingir. Tüm hakları saklıdır.
+                                </p>
+                            </div>
                         </td>
                     </tr>
                 </table>
@@ -837,43 +857,43 @@ export async function getLocksmithId(request) {
   }
 }
 
-/**
- * Kullanıcının konum bilgisini günceller
- * @param {Object} supabase - Supabase istemci
- * @param {string} fingerprintId - Kullanıcı parmak izi
- * @param {Object} location - Konum bilgisi {latitude, longitude, accuracy}
- * @returns {Promise<Object>} Güncelleme sonucu
- */
-export async function updateUserLocation(supabase, fingerprintId, location) {
-  console.log('updateUserLocation', fingerprintId, location);
-  console.log('FingerprintId', fingerprintId);
-  console.log('Location', location);
+// /**
+//  * Kullanıcının konum bilgisini günceller
+//  * @param {Object} supabase - Supabase istemci
+//  * @param {string} fingerprintId - Kullanıcı parmak izi
+//  * @param {Object} location - Konum bilgisi {latitude, longitude, accuracy}
+//  * @returns {Promise<Object>} Güncelleme sonucu
+//  */
+// export async function updateUserLocation(supabase, fingerprintId, location) {
+//   console.log('updateUserLocation', fingerprintId, location);
+//   console.log('FingerprintId', fingerprintId);
+//   console.log('Location', location);
 
-  try {
-    if (!fingerprintId || !location) {
-      throw new Error('FingerprintId ve konum bilgisi gerekli');
-    }
+//   try {
+//     if (!fingerprintId || !location) {
+//       throw new Error('FingerprintId ve konum bilgisi gerekli');
+//     }
 
-    const { data, error } = await supabase
-      .from('users')
-      .update({
-        latitude: location.latitude,
-        longitude: location.longitude,
-        location_accuracy: Math.round(location.accuracy),
-        location_source: 'browser',
-        updatedat: new Date().toISOString()
-      })
-      .eq('fingerprintid', fingerprintId)
-      .select();
+//     const { data, error } = await supabase
+//       .from('users')
+//       .update({
+//         latitude: location.latitude,
+//         longitude: location.longitude,
+//         location_accuracy: Math.round(location.accuracy),
+//         location_source: 'browser',
+//         updatedat: new Date().toISOString()
+//       })
+//       .eq('fingerprintid', fingerprintId)
+//       .select();
 
-    if (error) {
-      console.error('Kullanıcı konum güncelleme hatası:', error);
-      throw error;
-    }
+//     if (error) {
+//       console.error('Kullanıcı konum güncelleme hatası:', error);
+//       throw error;
+//     }
 
-    return { success: true, data };
-  } catch (error) {
-    console.error('Konum güncelleme hatası:', error);
-    return { success: false, error: error.message };
-  }
-}
+//     return { success: true, data };
+//   } catch (error) {
+//     console.error('Konum güncelleme hatası:', error);
+//     return { success: false, error: error.message };
+//   }
+// }

@@ -10,10 +10,8 @@ const nextConfig = {
     ],
   },
   trailingSlash: false,
-  // Statik dosyaların yolunu düzeltelim
   poweredByHeader: false,
   reactStrictMode: true,
-  // CSS sorunlarını çözmek için ek yapılandırmalar
   // experimental: {
   //   // optimizeCss: {
   //   //   // CSS optimizasyonu için critters ayarları

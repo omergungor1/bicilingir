@@ -1,5 +1,6 @@
 "use client";
 
+//Şuan kullanılmıyor..! Daha sonra aktif edilecek..!
 import { useEffect, useState } from 'react';
 import * as Dialog from "@radix-ui/react-dialog";
 import { Button } from './button';
@@ -11,57 +12,177 @@ export function LocationPermissionModal() {
     const { visitorId: fingerprintId } = useFingerprint();
     const [isOpen, setIsOpen] = useState(false);
     const [supabase, setSupabase] = useState(null);
+    const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        // Supabase client'ı sadece client-side'da oluştur
         setSupabase(getSupabaseClient());
 
-        // localStorage'dan konum tercihini kontrol et
-        const locationPreference = localStorage.getItem('locationPermission');
-        if (!locationPreference && fingerprintId) {
-            setIsOpen(true);
-        }
+        // Tarayıcı izni ve localStorage kontrolü
+        const checkPermissions = async () => {
+            const locationPreference = localStorage.getItem('locationPermission');
+
+            if (!locationPreference && fingerprintId) {
+                // Mevcut konum izni durumunu kontrol et
+                try {
+                    const permission = await navigator.permissions.query({ name: 'geolocation' });
+
+                    if (permission.state === 'granted') {
+                        // Zaten izin verilmiş, konumu al
+                        getCurrentPosition();
+                    } else if (permission.state === 'prompt') {
+                        // İzin henüz sorulmamış, modalı göster
+                        setIsOpen(true);
+                    } else if (permission.state === 'denied') {
+                        // İzin reddedilmiş, localStorage'a kaydet
+                        localStorage.setItem('locationPermission', 'denied');
+                    }
+                } catch (error) {
+                    // Permissions API desteklenmiyorsa modalı göster
+                    setIsOpen(true);
+                }
+            }
+        };
+
+        checkPermissions();
     }, [fingerprintId]);
 
     const getCurrentPosition = () => {
-        console.log('getCurrentPosition 1');
         if (!supabase) return;
-        console.log('getCurrentPosition 2');
+        setIsLoading(true);
+        setError(null);
+
+        // Konum alma seçenekleri
+        const geoOptions = {
+            enableHighAccuracy: false, // Yüksek hassasiyet kapalı, daha hızlı sonuç
+            timeout: 30000,           // 30 saniye timeout
+            maximumAge: 300000        // 5 dakikalık cache kullan
+        };
+
         if ('geolocation' in navigator) {
+            // Önce düşük hassasiyetle deneyelim
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
-                    const locationData = {
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
-                        accuracy: position.coords.accuracy
-                    };
-                    console.log('getCurrentPosition 3');
-                    console.log(locationData, 'locationData');
-                    // Konum bilgisini güncelle
-                    const result = await updateUserLocation(supabase, fingerprintId, locationData);
-                    console.log('getCurrentPosition 4');
-                    if (result.success) {
-                        console.log('Konum başarıyla güncellendi');
-                    } else {
-                        console.error('Konum güncellenirken hata oluştu:', result.error);
+                    try {
+                        const locationData = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy
+                        };
+
+                        const result = await updateUserLocation(supabase, fingerprintId, locationData);
+
+                        if (result.success) {
+                            console.log('Konum başarıyla güncellendi');
+                            localStorage.setItem('locationPermission', 'granted');
+                            setIsOpen(false);
+                        } else {
+                            throw new Error('Konum güncellenirken bir hata oluştu');
+                        }
+                    } catch (error) {
+                        console.error('Konum güncelleme hatası:', error);
+                        setError('Konum bilginiz kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.');
+                    } finally {
+                        setIsLoading(false);
                     }
                 },
-                (error) => {
-                    console.error('Konum alınamadı:', error);
-                }
+                async (error) => {
+                    console.error('Düşük hassasiyetli konum alınamadı:', error);
+
+                    // Eğer timeout hatası aldıysak, yüksek hassasiyetle tekrar deneyelim
+                    if (error.code === error.TIMEOUT) {
+                        try {
+                            // Yüksek hassasiyetli konum alma seçenekleri
+                            const highAccuracyOptions = {
+                                ...geoOptions,
+                                enableHighAccuracy: true,
+                                timeout: 60000 // 1 dakika
+                            };
+
+                            navigator.geolocation.getCurrentPosition(
+                                async (position) => {
+                                    try {
+                                        const locationData = {
+                                            latitude: position.coords.latitude,
+                                            longitude: position.coords.longitude,
+                                            accuracy: position.coords.accuracy
+                                        };
+
+                                        const result = await updateUserLocation(supabase, fingerprintId, locationData);
+
+                                        if (result.success) {
+                                            console.log('Konum başarıyla güncellendi (yüksek hassasiyet)');
+                                            localStorage.setItem('locationPermission', 'granted');
+                                            setIsOpen(false);
+                                        } else {
+                                            throw new Error('Konum güncellenirken bir hata oluştu');
+                                        }
+                                    } catch (error) {
+                                        setError('Konum bilginiz kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.');
+                                    } finally {
+                                        setIsLoading(false);
+                                    }
+                                },
+                                (highAccError) => {
+                                    console.error('Yüksek hassasiyetli konum alınamadı:', highAccError);
+                                    setIsLoading(false);
+
+                                    switch (highAccError.code) {
+                                        case highAccError.PERMISSION_DENIED:
+                                            localStorage.setItem('locationPermission', 'denied');
+                                            setError('Konum izni reddedildi. Konumu kullanabilmek için tarayıcı ayarlarından konum iznini etkinleştirmeniz gerekiyor.');
+                                            break;
+                                        case highAccError.POSITION_UNAVAILABLE:
+                                            setError('Konum servislerine erişilemiyor. Lütfen konum servislerinizin açık olduğundan emin olun ve tekrar deneyin.');
+                                            break;
+                                        case highAccError.TIMEOUT:
+                                            setError('Konum alınamadı. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.');
+                                            break;
+                                        default:
+                                            setError('Konum alınırken bir hata oluştu. Lütfen tekrar deneyin.');
+                                    }
+                                },
+                                highAccuracyOptions
+                            );
+                        } catch (retryError) {
+                            setIsLoading(false);
+                            setError('Konum alınamadı. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.');
+                        }
+                    } else {
+                        setIsLoading(false);
+                        switch (error.code) {
+                            case error.PERMISSION_DENIED:
+                                localStorage.setItem('locationPermission', 'denied');
+                                setError('Konum izni reddedildi. Konumu kullanabilmek için tarayıcı ayarlarından konum iznini etkinleştirmeniz gerekiyor.');
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                setError('Konum servislerine erişilemiyor. Lütfen konum servislerinizin açık olduğundan emin olun ve tekrar deneyin.');
+                                break;
+                            default:
+                                setError('Konum alınırken bir hata oluştu. Lütfen tekrar deneyin.');
+                        }
+                    }
+                },
+                geoOptions
             );
+        } else {
+            setError('Tarayıcınız konum özelliğini desteklemiyor.');
+            setIsLoading(false);
         }
     };
 
     const handleAccept = () => {
-        localStorage.setItem('locationPermission', 'granted');
         getCurrentPosition();
-        setIsOpen(false);
     };
 
     const handleReject = () => {
         localStorage.setItem('locationPermission', 'denied');
         setIsOpen(false);
+    };
+
+    const handleRetry = () => {
+        setError(null);
+        getCurrentPosition();
     };
 
     if (!fingerprintId) {
@@ -86,18 +207,31 @@ export function LocationPermissionModal() {
                             <li>En yakın çilingir telefonunu anında gösterebiliriz</li>
                         </ul>
                     </div>
+                    {error && (
+                        <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+                            {error}
+                            {error.includes('reddedildi') && (
+                                <div className="mt-2">
+                                    <Button size="sm" onClick={handleRetry}>
+                                        Tekrar Dene
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    )}
                     <div className="mt-6 flex justify-end space-x-4">
-                        <Button variant="outline" onClick={handleReject}>
+                        <Button variant="outline" onClick={handleReject} disabled={isLoading}>
                             Şimdi Değil
                         </Button>
-                        <Button onClick={handleAccept}>
-                            Konumumu Paylaş
+                        <Button onClick={handleAccept} disabled={isLoading}>
+                            {isLoading ? 'Konum Alınıyor...' : 'Konumumu Paylaş'}
                         </Button>
                     </div>
                     <Dialog.Close asChild>
                         <button
                             className="absolute right-[10px] top-[10px] inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 focus:outline-none"
                             aria-label="Kapat"
+                            disabled={isLoading}
                         >
                             <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path
