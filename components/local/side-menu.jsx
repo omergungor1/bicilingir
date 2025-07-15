@@ -19,7 +19,7 @@ export default function SideMenu(params) {
     return (
         <div>
             {/* Harita */}
-            {locksmithPositions.length > 0 && <div className="mb-6">
+            {/* {locksmithPositions.length > 0 && <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-3">Konum</h3>
                 <div className="h-[300px] rounded-lg overflow-hidden border">
                     <Map
@@ -32,7 +32,7 @@ export default function SideMenu(params) {
                         }))}
                     />
                 </div>
-            </div>}
+            </div>} */}
 
             {/* Yakın Caddeler */}
             {nearbySection && <Card className="mb-6">

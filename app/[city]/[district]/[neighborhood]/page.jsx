@@ -64,7 +64,7 @@ async function getNeighborhoodData(citySlug, districtSlug, neighborhoodSlug, ser
                 .single();
 
             if (cityError) {
-                console.error('Şehir bilgisi alınamadı');
+                console.error('Şehir bilgisi alınamadı #Neighborhood-1');
                 throw new Error('Şehir bulunamadı');
             }
 
@@ -302,7 +302,7 @@ async function getNeighborhoodData(citySlug, districtSlug, neighborhoodSlug, ser
                 .single();
 
             if (cityError) {
-                console.error('Şehir bilgisi alınamadı');
+                console.error('Şehir bilgisi alınamadı #Neighborhood-2');
                 throw new Error('Şehir bulunamadı');
             }
 

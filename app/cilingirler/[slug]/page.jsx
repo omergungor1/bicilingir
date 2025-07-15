@@ -128,7 +128,7 @@ export default async function Page({ params }) {
         tagline,
         avgrating,
         totalreviewcount,
-        provinces (
+        provinces!locksmiths_provinceid_fkey (
           name
         ),
         districts!locksmiths_districtid_fkey (
@@ -159,7 +159,6 @@ export default async function Page({ params }) {
 
 // Yapılandırma ayarları
 export const dynamic = 'force-static';
-export const revalidate = 86400; // Günde bir kez yeniden oluştur
 export const fetchCache = 'force-cache';
 export const runtime = 'nodejs';
 export const preferredRegion = 'auto';

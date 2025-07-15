@@ -20,6 +20,9 @@ CREATE TABLE provinces (
     slug TEXT UNIQUE NOT NULL,
     lat DOUBLE PRECISION,
     lng DOUBLE PRECISION,
+    locksmith1Id UUID REFERENCES locksmiths(id) ON DELETE SET NULL,
+    locksmith2Id UUID REFERENCES locksmiths(id) ON DELETE SET NULL,
+    adsCallLocksmithId UUID REFERENCES locksmiths(id) ON DELETE SET NULL,
     code TEXT
 );
 
@@ -31,6 +34,9 @@ CREATE TABLE districts (
     slug TEXT UNIQUE NOT NULL,
     lat DOUBLE PRECISION,
     lng DOUBLE PRECISION,
+    locksmith1Id UUID REFERENCES locksmiths(id) ON DELETE SET NULL,
+    locksmith2Id UUID REFERENCES locksmiths(id) ON DELETE SET NULL,
+    adsCallLocksmithId UUID REFERENCES locksmiths(id) ON DELETE SET NULL,
     UNIQUE(province_id, name)
 );
 

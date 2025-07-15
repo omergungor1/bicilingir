@@ -8,6 +8,58 @@ import { getSupabaseServer } from '../../../lib/supabase';
 import Script from 'next/script';
 import { notFound } from 'next/navigation';
 
+// Build zamanında tüm district/service kombinasyonlarını getir
+export async function generateStaticParams() {
+    try {
+        const supabase = getSupabaseServer();
+        const staticParams = [];
+
+        // Bursa'nın bilgilerini çek
+        const { data: bursaData, error: bursaError } = await supabase
+            .from('provinces')
+            .select('id, slug')
+            .eq('id', 16) // Bursa'nın ID'si
+            .single();
+
+        if (bursaError || !bursaData) {
+            console.error('Bursa bilgisi alınamadı:', bursaError);
+            return [];
+        }
+
+        // Bursa'nın ilçelerini çek
+        const { data: districts, error: districtsError } = await supabase
+            .from('districts')
+            .select('slug')
+            .eq('province_id', bursaData.id);
+
+        if (districtsError) {
+            console.error('İlçe bilgileri alınırken hata:', districtsError);
+        } else {
+            // Her ilçe için static params ekle
+            districts.forEach(district => {
+                staticParams.push({
+                    city: bursaData.slug,
+                    district: district.slug
+                });
+            });
+        }
+
+        // Service sayfaları için de static params ekle
+        ServiceList.forEach(service => {
+            staticParams.push({
+                city: bursaData.slug,
+                district: service.slug
+            });
+        });
+
+        console.log('District Static generation için:', staticParams.length, 'sayfa');
+        return staticParams;
+    } catch (error) {
+        console.error('District generateStaticParams hatası:', error);
+        return [];
+    }
+}
+
 // Sunucu tarafında tüm verileri yükleyen yardımcı fonksiyon 
 async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
     try {
@@ -63,7 +115,7 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
                 .single();
 
             if (cityError) {
-                console.error('Şehir bilgisi alınamadı');
+                console.error('Şehir bilgisi alınamadı #District-2');
                 throw new Error('Şehir bulunamadı');
             }
 
@@ -302,7 +354,7 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
             .single();
 
         if (cityError) {
-            console.error('Şehir bilgisi alınamadı');
+            console.error('Şehir bilgisi alınamadı #District-1');
             throw new Error('Şehir bulunamadı');
         }
 
@@ -420,7 +472,7 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
             },
             locksmitList: {
                 title: `${districtInfo.city} ${districtInfo.name} Çilingirler`,
-                description: 'Size en yakın çilingirler aşağıda listelenmiştir. Hemen arayabilir veya mesaj gönderebilirsiniz.',
+                description: 'Size en yakın 2 çilingir bulundu. İkisi de şuan açık. Hemen ara!',
                 data: locksmiths
             },
             seconCard: {
@@ -620,3 +672,10 @@ export default async function DistrictPage({ params }) {
         </>
     );
 }
+
+// Static generation yapılandırma ayarları
+export const dynamic = 'force-static';
+export const fetchCache = 'force-cache';
+export const runtime = 'nodejs';
+export const preferredRegion = 'auto';
+export const maxDuration = 5;

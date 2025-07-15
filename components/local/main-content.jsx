@@ -30,7 +30,7 @@ export default function MainContent(params) {
     return (
         <div>
             {/* Breadcrumb navigasyonu */}
-            <nav className="flex text-sm text-gray-600 mb-6">
+            <nav className="flex text-sm text-gray-600 mb-2 md:mb-6 flex-wrap">
                 {navbarList.map((item, index) => (
                     <React.Fragment key={index}>
                         {index === navbarList.length - 1 ? (
@@ -40,23 +40,23 @@ export default function MainContent(params) {
                                 <Link href={`${item.slug}`} className="hover:text-blue-600">
                                     {item.name}
                                 </Link>
-                                <span className="mx-2">/</span>
+                                <span className="mx-1">&gt;</span>
                             </>
                         )}
                     </React.Fragment>
                 ))}
             </nav>
             {/* Sayfa başlığı */}
-            <h1 className="text-2xl font-bold mb-2">{mainCard.title}</h1>
-            <p className="text-gray-600 mb-6">{mainCard.description}</p>
 
-            <h2 className="text-xl font-semibold mb-4">{locksmitList.title}</h2>
-            <p className="text-gray-600 mb-6">{locksmitList.description}</p>
-            <div className="grid grid-cols-1 gap-6 mb-8">
+            <h1 className="text-xl font-semibold mb-2 md:mb-6">{locksmitList.title}</h1>
+            <p className="text-gray-600 mb-2 md:mb-6">{locksmitList.description}</p>
+            <div className="grid grid-cols-1 gap-2 md:gap-6 mb-4 md:mb-8">
                 {locksmitList.data.map((locksmith, index) => (
                     <LocksmithCard key={index} locksmith={locksmith} index={index} />
                 ))}
             </div>
+            <h2 className="text-2xl font-bold mb-2">{mainCard.title}</h2>
+            <p className="text-gray-600 mb-6">{mainCard.description}</p>
 
             {/**Second Card */}
             <div className="bg-white p-6 rounded-lg shadow-sm mb-8">

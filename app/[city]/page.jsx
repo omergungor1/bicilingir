@@ -7,6 +7,32 @@ import { getSupabaseServer } from '../../lib/supabase';
 import { notFound } from 'next/navigation';
 import { yerIsmiBulunmaEkiEkle, getBulunmaEki } from '../utils/stringUtils';
 
+// Build zamanında tüm şehir sluglarını getir
+export async function generateStaticParams() {
+    try {
+        const supabase = getSupabaseServer();
+
+        // Şimdilik sadece Bursa'yı static generate etmek için
+        const { data: cities, error } = await supabase
+            .from('provinces')
+            .select('slug')
+            .eq('id', 16); // Bursa'nın ID'si 16
+
+        if (error) {
+            console.error('Şehir slugları alınırken hata:', error);
+            return [];
+        }
+
+        console.log('Static generation için şehirler:', cities);
+        return cities.map((city) => ({
+            city: city.slug,
+        }));
+    } catch (error) {
+        console.error('generateStaticParams hatası:', error);
+        return [];
+    }
+}
+
 // Sunucu tarafında tüm verileri yükleyen yardımcı fonksiyon
 async function getCityData(citySlug) {
     try {
@@ -21,8 +47,8 @@ async function getCityData(citySlug) {
             .single();
 
         if (cityError || !cityData) {
-            console.error('Şehir bilgisi alınamadı');
-            throw new Error('Şehir bilgisi alınamadı');
+            console.error('Şehir bilgisi alınamadı #City');
+            throw new Error('Şehir bilgisi alınamadı #City');
         }
 
         // Her iki veri isteğini paralel olarak çalıştır
@@ -233,7 +259,7 @@ async function getCityData(citySlug) {
                 { id: 2, name: cityData.name, slug: '#' },
             ],
             mainCard: { title: `${cityData.name} Çilingir Anahtarcı`, description: cityInfoData.description },
-            locksmitList: { title: `${cityData.name} Çilingirler`, description: `${cityData.name}\'${getBulunmaEki(cityData.name)} hizmet veren çilingirler`, data: locksmiths },
+            locksmitList: { title: `${cityData.name} Çilingirler`, description: `${cityData.name}\'${getBulunmaEki(cityData.name)} şuan açık 2 çilingir bulundu. Hemen ara!`, data: locksmiths },
             seconCard: { title: `${cityData.name} Hakkında`, longDescription: cityInfoData.longDescription },
             serviceList: { title: 'Çilingir Hizmetleri Kategorileri', description: '', data: servicesData, neighborhoods: districtsData },
             sssList: { title: `${cityData.name} Çilingir Sık Sorulan Sorular`, description: `${yerIsmiBulunmaEkiEkle(cityData.name)} bir çok kişi çilingirler hakkında bazı soruların cevabını merak ediyor. Sık sorulan soruların cevaplarını aşağıdaki listede bulabilirsiniz.`, data: sssList },
@@ -291,4 +317,11 @@ export default async function CityPage({ params }) {
             />
         </>
     );
-} 
+}
+
+// Static generation yapılandırma ayarları
+export const dynamic = 'force-static';
+export const fetchCache = 'force-cache';
+export const runtime = 'nodejs';
+export const preferredRegion = 'auto';
+export const maxDuration = 5;

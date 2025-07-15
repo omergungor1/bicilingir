@@ -49,7 +49,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
                 .single();
 
             if (cityError || !cityData) {
-                console.error('Şehir bilgisi alınamadı');
+                console.error('Şehir bilgisi alınamadı #SEO-1');
             } else {
                 city = cityData;
             }
@@ -65,7 +65,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
                 .single();
 
             if (districtError || !districtData) {
-                console.error('İlçe bilgisi alınamadı');
+                console.error('İlçe bilgisi alınamadı #SEO-2');
             } else {
                 district = districtData;
             }
@@ -83,7 +83,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
                 .single();
 
             if (neighborhoodError || !neighborhoodData) {
-                console.error('Mahalle bilgisi alınamadı');
+                console.error('Mahalle bilgisi alınamadı #SEO-3');
             } else {
                 neighborhood = neighborhoodData;
             }
@@ -91,7 +91,6 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
 
         // Hizmet bilgisini çek
         if (servicetypeSlug) {
-
             const { data: serviceData, error: serviceError } = await supabase
                 .from('services')
                 .select('id, name, description')
@@ -100,7 +99,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
                 .single();
 
             if (serviceError || !serviceData) {
-                console.error('Hizmet bilgisi alınamadı');
+                console.error('Hizmet bilgisi alınamadı #SEO-4');
                 // Eğer veritabanında bulunamazsa, slug'dan oluştur
                 serviceType = {
                     name: servicetypeSlug
@@ -412,6 +411,7 @@ export async function getLocksmithsList({ citySlug, districtSlug, neighborhoodSl
         });
 
         if (!response.ok) {
+            console.error('API yanıt vermedi #SEO-5 URL::', url);
             throw new Error('API yanıt vermedi');
         }
 

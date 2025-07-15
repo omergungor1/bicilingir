@@ -68,7 +68,7 @@ async function getServiceData(citySlug, districtSlug, neighborhoodSlug, servicet
                 .single();
 
             if (cityError) {
-                console.error('Şehir bilgisi alınamadı');
+                console.error('Şehir bilgisi alınamadı #Service-1');
             } else {
                 cityInfo = city;
                 location = { lat: city.lat, lng: city.lng };
@@ -84,7 +84,7 @@ async function getServiceData(citySlug, districtSlug, neighborhoodSlug, servicet
                         .single();
 
                     if (districtError) {
-                        console.error('İlçe bilgisi alınamadı');
+                        console.error('İlçe bilgisi alınamadı #Service-2');
                     } else {
                         districtInfo = district;
                         location = { lat: district.lat, lng: district.lng };
@@ -100,7 +100,7 @@ async function getServiceData(citySlug, districtSlug, neighborhoodSlug, servicet
                                 .single();
 
                             if (neighborhoodError) {
-                                console.error('Mahalle bilgisi alınamadı');
+                                console.error('Mahalle bilgisi alınamadı #Service-3');
                             } else {
                                 neighborhood.name = neighborhood.name + ' Mahallesi';
                                 neighborhoodInfo = neighborhood;

@@ -10,7 +10,7 @@ export async function GET(request) {
       .select(`
       *,
       locksmith_details ( * ),
-      provinces ( * ),
+      provinces!locksmiths_provinceid_fkey ( * ),
       districts!locksmiths_districtid_fkey ( * ),
       locksmith_balances ( balance, daily_spent_limit )
     `)

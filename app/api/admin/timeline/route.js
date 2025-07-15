@@ -27,7 +27,7 @@ export async function GET(request) {
                 locksmiths:locksmithid (
                     id,
                     businessname,
-                    provinces (
+                    provinces!locksmiths_provinceid_fkey (
                         name
                     ),
                     districts!locksmiths_districtid_fkey (
