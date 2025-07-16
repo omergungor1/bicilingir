@@ -28,6 +28,15 @@ export async function GET(request) {
         const provinceParamId = searchParams.get('provinceId');
         let districtParamId = searchParams.get('districtId');
 
+        console.log('🔍 API - Başlangıç parametreleri:', {
+            provinceParamId,
+            districtParamId,
+            citySlug,
+            districtSlug,
+            neighborhoodSlug,
+            servicetypeSlug
+        });
+
 
         // Supabase bağlantısı oluştur
         // const supabase = createSupabaseClient();
@@ -55,6 +64,11 @@ export async function GET(request) {
                     .eq('id', districtParamId)
                     .single();
 
+                console.log('🔍 API - districtParamId ile district sorgusu:', {
+                    districtParamId,
+                    districtData
+                });
+
                 if (districtData) {
                     if (districtData?.locksmith1id) locksmithList.push(districtData.locksmith1id);
                     if (districtData?.locksmith2id) locksmithList.push(districtData.locksmith2id);
@@ -65,6 +79,11 @@ export async function GET(request) {
                     .select('locksmith1id,locksmith2id')
                     .eq('slug', districtSlug)
                     .single();
+
+                console.log('🔍 API - districtSlug ile district sorgusu:', {
+                    districtSlug,
+                    districtData
+                });
 
                 if (districtData) {
                     if (districtData?.locksmith1id) locksmithList.push(districtData.locksmith1id);
@@ -78,6 +97,11 @@ export async function GET(request) {
                     .select('locksmith1id,locksmith2id')
                     .eq('slug', citySlug)
                     .single();
+
+                console.log('🔍 API - citySlug ile province sorgusu:', {
+                    citySlug,
+                    cityData
+                });
 
                 if (cityData) {
                     if (cityData?.locksmith1id) locksmithList.push(cityData.locksmith1id);
@@ -126,8 +150,22 @@ export async function GET(request) {
 
         const { data: locksmithData, error } = await locksmithQuery;
 
+        console.log('🔍 API - Final locksmithList:', locksmithList);
+
+        // locksmithData'yı locksmithList'in sırasına göre sırala
+        const sortedLocksmithData = locksmithData?.sort((a, b) => {
+            const aIndex = locksmithList.indexOf(a.id);
+            const bIndex = locksmithList.indexOf(b.id);
+            return aIndex - bIndex;
+        }) || [];
+
+        console.log('🔍 API - Sorted locksmithData:', sortedLocksmithData?.map(l => ({
+            id: l.id,
+            name: l.businessname || l.fullname
+        })));
+
         // Çilingir verilerini formatlama
-        const formattedLocksmiths = locksmithData?.map(item => ({
+        const formattedLocksmiths = sortedLocksmithData?.map(item => ({
             id: item.id,
             name: item.businessname || item.fullname,
             fullname: item.fullname,
@@ -169,7 +207,7 @@ export async function GET(request) {
             }
         }));
 
-        return NextResponse.json({ locksmiths: formattedLocksmiths });
+        return NextResponse.json({ locksmiths: formattedLocksmiths || [] });
     } catch (error) {
         console.error('API hatası:', error);
         return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 });

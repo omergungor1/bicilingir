@@ -395,6 +395,14 @@ async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, servicetype
 
 export async function getLocksmithsList({ citySlug, districtSlug, neighborhoodSlug, servicetypeSlug, count = 2 }) {
     try {
+        console.log('🔍 SEO.JS - getLocksmithsList çağrıldı:', {
+            citySlug,
+            districtSlug,
+            neighborhoodSlug,
+            servicetypeSlug,
+            count
+        });
+
         const params = new URLSearchParams();
         if (citySlug) params.append('citySlug', citySlug);
         if (districtSlug) params.append('districtSlug', districtSlug);
@@ -405,6 +413,8 @@ export async function getLocksmithsList({ citySlug, districtSlug, neighborhoodSl
         // Tam URL belirt (protokol ve ana bilgisayarı dahil et)
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
         const url = `${baseUrl}/api/locksmiths?${params.toString()}`;
+
+        console.log('🔍 SEO.JS - API çağrısı yapılıyor:', url);
 
         const response = await fetch(url, {
             cache: 'no-store' // Gerçek verileri almak için önbelleği devre dışı bırak

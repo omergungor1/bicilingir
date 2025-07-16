@@ -48,7 +48,10 @@ export default function MainContent(params) {
             </nav>
             {/* Sayfa başlığı */}
 
-            <h1 className="text-xl font-semibold mb-2 md:mb-6">{locksmitList.title}</h1>
+            <h1 className="text-xl font-semibold mb-1 md:mb-6">{locksmitList.title}</h1>
+            <a data-gtm="ilce-secimi" id="ilce-secimi" href="/" className="inline-block text-blue-600 hover:text-blue-800 mb-1 md:mb-3">
+                📍 Başka ilçede misin? İlçeni seç!
+            </a>
             <p className="text-gray-600 mb-2 md:mb-6">{locksmitList.description}</p>
             <div className="grid grid-cols-1 gap-2 md:gap-6 mb-4 md:mb-8">
                 {locksmitList.data.map((locksmith, index) => (

@@ -14,23 +14,12 @@ export async function generateStaticParams() {
         const supabase = getSupabaseServer();
         const staticParams = [];
 
-        // Bursa'nın bilgilerini çek
-        const { data: bursaData, error: bursaError } = await supabase
-            .from('provinces')
-            .select('id, slug')
-            .eq('id', 16) // Bursa'nın ID'si
-            .single();
-
-        if (bursaError || !bursaData) {
-            console.error('Bursa bilgisi alınamadı:', bursaError);
-            return [];
-        }
 
         // Bursa'nın ilçelerini çek
         const { data: districts, error: districtsError } = await supabase
             .from('districts')
             .select('slug')
-            .eq('province_id', bursaData.id);
+            .eq('province_id', 16);
 
         if (districtsError) {
             console.error('İlçe bilgileri alınırken hata:', districtsError);
@@ -38,7 +27,7 @@ export async function generateStaticParams() {
             // Her ilçe için static params ekle
             districts.forEach(district => {
                 staticParams.push({
-                    city: bursaData.slug,
+                    city: 'bursa',
                     district: district.slug
                 });
             });
@@ -47,12 +36,13 @@ export async function generateStaticParams() {
         // Service sayfaları için de static params ekle
         ServiceList.forEach(service => {
             staticParams.push({
-                city: bursaData.slug,
+                city: 'bursa',
                 district: service.slug
             });
         });
 
         console.log('District Static generation için:', staticParams.length, 'sayfa');
+        console.log('Generated static params:', staticParams);
         return staticParams;
     } catch (error) {
         console.error('District generateStaticParams hatası:', error);
@@ -67,6 +57,13 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
         const supabase = getSupabaseServer();
 
         // Paralel veri çekme işlemi
+        console.log('🔍 getLocksmithsList parametreleri:', {
+            citySlug,
+            districtSlug,
+            servicetypeSlug,
+            count: 2
+        });
+
         const locksmiths = await getLocksmithsList({
             citySlug,
             districtSlug,
