@@ -152,20 +152,21 @@ export async function GET(request) {
 
         console.log('🔍 API - Final locksmithList:', locksmithList);
 
-        // locksmithData'yı locksmithList'in sırasına göre sırala
-        const sortedLocksmithData = locksmithData?.sort((a, b) => {
-            const aIndex = locksmithList.indexOf(a.id);
-            const bIndex = locksmithList.indexOf(b.id);
-            return aIndex - bIndex;
-        }) || [];
+        // // locksmithData'yı locksmithList'in sırasına göre sırala
+        // const sortedLocksmithData = locksmithData?.sort((a, b) => {
+        //     const aIndex = locksmithList.indexOf(a.id);
+        //     const bIndex = locksmithList.indexOf(b.id);
+        //     return aIndex - bIndex;
+        // }) || [];
 
-        console.log('🔍 API - Sorted locksmithData:', sortedLocksmithData?.map(l => ({
-            id: l.id,
-            name: l.businessname || l.fullname
-        })));
+        // console.log('🔍 API - Sorted locksmithData:', sortedLocksmithData?.map(l => ({
+        //     id: l.id,
+        //     name: l.businessname || l.fullname
+        // })));
 
         // Çilingir verilerini formatlama
-        const formattedLocksmiths = sortedLocksmithData?.map(item => ({
+        const formattedLocksmiths = locksmithData?.map(item => ({
+            // const formattedLocksmiths = sortedLocksmithData?.map(item => ({
             id: item.id,
             name: item.businessname || item.fullname,
             fullname: item.fullname,
