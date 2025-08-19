@@ -13,7 +13,6 @@ import SideMenu from '../local/side-menu';
 
 export default function MainContent(params) {
 
-
     const {
         navbarList = [{ id: 1, name: '', slug: '' }],
         mainCard = { title: '', description: '' },

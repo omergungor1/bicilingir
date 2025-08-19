@@ -134,6 +134,11 @@ export async function middleware(req) {
     return NextResponse.next();
   }
 
+  // Public API endpoint'leri için auth kontrolü yapma
+  if (pathname === '/api/locksmiths' || pathname.startsWith('/api/public/')) {
+    return NextResponse.next();
+  }
+
   // API istekleri için yetkilendirme kontrolü
   if (pathname.startsWith('/api/locksmith/')) {
     const authHeader = req.headers.get('x-auth-token') ||

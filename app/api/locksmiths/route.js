@@ -125,13 +125,13 @@ export async function GET(request) {
             .in('id', locksmithList);
 
 
+
         const { data: locksmithData, error } = await locksmithQuery;
 
         // Çilingirleri locksmithList sırasına göre sırala
         const sortedLocksmithData = locksmithData ?
             locksmithList.map(id => locksmithData.find(locksmith => locksmith.id === id))
                 .filter(locksmith => locksmith !== undefined) : [];
-
         // Çilingir verilerini formatlama
         const formattedLocksmiths = sortedLocksmithData?.map(item => ({
             id: item.id,
