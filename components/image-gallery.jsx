@@ -66,8 +66,8 @@ export const ImageGallery = ({ images, locksmithName }) => {
     <>
       <div className="grid grid-cols-2 gap-2">
         {images.map((image, index) => (
-          <div 
-            key={index} 
+          <div
+            key={index}
             className="aspect-square relative overflow-hidden rounded-lg cursor-pointer"
             onClick={() => openGallery(index)}
           >
@@ -91,24 +91,24 @@ export const ImageGallery = ({ images, locksmithName }) => {
 
       {/* Tam Ekran Galeri */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center"
           onClick={closeGallery}
         >
-          <button 
+          <button
             className="absolute top-4 right-4 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-70 transition-all"
             onClick={closeGallery}
           >
             <X size={24} />
           </button>
-          
-          <button 
+
+          <button
             className="absolute left-4 top-1/2 transform -translate-y-1/2 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-70 transition-all"
             onClick={goToPrev}
           >
             <ChevronLeft size={24} />
           </button>
-          
+
           <div className="max-w-4xl max-h-[80vh] relative">
             {/* Tam ekran modda normal img kullanıyoruz çünkü boyut sınırlamaları ve remote URL'ler için daha esneklik sağlıyor */}
             <img
@@ -121,8 +121,8 @@ export const ImageGallery = ({ images, locksmithName }) => {
               {currentIndex + 1} / {images.length}
             </div>
           </div>
-          
-          <button 
+
+          <button
             className="absolute right-4 top-1/2 transform -translate-y-1/2 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-70 transition-all"
             onClick={goToNext}
           >

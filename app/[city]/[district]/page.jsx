@@ -41,8 +41,6 @@ export async function generateStaticParams() {
             });
         });
 
-        console.log('District Static generation için:', staticParams.length, 'sayfa');
-        console.log('Generated static params:', staticParams);
         return staticParams;
     } catch (error) {
         console.error('District generateStaticParams hatası:', error);
@@ -55,14 +53,6 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
     try {
         // Supabase client
         const supabase = getSupabaseServer();
-
-        // Paralel veri çekme işlemi
-        console.log('🔍 getLocksmithsList parametreleri:', {
-            citySlug,
-            districtSlug,
-            servicetypeSlug,
-            count: 2
-        });
 
         const locksmiths = await getLocksmithsList({
             citySlug,
