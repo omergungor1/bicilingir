@@ -421,87 +421,87 @@ async function addIpToIgnoreList(supabase, ip, userId, reason, userAgent = 'Bili
     }
 
     // Mail gönder
-    try {
-      const currentDate = new Date().toLocaleString('tr-TR', {
-        timeZone: 'Europe/Istanbul',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+    // try {
+    //   const currentDate = new Date().toLocaleString('tr-TR', {
+    //     timeZone: 'Europe/Istanbul',
+    //     year: 'numeric',
+    //     month: 'long',
+    //     day: 'numeric',
+    //     hour: '2-digit',
+    //     minute: '2-digit'
+    //   });
 
-      // IP bilgilerini al
-      const ipInfo = await getIpInfo(ip);
+    //   // IP bilgilerini al
+    //   const ipInfo = await getIpInfo(ip);
 
-      // GPT analizi al
-      const gptAnalysis = await analyzeIpWithGPT(ipInfo);
+    //   // GPT analizi al
+    //   const gptAnalysis = await analyzeIpWithGPT(ipInfo);
 
-      const actionText = action === 'new' ? 'Yeni IP Engelleme' : 'IP Engeli Güncelleme';
+    //   const actionText = action === 'new' ? 'Yeni IP Engelleme' : 'IP Engeli Güncelleme';
 
-      await resend.emails.send({
-        from: 'BiÇilingir <noreply@bicilingir.com>',
-        to: 'info@bicilingir.com',
-        subject: actionText + ' Bildirimi',
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          </head>
-          <body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, sans-serif;">
-              <table role="presentation" style="width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; margin-top: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                  <tr>
-                      <td style="padding: 12px; text-align: center; background-color: #ffffff;">
-                          <h3 style="margin: 0; color: #666; font-size: 14px; font-weight: normal;">⚠️ ${action === 'new' ? 'Şüpheli IP Adresi Tespit Edildi' : 'IP Engeli Yeniden Aktifleştirildi'}</h3>
-                      </td>
-                  </tr>
-                  <tr>
-                      <td style="padding: 12px 30px;">
-                          <h2 style="color: #333; margin: 0; text-align: center;">
-                              <code style="user-select: all; -webkit-user-select: all; -moz-user-select: all; -ms-user-select: all; cursor: text; padding: 8px 16px; border-radius: 4px; font-family: inherit; font-size: inherit; background: none; display: inline-block; white-space: nowrap;">${ip}</code>
-                          </h2>
-                          <div style="background-color: #f8f8f8; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                              <p style="margin: 0; color: #333; font-size: 14px;">
-                                  <strong>Şehir:</strong> ${ipInfo?.city || 'Bilinmiyor'}<br>
-                                  <strong>Bölge:</strong> ${ipInfo?.region || 'Bilinmiyor'}<br>
-                                  <strong>Ülke:</strong> ${ipInfo?.country || 'Bilinmiyor'}<br>
-                                  <strong>Servis Sağlayıcı:</strong> ${ipInfo?.org || 'Bilinmiyor'}<br>
-                                  <strong>Tarayıcı/Cihaz:</strong> ${userAgent}<br>
-                              </p>
-                          </div>
-                          ${gptAnalysis ? `
-                          <div style="background-color: #f0f7ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #0066cc;">
-                              <h4 style="margin: 0 0 10px 0; color: #0066cc;">🤖 Yapay Zeka Analizi</h4>
-                              <p style="margin: 0; color: #333; font-size: 14px; line-height: 1.5;">
-                                  ${gptAnalysis}
-                              </p>
-                          </div>
-                          ` : ''}
-                      </td>
-                  </tr>
-                  <tr>
-                      <td style="background-color: #f8f8f8; padding: 20px; text-align: center; border-top: 1px solid #eee;">
-                          <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
-                              <img src="https://bicilingir.com/logo.png" alt="BiÇilingir Logo" style="width: 80px; height: auto;">
-                              <p style="color: #888; font-size: 12px; margin: 0;">
-                                  © ${new Date().getFullYear()} BiÇilingir. Tüm hakları saklıdır.
-                              </p>
-                          </div>
-                          <p style="color: #888; font-size: 11px; margin: 0;">
-                              Bu otomatik bir bilgilendirme mailidir. Lütfen bu maile cevap vermeyiniz.
-                          </p>
-                      </td>
-                  </tr>
-              </table>
-          </body>
-          </html>
-        `
-      });
-    } catch (error) {
-      console.error('IP engelleme bildirimi mail gönderme hatası:', error);
-    }
+    //   await resend.emails.send({
+    //     from: 'BiÇilingir <noreply@bicilingir.com>',
+    //     to: 'info@bicilingir.com',
+    //     subject: actionText + ' Bildirimi',
+    //     html: `
+    //       <!DOCTYPE html>
+    //       <html>
+    //       <head>
+    //           <meta charset="UTF-8">
+    //           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    //       </head>
+    //       <body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, sans-serif;">
+    //           <table role="presentation" style="width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; margin-top: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    //               <tr>
+    //                   <td style="padding: 12px; text-align: center; background-color: #ffffff;">
+    //                       <h3 style="margin: 0; color: #666; font-size: 14px; font-weight: normal;">⚠️ ${action === 'new' ? 'Şüpheli IP Adresi Tespit Edildi' : 'IP Engeli Yeniden Aktifleştirildi'}</h3>
+    //                   </td>
+    //               </tr>
+    //               <tr>
+    //                   <td style="padding: 12px 30px;">
+    //                       <h2 style="color: #333; margin: 0; text-align: center;">
+    //                           <code style="user-select: all; -webkit-user-select: all; -moz-user-select: all; -ms-user-select: all; cursor: text; padding: 8px 16px; border-radius: 4px; font-family: inherit; font-size: inherit; background: none; display: inline-block; white-space: nowrap;">${ip}</code>
+    //                       </h2>
+    //                       <div style="background-color: #f8f8f8; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+    //                           <p style="margin: 0; color: #333; font-size: 14px;">
+    //                               <strong>Şehir:</strong> ${ipInfo?.city || 'Bilinmiyor'}<br>
+    //                               <strong>Bölge:</strong> ${ipInfo?.region || 'Bilinmiyor'}<br>
+    //                               <strong>Ülke:</strong> ${ipInfo?.country || 'Bilinmiyor'}<br>
+    //                               <strong>Servis Sağlayıcı:</strong> ${ipInfo?.org || 'Bilinmiyor'}<br>
+    //                               <strong>Tarayıcı/Cihaz:</strong> ${userAgent}<br>
+    //                           </p>
+    //                       </div>
+    //                       ${gptAnalysis ? `
+    //                       <div style="background-color: #f0f7ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #0066cc;">
+    //                           <h4 style="margin: 0 0 10px 0; color: #0066cc;">🤖 Yapay Zeka Analizi</h4>
+    //                           <p style="margin: 0; color: #333; font-size: 14px; line-height: 1.5;">
+    //                               ${gptAnalysis}
+    //                           </p>
+    //                       </div>
+    //                       ` : ''}
+    //                   </td>
+    //               </tr>
+    //               <tr>
+    //                   <td style="background-color: #f8f8f8; padding: 20px; text-align: center; border-top: 1px solid #eee;">
+    //                       <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
+    //                           <img src="https://bicilingir.com/logo.png" alt="BiÇilingir Logo" style="width: 80px; height: auto;">
+    //                           <p style="color: #888; font-size: 12px; margin: 0;">
+    //                               © ${new Date().getFullYear()} BiÇilingir. Tüm hakları saklıdır.
+    //                           </p>
+    //                       </div>
+    //                       <p style="color: #888; font-size: 11px; margin: 0;">
+    //                           Bu otomatik bir bilgilendirme mailidir. Lütfen bu maile cevap vermeyiniz.
+    //                       </p>
+    //                   </td>
+    //               </tr>
+    //           </table>
+    //       </body>
+    //       </html>
+    //     `
+    //   });
+    // } catch (error) {
+    //   console.error('IP engelleme bildirimi mail gönderme hatası:', error);
+    // }
   } catch (error) {
     console.error('IP işleme hatası:', error);
   }
