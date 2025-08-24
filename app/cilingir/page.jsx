@@ -377,7 +377,7 @@ function CilingirPanelContent() {
   const fetchProvinces = async () => {
     const response = await fetch('/api/public/provinces');
     const data = await response.json();
-    setProvinces(data.provinces);
+    setProvinces(data.data);
   };
 
   const fetchDistricts = async (provinceId) => {
@@ -389,12 +389,12 @@ function CilingirPanelContent() {
         // İl ID'si yoksa tüm ilçeleri getir
         const response = await fetch('/api/public/districts');
         const data = await response.json();
-        setDistricts(data.districts || []);
+        setDistricts(data.data || []);
       } else {
         // Belirli bir il için ilçeleri getir
         const response = await fetch(`/api/public/districts?province_id=${selectedProvinceId}`);
         const data = await response.json();
-        setDistricts(data.districts || []);
+        setDistricts(data.data || []);
       }
     } catch (error) {
       console.error('İlçe listesi getirilirken bir hata oluştu:', error);

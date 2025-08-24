@@ -136,7 +136,7 @@ export default function Home() {
   // Service ID ve slug'ı takip eden ayrı bir useEffect
   useEffect(() => {
     // ServiceList ve reduxSelectedValues hazır olduğunda
-    if (serviceList.length > 0 && reduxSelectedValues) {
+    if (serviceList?.length > 0 && reduxSelectedValues) {
       if (reduxSelectedValues.serviceId) {
         setSelectedServiceId(reduxSelectedValues.serviceId);
       } else if (reduxSelectedValues.serviceSlug) {
@@ -548,7 +548,7 @@ export default function Home() {
         const response = await fetch("/api/public/services");
         const data = await response.json();
 
-        setServiceList(data.services);
+        setServiceList(data.data);
       } catch (error) {
         console.error("Hizmetler yüklenirken hata:", error);
         showToast("Hizmetler yüklenirken bir sorun oluştu", "error", 3000);

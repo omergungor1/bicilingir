@@ -6,7 +6,7 @@ export async function GET(request) {
     // URL'den il ID'sini al
     const { searchParams } = new URL(request.url);
     const provinceId = searchParams.get('province_id');
-    
+
     // Supabase istemcisi oluştur
     const response = NextResponse.next();
     const supabase = createServerClient(
@@ -36,25 +36,28 @@ export async function GET(request) {
         },
       }
     );
-    
+
     let query = supabase
       .from('districts')
       .select('id, name, province_id')
       .order('name');
-    
+
     // Eğer il ID'si belirtilmişse, sadece o ile ait ilçeleri getir
     if (provinceId) {
       query = query.eq('province_id', provinceId);
     }
-    
+
     const { data: districts, error } = await query;
-    
+
     if (error) {
       console.error('İlçe listesi getirilirken bir hata oluştu:', error);
       return NextResponse.json({ error: 'İlçe listesi yüklenirken bir hata oluştu' }, { status: 500 });
     }
 
-    return NextResponse.json({ districts });
+    return NextResponse.json({
+      success: true,
+      data: districts
+    });
   } catch (error) {
     console.error('İlçe listesi getirilirken bir hata oluştu:', error);
     return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 });

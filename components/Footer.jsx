@@ -7,7 +7,7 @@ export default function Footer() {
   const pathname = usePathname();
 
 
-  if (pathname === '/cilingir' || pathname === '/admin' || pathname === '/cilingir/auth/register' || pathname === '/cilingir/auth/login' || pathname === '/cilingir/auth/forgot-password' || pathname === '/reset-password') {
+  if (pathname === '/cilingir' || pathname === '/admin' || pathname === '/cilingir/auth/register' || pathname === '/cilingir/auth/login' || pathname === '/cilingir/auth/forgot-password' || pathname === '/reset-password' || pathname === '/maps') {
     return null;
   }
 

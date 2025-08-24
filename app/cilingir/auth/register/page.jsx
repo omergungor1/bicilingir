@@ -544,7 +544,7 @@ export default function CilingirKayit() {
     const fetchHizmetler = async () => {
       const response = await fetch("/api/public/services");
       const data = await response.json();
-      setHizmetListesi(data.services);
+      setHizmetListesi(data.data);
     };
     fetchHizmetler();
   }, []);

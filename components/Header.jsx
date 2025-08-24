@@ -20,7 +20,7 @@ export default function Header() {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  if (pathname === '/cilingir' || pathname === '/admin' || pathname === '/cilingir/auth/register' || pathname === '/cilingir/auth/login' || pathname === '/cilingir/auth/forgot-password' || pathname === '/reset-password') {
+  if (pathname === '/cilingir' || pathname === '/admin' || pathname === '/cilingir/auth/register' || pathname === '/cilingir/auth/login' || pathname === '/cilingir/auth/forgot-password' || pathname === '/reset-password' || pathname === '/maps') {
     return null;
   }
 
@@ -84,6 +84,15 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Çilingirler
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/blog"
+                className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/blog' || pathname.startsWith('/blog/') ? '  border-b-2 border-white' : ''}`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Blog
               </Link>
             </li>
             <li>

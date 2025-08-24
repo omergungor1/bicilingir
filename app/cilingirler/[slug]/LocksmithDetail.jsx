@@ -445,6 +445,7 @@ export default function LocksmithDetail({ locksmith: initialData, similarLocksmi
                                         title: initialData.businessname || initialData.fullname,
                                         description: initialData.locksmith_details.fulladdress
                                     }]}
+                                    selectedLocksmith={null}
                                 />
                             </div>
 

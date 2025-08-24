@@ -16,7 +16,8 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      services: services
+      success: true,
+      data: services
     });
   } catch (error) {
     console.error('Hizmetler getirilirken bir hata oluştu 2:', error);

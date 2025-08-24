@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "../ToastContext";
 import { getUserId, getSessionId } from '../../lib/utils';
 
-export default function LocksmithCard({ locksmith, index }) {
+export default function LocksmithCard({ locksmith, index, showLocation = false }) {
     const { showToast } = useToast();
     const [loadingLocksmithIds, setLoadingLocksmithIds] = useState({});
     const [searchValues, setSearchValues] = useState(null);
@@ -350,6 +350,11 @@ export default function LocksmithCard({ locksmith, index }) {
                                             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-1"></span>
                                             Şuan Açık
                                         </span>
+                                        {showLocation && (
+                                            <span className="text-gray-500 text-sm px-2 rounded-full flex items-center w-fit">
+                                                {locksmith.districts.name}, {locksmith.provinces.name}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>

@@ -32,19 +32,22 @@ export async function GET(request) {
         },
       }
     );
-    
+
     // Tüm illeri getir (id ve name sıralı şekilde)
     const { data: provinces, error } = await supabase
       .from('provinces')
       .select('id, name')
       .order('name');
-    
+
     if (error) {
       console.error('İl listesi getirilirken bir hata oluştu:', error);
       return NextResponse.json({ error: 'İl listesi yüklenirken bir hata oluştu' }, { status: 500 });
     }
 
-    return NextResponse.json({ provinces });
+    return NextResponse.json({
+      success: true,
+      data: provinces
+    });
   } catch (error) {
     console.error('İl listesi getirilirken bir hata oluştu:', error);
     return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 });

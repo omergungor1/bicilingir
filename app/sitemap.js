@@ -112,6 +112,25 @@ export default async function sitemap() {
             console.error('Çilingirler yüklenirken hata:', locksmithError);
         }
 
+        // Blog yazıları - Sadece yayınlanmış olanları getir
+        const { data: blogs, error: blogError } = await supabase
+            .from('blogs')
+            .select(`
+                id, 
+                slug, 
+                updated_at, 
+                published_at,
+                provinces (slug),
+                districts (slug),
+                services (slug)
+            `)
+            .eq('status', 'published')
+            .order('published_at', { ascending: false });
+
+        if (blogError) {
+            console.error('Blog yazıları yüklenirken hata:', blogError);
+        }
+
         // İl, ilçe, mahalle ilişkilerini kur
         const districtsMap = districts ? districts.reduce((map, district) => {
             if (!map[district.province_id]) {
@@ -255,9 +274,67 @@ export default async function sitemap() {
             });
         }
 
+        // Blog sayfaları URL'leri
+        const blogUrls = [
+            {
+                url: `${baseUrl}/blog`,
+                lastModified: now,
+                changeFrequency: 'daily',
+                priority: 0.8,
+            }
+        ];
+
+        if (blogs && blogs.length > 0) {
+            blogs.forEach(blog => {
+                if (blog && blog.slug) {
+                    const lastMod = blog.updated_at || blog.published_at || now;
+
+                    // Genel blog URL'i
+                    blogUrls.push({
+                        url: `${baseUrl}/blog/${blog.slug}`,
+                        lastModified: lastMod,
+                        changeFrequency: 'weekly',
+                        priority: 0.6,
+                    });
+
+                    // Province level blog URL'i
+                    if (blog.provinces && blog.provinces.slug) {
+                        blogUrls.push({
+                            url: `${baseUrl}/${blog.provinces.slug}/blog/${blog.slug}`,
+                            lastModified: lastMod,
+                            changeFrequency: 'weekly',
+                            priority: 0.8,
+                        });
+                    }
+
+                    // District level blog URL'i
+                    if (blog.provinces && blog.districts && blog.provinces.slug && blog.districts.slug) {
+                        blogUrls.push({
+                            url: `${baseUrl}/${blog.provinces.slug}/${blog.districts.slug}/blog/${blog.slug}`,
+                            lastModified: lastMod,
+                            changeFrequency: 'weekly',
+                            priority: 0.9,
+                        });
+                    }
+
+                    // Service level blog URL'i
+                    if (blog.provinces && blog.districts && blog.services &&
+                        blog.provinces.slug && blog.districts.slug && blog.services.slug) {
+                        blogUrls.push({
+                            url: `${baseUrl}/${blog.provinces.slug}/${blog.districts.slug}/${blog.services.slug}/blog/${blog.slug}`,
+                            lastModified: lastMod,
+                            changeFrequency: 'weekly',
+                            priority: 1.0,
+                        });
+                    }
+                }
+            });
+        }
+
         // Tüm URL'leri birleştir
         return [
             ...staticPages,
+            ...blogUrls, // Blog sayfalarını ekledik
             ...locksmithUrls, // Çilingir sayfalarını ekledik
             ...provinceUrls,
             ...provinceServiceUrls,

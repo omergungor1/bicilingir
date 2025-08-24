@@ -8,7 +8,8 @@ import { useMaps } from '../app/contexts/MapsContext';
 
 const containerStyle = {
     width: '100%',
-    height: '400px',
+    minHeight: '400px',
+    height: '100%',
     borderRadius: '0.75rem',
 };
 
@@ -44,7 +45,15 @@ const suppressConsoleWarnings = () => {
 };
 
 const Map = ({ center, zoom = 14, markers = [], onMarkerClick, selectedLocksmith }) => {
-    const { isLoaded } = useMaps();
+    let isLoaded = false;
+    try {
+        const mapsContext = useMaps();
+        isLoaded = mapsContext.isLoaded;
+    } catch (error) {
+        console.error('MapsContext error:', error);
+        isLoaded = false;
+    }
+
     const [map, setMap] = useState(null);
     const [selectedMarker, setSelectedMarker] = useState(null);
     const [mapMarkers, setMapMarkers] = useState([]);
@@ -74,6 +83,9 @@ const Map = ({ center, zoom = 14, markers = [], onMarkerClick, selectedLocksmith
     // Info window'un kapatılma işlemi
     const handleInfoWindowClose = () => {
         setSelectedMarker(null);
+        if (onMarkerClick) {
+            onMarkerClick(null);
+        }
     };
 
     // Programatik olarak markerları oluştur
@@ -95,17 +107,31 @@ const Map = ({ center, zoom = 14, markers = [], onMarkerClick, selectedLocksmith
             // Geçersiz koordinatları atla
             if (isNaN(lat) || isNaN(lng)) return null;
 
+            // Seçili çilingir için farklı ikon
+            const isSelected = selectedLocksmith && selectedLocksmith.id === markerData.id;
+
             const marker = new window.google.maps.Marker({
                 position: { lat, lng },
                 map: map,
-                icon: {
+                icon: (markers.length > 1) ? {
+                    path: window.google.maps.SymbolPath.CIRCLE,
+                    scale: isSelected ? 12 : 8,
+                    fillColor: isSelected ? '#FF4444' : '#4169E1',
+                    fillOpacity: isSelected ? 1 : 0.8,
+                    strokeColor: '#ffffff',
+                    strokeWeight: isSelected ? 3 : 2
+                } : {
                     url: '/images/map-marker.png',
                     scaledSize: new window.google.maps.Size(50, 50),
-                }
+                },
+                zIndex: isSelected ? 1000 : 1
             });
 
             marker.addListener('click', () => {
                 handleMarkerClick(markerData);
+                if (onMarkerClick) {
+                    onMarkerClick(markerData);
+                }
             });
 
             return marker;
@@ -128,14 +154,23 @@ const Map = ({ center, zoom = 14, markers = [], onMarkerClick, selectedLocksmith
         }
     }, [map, center]);
 
+    // Seçili çilingir değiştiğinde InfoWindow'u aç
+    useEffect(() => {
+        if (selectedLocksmith) {
+            setSelectedMarker(selectedLocksmith);
+        } else {
+            setSelectedMarker(null);
+        }
+    }, [selectedLocksmith]);
+
     useEffect(() => {
         if (markers && markers.length > 0 && isLoaded && window.google) {
             try {
                 // Haritayı markerların ortasına konumlandır
                 const bounds = new window.google.maps.LatLngBounds();
                 markers.forEach(marker => {
-                    const lat = parseFloat(marker.lat);
-                    const lng = parseFloat(marker.lng);
+                    const lat = parseFloat(marker.position?.lat);
+                    const lng = parseFloat(marker.position?.lng);
 
                     // Geçerli koordinat kontrolü
                     if (!isNaN(lat) && !isNaN(lng)) {
@@ -173,46 +208,55 @@ const Map = ({ center, zoom = 14, markers = [], onMarkerClick, selectedLocksmith
                     position={selectedMarker.position}
                     onCloseClick={handleInfoWindowClose}
                 >
-                    <div className="p-2 max-w-xs flex items-start gap-2">
-                        <Image src='/images/map-marker.png' alt='Çilingir logo' width={40} height={40} />
-                        <div>
-                            <h3 className="font-semibold text-gray-900">{selectedMarker.title}</h3>
-                            {selectedMarker.description && (
-                                <p className="text-sm text-gray-600 mt-1">{selectedMarker.description}</p>
-                            )}
-                            {/* <div className="mt-2">
-                                <Button className="gap-2 flex items-center w-full bg-primary text-white animate-pulse" variant="outline" size="icon">
-                                    <Phone className="w-4 h-4 mr-2" />
-                                    <span className="text-sm">Hemen Ara</span>
-                                </Button>
-                            </div> */}
-                        </div>
-                        {selectedMarker.image && (
-                            <div className="mt-2">
-                                <Image
-                                    src={selectedMarker.image}
+                    <div className="p-3 max-w-sm">
+                        <div className="flex items-start gap-3">
+                            {selectedMarker.profileImage ? (
+                                <img
+                                    src={selectedMarker.profileImage}
                                     alt={selectedMarker.title}
-                                    width={150}
-                                    height={100}
-                                    className="rounded"
+                                    className="w-12 h-12 rounded-lg object-cover"
                                 />
+                            ) : (
+                                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <span className="text-blue-600 font-semibold text-sm">
+                                        {selectedMarker.title.charAt(0)}
+                                    </span>
+                                </div>
+                            )}
+
+                            <div className="flex-1">
+                                <h3 className="font-semibold text-gray-900 mb-1">{selectedMarker.title}</h3>
+                                {selectedMarker.description && (
+                                    <p className="text-sm text-gray-600 mb-2 line-clamp-2">{selectedMarker.description}</p>
+                                )}
+
+                                {selectedMarker.rating && (
+                                    <div className="flex items-center gap-1 mb-2">
+                                        <span className="text-yellow-400 text-sm">★</span>
+                                        <span className="text-sm font-medium text-gray-700">
+                                            {selectedMarker.rating}
+                                        </span>
+                                        <span className="text-sm text-gray-500">
+                                            ({selectedMarker.reviewCount})
+                                        </span>
+                                    </div>
+                                )}
+
+                                {selectedMarker.phoneNumber && (
+                                    <div className="flex items-center gap-2">
+                                        <Phone className="w-4 h-4 text-blue-600" />
+                                        <span className="text-sm font-medium text-blue-600">
+                                            {selectedMarker.phoneNumber}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
                     </div>
                 </InfoWindow>
             )}
 
-            {selectedLocksmith && (
-                <InfoWindow
-                    position={{ lat: selectedLocksmith.lat, lng: selectedLocksmith.lng }}
-                    onCloseClick={() => onMarkerClick(null)}
-                >
-                    <div>
-                        <h3>{selectedLocksmith.businessname}</h3>
-                        <p>{selectedLocksmith.address}</p>
-                    </div>
-                </InfoWindow>
-            )}
+
         </GoogleMap>
     );
 };

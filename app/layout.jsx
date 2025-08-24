@@ -6,6 +6,7 @@ import ClientLayout from './ClientLayout';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
+  metadataBase: new URL('https://bicilingir.com'),
   title: "Bi Çilingir - En yakın çilingiri bul",
   description: "Türkiye'nin ilk ve tek çilingir arama platformu. En yakın çilingir bul, fiyatları görün, karşılaştırın.",
   icons: {
