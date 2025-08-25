@@ -112,7 +112,7 @@ export default async function sitemap() {
             console.error('Çilingirler yüklenirken hata:', locksmithError);
         }
 
-        // Blog yazıları - Sadece yayınlanmış olanları getir
+        // Blog yazıları - Sadece yayınlanmış olanları getir (neighborhoods da dahil et)
         const { data: blogs, error: blogError } = await supabase
             .from('blogs')
             .select(`
@@ -122,6 +122,7 @@ export default async function sitemap() {
                 published_at,
                 provinces (slug),
                 districts (slug),
+                neighborhoods (slug),
                 services (slug)
             `)
             .eq('status', 'published')
@@ -174,6 +175,7 @@ export default async function sitemap() {
                 });
             });
         }
+
 
         // İlçe sayfaları URL'leri (Sadece Bursa'nın ilçeleri)
         const districtUrls = [];
@@ -284,48 +286,88 @@ export default async function sitemap() {
             }
         ];
 
+        // Blog liste sayfaları oluştur
+        const addedBlogListUrls = new Set();
+
         if (blogs && blogs.length > 0) {
             blogs.forEach(blog => {
                 if (blog && blog.slug) {
                     const lastMod = blog.updated_at || blog.published_at || now;
 
-                    // Genel blog URL'i
-                    blogUrls.push({
-                        url: `${baseUrl}/blog/${blog.slug}`,
-                        lastModified: lastMod,
-                        changeFrequency: 'weekly',
-                        priority: 0.6,
-                    });
+                    // Her blog için sadece bir canonical URL oluştur (en spesifik olanı)
+                    let blogUrl = '';
+                    let priority = 0.6;
 
-                    // Province level blog URL'i
-                    if (blog.provinces && blog.provinces.slug) {
-                        blogUrls.push({
-                            url: `${baseUrl}/${blog.provinces.slug}/blog/${blog.slug}`,
-                            lastModified: lastMod,
-                            changeFrequency: 'weekly',
-                            priority: 0.8,
-                        });
-                    }
-
-                    // District level blog URL'i
-                    if (blog.provinces && blog.districts && blog.provinces.slug && blog.districts.slug) {
-                        blogUrls.push({
-                            url: `${baseUrl}/${blog.provinces.slug}/${blog.districts.slug}/blog/${blog.slug}`,
-                            lastModified: lastMod,
-                            changeFrequency: 'weekly',
-                            priority: 0.9,
-                        });
-                    }
-
-                    // Service level blog URL'i
-                    if (blog.provinces && blog.districts && blog.services &&
+                    if (blog.provinces && blog.districts && blog.neighborhoods && blog.services &&
+                        blog.provinces.slug && blog.districts.slug && blog.neighborhoods.slug && blog.services.slug) {
+                        // En spesifik: Province + District + Neighborhood + Service
+                        blogUrl = `${baseUrl}/${blog.provinces.slug}/${blog.districts.slug}/${blog.neighborhoods.slug}/${blog.services.slug}/blog/${blog.slug}`;
+                        priority = 1.0;
+                    } else if (blog.provinces && blog.districts && blog.neighborhoods &&
+                        blog.provinces.slug && blog.districts.slug && blog.neighborhoods.slug) {
+                        // Province + District + Neighborhood
+                        blogUrl = `${baseUrl}/${blog.provinces.slug}/${blog.districts.slug}/${blog.neighborhoods.slug}/blog/${blog.slug}`;
+                        priority = 0.9;
+                    } else if (blog.provinces && blog.districts && blog.services &&
                         blog.provinces.slug && blog.districts.slug && blog.services.slug) {
+                        // Province + District + Service
+                        blogUrl = `${baseUrl}/${blog.provinces.slug}/${blog.districts.slug}/${blog.services.slug}/blog/${blog.slug}`;
+                        priority = 0.9;
+                    } else if (blog.provinces && blog.districts &&
+                        blog.provinces.slug && blog.districts.slug) {
+                        // Province + District
+                        blogUrl = `${baseUrl}/${blog.provinces.slug}/${blog.districts.slug}/blog/${blog.slug}`;
+                        priority = 0.8;
+                    } else if (blog.provinces && blog.services &&
+                        blog.provinces.slug && blog.services.slug) {
+                        // Province + Service
+                        blogUrl = `${baseUrl}/${blog.provinces.slug}/${blog.services.slug}/blog/${blog.slug}`;
+                        priority = 0.8;
+                    } else if (blog.provinces && blog.provinces.slug) {
+                        // Sadece Province
+                        blogUrl = `${baseUrl}/${blog.provinces.slug}/blog/${blog.slug}`;
+                        priority = 0.7;
+                    } else {
+                        // Genel blog
+                        blogUrl = `${baseUrl}/blog/${blog.slug}`;
+                        priority = 0.6;
+                    }
+
+                    // Blog detay URL'ini ekle
+                    if (blogUrl) {
                         blogUrls.push({
-                            url: `${baseUrl}/${blog.provinces.slug}/${blog.districts.slug}/${blog.services.slug}/blog/${blog.slug}`,
+                            url: blogUrl,
                             lastModified: lastMod,
                             changeFrequency: 'weekly',
-                            priority: 1.0,
+                            priority: priority,
                         });
+                    }
+
+                    // Blog liste sayfalarını ekle (sadece province ve district kombinasyonları)
+                    if (blog.provinces && blog.provinces.slug) {
+                        const provinceListUrl = `${baseUrl}/${blog.provinces.slug}/blog`;
+                        if (!addedBlogListUrls.has(provinceListUrl)) {
+                            blogUrls.push({
+                                url: provinceListUrl,
+                                lastModified: lastMod,
+                                changeFrequency: 'weekly',
+                                priority: 0.7,
+                            });
+                            addedBlogListUrls.add(provinceListUrl);
+                        }
+
+                        if (blog.districts && blog.districts.slug) {
+                            const districtListUrl = `${baseUrl}/${blog.provinces.slug}/${blog.districts.slug}/blog`;
+                            if (!addedBlogListUrls.has(districtListUrl)) {
+                                blogUrls.push({
+                                    url: districtListUrl,
+                                    lastModified: lastMod,
+                                    changeFrequency: 'weekly',
+                                    priority: 0.8,
+                                });
+                                addedBlogListUrls.add(districtListUrl);
+                            }
+                        }
                     }
                 }
             });

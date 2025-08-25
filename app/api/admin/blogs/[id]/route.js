@@ -29,6 +29,11 @@ export async function GET(request, { params }) {
           name,
           slug
         ),
+        neighborhoods (
+          id,
+          name,
+          slug
+        ),
         services (
           id,
           name,
@@ -191,6 +196,11 @@ export async function PUT(request, { params }) {
           slug
         ),
         districts (
+          id,
+          name,
+          slug
+        ),
+        neighborhoods (
           id,
           name,
           slug

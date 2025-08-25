@@ -13,6 +13,7 @@ export default function BlogDetailPage({
     slug,
     province = null,
     district = null,
+    neighborhood = null,
     service = null
 }) {
     const [blog, setBlog] = useState(null);
@@ -24,7 +25,7 @@ export default function BlogDetailPage({
         if (slug) {
             fetchBlog();
         }
-    }, [slug, province, district, service]);
+    }, [slug, province, district, neighborhood, service]);
 
     // Menü dışında tıklandığında menüyü kapat
     useEffect(() => {
@@ -50,6 +51,7 @@ export default function BlogDetailPage({
 
             if (province) params.append('province', province);
             if (district) params.append('district', district);
+            if (neighborhood) params.append('neighborhood', neighborhood);
             if (service) params.append('service', service);
 
             if (params.toString()) {
@@ -152,20 +154,39 @@ export default function BlogDetailPage({
                 });
             }
 
+            // Neighborhood level
+            if (neighborhood && blog.neighborhoods) {
+                breadcrumbItems.push({
+                    label: blog.neighborhoods.name,
+                    href: `/${blog.provinces.slug}/${blog.districts.slug}/${blog.neighborhoods.slug}`
+                });
+            }
+
             // Service level
             if (service && blog.services) {
+                let serviceHref = `/${blog.provinces.slug}`;
+                if (blog.districts) serviceHref += `/${blog.districts.slug}`;
+                if (blog.neighborhoods) serviceHref += `/${blog.neighborhoods.slug}`;
+                serviceHref += `/${blog.services.slug}`;
+
                 breadcrumbItems.push({
                     label: blog.services.name,
-                    href: `/${blog.provinces.slug}/${blog.districts.slug}/${blog.services.slug}`
+                    href: serviceHref
                 });
             }
 
             // Blog section
             let blogHref = '/blog';
-            if (province && district && service) {
+            if (province && district && neighborhood && service) {
+                blogHref = `/${blog.provinces.slug}/${blog.districts.slug}/${blog.neighborhoods.slug}/${blog.services.slug}/blog`;
+            } else if (province && district && neighborhood) {
+                blogHref = `/${blog.provinces.slug}/${blog.districts.slug}/${blog.neighborhoods.slug}/blog`;
+            } else if (province && district && service) {
                 blogHref = `/${blog.provinces.slug}/${blog.districts.slug}/${blog.services.slug}/blog`;
             } else if (province && district) {
                 blogHref = `/${blog.provinces.slug}/${blog.districts.slug}/blog`;
+            } else if (province && service) {
+                blogHref = `/${blog.provinces.slug}/${blog.services.slug}/blog`;
             } else if (province) {
                 blogHref = `/${blog.provinces.slug}/blog`;
             }
@@ -261,6 +282,7 @@ export default function BlogDetailPage({
                                     <MapPin className="w-3 h-3 mr-1" />
                                     {blog.provinces.name}
                                     {blog.districts && ` / ${blog.districts.name}`}
+                                    {blog.neighborhoods && ` / ${blog.neighborhoods.name}`}
                                 </Badge>
                             )}
 
@@ -359,8 +381,10 @@ export default function BlogDetailPage({
                                     src={blog.blog_images.url}
                                     alt={blog.blog_images.alt_text || blog.title}
                                     fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
                                     className="object-cover"
                                     priority
+                                    loading="eager"
                                 />
                             </div>
                         )}
@@ -379,11 +403,13 @@ export default function BlogDetailPage({
                     {blog.relatedLocksmiths && blog.relatedLocksmiths.length > 0 && (
                         <div className="md:bg-white md:rounded-lg md:shadow-sm p-2 md:p-8 mb-2 md:mb-8">
                             <h2 className="text-2xl font-bold text-gray-900 mb-2 md:mb-6">
-                                {blog.provinces && blog.districts
-                                    ? `${blog.provinces.name} ${blog.districts.name} Çilingir Listesi`
-                                    : blog.provinces
-                                        ? `${blog.provinces.name} Çilingir Listesi`
-                                        : 'Önerilen Çilingirler'
+                                {blog.provinces && blog.districts && blog.neighborhoods
+                                    ? `${blog.provinces.name} ${blog.districts.name} ${blog.neighborhoods.name} Çilingir Listesi`
+                                    : blog.provinces && blog.districts
+                                        ? `${blog.provinces.name} ${blog.districts.name} Çilingir Listesi`
+                                        : blog.provinces
+                                            ? `${blog.provinces.name} Çilingir Listesi`
+                                            : 'Önerilen Çilingirler'
                                 }
                             </h2>
                             <p className="text-gray-600 mb-2 md:mb-6">Aşağıdaki listeden size en uygun çilingiri seçip hemen arayarak detaylı bilgi alabilirsiniz.</p>

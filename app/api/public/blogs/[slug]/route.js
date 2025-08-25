@@ -11,10 +11,11 @@ export async function GET(request, { params }) {
         const url = new URL(request.url);
         const province = url.searchParams.get('province');
         const district = url.searchParams.get('district');
+        const neighborhood = url.searchParams.get('neighborhood');
         const service = url.searchParams.get('service');
 
         console.log(slug, 'slug');
-        console.log({ province, district, service }, 'location filters');
+        console.log({ province, district, neighborhood, service }, 'location filters');
 
         // Blog sorgusunu oluştur
         let blogQuery = supabase
@@ -34,6 +35,11 @@ export async function GET(request, { params }) {
           slug
         ),
         districts (
+          id,
+          name,
+          slug
+        ),
+        neighborhoods (
           id,
           name,
           slug
@@ -81,6 +87,19 @@ export async function GET(request, { params }) {
 
             if (districtData) {
                 blogQuery = blogQuery.eq('district_id', districtData.id);
+            }
+        }
+
+        if (neighborhood) {
+            // Neighborhood slug'ını ID'ye çevir
+            const { data: neighborhoodData } = await supabase
+                .from('neighborhoods')
+                .select('id')
+                .eq('slug', neighborhood)
+                .single();
+
+            if (neighborhoodData) {
+                blogQuery = blogQuery.eq('neighborhood_id', neighborhoodData.id);
             }
         }
 
@@ -153,11 +172,6 @@ export async function GET(request, { params }) {
         // İlgili çilingirleri getir (locksmith_districts ve locksmith_services tabloları üzerinden)
         let relatedLocksmiths = [];
         if (blogData.province_id || blogData.district_id || blogData.service_id) {
-            console.log('Blog lokasyon bilgileri:', {
-                province_id: blogData.province_id,
-                district_id: blogData.district_id,
-                service_id: blogData.service_id
-            });
 
             try {
                 let locksmithIds = [];

@@ -1,15 +1,13 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { Clock, Eye, MapPin, Search, Calendar, Filter } from 'lucide-react';
-import { Input } from '../ui/input';
+import { Clock, Eye, MapPin, Calendar } from 'lucide-react';
+import { getSupabaseServer } from '../../lib/supabase';
 
-export default function BlogListPage({
+export default async function BlogListServerPage({
     pageTitle = "Blog Yazıları",
     breadcrumbItems = [],
     province = null,
@@ -17,81 +15,103 @@ export default function BlogListPage({
     neighborhood = null,
     service = null
 }) {
-    const [blogs, setBlogs] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filteredBlogs, setFilteredBlogs] = useState([]);
-    const [selectedCategory, setSelectedCategory] = useState('all');
-    const [categories, setCategories] = useState([]);
+    const supabase = getSupabaseServer();
 
-    useEffect(() => {
-        fetchBlogs();
-    }, [province, district, neighborhood, service]);
+    // API endpoint'ini route parametrelerine göre belirle
+    let query = supabase
+        .from('blogs')
+        .select(`
+            id,
+            title,
+            slug,
+            excerpt,
+            views,
+            created_at,
+            reading_time,
+            is_featured,
+            category,
+            blog_images (
+                id,
+                url,
+                alt_text,
+                width,
+                height
+            ),
+            provinces (
+                id,
+                name,
+                slug
+            ),
+            districts (
+                id,
+                name,
+                slug
+            ),
+            neighborhoods (
+                id,
+                name,
+                slug
+            ),
+            services (
+                id,
+                name,
+                slug
+            )
+        `)
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(12);
 
-    useEffect(() => {
-        filterBlogs();
-    }, [blogs, searchTerm, selectedCategory]);
+    // Slug bazlı filtreler
+    if (province) {
+        const { data: provinceData } = await supabase
+            .from('provinces')
+            .select('id')
+            .eq('slug', province)
+            .single();
 
-    const fetchBlogs = async () => {
-        try {
-            setLoading(true);
-
-            // API endpoint'ini route parametrelerine göre belirle
-            let apiUrl = '/api/public/blogs';
-            const params = new URLSearchParams();
-
-            if (province) params.append('province', province);
-            if (district) params.append('district', district);
-            if (neighborhood) params.append('neighborhood', neighborhood);
-            if (service) params.append('service', service);
-
-            // Sayfa başına blog sayısını sınırla
-            params.append('limit', '12');
-
-            if (params.toString()) {
-                apiUrl += `?${params.toString()}`;
-            }
-
-            const response = await fetch(apiUrl);
-            const result = await response.json();
-
-            if (result.success) {
-                setBlogs(result.data || []);
-
-                // Kategorileri çıkar
-                const uniqueCategories = [...new Set(result.data?.map(blog => blog.category).filter(Boolean))];
-                setCategories(uniqueCategories);
-            } else {
-                setError(result.error);
-            }
-        } catch (error) {
-            console.error('Bloglar alınamadı:', error);
-            setError('Bloglar yüklenirken bir hata oluştu');
-        } finally {
-            setLoading(false);
+        if (provinceData) {
+            query = query.eq('province_id', provinceData.id);
         }
-    };
+    }
 
-    const filterBlogs = () => {
-        let filtered = blogs;
+    if (district) {
+        const { data: districtData } = await supabase
+            .from('districts')
+            .select('id')
+            .eq('slug', district)
+            .single();
 
-        // Arama terimine göre filtrele
-        if (searchTerm) {
-            filtered = filtered.filter(blog =>
-                blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                blog.excerpt?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                blog.meta_keywords?.toLowerCase().includes(searchTerm.toLowerCase())
-            );
+        if (districtData) {
+            query = query.eq('district_id', districtData.id);
         }
+    }
 
-        // Kategoriye göre filtrele
-        if (selectedCategory !== 'all') {
-            filtered = filtered.filter(blog => blog.category === selectedCategory);
+    if (neighborhood) {
+        const { data: neighborhoodData } = await supabase
+            .from('neighborhoods')
+            .select('id')
+            .eq('slug', neighborhood)
+            .single();
+
+        if (neighborhoodData) {
+            query = query.eq('neighborhood_id', neighborhoodData.id);
         }
+    }
 
-        setFilteredBlogs(filtered);
-    };
+    if (service) {
+        const { data: serviceData } = await supabase
+            .from('services')
+            .select('id')
+            .eq('slug', service)
+            .single();
+
+        if (serviceData) {
+            query = query.eq('service_id', serviceData.id);
+        }
+    }
+
+    const { data: blogs } = await query;
 
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('tr-TR', {
@@ -138,61 +158,6 @@ export default function BlogListPage({
         }
     };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-gray-50">
-                <div className="container mx-auto px-4 py-8">
-                    <div className="max-w-6xl mx-auto">
-                        {/* Header skeleton */}
-                        <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
-                            <div className="animate-pulse">
-                                <div className="h-8 bg-gray-200 rounded mb-4"></div>
-                                <div className="h-4 bg-gray-200 rounded mb-6 w-1/2"></div>
-                                <div className="h-10 bg-gray-200 rounded w-full"></div>
-                            </div>
-                        </div>
-
-                        {/* Blog cards skeleton */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {[1, 2, 3, 4, 5, 6].map(i => (
-                                <div key={i} className="bg-white rounded-lg shadow-sm p-6">
-                                    <div className="animate-pulse">
-                                        <div className="h-48 bg-gray-200 rounded mb-4"></div>
-                                        <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                                        <div className="h-4 bg-gray-200 rounded mb-4 w-3/4"></div>
-                                        <div className="h-3 bg-gray-200 rounded mb-1"></div>
-                                        <div className="h-3 bg-gray-200 rounded mb-1"></div>
-                                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="min-h-screen bg-gray-50">
-                <div className="container mx-auto px-4 py-8">
-                    <div className="max-w-4xl mx-auto">
-                        <Card>
-                            <CardContent className="p-8 text-center">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-4">Bir Hata Oluştu</h2>
-                                <p className="text-gray-600 mb-6">{error}</p>
-                                <Button onClick={() => window.location.reload()}>
-                                    Tekrar Dene
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="container mx-auto px-2 md:px-4 py-2 md:py-8">
@@ -227,74 +192,23 @@ export default function BlogListPage({
                         <p className="text-gray-600 mb-2 md:mb-6">
                             Çilingirlik hizmetleri, güvenlik sistemleri ve daha birçok konuda faydalı bilgilere ulaşın.
                         </p>
-
-                        {/* Arama ve Filtreler */}
-                        <div className="flex flex-col sm:flex-row gap-4 mb-2 md:mb-0">
-                            {/* Arama */}
-                            <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                                <Input
-                                    type="text"
-                                    placeholder="Blog ara..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-10"
-                                />
-                            </div>
-
-                            {/* Kategori Filtresi */}
-                            {categories.length > 0 && (
-                                <div className="flex items-center gap-2">
-                                    <Filter className="w-4 h-4 text-gray-400" />
-                                    <select
-                                        value={selectedCategory}
-                                        onChange={(e) => setSelectedCategory(e.target.value)}
-                                        className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    >
-                                        <option value="all">Tüm Kategoriler</option>
-                                        {categories.map(category => (
-                                            <option key={category} value={category}>
-                                                {category}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
-                        </div>
                     </div>
 
                     {/* Blog Listesi */}
-                    {filteredBlogs.length === 0 ? (
+                    {!blogs || blogs.length === 0 ? (
                         <div className="md:bg-white md:rounded-lg md:shadow-sm p-2 md:p-8 text-center">
                             <div className="py-12">
                                 <h3 className="text-xl font-medium text-gray-900 mb-2">
-                                    {searchTerm || selectedCategory !== 'all'
-                                        ? 'Arama kriterlerinize uygun blog bulunamadı'
-                                        : 'Henüz blog yazısı bulunmuyor'
-                                    }
+                                    Henüz blog yazısı bulunmuyor
                                 </h3>
                                 <p className="text-gray-600 mb-6">
-                                    {searchTerm || selectedCategory !== 'all'
-                                        ? 'Lütfen farklı anahtar kelimeler deneyin veya filtreleri temizleyin.'
-                                        : 'Yakında faydalı içeriklerle burada olacağız.'
-                                    }
+                                    Yakında faydalı içeriklerle burada olacağız.
                                 </p>
-                                {(searchTerm || selectedCategory !== 'all') && (
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => {
-                                            setSearchTerm('');
-                                            setSelectedCategory('all');
-                                        }}
-                                    >
-                                        Filtreleri Temizle
-                                    </Button>
-                                )}
                             </div>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6">
-                            {filteredBlogs.map((blog, index) => (
+                            {blogs.map((blog, index) => (
                                 <Card key={blog.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
                                     <div className="relative">
                                         {/* Blog Resmi */}
@@ -394,12 +308,10 @@ export default function BlogListPage({
                     )}
 
                     {/* Blog Sayısı Bilgisi */}
-                    {filteredBlogs.length > 0 && (
+                    {blogs && blogs.length > 0 && (
                         <div className="mt-8 text-center">
                             <p className="text-gray-600 text-sm">
-                                Toplam {filteredBlogs.length} blog yazısı gösteriliyor
-                                {searchTerm && ` "${searchTerm}" araması için`}
-                                {selectedCategory !== 'all' && ` "${selectedCategory}" kategorisinde`}
+                                Toplam {blogs.length} blog yazısı gösteriliyor
                             </p>
                         </div>
                     )}

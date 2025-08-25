@@ -38,6 +38,11 @@ export async function GET(request) {
           name,
           slug
         ),
+        neighborhoods (
+          id,
+          name,
+          slug
+        ),
         services (
           id,
           name,
@@ -223,6 +228,11 @@ export async function POST(request) {
           slug
         ),
         districts (
+          id,
+          name,
+          slug
+        ),
+        neighborhoods (
           id,
           name,
           slug

@@ -33,6 +33,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
         keywords: 'çilingir, anahtarcı, kapı açma, acil çilingir, kasa çilingir, oto çilingir, ev çilingir, en uygun çilingir, çilingir fiyatları',
     };
 
+
     // Supabase bağlantısı oluştur
     const supabase = createSupabaseClient();
 

@@ -24,6 +24,7 @@ CREATE TABLE blogs (
     image_id UUID REFERENCES blog_images(id) ON DELETE SET NULL,
     province_id INTEGER REFERENCES provinces(id) ON DELETE SET NULL,
     district_id INTEGER REFERENCES districts(id) ON DELETE SET NULL,
+    neighborhood_id INTEGER REFERENCES neighborhoods(id) ON DELETE SET NULL,
     service_id UUID REFERENCES services(id) ON DELETE SET NULL,
     locksmith_id UUID REFERENCES locksmiths(id) ON DELETE SET NULL,
     views INTEGER DEFAULT 0 CHECK (views >= 0),
