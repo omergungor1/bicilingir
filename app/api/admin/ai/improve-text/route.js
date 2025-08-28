@@ -2,6 +2,9 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
+// Vercel timeout ayarı - maksimum 60 saniye (Pro plan için)
+export const maxDuration = 60
+
 // Metin iyileştirme
 export async function POST(request) {
     try {
@@ -74,6 +77,10 @@ export async function POST(request) {
         }
 
         try {
+            // Timeout ile fetch (45 saniye)
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 45000)
+
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {
@@ -94,8 +101,11 @@ export async function POST(request) {
                     ],
                     temperature: 0.7,
                     max_tokens: 2000
-                })
+                }),
+                signal: controller.signal
             })
+
+            clearTimeout(timeoutId)
 
             if (!response.ok) {
                 const errorData = await response.json()
@@ -110,6 +120,11 @@ export async function POST(request) {
             return NextResponse.json({ improvedText })
 
         } catch (fetchError) {
+            if (fetchError.name === 'AbortError') {
+                return NextResponse.json({
+                    error: 'İşlem zaman aşımına uğradı. Lütfen daha kısa bir metin deneyin.'
+                }, { status: 408 })
+            }
             return NextResponse.json({
                 error: 'OpenAI API isteği başarısız: ' + fetchError.message
             }, { status: 500 })

@@ -20,11 +20,18 @@ export default function AIButton({ text, onTextChange, fieldType = 'content' }) 
                 body.customPrompt = customPrompt
             }
 
+            // Timeout ile fetch (50 saniye)
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 50000)
+
             const response = await fetch('/api/admin/ai/improve-text', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
+                body: JSON.stringify(body),
+                signal: controller.signal
             })
+
+            clearTimeout(timeoutId)
 
             const data = await response.json()
 
@@ -33,10 +40,18 @@ export default function AIButton({ text, onTextChange, fieldType = 'content' }) 
                 setIsOpen(false)
                 setCustomPrompt('')
             } else {
-                alert('Hata: ' + data.error)
+                if (response.status === 408) {
+                    alert('İşlem zaman aşımına uğradı. Lütfen daha kısa bir metin deneyin.')
+                } else {
+                    alert('Hata: ' + data.error)
+                }
             }
         } catch (error) {
-            alert('AI isteği başarısız oldu')
+            if (error.name === 'AbortError') {
+                alert('İşlem zaman aşımına uğradı. Lütfen daha kısa bir metin deneyin.')
+            } else {
+                alert('AI isteği başarısız oldu: ' + error.message)
+            }
         } finally {
             setLoading(false)
         }

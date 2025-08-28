@@ -21,5 +21,13 @@
                 }
             ]
         }
-    ]
+    ],
+    "functions": {
+        "app/api/admin/ai/generate-blog/route.js": {
+            "maxDuration": 60
+        },
+        "app/api/admin/ai/improve-text/route.js": {
+            "maxDuration": 60
+        }
+    }
 }

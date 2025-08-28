@@ -272,6 +272,10 @@ Sadece yeni içeriği yaz:`
                     break
             }
 
+            // Timeout ile fetch (50 saniye)
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 50000)
+
             const response = await fetch('/api/admin/ai/improve-text', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -280,8 +284,11 @@ Sadece yeni içeriği yaz:`
                     action: 'SEO optimize',
                     fieldType: fieldType,
                     customPrompt: prompt
-                })
+                }),
+                signal: controller.signal
             })
+
+            clearTimeout(timeoutId)
 
             const data = await response.json()
 
@@ -289,11 +296,19 @@ Sadece yeni içeriği yaz:`
                 onTextChange(data.improvedText)
                 setIsExpanded(false)
             } else {
-                alert('AI düzeltme başarısız: ' + (data.error || 'Bilinmeyen hata'))
+                if (response.status === 408) {
+                    alert('İşlem zaman aşımına uğradı. Lütfen daha kısa bir metin deneyin.')
+                } else {
+                    alert('AI düzeltme başarısız: ' + (data.error || 'Bilinmeyen hata'))
+                }
             }
         } catch (error) {
-            console.error('AI düzeltme hatası:', error)
-            alert('AI düzeltme sırasında hata oluştu')
+            if (error.name === 'AbortError') {
+                alert('İşlem zaman aşımına uğradı. Lütfen daha kısa bir metin deneyin.')
+            } else {
+                console.error('AI düzeltme hatası:', error)
+                alert('AI düzeltme sırasında hata oluştu')
+            }
         } finally {
             setIsFixing(false)
         }
