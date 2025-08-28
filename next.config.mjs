@@ -29,13 +29,8 @@ const nextConfig = {
   //   optimizeCss: false,
   //   forceSwcTransforms: true,
   // },
-  // Önbellek sorunlarını çözmek için
-  onDemandEntries: {
-    // Sayfaların bellekte tutulma süresi (ms)
-    maxInactiveAge: 25 * 1000,
-    // Aynı anda bellekte tutulacak sayfa sayısı
-    pagesBufferLength: 2,
-  },
+  // App Router için önbellek ayarları
+  // onDemandEntries Pages Router için kullanılır, App Router'da gerek yok
   async redirects() {
     return [
       {

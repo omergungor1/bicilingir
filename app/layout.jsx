@@ -9,6 +9,31 @@ export const metadata = {
   metadataBase: new URL('https://bicilingir.com'),
   title: "Bi Çilingir - En yakın çilingiri bul",
   description: "Türkiye'nin ilk ve tek çilingir arama platformu. En yakın çilingir bul, fiyatları görün, karşılaştırın.",
+  alternates: {
+    canonical: 'https://bicilingir.com',
+  },
+  openGraph: {
+    title: "Bi Çilingir - En yakın çilingiri bul",
+    description: "Türkiye'nin ilk ve tek çilingir arama platformu. En yakın çilingir bul, fiyatları görün, karşılaştırın.",
+    url: 'https://bicilingir.com',
+    siteName: 'Bi Çilingir',
+    images: [
+      {
+        url: 'https://bicilingir.com/images/infocard.png',
+        width: 1200,
+        height: 630,
+        alt: 'Bi Çilingir - En yakın çilingiri bul',
+      },
+    ],
+    locale: 'tr_TR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Bi Çilingir - En yakın çilingiri bul",
+    description: "Türkiye'nin ilk ve tek çilingir arama platformu. En yakın çilingir bul, fiyatları görün, karşılaştırın.",
+    images: ['https://bicilingir.com/images/infocard.png'],
+  },
   icons: {
     icon: "/favicon.ico",
   },

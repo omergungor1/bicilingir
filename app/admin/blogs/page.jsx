@@ -150,9 +150,9 @@ export default function BlogList() {
                 <h1 className="text-2xl font-bold text-gray-900">Blog Yazıları</h1>
                 <Link
                     href="/admin/blogs/new"
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+                    className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center"
                 >
-                    ➕ Yeni Blog
+                    <span className="text-lg mr-2">+</span> Yeni Blog
                 </Link>
             </div>
 

@@ -489,7 +489,7 @@ export default function BlogDetailPage({
 
                         {/* Blog resmi */}
                         {blog.blog_images && (
-                            <div className="relative h-64 md:h-96 mb-0 md:mb-8 rounded-md md:rounded-lg overflow-hidden">
+                            <div className="relative h-64 md:h-96 mb-2 md:mb-8 rounded-md md:rounded-lg overflow-hidden">
                                 <Image
                                     src={blog.blog_images.url}
                                     alt={blog.blog_images.alt_text || blog.title}
@@ -528,14 +528,14 @@ export default function BlogDetailPage({
 
                         {/* Excerpt */}
                         {blog.excerpt && (
-                            <p className="text-lg text-gray-600 leading-relaxed border-l-4 border-blue-500 pl-4 mb-2 md:mb-6">
+                            <p className="text-lg text-gray-600 leading-relaxed border-l-4 border-blue-500 pl-4 -mb-4 md:mb-2">
                                 {blog.excerpt}
                             </p>
                         )}
                     </div>
 
                     {/* Blog İçeriği */}
-                    <div className="md:bg-white p-2 md:p-8 mb-2 md:mb-8">
+                    <div className="md:bg-white p-2 md:pl-8 md:pr-8">
                         <div
                             className="prose prose-lg max-w-none"
                             dangerouslySetInnerHTML={{ __html: markdownToHtml(blog.content) }}
@@ -545,7 +545,7 @@ export default function BlogDetailPage({
 
                     {/* İlgili Çilingirler */}
                     {blog.relatedLocksmiths && blog.relatedLocksmiths.length > 0 && (
-                        <div className="md:bg-white p-2 md:p-8 mb-2 md:mb-8">
+                        <div className="md:bg-white p-2 md:pl-8 md:pr-8 mb-2">
                             <h2 className="text-2xl font-bold text-gray-900 mb-2 md:mb-6">
                                 {blog.provinces && blog.districts && blog.neighborhoods
                                     ? `${blog.provinces.name} ${blog.districts.name} ${blog.neighborhoods.name} Çilingir Listesi`
@@ -571,19 +571,13 @@ export default function BlogDetailPage({
                         </div>
                     )}
 
-                    {/* Result bölümü */}
+                    {/* Result bölümü - Blog yazısının devamı olarak */}
                     {blog.result && (
-                        <div className="md:bg-white p-2 md:p-8 mb-2 md:mb-8">
-                            <div className="p-6 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                                <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                                    <span className="text-blue-600 mr-2">💡</span>
-                                    Özet olarak...
-                                </h2>
-                                <div
-                                    className="prose prose-lg max-w-none"
-                                    dangerouslySetInnerHTML={{ __html: markdownToHtml(blog.result) }}
-                                />
-                            </div>
+                        <div className="md:bg-white p-2 md:pl-8 md:pr-8 mb-2">
+                            <div
+                                className="prose prose-lg max-w-none"
+                                dangerouslySetInnerHTML={{ __html: markdownToHtml(blog.result) }}
+                            />
                         </div>
                     )}
                 </div>

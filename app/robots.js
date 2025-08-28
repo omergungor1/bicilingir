@@ -5,6 +5,6 @@ export default function robots() {
             allow: '/',
             disallow: ['/api/', '/admin/'],
         },
-        sitemap: 'https://www.bicilingir.com/sitemap.xml',
+        sitemap: 'https://bicilingir.com/sitemap.xml',
     };
 } 

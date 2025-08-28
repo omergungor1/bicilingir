@@ -327,7 +327,24 @@ export async function generateMetadata({ params }) {
         resolvedParams.neighborhood,
         resolvedParams.servicetype
     );
-    return metadata;
+
+    // Mahalle servis sayfalarına canonical URL ekle
+    // Canonical URL mahalle ana sayfasını işaret eder
+    const canonicalUrl = `https://bicilingir.com/${resolvedParams.city}/${resolvedParams.district}/${resolvedParams.neighborhood}`;
+
+    return {
+        ...metadata,
+        alternates: {
+            ...metadata.alternates,
+            canonical: canonicalUrl
+        },
+        robots: {
+            // index: false, // Arama motorlarında listelenmemesi için
+            follow: true, // Linkleri takip edebilir
+            noarchive: true, // Arşivlenmemesi için
+            noimageindex: true // Resimler dizinlenmesin
+        }
+    };
 }
 
 export default async function NeighborhoodServicePage({ params }) {

@@ -237,6 +237,7 @@ export default async function sitemap() {
         }
 
         // Mahalle + Hizmet sayfaları URL'leri (Sadece Bursa'nın ilçelerinin mahalleleri)
+        // Bu sayfalar canonical ile mahalle ana sayfalarını işaret eder, düşük priority
         const neighborhoodserviceUrls = [];
         if (provinces && services && services.length > 0) {
             provinces.forEach(province => {
@@ -249,8 +250,8 @@ export default async function sitemap() {
                                 neighborhoodserviceUrls.push({
                                     url: `${baseUrl}/${province.slug}/${district.slug}/${neighbourhood.slug}/${service.slug}`,
                                     lastModified: now,
-                                    changeFrequency: 'weekly',
-                                    priority: 0.5,
+                                    changeFrequency: 'monthly', // Daha az sıklıkta güncellenir
+                                    priority: 0.1, // Çok düşük priority - canonical var
                                 });
                             }
                         });
