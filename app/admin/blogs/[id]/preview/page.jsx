@@ -1,6 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
+// Admin sayfası dynamic rendering'e zorla
+export const dynamic = 'force-dynamic'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import BlogDetailPage from '../../../../../components/blog/BlogDetailPage'

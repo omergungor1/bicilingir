@@ -1,15 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
+// Admin sayfası dynamic rendering'e zorla
+export const dynamic = 'force-dynamic'
 import { useRouter, useParams } from 'next/navigation'
-import dynamic from 'next/dynamic'
+import dynamicImport from 'next/dynamic'
 import AIButton from '../../../components/AIButton'
 import ImageLibraryModal from '../../../components/ImageLibraryModal'
 import SEOScoreCard from '../../../components/SEOScoreCard'
 import InlineSEOScore from '../../../components/InlineSEOScore'
 
 // Markdown editörü dinamik olarak yükle
-const MDEditor = dynamic(
+const MDEditor = dynamicImport(
     () => import('@uiw/react-md-editor'),
     { ssr: false }
 )

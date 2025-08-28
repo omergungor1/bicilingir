@@ -1,6 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+
+// Admin sayfası dynamic rendering'e zorla
+export const dynamic = 'force-dynamic'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 

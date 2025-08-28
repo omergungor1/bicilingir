@@ -1,15 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
+// Admin sayfası dynamic rendering'e zorla
+export const dynamic = 'force-dynamic'
 import { useRouter } from 'next/navigation'
-import dynamic from 'next/dynamic'
+import dynamicImport from 'next/dynamic'
 import AIButton from '../../components/AIButton'
 import ImageLibraryModal from '../../components/ImageLibraryModal'
 import SEOScoreCard from '../../components/SEOScoreCard'
 import InlineSEOScore from '../../components/InlineSEOScore'
 
 // Markdown editörü dinamik olarak yükle (SSR sorunlarını önlemek için)
-const MDEditor = dynamic(
+const MDEditor = dynamicImport(
     () => import('@uiw/react-md-editor'),
     { ssr: false }
 )
@@ -190,11 +193,18 @@ export default function NewBlog() {
                 ...options
             }
 
+            // 60 saniye timeout ile fetch
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 60000)
+
             const response = await fetch('/api/admin/ai/generate-blog', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(generateData)
+                body: JSON.stringify(generateData),
+                signal: controller.signal
             })
+
+            clearTimeout(timeoutId)
 
             const data = await response.json()
 
@@ -216,7 +226,11 @@ export default function NewBlog() {
                 alert('AI içerik üretimi başarısız: ' + data.error)
             }
         } catch (error) {
-            alert('AI isteği sırasında hata oluştu')
+            if (error.name === 'AbortError') {
+                alert('AI isteği zaman aşımına uğradı. Lütfen daha kısa parametreler deneyin.')
+            } else {
+                alert('AI isteği sırasında hata oluştu: ' + error.message)
+            }
         } finally {
             setGenerating(false)
         }

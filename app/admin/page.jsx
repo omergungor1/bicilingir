@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 
+// Admin sayfası dynamic rendering'e zorla
+export const dynamic = 'force-dynamic'
+
 export default function AdminDashboard() {
     const [stats, setStats] = useState({
         totalBlogs: 0,
