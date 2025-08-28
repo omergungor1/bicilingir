@@ -9,12 +9,89 @@ import { Button } from '../ui/button';
 import { Clock, Eye, MapPin, Phone, MessageCircle, Star, ArrowLeft, Share2 } from 'lucide-react';
 import LocksmithCard from '../ui/locksmith-card';
 
+// Markdown to HTML converter
+const markdownToHtml = (markdown) => {
+    if (!markdown) return ''
+
+    return markdown
+        // Headers
+        .replace(/^### (.*$)/gm, '<h3 class="text-xl font-semibold text-gray-900 mt-8 mb-4">$1</h3>')
+        .replace(/^## (.*$)/gm, '<h2 class="text-2xl font-bold text-gray-900 mt-10 mb-6">$1</h2>')
+        .replace(/^# (.*$)/gm, '<h1 class="text-3xl font-bold text-gray-900 mt-12 mb-8">$1</h1>')
+        // Bold
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')
+        // Italic
+        .replace(/\*(.*?)\*/g, '<em class="italic text-gray-700">$1</em>')
+        // Links
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">$1</a>')
+        // Unordered lists
+        .replace(/^\* (.+$)/gm, '<li class="mb-2">$1</li>')
+        .replace(/(<li class="mb-2">.*?<\/li>)/gs, '<ul class="list-disc list-inside mb-6 space-y-2 text-gray-700">$1</ul>')
+        // Ordered lists
+        .replace(/^\d+\. (.+$)/gm, '<li class="mb-2">$1</li>')
+        .replace(/(<li class="mb-2">.*?<\/li>)/gs, '<ol class="list-decimal list-inside mb-6 space-y-2 text-gray-700">$1</ol>')
+        // Code blocks
+        .replace(/```([\s\S]*?)```/g, '<pre class="bg-gray-100 p-4 rounded-lg mb-6 overflow-x-auto"><code class="text-sm">$1</code></pre>')
+        // Inline code
+        .replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-2 py-1 rounded text-sm font-mono">$1</code>')
+        // Blockquotes
+        .replace(/^> (.+$)/gm, '<blockquote class="border-l-4 border-blue-500 pl-4 italic text-gray-600 mb-6">$1</blockquote>')
+        // Tables - Daha güvenilir tablo parsing (önce tabloları işle)
+        .replace(/((\|[^|\n]+)+\|\n(\|[\s\-:]+)+\|\n((\|[^|\n]+)+\|\n?)*)/gm, (match) => {
+            const lines = match.trim().split('\n');
+            const headerLine = lines[0];
+            const separatorLine = lines[1]; // | --- | --- | formatı
+            const bodyLines = lines.slice(2);
+
+            // Header'ı parse et
+            const headerCells = headerLine.split('|').slice(1, -1).map(cell => cell.trim());
+            const headerRow = headerCells.map(cell =>
+                `<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-gray-300 bg-gray-50">${cell}</th>`
+            ).join('');
+
+            // Body rows'ları parse et
+            const bodyRows = bodyLines.map(line => {
+                const cells = line.split('|').slice(1, -1).map(cell => cell.trim());
+                return '<tr>' + cells.map(cell =>
+                    `<td class="px-4 py-3 text-sm text-gray-900 border border-gray-300">${cell}</td>`
+                ).join('') + '</tr>';
+            }).join('');
+
+            return `<TABLE_PLACEHOLDER>${headerRow}|${bodyRows}</TABLE_PLACEHOLDER>`;
+        })
+        // Horizontal rule
+        .replace(/^---$/gm, '<hr class="border-t border-gray-300 my-8">')
+        // Line breaks and paragraphs
+        .replace(/\n\n/g, '</p><p class="mb-4 text-gray-700 leading-relaxed">')
+        .replace(/\n/g, '<br>')
+        // Wrap content in paragraphs (tablo, liste ve diğer elementleri hariç tut)
+        .replace(/^(?!<[h|u|o|l|p|b|c|hr|d])/gm, '<p class="mb-4 text-gray-700 leading-relaxed">')
+        .replace(/(?<!>)$/gm, '</p>')
+        // Clean up empty paragraphs
+        .replace(/<p class="mb-4 text-gray-700 leading-relaxed"><\/p>/g, '')
+        // Fix nested list issues
+        .replace(/<\/ul>\s*<ul class="list-disc list-inside mb-6 space-y-2 text-gray-700">/g, '')
+        .replace(/<\/ol>\s*<ol class="list-decimal list-inside mb-6 space-y-2 text-gray-700">/g, '')
+        // Clean up paragraph wrapping around tables and other block elements
+        .replace(/<p class="mb-4 text-gray-700 leading-relaxed">(<div class="overflow-x-auto)/g, '$1')
+        .replace(/(<\/div>)<\/p>/g, '$1')
+        // Son olarak tablo placeholder'larını gerçek HTML'e çevir
+        .replace(/<TABLE_PLACEHOLDER>(.*?)\|(.*?)<\/TABLE_PLACEHOLDER>/g, (match, headerRow, bodyRows) => {
+            return `<div class="overflow-x-auto my-6"><table class="min-w-full border-collapse border border-gray-300"><thead><tr>${headerRow}</tr></thead><tbody class="bg-white divide-y divide-gray-200">${bodyRows}</tbody></table></div>`;
+        })
+        // Başlıklar etrafındaki gereksiz br tag'lerini temizle
+        .replace(/<br>\s*(<h[1-6][^>]*>)/g, '$1')
+        .replace(/(<\/h[1-6]>)\s*<br>/g, '$1')
+}
+
 export default function BlogDetailPage({
     slug,
     province = null,
     district = null,
     neighborhood = null,
-    service = null
+    service = null,
+    blogData = null,
+    isPreview = false
 }) {
     const [blog, setBlog] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -22,10 +99,19 @@ export default function BlogDetailPage({
     const [showShareMenu, setShowShareMenu] = useState(false);
 
     useEffect(() => {
-        if (slug) {
+        if (blogData) {
+            // Preview modunda: blog verisi prop olarak gelir
+            setBlog(blogData);
+            setLoading(false);
+            // Preview modunda da ilgili çilingirleri al
+            if (isPreview) {
+                fetchRelatedLocksmiths(blogData);
+            }
+        } else if (slug) {
+            // Normal modda: API'den blog verisini al
             fetchBlog();
         }
-    }, [slug, province, district, neighborhood, service]);
+    }, [slug, province, district, neighborhood, service, blogData, isPreview]);
 
     // Menü dışında tıklandığında menüyü kapat
     useEffect(() => {
@@ -86,6 +172,59 @@ export default function BlogDetailPage({
             setError('Blog yüklenirken bir hata oluştu');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchRelatedLocksmiths = async (blogData) => {
+        try {
+            // Blog ile ilgili çilingirleri al
+            let relatedLocksmiths = [];
+
+            // Eğer blogda konum bilgileri varsa, o konumdaki çilingirleri getir
+            if (blogData.province_id || blogData.district_id || blogData.neighborhood_id) {
+                const params = new URLSearchParams();
+                if (blogData.province_id) params.append('province_id', blogData.province_id);
+                if (blogData.district_id) params.append('district_id', blogData.district_id);
+                if (blogData.neighborhood_id) params.append('neighborhood_id', blogData.neighborhood_id);
+                params.append('limit', '4'); // En fazla 4 çilingir
+
+                const response = await fetch(`/api/public/locksmiths?${params.toString()}`);
+
+                if (!response.ok) {
+                    console.error('Locksmiths API response not ok:', response.status, response.statusText);
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    relatedLocksmiths = result.data.map(locksmith => ({
+                        id: locksmith.id,
+                        slug: locksmith.slug,
+                        name: locksmith.businessname || locksmith.fullname,
+                        businessname: locksmith.businessname,
+                        fullname: locksmith.fullname,
+                        phone: locksmith.phonenumber,
+                        whatsapp: locksmith.whatsappnumber,
+                        rating: locksmith.avgrating,
+                        totalReviewCount: locksmith.totalreviewcount,
+                        profileimageurl: locksmith.profileimageurl,
+                        description: locksmith.tagline || '',
+                        provinces: locksmith.provinces,
+                        districts: locksmith.districts,
+                        locksmith_details: locksmith.locksmith_details
+                    }));
+                }
+            }
+
+            // Blog state'ini güncelleyerek ilgili çilingirleri ekle
+            setBlog(prevBlog => ({
+                ...prevBlog,
+                relatedLocksmiths
+            }));
+
+        } catch (error) {
+            console.error('İlgili çilingirler alınamadı:', error);
         }
     };
 
@@ -252,11 +391,11 @@ export default function BlogDetailPage({
     const breadcrumbItems = buildBreadcrumbs();
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen">
             <div className="container mx-auto px-2 md:px-4 py-2 md:py-8">
-                <div className="max-w-4xl mx-auto">
+                <div className="max-w-4xl mx-auto bg-white md:shadow-sm">
                     {/* Blog Header */}
-                    <div className="md:bg-white md:rounded-lg md:shadow-sm p-2 md:p-8 mb-2 md:mb-8">
+                    <div className="md:bg-white p-2 md:p-8 md:pb-2">
                         {/* Breadcrumb - MainContent tarzı navigasyon */}
                         <nav className="flex text-sm text-gray-600 mb-1 md:mb-6 flex-wrap">
                             {breadcrumbItems.map((item, index) => (
@@ -277,6 +416,11 @@ export default function BlogDetailPage({
 
                         {/* Meta bilgiler */}
                         <div className="flex flex-wrap items-center gap-4 mb-2 md:mb-6 md:text-sm">
+                            {isPreview && (
+                                <Badge variant={blog.status === 'published' ? 'default' : blog.status === 'draft' ? 'secondary' : 'outline'}>
+                                    {blog.status === 'draft' ? 'Taslak' : blog.status === 'published' ? 'Yayınlandı' : 'Arşivlendi'}
+                                </Badge>
+                            )}
                             {blog.provinces && (
                                 <Badge variant="outline">
                                     <MapPin className="w-3 h-3 mr-1" />
@@ -343,6 +487,21 @@ export default function BlogDetailPage({
                             </div>
                         </div>
 
+                        {/* Blog resmi */}
+                        {blog.blog_images && (
+                            <div className="relative h-64 md:h-96 mb-0 md:mb-8 rounded-md md:rounded-lg overflow-hidden">
+                                <Image
+                                    src={blog.blog_images.url}
+                                    alt={blog.blog_images.alt_text || blog.title}
+                                    fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
+                                    className="object-cover"
+                                    priority
+                                    loading="eager"
+                                />
+                            </div>
+                        )}
+
                         {/* Başlık */}
                         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-1 md:mb-6">
                             {blog.title}
@@ -373,35 +532,20 @@ export default function BlogDetailPage({
                                 {blog.excerpt}
                             </p>
                         )}
-
-                        {/* Blog resmi */}
-                        {blog.blog_images && (
-                            <div className="relative h-64 md:h-96 mb-0 md:mb-8 rounded-md md:rounded-lg overflow-hidden">
-                                <Image
-                                    src={blog.blog_images.url}
-                                    alt={blog.blog_images.alt_text || blog.title}
-                                    fill
-                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
-                                    className="object-cover"
-                                    priority
-                                    loading="eager"
-                                />
-                            </div>
-                        )}
                     </div>
 
                     {/* Blog İçeriği */}
-                    <div className="md:bg-white md:rounded-lg md:shadow-sm p-2 md:p-8 mb-2 md:mb-8">
+                    <div className="md:bg-white p-2 md:p-8 mb-2 md:mb-8">
                         <div
                             className="prose prose-lg max-w-none"
-                            dangerouslySetInnerHTML={{ __html: blog.content }}
+                            dangerouslySetInnerHTML={{ __html: markdownToHtml(blog.content) }}
                         />
 
                     </div>
 
                     {/* İlgili Çilingirler */}
                     {blog.relatedLocksmiths && blog.relatedLocksmiths.length > 0 && (
-                        <div className="md:bg-white md:rounded-lg md:shadow-sm p-2 md:p-8 mb-2 md:mb-8">
+                        <div className="md:bg-white p-2 md:p-8 mb-2 md:mb-8">
                             <h2 className="text-2xl font-bold text-gray-900 mb-2 md:mb-6">
                                 {blog.provinces && blog.districts && blog.neighborhoods
                                     ? `${blog.provinces.name} ${blog.districts.name} ${blog.neighborhoods.name} Çilingir Listesi`
@@ -429,7 +573,7 @@ export default function BlogDetailPage({
 
                     {/* Result bölümü */}
                     {blog.result && (
-                        <div className="md:bg-white md:rounded-lg md:shadow-sm p-2 md:p-8 mb-2 md:mb-8">
+                        <div className="md:bg-white p-2 md:p-8 mb-2 md:mb-8">
                             <div className="p-6 bg-blue-50 rounded-lg border-l-4 border-blue-500">
                                 <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
                                     <span className="text-blue-600 mr-2">💡</span>
@@ -437,7 +581,7 @@ export default function BlogDetailPage({
                                 </h2>
                                 <div
                                     className="prose prose-lg max-w-none"
-                                    dangerouslySetInnerHTML={{ __html: blog.result }}
+                                    dangerouslySetInnerHTML={{ __html: markdownToHtml(blog.result) }}
                                 />
                             </div>
                         </div>

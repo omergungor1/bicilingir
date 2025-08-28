@@ -5,7 +5,7 @@ import { checkAdminAuth } from '../../../utils';
 export async function PUT(request, { params }) {
     try {
         const { supabase } = await checkAdminAuth(request);
-        const { id } = params;
+        const { id } = await params;
 
         const { alt_text } = await request.json();
 
@@ -63,7 +63,7 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
     try {
         const { supabase } = await checkAdminAuth(request);
-        const { id } = params;
+        const { id } = await params;
 
         // Mevcut resmi kontrol et
         const { data: existingImage, error: fetchError } = await supabase

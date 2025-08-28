@@ -1,284 +1,255 @@
-import { NextResponse } from 'next/server';
-import { checkAdminAuth } from '../../../utils';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
+import { cookies } from 'next/headers'
+import { NextResponse } from 'next/server'
 
-// Blog detayını getir (Admin)
+// Service role client (RLS'yi bypass eder)
+const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+)
+
+// Tek blog getirme
 export async function GET(request, { params }) {
     try {
-        const { supabase } = await checkAdminAuth(request);
-        const { id } = params;
+        const cookieStore = await cookies()
+        const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+        const { id } = await params
 
-        const { data: blogData, error } = await supabase
-            .from('blogs')
-            .select(`
-        *,
-        blog_images (
-          id,
-          url,
-          alt_text,
-          file_size,
-          width,
-          height
-        ),
-        provinces (
-          id,
-          name,
-          slug
-        ),
-        districts (
-          id,
-          name,
-          slug
-        ),
-        neighborhoods (
-          id,
-          name,
-          slug
-        ),
-        services (
-          id,
-          name,
-          slug
-        ),
-        locksmiths (
-          id,
-          businessname,
-          fullname,
-          slug
-        )
-      `)
-            .eq('id', id)
-            .single();
-
-        if (error) {
-            if (error.code === 'PGRST116') {
-                return NextResponse.json({
-                    success: false,
-                    error: 'Blog bulunamadı'
-                }, { status: 404 });
-            }
-            throw error;
+        // Auth kontrolü
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+            return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
         }
 
-        return NextResponse.json({
-            success: true,
-            data: blogData
-        });
+        // Admin kontrolü
+        const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .single()
+
+        if (roleData?.role !== 'admin') {
+            return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 403 })
+        }
+
+        const { data: blog, error } = await supabaseAdmin
+            .from('blogs')
+            .select(`
+                *,
+                blog_images (
+                    id,
+                    url,
+                    alt_text
+                ),
+                provinces (
+                    id,
+                    name
+                ),
+                districts (
+                    id,
+                    name
+                ),
+                neighborhoods (
+                    id,
+                    name
+                ),
+                services (
+                    id,
+                    name
+                ),
+                locksmiths (
+                    id,
+                    fullname
+                ),
+                blog_categories (
+                    id,
+                    name
+                ),
+                blog_topics (
+                    id,
+                    name
+                )
+            `)
+            .eq('id', id)
+            .single()
+
+        if (error) {
+            return NextResponse.json({ error: error.message }, { status: 500 })
+        }
+
+        if (!blog) {
+            return NextResponse.json({ error: 'Blog bulunamadı' }, { status: 404 })
+        }
+
+        // Blog ayarlarını da getir
+        const { data: settings } = await supabaseAdmin
+            .from('blog_settings')
+            .select('*')
+            .eq('blog_id', id)
+            .single()
+
+        return NextResponse.json({ blog, settings })
+
     } catch (error) {
-        console.error('Blog alınamadı:', error);
-        return NextResponse.json({
-            success: false,
-            error: 'Blog alınamadı'
-        }, { status: 500 });
+        return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
     }
 }
 
-// Blog güncelle (Admin)
+// Blog güncelleme
 export async function PUT(request, { params }) {
     try {
-        const { supabase } = await checkAdminAuth(request);
-        const { id } = params;
+        const cookieStore = await cookies()
+        const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+        const { id } = await params
+        const body = await request.json()
+
+        // Auth kontrolü
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+            return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+        }
+
+        // Admin kontrolü
+        const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .single()
+
+        if (roleData?.role !== 'admin') {
+            return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 403 })
+        }
 
         const {
             title,
+            slug,
             content,
             result,
             excerpt,
             image_id,
             province_id,
             district_id,
+            neighborhood_id,
             service_id,
             locksmith_id,
+            category_id,
+            topic_id,
             status,
             meta_title,
             meta_description,
             meta_keywords,
-            is_featured
-        } = await request.json();
+            is_featured,
+            reading_time
+        } = body
 
-        // Mevcut blog'u kontrol et
-        const { data: existingBlog, error: fetchError } = await supabase
+        // Mevcut blog kontrolü
+        const { data: existingBlog } = await supabaseAdmin
             .from('blogs')
-            .select('id, slug, status')
+            .select('*')
             .eq('id', id)
-            .single();
+            .single()
 
-        if (fetchError) {
-            if (fetchError.code === 'PGRST116') {
-                return NextResponse.json({
-                    success: false,
-                    error: 'Blog bulunamadı'
-                }, { status: 404 });
-            }
-            throw fetchError;
+        if (!existingBlog) {
+            return NextResponse.json({ error: 'Blog bulunamadı' }, { status: 404 })
         }
 
-        // Güncelleme verilerini hazırla
-        const updateData = {};
+        // Slug benzersizlik kontrolü (kendi ID'si hariç)
+        if (slug && slug !== existingBlog.slug) {
+            const { data: slugCheck } = await supabaseAdmin
+                .from('blogs')
+                .select('id')
+                .eq('slug', slug)
+                .neq('id', id)
+                .single()
 
-        if (title !== undefined) {
-            updateData.title = title;
-
-            // Başlık değişmişse slug'ı da güncelle
-            if (title !== existingBlog.title) {
-                const baseSlug = title
-                    .toLowerCase()
-                    .replace(/ğ/g, 'g')
-                    .replace(/ü/g, 'u')
-                    .replace(/ş/g, 's')
-                    .replace(/ı/g, 'i')
-                    .replace(/ö/g, 'o')
-                    .replace(/ç/g, 'c')
-                    .replace(/[^a-z0-9\s-]/g, '')
-                    .replace(/\s+/g, '-')
-                    .replace(/-+/g, '-')
-                    .trim('-');
-
-                // Mevcut slug ile aynı değilse yeni benzersiz slug oluştur
-                if (baseSlug !== existingBlog.slug) {
-                    const { data: uniqueSlugData } = await supabase
-                        .rpc('generate_unique_slug', {
-                            base_slug: baseSlug,
-                            table_name: 'blogs'
-                        });
-                    updateData.slug = uniqueSlugData || baseSlug;
-                }
+            if (slugCheck) {
+                return NextResponse.json({ error: 'Bu slug zaten kullanılıyor' }, { status: 400 })
             }
         }
 
-        if (content !== undefined) {
-            updateData.content = content;
-
-            // İçerik değişmişse okuma süresini yeniden hesapla
-            const wordCount = content.split(/\s+/).length;
-            updateData.reading_time = Math.max(1, Math.round(wordCount / 200));
+        const updateData = {
+            title,
+            slug,
+            content,
+            result,
+            excerpt,
+            image_id,
+            province_id,
+            district_id,
+            neighborhood_id,
+            service_id,
+            locksmith_id,
+            category_id,
+            topic_id,
+            status,
+            meta_title,
+            meta_description,
+            meta_keywords,
+            is_featured,
+            reading_time,
+            updated_at: new Date().toISOString()
         }
 
-        if (result !== undefined) updateData.result = result;
-        if (excerpt !== undefined) updateData.excerpt = excerpt;
-        if (image_id !== undefined) updateData.image_id = image_id;
-        if (province_id !== undefined) updateData.province_id = province_id;
-        if (district_id !== undefined) updateData.district_id = district_id;
-        if (service_id !== undefined) updateData.service_id = service_id;
-        if (locksmith_id !== undefined) updateData.locksmith_id = locksmith_id;
-        if (meta_title !== undefined) updateData.meta_title = meta_title;
-        if (meta_description !== undefined) updateData.meta_description = meta_description;
-        if (meta_keywords !== undefined) updateData.meta_keywords = meta_keywords;
-        if (is_featured !== undefined) updateData.is_featured = is_featured;
-
-        // Status değişikliği kontrolü
-        if (status !== undefined && status !== existingBlog.status) {
-            updateData.status = status;
-
-            // Yayınlanıyorsa published_at tarihini güncelle
-            if (status === 'published' && existingBlog.status !== 'published') {
-                updateData.published_at = new Date().toISOString();
-            }
-            // Taslağa dönüyorsa published_at'ı temizle
-            else if (status === 'draft') {
-                updateData.published_at = null;
-            }
+        // Eğer status published olarak değişiyorsa published_at'i güncelle
+        if (status === 'published' && existingBlog.status !== 'published') {
+            updateData.published_at = new Date().toISOString()
         }
 
-        const { data, error } = await supabase
+        const { data: blog, error } = await supabaseAdmin
             .from('blogs')
             .update(updateData)
             .eq('id', id)
-            .select(`
-        *,
-        blog_images (
-          id,
-          url,
-          alt_text
-        ),
-        provinces (
-          id,
-          name,
-          slug
-        ),
-        districts (
-          id,
-          name,
-          slug
-        ),
-        neighborhoods (
-          id,
-          name,
-          slug
-        ),
-        services (
-          id,
-          name,
-          slug
-        ),
-        locksmiths (
-          id,
-          businessname,
-          fullname,
-          slug
-        )
-      `)
-            .single();
+            .select()
+            .single()
 
         if (error) {
-            throw error;
+            return NextResponse.json({ error: error.message }, { status: 500 })
         }
 
-        return NextResponse.json({
-            success: true,
-            data,
-            message: 'Blog başarıyla güncellendi'
-        });
+        return NextResponse.json({ blog })
+
     } catch (error) {
-        console.error('Blog güncellenemedi:', error);
-        return NextResponse.json({
-            success: false,
-            error: 'Blog güncellenemedi'
-        }, { status: 500 });
+        return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
     }
 }
 
-// Blog sil (Admin)
+// Blog silme
 export async function DELETE(request, { params }) {
     try {
-        const { supabase } = await checkAdminAuth(request);
-        const { id } = params;
+        const cookieStore = await cookies()
+        const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+        const { id } = await params
 
-        // Blog'u kontrol et
-        const { data: existingBlog, error: fetchError } = await supabase
-            .from('blogs')
-            .select('id, title')
-            .eq('id', id)
-            .single();
-
-        if (fetchError) {
-            if (fetchError.code === 'PGRST116') {
-                return NextResponse.json({
-                    success: false,
-                    error: 'Blog bulunamadı'
-                }, { status: 404 });
-            }
-            throw fetchError;
+        // Auth kontrolü
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+            return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
         }
 
-        // Blog'u sil
-        const { error } = await supabase
+        // Admin kontrolü
+        const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .single()
+
+        if (roleData?.role !== 'admin') {
+            return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 403 })
+        }
+
+        const { error } = await supabaseAdmin
             .from('blogs')
             .delete()
-            .eq('id', id);
+            .eq('id', id)
 
         if (error) {
-            throw error;
+            return NextResponse.json({ error: error.message }, { status: 500 })
         }
 
-        return NextResponse.json({
-            success: true,
-            message: 'Blog başarıyla silindi'
-        });
+        return NextResponse.json({ message: 'Blog başarıyla silindi' })
+
     } catch (error) {
-        console.error('Blog silinemedi:', error);
-        return NextResponse.json({
-            success: false,
-            error: 'Blog silinemedi'
-        }, { status: 500 });
+        return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
     }
 }

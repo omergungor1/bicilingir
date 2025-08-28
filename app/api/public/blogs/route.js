@@ -17,6 +17,7 @@ export async function GET(request) {
         const offset = parseInt(searchParams.get('offset')) || 0;
         const search = searchParams.get('search');
 
+
         // Slug bazlı parametreler
         const province = searchParams.get('province');
         const district = searchParams.get('district');
@@ -69,7 +70,7 @@ export async function GET(request) {
         )
       `)
             .eq('status', 'published')
-            .order('published_at', { ascending: false });
+            .order('created_at', { ascending: false });
 
         // ID bazlı filtreler
         if (province_id) {

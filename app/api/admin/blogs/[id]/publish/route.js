@@ -5,7 +5,7 @@ import { checkAdminAuth } from '../../../../utils';
 export async function PATCH(request, { params }) {
     try {
         const { supabase } = await checkAdminAuth(request);
-        const { id } = params;
+        const { id } = await params;
 
         const { action } = await request.json(); // 'publish' veya 'unpublish'
 

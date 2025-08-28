@@ -1,5 +1,5 @@
 import React from 'react';
-import BlogListServerPage from '../../components/blog/BlogListServerPage';
+import BlogListPage from '../../components/blog/BlogListPage';
 
 export const metadata = {
     title: 'Blog Yazıları | Çilingir Hizmetleri ve Güvenlik Sistemleri',
@@ -20,7 +20,7 @@ export default function BlogPage() {
     ];
 
     return (
-        <BlogListServerPage
+        <BlogListPage
             pageTitle="Blog Yazıları"
             breadcrumbItems={breadcrumbItems}
         />

@@ -1,5 +1,5 @@
 import React from 'react'
-import BlogListServerPage from '../../../components/blog/BlogListServerPage'
+import BlogListPage from '../../../components/blog/BlogListPage'
 // import { createServerClient } from '../../api/utils'
 import { getSupabaseServer } from '../../../lib/supabase';
 
@@ -44,7 +44,7 @@ async function BlogPage({ params }) {
     const pageTitle = `${provinceData.name} Blog Yazıları`;
 
     return (
-        <BlogListServerPage
+        <BlogListPage
             pageTitle={pageTitle}
             breadcrumbItems={breadcrumbItems}
             province={provinceData.slug}

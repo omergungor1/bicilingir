@@ -325,3 +325,103 @@ create table locksmith_topup_requests (
     updated_at timestamp with time zone default now(),
     admin_note text                        
 );
+
+create table user_roles (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id) on delete cascade,
+  role character varying(20) not null check (role in ('admin', 'locksmith')),
+  created_at timestamp with time zone default now()
+);
+
+-- Blog Section -->
+CREATE TABLE blog_images (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    url TEXT NOT NULL,               -- CDN veya storage yolu
+    alt_text TEXT,                   -- SEO ve erişilebilirlik için
+    file_size INTEGER,               -- Dosya boyutu (bytes)
+    file_type VARCHAR(50),           -- image/jpeg, image/png vb.
+    width INTEGER,                   -- Görsel genişliği
+    height INTEGER,                  -- Görsel yüksekliği
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Blog yazıları tablosu
+CREATE TABLE blogs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) UNIQUE NOT NULL,
+    content TEXT NOT NULL,
+    result TEXT,                     -- İçeriğin özet hali
+    excerpt TEXT,                    -- Kısa açıklama (liste görünümü + meta description fallback)
+    image_id UUID REFERENCES blog_images(id) ON DELETE SET NULL,
+    province_id INTEGER REFERENCES provinces(id) ON DELETE SET NULL,
+    district_id INTEGER REFERENCES districts(id) ON DELETE SET NULL,
+    neighborhood_id INTEGER REFERENCES neighborhoods(id) ON DELETE SET NULL,
+    service_id UUID REFERENCES services(id) ON DELETE SET NULL,
+    locksmith_id UUID REFERENCES locksmiths(id) ON DELETE SET NULL,
+    views INTEGER DEFAULT 0 CHECK (views >= 0),
+    status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+    published_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    meta_title VARCHAR(255),         -- SEO için özel başlık (title tag)
+    meta_description VARCHAR(500),   -- SEO açıklaması (Google snippet)
+    meta_keywords VARCHAR(500),      -- Anahtar kelimeler
+    is_featured BOOLEAN DEFAULT FALSE, -- Öne çıkarılmış yazı mı?
+    author_id UUID,                  -- İleride kullanım için
+    reading_time INTEGER DEFAULT 0   -- Tahmini okuma süresi (dakika)
+    category_id UUID REFERENCES blog_categories(id) ON DELETE SET NULL,
+    topic_id UUID REFERENCES blog_topics(id) ON DELETE SET NULL
+);
+
+-- Blog kategorileri tablosu
+CREATE TABLE blog_categories (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) NOT NULL UNIQUE,
+    slug VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Blog konuları tablosu
+CREATE TABLE blog_topics (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    category_id UUID NOT NULL REFERENCES blog_categories(id) ON DELETE CASCADE,
+    name VARCHAR(200) NOT NULL,
+    slug VARCHAR(200) NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Blog ayarları tablosu (kullanıcının seçtiği özellikler için)
+CREATE TABLE blog_settings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    blog_id UUID NOT NULL REFERENCES blogs(id) ON DELETE CASCADE,
+    category_id UUID REFERENCES blog_categories(id) ON DELETE SET NULL,
+    topic_id UUID REFERENCES blog_topics(id) ON DELETE SET NULL,
+    user_description TEXT,
+    seo_keywords TEXT,
+    highlight_keywords TEXT,
+    content_style VARCHAR(20) DEFAULT 'normal' CHECK (content_style IN ('normal', 'formal', 'friendly')),
+    include_list BOOLEAN DEFAULT FALSE,
+    include_table BOOLEAN DEFAULT FALSE,
+    include_faq BOOLEAN DEFAULT FALSE,
+    include_internal_links BOOLEAN DEFAULT FALSE,
+    include_cta BOOLEAN DEFAULT FALSE,
+    include_year BOOLEAN DEFAULT FALSE,
+    light_humor BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Blog görüntülenme logları (isteğe bağlı - detaylı analiz için)
+CREATE TABLE blog_views (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    blog_id UUID NOT NULL REFERENCES blogs(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    ip_address INET,
+    user_agent TEXT,
+    referrer TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);

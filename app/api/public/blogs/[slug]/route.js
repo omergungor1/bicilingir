@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createRouteClient, logUserActivity } from '../../../utils';
+import { createRouteClient } from '../../../utils';
 
 // Blog detayını getir ve görüntülenme sayısını artır
 export async function GET(request, { params }) {
@@ -13,9 +13,6 @@ export async function GET(request, { params }) {
         const district = url.searchParams.get('district');
         const neighborhood = url.searchParams.get('neighborhood');
         const service = url.searchParams.get('service');
-
-        console.log(slug, 'slug');
-        console.log({ province, district, neighborhood, service }, 'location filters');
 
         // Blog sorgusunu oluştur
         let blogQuery = supabase
@@ -129,12 +126,6 @@ export async function GET(request, { params }) {
             throw error;
         }
 
-        // Görüntülenme sayısını artır - SQL increment kullanarak race condition'ı önle
-        console.log('Views güncelleme öncesi:', {
-            blogId: blogData.id,
-            currentViews: blogData.views
-        });
-
         // Views sayısını güncelle (basit UPDATE yöntemi)
         const { data: updateData, error: viewError } = await supabase
             .from('blogs')
@@ -144,8 +135,6 @@ export async function GET(request, { params }) {
 
         if (viewError) {
             console.error('Views güncellemesi başarısız:', viewError);
-        } else {
-            console.log('Views başarıyla güncellendi:', updateData);
         }
 
         // Blog view kaydı ekle (detaylı analiz için)
@@ -198,13 +187,10 @@ export async function GET(request, { params }) {
                         .eq('provinceid', blogData.province_id)
                         .eq('isactive', true);
 
-                    console.log('provinceLocksmiths:', provinceLocksmiths)
-
                     if (!provinceError && provinceLocksmiths) {
                         // Duplicate ID'leri kaldır
                         const uniqueIds = [...new Set(provinceLocksmiths.map(item => item.locksmithid))];
                         locksmithIds = uniqueIds;
-                        console.log('İl bazlı çilingir ID\'leri (unique):', locksmithIds);
                     }
                 }
 
@@ -217,13 +203,10 @@ export async function GET(request, { params }) {
                         .eq('isActive', true)
                         .in('locksmithid', locksmithIds);
 
-                    console.log('serviceLocksmiths:', serviceLocksmiths);
-
                     if (!serviceError && serviceLocksmiths) {
                         // Duplicate ID'leri kaldır
                         const uniqueIds = [...new Set(serviceLocksmiths.map(item => item.locksmithid))];
                         locksmithIds = uniqueIds;
-                        console.log('Servis filtreli çilingir ID\'leri (unique):', locksmithIds);
                     }
                 } else if (blogData.service_id && locksmithIds.length === 0) {
                     // Sadece servis bilgisi varsa, tüm çilingirleri servis bazlı getir
@@ -233,13 +216,10 @@ export async function GET(request, { params }) {
                         .eq('serviceid', blogData.service_id)
                         .eq('isactive', true);
 
-                    console.log('serviceOnlyLocksmiths:', serviceOnlyLocksmiths);
-
                     if (!serviceOnlyError && serviceOnlyLocksmiths) {
                         // Duplicate ID'leri kaldır
                         const uniqueIds = [...new Set(serviceOnlyLocksmiths.map(item => item.locksmithid))];
                         locksmithIds = uniqueIds;
-                        console.log('Sadece servis bazlı çilingir ID\'leri (unique):', locksmithIds);
                     }
                 }
 
