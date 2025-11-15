@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { useJsApiLoader } from '@react-google-maps/api';
 
 // Tüm uygulama için tek bir konfigürasyon
@@ -16,28 +16,31 @@ const GOOGLE_MAPS_CONFIG = {
 const MapsContext = createContext();
 
 export function MapsProvider({ children }) {
-    const [deferLoad, setDeferLoad] = useState(false);
+    const [shouldLoad, setShouldLoad] = useState(false);
 
     // Google Maps'i sayfa yüklendikten sonra yükle (defer loading)
     useEffect(() => {
         // Sayfa yüklendikten 2 saniye sonra yükle - kritik olmayan kaynak
         const timer = setTimeout(() => {
-            setDeferLoad(true);
+            setShouldLoad(true);
         }, 2000);
 
         return () => clearTimeout(timer);
     }, []);
 
-    // useJsApiLoader'ı sadece deferLoad true olduğunda aktif et
-    const loaderConfig = deferLoad ? GOOGLE_MAPS_CONFIG : {
-        ...GOOGLE_MAPS_CONFIG,
-        googleMapsApiKey: '', // Boş key ile yükleme engellenir
-    };
+    // useJsApiLoader'ı her zaman aynı konfigürasyonla çağır
+    // React hook kurallarına uymak için konfigürasyon değişmemeli
+    // Lazy loading için shouldLoad state'ini kullanıyoruz
+    const { isLoaded, loadError } = useJsApiLoader(GOOGLE_MAPS_CONFIG);
 
-    const { isLoaded, loadError } = useJsApiLoader(loaderConfig);
+    // Sadece shouldLoad true olduğunda isLoaded'ı true olarak döndür
+    // Bu, script'in yüklenmesini kontrol eder
+    const effectiveIsLoaded = useMemo(() => {
+        return shouldLoad && isLoaded;
+    }, [shouldLoad, isLoaded]);
 
     return (
-        <MapsContext.Provider value={{ isLoaded: deferLoad ? isLoaded : false, loadError }}>
+        <MapsContext.Provider value={{ isLoaded: effectiveIsLoaded, loadError }}>
             {children}
         </MapsContext.Provider>
     );
