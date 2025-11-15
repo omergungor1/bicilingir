@@ -16,7 +16,10 @@ export default function ClientLayout({ children }) {
                     </div>
                 </div>
                 <div className="custom-notification-container">
-                </div>{children}
+                </div>
+                <main id="main-content">
+                    {children}
+                </main>
                 <Footer />
                 {/* <LocationPermissionModal /> */}
             </ToastProvider>

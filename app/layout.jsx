@@ -1,9 +1,21 @@
 import "./globals.css";
 import Script from 'next/script';
-import { Inter } from 'next/font/google';
+// import { Inter } from 'next/font/google';
+import localFont from "next/font/local";
 import ClientLayout from './ClientLayout';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = localFont({
+  src: [
+    { path: "./fonts/Inter-Regular.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/Inter-Medium.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/Inter-SemiBold.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/Inter-Bold.woff2", weight: "700", style: "normal" },
+    { path: "./fonts/Inter-ExtraBold.woff2", weight: "800", style: "normal" },
+  ],
+  display: "swap",
+  variable: "--font-inter",
+  preload: true,
+});
 
 export const metadata = {
   metadataBase: new URL('https://bicilingir.com'),
@@ -34,7 +46,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="tr">
       <head>
-        <Script id="google-tag-manager" strategy="beforeInteractive">
+        <Script id="google-tag-manager" strategy="afterInteractive">
           {`
             (function(w,d,s,l,i){w[l] = w[l] || [];w[l].push({'gtm.start':
               new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -49,6 +61,19 @@ export default function RootLayout({ children }) {
           <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KNCFWKZ6"
             height="0" width="0" style={{ display: 'none', visibility: 'hidden' }}></iframe>
         </noscript>
+
+        <Script
+          src="https://www.clickcease.com/monitor/stat.js"
+          strategy="afterInteractive"
+        />
+
+        {/* ClickCease noscript fallback (isteğe bağlı) */}
+        <noscript>
+          <a href="https://www.clickcease.com" rel="nofollow">
+            <img src="https://monitor.clickcease.com" alt="ClickCease" />
+          </a>
+        </noscript>
+
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
