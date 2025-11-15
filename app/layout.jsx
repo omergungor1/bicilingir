@@ -46,6 +46,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="tr">
       <head>
+        {/* DNS Prefetch ve Preconnect - Kritik kaynaklar için */}
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://maps.googleapis.com" />
+        <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://maps.googleapis.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
+
         <Script id="google-tag-manager" strategy="afterInteractive">
           {`
             (function(w,d,s,l,i){w[l] = w[l] || [];w[l].push({'gtm.start':
@@ -62,9 +69,11 @@ export default function RootLayout({ children }) {
             height="0" width="0" style={{ display: 'none', visibility: 'hidden' }}></iframe>
         </noscript>
 
+        {/* ClickCease - Lazy load, sadece gerektiğinde yükle */}
         <Script
           src="https://www.clickcease.com/monitor/stat.js"
-          strategy="afterInteractive"
+          // strategy="afterInteractive"
+          strategy="lazyOnload"
         />
 
         {/* ClickCease noscript fallback (isteğe bağlı) */}
