@@ -40,6 +40,10 @@ export const metadata = {
     title: "Bi Çilingir - En yakın çilingiri bul",
     description: "Türkiye'nin ilk ve tek çilingir arama platformu. En yakın çilingir bul, fiyatları görün, karşılaştırın.",
   },
+  other: {
+    // Preconnect için metadata
+    'dns-prefetch': 'https://www.googletagmanager.com https://maps.googleapis.com',
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -51,7 +55,6 @@ export default function RootLayout({ children }) {
         <link rel="dns-prefetch" href="https://maps.googleapis.com" />
         <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://maps.googleapis.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
 
         <Script id="google-tag-manager" strategy="afterInteractive">
           {`

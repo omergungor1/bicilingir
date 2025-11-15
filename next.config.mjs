@@ -18,8 +18,10 @@ const nextConfig = {
       exclude: ['error', 'warn'],
     } : false,
   },
-  // CSS ve asset optimizasyonları
-  swcMinify: true,
+  // CSS optimizasyonu - kritik CSS'i inline yap
+  experimental: {
+    optimizeCss: true,
+  },
   // App Router için önbellek ayarları
   // onDemandEntries Pages Router için kullanılır, App Router'da gerek yok
   async redirects() {
