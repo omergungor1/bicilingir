@@ -149,7 +149,7 @@ export default function AdminLayout({ children }) {
                             </div>
                             <button
                                 onClick={handleLogout}
-                                className="text-gray-400 hover:text-gray-600"
+                                className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition-all duration-200 cursor-pointer"
                                 title="Çıkış Yap"
                             >
                                 🚪

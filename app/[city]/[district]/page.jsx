@@ -454,38 +454,38 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
                 { id: 3, name: districtInfo.name, slug: '#' }
             ],
             mainCard: {
-                title: `${districtInfo.city} ${districtInfo.name} Çilingir Anahtarcı`,
-                description: districtInfo.description
+                title: `${districtInfo.city} ${districtInfo.name} Çilingir Anahtarcı - En Yakın Çilingir Hizmeti`,
+                description: `${districtInfo.city} ${districtInfo.name} ilçesinde çilingir ve anahtarcı hizmetine mi ihtiyacınız var? ${districtInfo.name} çilingir, ${districtInfo.name} anahtarcı ve ${districtInfo.name} oto çilingir hizmetleri geniş bir ağla sunulmaktadır. ${districtInfo.name} en yakın çilingir ve ${districtInfo.name} en yakın anahtarcı hizmeti için aşağıda listelenen çilingirlerin hepsi ${districtInfo.city} ${districtInfo.name} ilçesinde hizmet vermektedir. ${districtInfo.name} çilingir numarası ile hemen iletişime geçebilirsiniz.`
             },
             locksmitList: {
-                title: `${districtInfo.city} ${districtInfo.name} Çilingirler`,
-                description: 'Size en yakın 2 çilingir bulundu. İkisi de şuan açık. Hemen ara!',
+                title: `${districtInfo.city} ${districtInfo.name} Çilingirler ve Anahtarcılar - En Yakın Çilingir`,
+                description: `${districtInfo.name} en yakın çilingir ve ${districtInfo.name} en yakın anahtarcı hizmeti için size en yakın çilingirler bulundu. ${districtInfo.name} çilingir telefonu ile hemen arayabilir, ${districtInfo.name} anahtarcı hizmeti alabilirsiniz. Tüm çilingirler şuan açık ve 7/24 hizmet vermektedir.`,
                 data: locksmiths
             },
             seconCard: {
-                title: `${districtInfo.name} Hakkında`,
-                longDescription: districtInfo.longDescription
+                title: `${districtInfo.name} Çilingir ve Anahtarcı Hizmetleri Hakkında`,
+                longDescription: `${districtInfo.city} ${districtInfo.name} ilçesinde çilingir hizmetleri geniş bir ağla sunulmaktadır. ${districtInfo.name} çilingir, ${districtInfo.name} anahtarcı ve ${districtInfo.name} oto çilingir hizmetleri için birçok çilingir bölgede aktif olarak hizmet vermektedir.\n\n${districtInfo.city} ${districtInfo.name} ilçesinde çilingir fiyatları, ilçe ve hizmete göre değişkenlikler göstermektedir. ${districtInfo.name} çilingir fiyatları, ${districtInfo.name} anahtarcı fiyatları ve ${districtInfo.name} oto çilingir fiyatları hizmet türüne göre değişmektedir. ${districtInfo.city} ${districtInfo.name} ilçesinde ev çilingiri, otomobil çilingiri, acil çilingir, 7/24 çilingir, kasa çilingiri ve anahtar kopyalama hizmetleri bulmak oldukça kolaydır.\n\n${districtInfo.name} en yakın çilingir ve ${districtInfo.name} en yakın anahtarcı hizmeti için BiÇilingir ile en yakın çilingiri saniyeler içinde bulabilir ve hemen arayabilirsiniz. ${districtInfo.name} çilingir numarası ile iletişime geçerek hizmetlere göre güncel yaklaşık fiyat bilgilerini görebilirsiniz. Net fiyat bilgisi için ${districtInfo.name} çilingir ile telefonda görüşebilirsiniz.\n\n${districtInfo.name} oto çilingir hizmetleri kapsamında araç anahtarı kopyalama, oto anahtar yapımı, motor anahtar, araç kapısı açma ve immobilizer programlama gibi tüm hizmetler sunulmaktadır. ${districtInfo.name} anahtarcı hizmetleri için ev anahtarı kopyalama, anahtar çoğaltma ve özel kilit sistemleri için anahtar yapımı hizmetleri mevcuttur.`
             },
             serviceList: {
-                title: `${districtInfo.name} Çilingir Anahtarcı`,
-                description: 'Aşağıdaki hizmetler bölgenizdeki çilingirler tarafından verilmektedir.',
+                title: `${districtInfo.name} Çilingir Anahtarcı Hizmetleri`,
+                description: `${districtInfo.name} ilçesinde aşağıdaki çilingir hizmetleri bölgenizdeki çilingirler ve anahtarcılar tarafından verilmektedir. ${districtInfo.name} çilingir, ${districtInfo.name} anahtarcı, ${districtInfo.name} oto çilingir, ${districtInfo.name} kasa çilingiri ve ${districtInfo.name} acil çilingir hizmetleri için aşağıdaki kategorilerden seçim yapabilirsiniz.`,
                 data: servicesData,
                 neighborhoods: districtInfo.neighborhoods,
                 name: districtInfo.name
             },
             sssList: {
                 title: `${districtInfo.city} ${districtInfo.name} Çilingir Hizmetleri - Sık Sorulan Sorular`,
-                description: 'Çilingir hizmetleri hakkında merak edilenler',
+                description: `${districtInfo.name} çilingir, ${districtInfo.name} anahtarcı ve ${districtInfo.name} oto çilingir hizmetleri hakkında merak edilenler`,
                 data: [
                     {
                         id: 1,
-                        question: `${districtInfo.city} ${districtInfo.name}'de en yakın çilingir nerede?`,
-                        answer: `BiÇilingir platformu sayesinde ${districtInfo.city} ${districtInfo.name} ilçesinin tüm mahallelerinde hizmet veren en yakın çilingiri bulabilir, fiyatları görebilirsiniz. Arama formunu kullanarak konumunuza en yakın çilingiri tespit edebilir ve hemen iletişime geçebilirsiniz.`
+                        question: `${districtInfo.city} ${districtInfo.name}'de en yakın çilingir ve en yakın anahtarcı nerede?`,
+                        answer: `BiÇilingir platformu sayesinde ${districtInfo.city} ${districtInfo.name} ilçesinin tüm mahallelerinde hizmet veren ${districtInfo.name} en yakın çilingir ve ${districtInfo.name} en yakın anahtarcı hizmetini bulabilir, fiyatları görebilirsiniz. ${districtInfo.name} çilingir numarası ile arama formunu kullanarak konumunuza en yakın çilingiri tespit edebilir ve hemen iletişime geçebilirsiniz. ${districtInfo.name} anahtarcı ve ${districtInfo.name} çilingir hizmetleri için 7/24 hizmet veren ekiplerimiz bulunmaktadır.`
                     },
                     {
                         id: 2,
-                        question: `${districtInfo.city} ${districtInfo.name}'de çilingir ücretleri ne kadar?`,
-                        answer: `${districtInfo.city} ${districtInfo.name} ilçesinde çilingir ücretleri genellikle 300₺ ile 1000₺ arasında değişmektedir. Kapı açma işlemleri ortalama 300₺-500₺, kilit değiştirme 500₺-1000₺, çelik kapı tamiri ise 500₺-1500₺ arasındadır. Fiyatlar mesafeye, zamana ve hizmet türüne göre farklılık gösterebilir.`
+                        question: `${districtInfo.city} ${districtInfo.name}'de çilingir fiyatları ve ücretleri ne kadar?`,
+                        answer: `${districtInfo.city} ${districtInfo.name} ilçesinde ${districtInfo.name} çilingir fiyatları genellikle 300₺ ile 1000₺ arasında değişmektedir. ${districtInfo.name} kapı açma ücreti ortalama 300₺-500₺, ${districtInfo.name} kilit değiştirme fiyatı 500₺-1000₺, ${districtInfo.name} çelik kapı çilingir fiyatları ise 500₺-1500₺ arasındadır. ${districtInfo.name} oto çilingir fiyatı, ${districtInfo.name} anahtar kopyalama fiyatı ve ${districtInfo.name} kasa çilingir fiyatı hizmet türüne göre değişiklik gösterebilir. Fiyatlar mesafeye, zamana ve hizmet türüne göre farklılık gösterebilir.`
                     },
                     {
                         id: 3,
@@ -494,8 +494,8 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
                     },
                     {
                         id: 4,
-                        question: `${districtInfo.city} ${districtInfo.name}'de oto çilingir hizmeti var mı?`,
-                        answer: `Evet, ${districtInfo.city} ${districtInfo.name} ilçesinde bir çok uzman oto çilingir ekipleri hizmet vermektedir. Araç anahtarı kopyalama, kayıp anahtar yerine yenisini yapma, immobilizer programlama ve araç kapısı açma gibi tüm hizmetler sunulmaktadır. Detaylı bilgi için en yakın oto çilingiri BiÇilingir ile bulabilir ve hemen arayabilirsiniz.`
+                        question: `${districtInfo.city} ${districtInfo.name}'de oto çilingir ve en yakın oto kilitçi hizmeti var mı?`,
+                        answer: `Evet, ${districtInfo.city} ${districtInfo.name} ilçesinde ${districtInfo.name} oto çilingir hizmeti veren birçok uzman ekip bulunmaktadır. ${districtInfo.name} en yakın oto kilitçi ve ${districtInfo.name} oto anahtarcı hizmetleri kapsamında araç anahtarı kopyalama, oto anahtar kopyalama, kayıp anahtar yerine yenisini yapma, immobilizer programlama, motor anahtar, moto anahtar ve araç kapısı açma gibi tüm hizmetler sunulmaktadır. ${districtInfo.name} oto çilingir fiyatları için detaylı bilgi almak isterseniz, ${districtInfo.name} en yakın oto çilingiri BiÇilingir ile bulabilir ve hemen arayabilirsiniz.`
                     },
                     {
                         id: 5,
@@ -504,8 +504,8 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
                     },
                     {
                         id: 6,
-                        question: `${districtInfo.city} ${districtInfo.name}'de 7/24 açık çilingir var mı?`,
-                        answer: `Evet, ${districtInfo.city} ${districtInfo.name} ilçesinde 7/24 açık çilingir hizmeti veren işletmeler bulunmaktadır. BiÇilingir platformu üzerinden istediğiniz saat diliminde hizmet veren çilingirleri bulabilir ve acil durumlarınızda iletişime geçebilirsiniz.`
+                        question: `${districtInfo.city} ${districtInfo.name}'de 7/24 açık çilingir ve acil çilingir hizmeti var mı?`,
+                        answer: `Evet, ${districtInfo.city} ${districtInfo.name} ilçesinde ${districtInfo.name} 7/24 açık çilingir ve ${districtInfo.name} acil çilingir hizmeti veren işletmeler bulunmaktadır. ${districtInfo.name} çilingirler 7/24 açık olarak hizmet vermektedir. BiÇilingir platformu üzerinden istediğiniz saat diliminde ${districtInfo.name} çilingir numarası ile hizmet veren çilingirleri bulabilir ve acil durumlarınızda iletişime geçebilirsiniz. ${districtInfo.name} en yakın çilingir hizmeti için 7/24 hizmet veren ekiplerimiz mevcuttur.`
                     },
                     {
                         id: 7,
@@ -514,13 +514,13 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
                     },
                     {
                         id: 8,
-                        question: `${districtInfo.city} ${districtInfo.name}'de anahtar kapıda kaldı, ne yapmalıyım?`,
-                        answer: `Anahtarınız kapıda kaldıysa, BiÇilingir platformu üzerinden ${districtInfo.city} ${districtInfo.name}'de size en yakın çilingiri bulabilir ve hemen iletişime geçebilirsiniz. Çilingir gelene kadar kapıya zarar vermemeye çalışın. Çilingirlerimiz özel aletlerle kapınıza zarar vermeden açma işlemi gerçekleştirebilmektedir.`
+                        question: `${districtInfo.city} ${districtInfo.name}'de anahtar kapıda kaldı, en yakın çilingir anahtarcı hizmeti nasıl alabilirim?`,
+                        answer: `Anahtarınız kapıda kaldıysa, BiÇilingir platformu üzerinden ${districtInfo.city} ${districtInfo.name}'de ${districtInfo.name} en yakın çilingir anahtarcı hizmetini bulabilir ve hemen iletişime geçebilirsiniz. ${districtInfo.name} en yakın anahtarcı ve ${districtInfo.name} en yakın çilingir hizmeti için ${districtInfo.name} çilingir numarası ile arayabilirsiniz. Çilingir gelene kadar kapıya zarar vermemeye çalışın. ${districtInfo.name} çilingirlerimiz özel aletlerle kapınıza zarar vermeden açma işlemi gerçekleştirebilmektedir.`
                     },
                     {
                         id: 9,
-                        question: `${districtInfo.city} ${districtInfo.name}'de kapı kilidi kırıldı, ne yapmalıyım?`,
-                        answer: `Kapı kilidiniz kırıldıysa, öncelikle güvenliğiniz için geçici önlemler alın ve hemen BiÇilingir üzerinden ${districtInfo.city} ${districtInfo.name}'de hizmet veren bir çilingir ile iletişime geçin. Çilingirlerimiz kilit değişimi ve tamir hizmetleri de sunmaktadır. Size uygun yeni kilit modelleri ve güvenlik önerileri konusunda da yardımcı olacaklardır.`
+                        question: `${districtInfo.city} ${districtInfo.name}'de kapı kilidi kırıldı, çilingir hizmeti nasıl alabilirim?`,
+                        answer: `${districtInfo.name} ilçesinde kapı kilidiniz kırıldıysa, öncelikle güvenliğiniz için geçici önlemler alın ve hemen BiÇilingir üzerinden ${districtInfo.city} ${districtInfo.name}'de ${districtInfo.name} çilingir hizmeti veren bir çilingir ile iletişime geçin. ${districtInfo.name} çilingirlerimiz kapı kilidi değişimi, çelik kapı çilingir ve tamir hizmetleri de sunmaktadır. ${districtInfo.name} çelik kapı çilingir fiyatları ve ${districtInfo.name} kapı kilidi değişim fiyatları için ${districtInfo.name} çilingir ile görüşebilirsiniz. Size uygun yeni kilit modelleri ve güvenlik önerileri konusunda da yardımcı olacaklardır.`
                     },
                     {
                         id: 10,
@@ -550,7 +550,17 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
                     {
                         id: 15,
                         question: `${districtInfo.city} ${districtInfo.name}'de immobilizer anahtar kopyalama ve kodlama yapılır mı?`,
-                        answer: `Evet, ${districtInfo.city} ${districtInfo.name}'de immobilizer (çipli) araç anahtarı kopyalama ve kodlama hizmeti veren oto çilingirlerimiz mevcuttur. BiÇilingir platformumuzda oto çilingiri kategorisinde, aracınızın markasına uygun hizmet veren çilingirleri bulabilirsiniz. Modern araçların çipli anahtarları için özel ekipmanlarla profesyonel hizmet sunulmaktadır.`
+                        answer: `Evet, ${districtInfo.city} ${districtInfo.name}'de ${districtInfo.name} oto çilingir hizmetleri kapsamında immobilizer (çipli) araç anahtarı kopyalama ve kodlama hizmeti veren oto çilingirlerimiz mevcuttur. ${districtInfo.name} oto anahtarcı uzmanlarımız modern araçların çipli anahtarları için özel ekipmanlarla profesyonel hizmet sunmaktadır. BiÇilingir platformumuzda ${districtInfo.name} oto çilingiri kategorisinde, aracınızın markasına uygun hizmet veren çilingirleri bulabilirsiniz. ${districtInfo.name} oto anahtar kopyalama fiyatı için ${districtInfo.name} çilingir telefonu ile iletişime geçebilirsiniz.`
+                    },
+                    {
+                        id: 16,
+                        question: `${districtInfo.name} anahtarcı ve ${districtInfo.name} çilingir arasındaki fark nedir?`,
+                        answer: `${districtInfo.name} anahtarcı genellikle anahtar kopyalama, anahtar çoğaltma ve basit kilit işlemleri yaparken, ${districtInfo.name} çilingir daha kapsamlı hizmetler sunmaktadır. ${districtInfo.name} çilingir hizmetleri kapı açma, kilit değişimi, çelik kapı çilingir, kasa çilingiri ve oto çilingir gibi tüm hizmetleri içermektedir. ${districtInfo.name} anahtarcı hizmetleri ise daha çok anahtar yapımı ve kopyalama üzerine odaklanmaktadır. Her iki hizmet de ${districtInfo.name} ilçesinde mevcuttur.`
+                    },
+                    {
+                        id: 17,
+                        question: `${districtInfo.name} en yakın çilingir anahtarcı hizmeti ne kadar sürede gelir?`,
+                        answer: `${districtInfo.name} en yakın çilingir anahtarcı hizmeti genellikle 15-30 dakika içinde adresinize ulaşmaktadır. ${districtInfo.name} en yakın anahtarcı ve ${districtInfo.name} en yakın çilingir hizmeti için ${districtInfo.name} çilingir numarası ile iletişime geçtiğinizde, konumunuza göre en kısa sürede hizmet verilecektir. Acil durumlarda ${districtInfo.name} çilingirlerimiz daha hızlı ulaşım sağlamaktadır.`
                     }
                 ]
             },

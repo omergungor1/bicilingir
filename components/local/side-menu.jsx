@@ -35,7 +35,7 @@ export default function SideMenu(params) {
             </div>} */}
 
             {/* Yakın Caddeler */}
-            {nearbySection && <Card className="mb-6">
+            {nearbySection.data.length > 0 && <Card className="mb-6">
                 <CardHeader>
                     <CardTitle className="text-lg">{nearbySection.title}</CardTitle>
                     <CardDescription>{nearbySection.description}</CardDescription>
