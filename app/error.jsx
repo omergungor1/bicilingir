@@ -1,13 +1,19 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Error({ error, reset }) {
+    const router = useRouter();
+
     useEffect(() => {
         // Log the error to an error reporting service
         console.error(error);
     }, [error]);
+
+    const handleGoHome = () => {
+        router.push('/');
+    };
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16">
@@ -27,21 +33,24 @@ export default function Error({ error, reset }) {
                         >
                             Tekrar Dene
                         </button>
-                        <Link
-                            href="/"
+                        <button
+                            onClick={handleGoHome}
                             className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors"
                         >
                             Ana Sayfaya Dön
-                        </Link>
+                        </button>
                     </div>
                 </div>
 
                 <div className="mt-12 border-t border-gray-200 pt-8">
                     <p className="text-sm text-gray-500">
                         Çilingir mi lazım?{' '}
-                        <Link href="/" className="text-blue-600 hover:underline">
+                        <button
+                            onClick={handleGoHome}
+                            className="text-blue-600 hover:underline"
+                        >
                             BiÇilingir ile en yakın çilingiri hemen bulun.
-                        </Link>
+                        </button>
                     </p>
                 </div>
             </div>

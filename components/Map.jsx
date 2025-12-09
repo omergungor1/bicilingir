@@ -71,8 +71,15 @@ const Map = ({ center, zoom = 14, markers = [], onMarkerClick, selectedLocksmith
     }, []);
 
     const onUnmount = useCallback(function callback() {
-        mapRef.current = null;
-        setMap(null);
+        try {
+            if (mapRef.current) {
+                mapRef.current = null;
+            }
+            setMap(null);
+        } catch (error) {
+            // Ignore unmount errors from @react-google-maps/api
+            console.debug('Map unmount error (ignored):', error);
+        }
     }, []);
 
     // Map marker'ının tıklanma işlemi

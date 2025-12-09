@@ -1,7 +1,20 @@
 'use client';
 import { Suspense, useEffect, useState } from 'react';
-import Map from '../../components/Map';
+import dynamic from 'next/dynamic';
 import { MapPin, Users, Star } from 'lucide-react';
+
+// Dynamic import to prevent SSR issues with Google Maps
+const Map = dynamic(() => import('../../components/Map'), {
+    ssr: false,
+    loading: () => (
+        <div className="w-full h-[600px] bg-gray-100 rounded-xl flex items-center justify-center">
+            <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Harita yükleniyor...</p>
+            </div>
+        </div>
+    ),
+});
 
 // Türkiye'nin merkez koordinatları
 const TURKEY_CENTER = {
