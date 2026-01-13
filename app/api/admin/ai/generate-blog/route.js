@@ -79,7 +79,7 @@ export async function POST(request) {
         if (include_faq) prompt += `- SSS bölümü ekle\n`
         if (include_internal_links) prompt += `- İç linkler için yer tutucu ekle\n`
         if (include_cta) prompt += `- Call-to-Action ekle\n`
-        if (include_year) prompt += `- 2025 yılını vurgulay\n`
+        if (include_year) prompt += `- ${new Date().getFullYear()} yılını vurgulay\n`
         if (light_humor) prompt += `- Hafif mizahi ton kullan\n`
 
         prompt += `

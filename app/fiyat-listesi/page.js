@@ -1,9 +1,9 @@
 import Link from 'next/link';
 
 export const metadata = {
-    title: '2025 Güncel Çilingir Fiyat Listesi - Kapı Açma, Anahtar Yapımı, Oto Çilingir Fiyatları',
-    description: 'Türkiye genelinde 2025 yılı güncel çilingir hizmet fiyatları. Ev, otomobil, kasa açma ve anahtar yapımı için güncel ve detaylı fiyat listesi.',
-    keywords: 'çilingir fiyatları, kapı açma ücreti, anahtar yapımı fiyatları, oto çilingir fiyatları, kasa açma ücreti, çelik kapı açma fiyatı, 2025 çilingir fiyatları',
+    title: '2026 Güncel Çilingir Fiyat Listesi - Kapı Açma, Anahtar Yapımı, Oto Çilingir Fiyatları',
+    description: 'Türkiye genelinde 2026 yılı güncel çilingir hizmet fiyatları. Ev, otomobil, kasa açma ve anahtar yapımı için güncel ve detaylı fiyat listesi.',
+    keywords: 'çilingir fiyatları, kapı açma ücreti, anahtar yapımı fiyatları, oto çilingir fiyatları, kasa açma ücreti, çelik kapı açma fiyatı, 2026 çilingir fiyatları',
     alternates: {
         canonical: 'https://bicilingir.com/fiyat-listesi'
     }
@@ -29,7 +29,7 @@ export default function FiyatListesi() {
                 </ol>
             </nav>
 
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">2025 Güncel Çilingir Fiyat Listesi</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">2026 Güncel Çilingir Fiyat Listesi</h1>
             <p className="text-lg text-gray-600 mb-6">Türkiye genelinde ev, otomobil, kasa ve servis alanlarındaki çilingir hizmetleri için detaylı ve güncel fiyat bilgileri.</p>
 
             <div className="bg-blue-50 p-5 rounded-lg mb-8 border border-blue-100">
@@ -354,7 +354,7 @@ export default function FiyatListesi() {
 
             <div className="text-center mt-10">
                 <p className="text-gray-500 text-sm">
-                    Fiyatlar son güncelleme tarihi: 01/05/2025
+                    Fiyatlar son güncelleme tarihi: 01/05/2026
                 </p>
             </div>
 
