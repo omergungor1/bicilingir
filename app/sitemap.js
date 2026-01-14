@@ -44,6 +44,12 @@ export default async function sitemap() {
                 changeFrequency: 'weekly',
                 priority: 0.8,
             },
+            {
+                url: `${baseUrl}/cilingir-cagirmadan-once-bilmeniz-gerekenler`,
+                lastModified: now,
+                changeFrequency: 'weekly',
+                priority: 0.8,
+            },
         ];
 
         // Sadece Bursa'yı (id=16) getir
@@ -159,22 +165,8 @@ export default async function sitemap() {
             };
         }) : [];
 
-        // İl + Hizmet sayfaları URL'leri (Sadece Bursa)
+        // İl + Hizmet sayfaları URL'leri kaldırıldı - 301 redirect yapıldı
         const provinceServiceUrls = [];
-        if (provinces && services && services.length > 0) {
-            provinces.forEach(province => {
-                services.forEach(service => {
-                    if (service && service.slug) {
-                        provinceServiceUrls.push({
-                            url: `${baseUrl}/${province.slug}/${service.slug}`,
-                            lastModified: now,
-                            changeFrequency: 'weekly',
-                            priority: 0.7,
-                        });
-                    }
-                });
-            });
-        }
 
 
         // İlçe sayfaları URL'leri (Sadece Bursa'nın ilçeleri)
@@ -195,70 +187,14 @@ export default async function sitemap() {
             });
         }
 
-        // İlçe + Hizmet sayfaları URL'leri (Sadece Bursa'nın ilçeleri)
+        // İlçe + Hizmet sayfaları URL'leri kaldırıldı - 301 redirect yapıldı
         const districtServiceUrls = [];
-        if (provinces && services && services.length > 0) {
-            provinces.forEach(province => {
-                const provinceDistricts = districtsMap[province.id] || [];
-                provinceDistricts.forEach(district => {
-                    services.forEach(service => {
-                        if (district && district.slug && service && service.slug) {
-                            districtServiceUrls.push({
-                                url: `${baseUrl}/${province.slug}/${district.slug}/${service.slug}`,
-                                lastModified: now,
-                                changeFrequency: 'weekly',
-                                priority: 0.6,
-                            });
-                        }
-                    });
-                });
-            });
-        }
 
-        // Mahalle sayfaları URL'leri (Sadece Bursa'nın ilçelerinin mahalleleri)
+        // Mahalle sayfaları URL'leri kaldırıldı - 301 redirect yapıldı
         const neighbourhoodUrls = [];
-        if (provinces && provinces.length > 0) {
-            provinces.forEach(province => {
-                const provinceDistricts = districtsMap[province.id] || [];
-                provinceDistricts.forEach(district => {
-                    const districtneighborhoods = neighborhoodsMap[district.id] || [];
-                    districtneighborhoods.forEach(neighbourhood => {
-                        if (neighbourhood && neighbourhood.slug) {
-                            neighbourhoodUrls.push({
-                                url: `${baseUrl}/${province.slug}/${district.slug}/${neighbourhood.slug}`,
-                                lastModified: now,
-                                changeFrequency: 'weekly',
-                                priority: 0.5,
-                            });
-                        }
-                    });
-                });
-            });
-        }
 
-        // Mahalle + Hizmet sayfaları URL'leri (Sadece Bursa'nın ilçelerinin mahalleleri)
-        // Bu sayfalar canonical ile mahalle ana sayfalarını işaret eder, düşük priority
+        // Mahalle + Hizmet sayfaları URL'leri kaldırıldı - 301 redirect yapıldı
         const neighborhoodserviceUrls = [];
-        if (provinces && services && services.length > 0) {
-            provinces.forEach(province => {
-                const provinceDistricts = districtsMap[province.id] || [];
-                provinceDistricts.forEach(district => {
-                    const districtneighborhoods = neighborhoodsMap[district.id] || [];
-                    districtneighborhoods.forEach(neighbourhood => {
-                        services.forEach(service => {
-                            if (neighbourhood && neighbourhood.slug && service && service.slug) {
-                                neighborhoodserviceUrls.push({
-                                    url: `${baseUrl}/${province.slug}/${district.slug}/${neighbourhood.slug}/${service.slug}`,
-                                    lastModified: now,
-                                    changeFrequency: 'monthly', // Daha az sıklıkta güncellenir
-                                    priority: 0.1, // Çok düşük priority - canonical var
-                                });
-                            }
-                        });
-                    });
-                });
-            });
-        }
 
 
         // Çilingir detay sayfaları URL'leri
@@ -380,11 +316,8 @@ export default async function sitemap() {
             ...blogUrls, // Blog sayfalarını ekledik
             ...locksmithUrls, // Çilingir sayfalarını ekledik
             ...provinceUrls,
-            ...provinceServiceUrls,
             ...districtUrls,
-            ...districtServiceUrls,
-            ...neighbourhoodUrls,
-            ...neighborhoodserviceUrls,
+            // Mahalle ve servis detay sayfaları kaldırıldı - 301 redirect yapıldı
         ];
     } catch (error) {
         console.error('Sitemap oluşturulurken hata:', error);

@@ -2,11 +2,10 @@
 
 import DistrictContent from '../../../components/district/DistrictContent';
 import { ServiceList } from '../../../lib/service-list';
-import ServicePage from '../../../components/location/ServicePage';
 import { getMetaData, getLocksmithsList } from '../../utils/seo';
 import { getSupabaseServer } from '../../../lib/supabase';
 import Script from 'next/script';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 
 // Build zamanında tüm district/service kombinasyonlarını getir
 export async function generateStaticParams() {
@@ -33,13 +32,6 @@ export async function generateStaticParams() {
             });
         }
 
-        // Service sayfaları için de static params ekle
-        ServiceList.forEach(service => {
-            staticParams.push({
-                city: 'bursa',
-                district: service.slug
-            });
-        });
 
         return staticParams;
     } catch (error) {
@@ -597,15 +589,8 @@ export async function generateMetadata({ params }) {
     const resolvedParams = await params;
     const { city: citySlug, district: districtSlug } = resolvedParams;
 
-    const isService = ServiceList.some(service => service.slug === districtSlug);
-
-    if (isService) {
-        const { metadata } = await getDistrictData(citySlug, null, districtSlug);
-        return metadata;
-    } else {
-        const { metadata } = await getDistrictData(citySlug, districtSlug, null);
-        return metadata;
-    }
+    const { metadata } = await getDistrictData(citySlug, districtSlug, null);
+    return metadata;
 }
 
 // Bu sayfa otomatik olarak sunucu tarafında render edilir
@@ -613,38 +598,10 @@ export default async function DistrictPage({ params }) {
     const resolvedParams = await params;
     const { city: citySlug, district: districtSlug } = resolvedParams;
 
+    // Eğer district bir servis slug'ı ise, şehir sayfasına redirect et
     const isService = ServiceList.some(service => service.slug === districtSlug);
-
-    // İlgili verileri ve metadata'yı çek - bunu sayfa render edilmeden önce tamamla
     if (isService) {
-        // Hizmet sayfası durumu
-        const result = await getDistrictData(citySlug, null, districtSlug);
-        const structuredData = result.metadata?.other?.structuredData;
-
-        const data = {
-            citySlug,
-            districtSlug: null,
-            neighborhoodSlug: null,
-            servicetypeSlug: districtSlug,
-            locksmiths: result.locksmiths
-        };
-
-        return (
-            <>
-                {structuredData && (
-                    <Script id="schema-data" type="application/ld+json" strategy="beforeInteractive">
-                        {structuredData}
-                    </Script>
-                )}
-                <ServicePage
-                    data={data}
-                    serviceInfo={result.serviceInfo}
-                    locationInfo={result.locationInfo}
-                    sideMenuParams={result.sideMenuParams}
-                    mainContentParams={result.mainContentParams}
-                />
-            </>
-        );
+        permanentRedirect(`/${citySlug}`);
     }
 
     // Normal ilçe sayfası durumu
