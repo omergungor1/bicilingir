@@ -143,7 +143,7 @@ export async function GET(request) {
             phone: item.phonenumber,
             whatsapp: item.whatsappnumber,
             profileimageurl: item.profileimageurl,
-            url: `https://bicilingir.com/cilingirler/${item.slug}`,
+            url: `https://bicilingir.com/${item.slug}`,
             city: item.provinces?.name,
             district: item.districts?.name,
             rating: item.avgrating,

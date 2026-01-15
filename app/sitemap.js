@@ -112,7 +112,8 @@ export default async function sitemap() {
         const { data: locksmiths, error: locksmithError } = await supabase
             .from('locksmiths')
             .select('id, slug, createdat')
-            .eq('isactive', true);
+            .eq('isactive', true)
+            .eq('status', 'approved');
 
         if (locksmithError) {
             console.error('Çilingirler yüklenirken hata:', locksmithError);
@@ -204,7 +205,7 @@ export default async function sitemap() {
                 if (locksmith && locksmith.slug) {
                     const lastMod = now;
                     locksmithUrls.push({
-                        url: `${baseUrl}/cilingirler/${locksmith.slug}`,
+                        url: `${baseUrl}/${locksmith.slug}`,
                         lastModified: lastMod,
                         changeFrequency: 'weekly',
                         priority: 0.8, // Çilingir sayfaları daha yüksek önceliğe sahip olabilir

@@ -2127,7 +2127,7 @@ function CilingirPanelContent() {
                           className="w-full sm:w-auto flex items-center gap-2"
                           asChild
                         >
-                          <Link href={`/cilingirler/${locksmith.slug}`} target="_blank" rel="noopener noreferrer">
+                          <Link href={`/${locksmith.slug}`} target="_blank" rel="noopener noreferrer">
                             <Eye className="h-4 w-4" />
                             Profilimi Önizle
                           </Link>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -27,8 +27,7 @@ const StarRating = ({ rating }) => {
     );
 };
 
-export default function LocksmithDetail({ locksmith: initialData, similarLocksmiths }) {
-    const dispatch = useDispatch();
+export default function LocksmithDetail({ locksmith: initialData, similarLocksmiths, navbarList }) {
     const { hasSearched } = useSelector(state => state.search);
     const { showToast } = useToast();
     const searchParams = useSearchParams();
@@ -155,8 +154,31 @@ export default function LocksmithDetail({ locksmith: initialData, similarLocksmi
 
     return (
         <div className="bg-gray-50 min-h-screen">
+
+            {/* Breadcrumb Navigasyonu */}
+            {navbarList && navbarList.length > 0 && (
+                <div className="container mx-auto px-4 pt-5">
+                    <nav className="flex text-sm text-gray-600 flex-wrap" aria-label="Breadcrumb">
+                        {navbarList.map((item, index) => (
+                            <React.Fragment key={item.id || index}>
+                                {index === navbarList.length - 1 ? (
+                                    <span className="text-gray-900 font-medium">{item.name}</span>
+                                ) : (
+                                    <>
+                                        <Link href={item.slug} className="hover:text-blue-600">
+                                            {item.name}
+                                        </Link>
+                                        <span className="mx-1">&gt;</span>
+                                    </>
+                                )}
+                            </React.Fragment>
+                        ))}
+                    </nav>
+                </div>
+            )}
+
             {/* Geri Butonu */}
-            <div className="container mx-auto px-4 py-4">
+            <div className="container mx-auto p-4 pb-0">
                 <Link
                     href={getBackUrl()}
                     className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
@@ -204,6 +226,9 @@ export default function LocksmithDetail({ locksmith: initialData, similarLocksmi
 
                                 <p className="text-gray-600 mb-4">{initialData.tagline}</p>
 
+                                {/* Verilen Hizmetler */}
+
+                                <p className="text-gray-800 mb-2">Verilen Hizmetler:</p>
                                 <div className="flex flex-wrap gap-2 mb-6">
                                     {initialData.services?.map((service) => (
                                         <span
@@ -335,40 +360,42 @@ export default function LocksmithDetail({ locksmith: initialData, similarLocksmi
                                 <div className="border-t border-gray-200 pt-6">
                                     <h2 className="text-xl font-bold text-gray-800 mb-4">Benzer Çilingirler</h2>
                                     <div className="grid grid-cols-1 gap-4">
-                                        {similarLocksmiths.map((item) => (
-                                            <Link
-                                                key={item.id}
-                                                href={`/cilingirler/${item.slug}`}
-                                                className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors"
-                                            >
-                                                <div className="flex items-center">
-                                                    <div className="relative w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center text-white mr-4">
-                                                        {item.locksmith_images?.find(img => img.is_profile)?.image_url ? (
-                                                            <Image
-                                                                src={item.locksmith_images.find(img => img.is_profile).image_url}
-                                                                alt={`${item.businessname || item.fullname} Profil Resmi`}
-                                                                fill
-                                                                sizes="48px"
-                                                                className="object-cover rounded-lg"
-                                                            />
-                                                        ) : (
-                                                            <span className="text-lg">{item.businessname?.substring(0, 2) || "ÇL"}</span>
-                                                        )}
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="font-semibold text-gray-800">{item.businessname || item.fullname}</h3>
-                                                        <p className="text-gray-600 text-sm">{item.provinces.name}, {item.districts.name}</p>
-                                                        <div className="flex items-center mt-1">
-                                                            <span className="text-yellow-400">★</span>
-                                                            <span className="ml-1 text-gray-700">{item.avgrating || 0}</span>
-                                                            <span className="text-sm text-gray-500 ml-2">
-                                                                ({item.totalreviewcount || 0} değerlendirme)
-                                                            </span>
+                                        {similarLocksmiths.map((item) => {
+                                            return (
+                                                <Link
+                                                    key={item.id}
+                                                    href={`/${item.slug}`}
+                                                    className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors"
+                                                >
+                                                    <div className="flex items-center">
+                                                        <div className="relative w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center text-white mr-4">
+                                                            {item.locksmith_images?.find(img => img.is_profile)?.image_url ? (
+                                                                <Image
+                                                                    src={item.locksmith_images.find(img => img.is_profile).image_url}
+                                                                    alt={`${item.businessname || item.fullname} Profil Resmi`}
+                                                                    fill
+                                                                    sizes="48px"
+                                                                    className="object-cover rounded-lg"
+                                                                />
+                                                            ) : (
+                                                                <span className="text-lg">{item.businessname?.substring(0, 2) || "ÇL"}</span>
+                                                            )}
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="font-semibold text-gray-800">{item.businessname || item.fullname}</h3>
+                                                            <p className="text-gray-600 text-sm">{item.provinces.name}, {item.districts.name}</p>
+                                                            <div className="flex items-center mt-1">
+                                                                <span className="text-yellow-400">★</span>
+                                                                <span className="ml-1 text-gray-700">{item.avgrating || 0}</span>
+                                                                <span className="text-sm text-gray-500 ml-2">
+                                                                    ({item.totalreviewcount || 0} değerlendirme)
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </Link>
-                                        ))}
+                                                </Link>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             )}

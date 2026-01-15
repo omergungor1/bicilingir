@@ -132,7 +132,7 @@ export default function LocksmithCard({ locksmith, index, showLocation = false }
         const referrer = encodeURIComponent(currentUrl);
 
         // Çilingir detay sayfasına yönlendir
-        const formattedSlug = `/cilingirler/${slug}?fromDetail=true&referrer=${referrer}`;
+        const formattedSlug = `/${slug}?fromDetail=true&referrer=${referrer}`;
 
         // Loglamayı arka planda yapacağız, sayfaya yönlendirmeyi geciktirmemek için
         try {
