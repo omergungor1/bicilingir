@@ -108,34 +108,34 @@ export default function BlogListPage({
 
     const getBlogUrl = (blog) => {
         // Blog URL'ini lokasyon bilgilerine göre oluştur
-        let baseUrl = '';
+        // let baseUrl = '';
 
-        if (blog.provinces?.slug) {
-            baseUrl += `/${blog.provinces.slug}`;
+        // if (blog.provinces?.slug) {
+        //     baseUrl += `/${blog.provinces.slug}`;
 
-            if (blog.districts?.slug) {
-                baseUrl += `/${blog.districts.slug}`;
+        //     if (blog.districts?.slug) {
+        //         baseUrl += `/${blog.districts.slug}`;
 
-                if (blog.neighborhoods?.slug) {
-                    baseUrl += `/${blog.neighborhoods.slug}`;
+        //         if (blog.neighborhoods?.slug) {
+        //             baseUrl += `/${blog.neighborhoods.slug}`;
 
-                    if (blog.services?.slug) {
-                        baseUrl += `/${blog.services.slug}`;
-                    }
-                } else if (blog.services?.slug) {
-                    baseUrl += `/${blog.services.slug}`;
-                }
-            } else if (blog.services?.slug) {
-                baseUrl += `/${blog.services.slug}`;
-            }
-        }
+        //             if (blog.services?.slug) {
+        //                 baseUrl += `/${blog.services.slug}`;
+        //             }
+        //         } else if (blog.services?.slug) {
+        //             baseUrl += `/${blog.services.slug}`;
+        //         }
+        //     } else if (blog.services?.slug) {
+        //         baseUrl += `/${blog.services.slug}`;
+        //     }
+        // }
 
-        // Blog URL'ini oluştur
-        if (baseUrl) {
-            return `${baseUrl}/blog/${blog.slug}`;
-        } else {
-            return `/blog/${blog.slug}`;
-        }
+        // // Blog URL'ini oluştur
+        // if (baseUrl) {
+        // return `${baseUrl}/blog/${blog.slug}`;
+        // } else {
+        return `/blog/${blog.slug}`;
+        // }
     };
 
     if (loading) {

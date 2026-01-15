@@ -744,7 +744,7 @@ export default function Home() {
           <section className="w-full py-16 px-4 bg-gray-100">
             <div className="container mx-auto text-center">
               <div className="max-w-4xl mx-auto">
-                <h2 className="text-3xl font-bold mb-4 text-gray-800">Çilingir misiniz?</h2>
+                <h2 className="text-3xl font-bold mb-4 text-gray-800">Çilingir misin?</h2>
                 <p className="text-xl mb-8 text-gray-700">
                   BiÇilingir'e katılın ve daha fazla müşteriye ulaşın! Platformumuzda listelenip, hizmet kapsamınızı genişletin ve işlerinizi büyütün.
                 </p>

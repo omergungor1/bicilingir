@@ -99,18 +99,36 @@ const LoginSection = () => {
   return (
     <section className="w-full py-16 px-4 bg-blue-600 text-white">
       <div className="container mx-auto text-center flex flex-col items-center">
-        <h2 className="text-3xl font-bold mb-4">Çilingir misiniz?</h2>
-        <p className="text-xl max-w-3xl mx-auto mb-8">
+        <h2 className="text-3xl font-bold mb-4">Çilingir misin?</h2>
+        {/* <p className="text-xl max-w-3xl mx-auto mb-8">
           Kayıt ol veya giriş yap
-        </p>
+        </p> */}
         <div className="flex space-x-3">
-          <Link href="/cilingir/auth/login" className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded transition-colors">
+          {/* <Link href="/cilingir/auth/login" className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded transition-colors">
             Giriş Yap
-          </Link>
+          </Link> */}
           <Link href="/cilingir/auth/register" className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors">
             Kayıt Ol
           </Link>
         </div>
+      </div>
+    </section>
+  );
+};
+
+const RegisterSection = () => {
+  return (
+    <section className="w-full py-16 px-4 bg-blue-600 text-white">
+      <div className="container mx-auto text-center">
+        <h2 className="text-3xl font-bold mb-4">Hemen Bi Çilingir Ağına Katılın</h2>
+        <p className="text-xl max-w-3xl mx-auto mb-8">
+          Türkiye'nin ilk ve tek çilingir ağının bir parçası olun, işinizi büyütün ve kazancınızı artırın.
+        </p>
+        <Link href="/cilingir/auth/register">
+          <Button className="bg-white text-blue-600 hover:bg-gray-100 font-bold text-lg px-8 py-4 cursor-pointer">
+            Şimdi Başvur
+          </Button>
+        </Link>
       </div>
     </section>
   );
@@ -187,6 +205,8 @@ export default function CilingirlerPage() {
         </div>
       </section>
 
+      {/* Hemen Bi Çilingir Ağına Katılın Bölümü */}
+      <RegisterSection />
 
       {/* Nasıl Çalışır Bölümü */}
       <section className="w-full py-16 px-4 bg-gray-50">
@@ -245,19 +265,7 @@ export default function CilingirlerPage() {
 
 
       {/* CTA Bölümü */}
-      <section className="w-full py-16 px-4 bg-blue-600 text-white">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">Hemen Bi Çilingir Ağına Katılın</h2>
-          <p className="text-xl max-w-3xl mx-auto mb-8">
-            Türkiye'nin ilk ve tek çilingir ağının bir parçası olun, işinizi büyütün ve kazancınızı artırın.
-          </p>
-          <Link href="/cilingir/auth/register">
-            <Button className="bg-white text-blue-600 hover:bg-gray-100 font-bold text-lg px-8 py-4 cursor-pointer">
-              Şimdi Başvur
-            </Button>
-          </Link>
-        </div>
-      </section>
+      <RegisterSection />
 
       {/* SSS Bölümü */}
       <section className="w-full py-16 px-4 bg-gray-50">

@@ -83,7 +83,7 @@ export default function Header() {
                 className={`text-white hover:text-blue-200 transition-colors block py-2 p-2 md:py-0 ${pathname === '/bilgi' ? '  border-b-2 border-white' : ''}`}
                 onClick={() => setIsMenuOpen(false)}
               >
-                Çilingirler
+                Çilingir misin?
               </Link>
             </li>
             <li>
