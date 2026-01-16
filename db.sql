@@ -71,8 +71,8 @@ CREATE TABLE locksmiths (
     authid UUID REFERENCES auth.users(id),
     isVerified BOOLEAN DEFAULT FALSE,
     isActive BOOLEAN DEFAULT FALSE,
-    createdat TIMESTAMPTZ DEFAULT NOW(),
-    password TEXT
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    createdat TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Çilingir Detayları Tablosu
@@ -85,13 +85,14 @@ CREATE TABLE locksmith_details (
     startDate DATE,
     isEmailVerified BOOLEAN DEFAULT FALSE,
     isPhoneVerified BOOLEAN DEFAULT FALSE,
-    totalReviewsCount INTEGER DEFAULT 0,
-    avgRating NUMERIC(3,2) DEFAULT 0,
     lat DOUBLE PRECISION,
     lng DOUBLE PRECISION,
     createdAt TIMESTAMPTZ DEFAULT NOW(),
     lastLogin TIMESTAMPTZ,
-    postal_code VARCHAR(10)
+    postal_code VARCHAR(10),
+    map_url TEXT,
+    plus_code TEXT,
+    business_type TEXT
 );
 
 -- Çilingir Resimleri Tablosu
@@ -114,7 +115,6 @@ CREATE TABLE locksmith_working_hours (
     isWorking BOOLEAN DEFAULT TRUE, -- O gün çalışıyor mu?
     openTime TIME, -- Açılış saati
     closeTime TIME, -- Kapanış saati
-    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
     UNIQUE (locksmithId, dayOfWeek) -- Aynı çilingir için aynı gün tekrar eklenemesin
 );
 

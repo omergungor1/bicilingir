@@ -14,19 +14,20 @@ export async function generateStaticParams() {
         const staticParams = [];
 
 
-        // Bursa'nın ilçelerini çek
+        // Bursa ve İstanbul'un ilçelerini çek
         const { data: districts, error: districtsError } = await supabase
             .from('districts')
-            .select('slug')
-            .eq('province_id', 16);
+            .select('slug, province_id, provinces(slug)')
+            .in('province_id', [16, 34]); // Bursa (16) ve İstanbul (34)
 
         if (districtsError) {
             console.error('İlçe bilgileri alınırken hata:', districtsError);
-        } else {
+        } else if (districts) {
             // Her ilçe için static params ekle
             districts.forEach(district => {
+                const citySlug = district.provinces?.slug || (district.province_id === 16 ? 'bursa' : 'istanbul');
                 staticParams.push({
-                    city: 'bursa',
+                    city: citySlug,
                     district: district.slug
                 });
             });
@@ -446,11 +447,11 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
                 { id: 3, name: districtInfo.name, slug: '#' }
             ],
             mainCard: {
-                title: `${districtInfo.city} ${districtInfo.name} Çilingir Anahtarcı - En Yakın Çilingir Hizmeti`,
+                title: `${districtInfo.city} ${districtInfo.name} Çilingir Anahtarcı -  En Yakın Çilingir Hizmeti`,
                 description: `${districtInfo.city} ${districtInfo.name} ilçesinde çilingir ve anahtarcı hizmetine mi ihtiyacınız var? ${districtInfo.name} çilingir, ${districtInfo.name} anahtarcı ve ${districtInfo.name} oto çilingir hizmetleri geniş bir ağla sunulmaktadır. ${districtInfo.name} en yakın çilingir ve ${districtInfo.name} en yakın anahtarcı hizmeti için aşağıda listelenen çilingirlerin hepsi ${districtInfo.city} ${districtInfo.name} ilçesinde hizmet vermektedir. ${districtInfo.name} çilingir numarası ile hemen iletişime geçebilirsiniz.`
             },
             locksmitList: {
-                title: `${districtInfo.city} ${districtInfo.name} Çilingirler ve Anahtarcılar - En Yakın Çilingir`,
+                title: `${districtInfo.city} ${districtInfo.name} Çilingirler ve Anahtarcılar - ${districtInfo.name} En Yakın Çilingir`,
                 description: `${districtInfo.name} en yakın çilingir ve ${districtInfo.name} en yakın anahtarcı hizmeti için size en yakın çilingirler bulundu. ${districtInfo.name} çilingir telefonu ile hemen arayabilir, ${districtInfo.name} anahtarcı hizmeti alabilirsiniz. Tüm çilingirler şuan açık ve 7/24 hizmet vermektedir.`,
                 data: locksmiths
             },

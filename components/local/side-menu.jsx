@@ -43,14 +43,9 @@ export default function SideMenu(params) {
                 <CardContent className="px-4 pb-4">
                     <ul className="space-y-2">
                         {nearbySection.data.map((street, index) => (
-                            <li key={index}>
-                                <Link
-                                    href={`/${street.slug}`}
-                                    className="flex items-center text-sm hover:text-primary"
-                                >
-                                    <MapPin size={14} className="mr-2" />
-                                    {type != 'neighborhood' && formattedName} {street.name} Çilingir Anahtarcı
-                                </Link>
+                            <li key={index} className="flex items-center text-sm text-gray-700">
+                                <MapPin size={14} className="mr-2 text-gray-500" />
+                                <span>{type != 'neighborhood' && formattedName} {street.name} Çilingir Anahtarcı</span>
                             </li>
                         ))}
                     </ul>
@@ -91,24 +86,24 @@ export default function SideMenu(params) {
 
 
             {/* Daha fazla kategori */}
-            {categorySection && <Card className="mb-6">
-                <CardHeader>
-                    <CardTitle className="text-lg">{categorySection.title}</CardTitle>
-                    <CardDescription>{categorySection.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ul className="space-y-2">
-                        {categorySection.data.map((service, index) => (
-                            <li key={index}>
-                                <Link href={`/${service.slug}`} className="text-blue-600 hover:underline flex items-center">
+            {categorySection && categorySection.data && categorySection.data.length > 0 && (
+                <Card className="mb-6">
+                    <CardHeader>
+                        <CardTitle className="text-lg">{categorySection.title}</CardTitle>
+                        <CardDescription>{categorySection.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ul className="space-y-2">
+                            {categorySection.data.map((service, index) => (
+                                <li key={index} className="flex items-center text-gray-700">
                                     <span className="mr-2">•</span>
-                                    {formattedName} {service.name}
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
-                </CardContent>
-            </Card>}
+                                    <span>{formattedName} {service.name}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Hizmetler */}
             {services && <Card className="mb-6">

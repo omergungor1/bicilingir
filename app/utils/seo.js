@@ -370,8 +370,9 @@ async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, servicetype
                 "geo": geo,
                 "founder": locksmith.fullname,
                 "foundingDate": locksmith.foundingDate || "2019-01-01",
+                "is_verified": locksmith.isverified,
                 "paymentAccepted": paymentAccepted,
-                "currenciesAccepted": "TRY"
+                "currenciesAccepted": "TRY",
             });
 
             // ListItem olarak dön

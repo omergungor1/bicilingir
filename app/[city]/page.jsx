@@ -12,18 +12,18 @@ export async function generateStaticParams() {
     try {
         const supabase = getSupabaseServer();
 
-        // Şimdilik sadece Bursa'yı static generate etmek için
+        // Bursa (id: 16) ve İstanbul (id: 34) için static generate et
         const { data: cities, error } = await supabase
             .from('provinces')
             .select('slug')
-            .eq('id', 16); // Bursa'nın ID'si 16
+            .in('id', [16, 34]); // Bursa (16) ve İstanbul (34)
 
         if (error) {
             console.error('Şehir slugları alınırken hata:', error);
             return [];
         }
 
-        console.log('Static generation için şehirler:', cities);
+        // Static generation için şehirler
         return cities.map((city) => ({
             city: city.slug,
         }));
@@ -259,7 +259,7 @@ async function getCityData(citySlug) {
                 { id: 2, name: cityData.name, slug: '#' },
             ],
             mainCard: { title: `${cityData.name} Çilingir Anahtarcı`, description: cityInfoData.description },
-            locksmitList: { title: `${cityData.name} Çilingirler`, description: `${cityData.name}\'${getBulunmaEki(cityData.name)} şuan açık 2 çilingir bulundu. Hemen ara!`, data: locksmiths },
+            locksmitList: { title: `${cityData.name} Çilingirler`, description: `${cityData.name}\'${getBulunmaEki(cityData.name)} şuan açık ${locksmiths.length} çilingir bulundu. Hemen ara!`, data: locksmiths },
             seconCard: { title: `${cityData.name} Hakkında`, longDescription: cityInfoData.longDescription },
             serviceList: { title: 'Çilingir Hizmetleri Kategorileri', description: '', data: servicesData, neighborhoods: districtsData },
             sssList: { title: `${cityData.name} Çilingir Sık Sorulan Sorular`, description: `${yerIsmiBulunmaEkiEkle(cityData.name)} bir çok kişi çilingirler hakkında bazı soruların cevabını merak ediyor. Sık sorulan soruların cevaplarını aşağıdaki listede bulabilirsiniz.`, data: sssList },

@@ -106,38 +106,6 @@ export default function BlogListPage({
         return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
     };
 
-    const getBlogUrl = (blog) => {
-        // Blog URL'ini lokasyon bilgilerine göre oluştur
-        // let baseUrl = '';
-
-        // if (blog.provinces?.slug) {
-        //     baseUrl += `/${blog.provinces.slug}`;
-
-        //     if (blog.districts?.slug) {
-        //         baseUrl += `/${blog.districts.slug}`;
-
-        //         if (blog.neighborhoods?.slug) {
-        //             baseUrl += `/${blog.neighborhoods.slug}`;
-
-        //             if (blog.services?.slug) {
-        //                 baseUrl += `/${blog.services.slug}`;
-        //             }
-        //         } else if (blog.services?.slug) {
-        //             baseUrl += `/${blog.services.slug}`;
-        //         }
-        //     } else if (blog.services?.slug) {
-        //         baseUrl += `/${blog.services.slug}`;
-        //     }
-        // }
-
-        // // Blog URL'ini oluştur
-        // if (baseUrl) {
-        // return `${baseUrl}/blog/${blog.slug}`;
-        // } else {
-        return `/blog/${blog.slug}`;
-        // }
-    };
-
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50">
@@ -346,7 +314,7 @@ export default function BlogListPage({
                                         {/* Başlık */}
                                         <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
                                             <Link
-                                                href={getBlogUrl(blog)}
+                                                href={`/blog/${blog.slug}`}
                                                 className="hover:text-blue-600 transition-colors"
                                             >
                                                 {blog.title}
@@ -378,7 +346,7 @@ export default function BlogListPage({
                                         </div>
 
                                         {/* Devamını Oku Butonu */}
-                                        <Link href={getBlogUrl(blog)}>
+                                        <Link href={`/blog/${blog.slug}`}>
                                             <Button
                                                 variant="outline"
                                                 size="sm"

@@ -1,10 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
 import Hero from "../../components/Hero";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
-import SearchForm from "../../components/SearchForm";
 
 const services = [
   {
@@ -173,7 +170,7 @@ export default function HizmetlerPage() {
       </section>
 
       {/* Acil Durum Bölümü */}
-      <section className="w-full py-16 px-4 bg-blue-600 text-white">
+      <section className="w-full py-16 px-4  bg-gradient-to-r from-[#4169E1] to-[#6495ED] text-white">
         <div className="container mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">Hızlı Çilingir Hizmeti</h2>
           <p className="text-xl max-w-3xl mx-auto mb-8">

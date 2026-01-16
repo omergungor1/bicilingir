@@ -52,11 +52,11 @@ export default async function sitemap() {
             },
         ];
 
-        // Sadece Bursa'yı (id=16) getir
+        // Bursa (id=16) ve İstanbul (id=34) getir
         const { data: provinces, error: provinceError } = await supabase
             .from('provinces')
             .select('id, name, slug')
-            .eq('id', 16);  // Sadece Bursa'yı filtrele
+            .in('id', [16, 34]);  // Bursa ve İstanbul'u filtrele
 
         if (provinceError) {
             console.error('İller yüklenirken hata:', provinceError);
@@ -64,24 +64,24 @@ export default async function sitemap() {
             return staticPages;
         }
 
-        // Bursa'nın ilçelerini getir
+        // Bursa ve İstanbul'un ilçelerini getir
         const { data: districts, error: districtError } = await supabase
             .from('districts')
             .select('id, name, slug, province_id')
-            .eq('province_id', 16);  // Sadece Bursa'nın ilçelerini filtrele
+            .in('province_id', [16, 34]);  // Bursa ve İstanbul'un ilçelerini filtrele
 
         if (districtError) {
             console.error('İlçeler yüklenirken hata:', districtError);
             return staticPages;
         }
 
-        // Bursa ilçelerinin mahallelerini getir
+        // Bursa ve İstanbul ilçelerinin mahallelerini getir
         const districtIds = districts ? districts.map(d => d.id) : [];
 
         const { data: neighborhoods, error: neighbourhoodError } = await supabase
             .from('neighborhoods')
             .select('id, name, slug, district_id')
-            .in('district_id', districtIds);  // Sadece Bursa ilçelerinin mahallelerini filtrele
+            .in('district_id', districtIds);  // Bursa ve İstanbul ilçelerinin mahallelerini filtrele
 
         if (neighbourhoodError) {
             console.error('Mahalleler yüklenirken hata:', neighbourhoodError);
@@ -156,7 +156,7 @@ export default async function sitemap() {
             return map;
         }, {}) : {};
 
-        // İl sayfaları URL'leri (Sadece Bursa)
+        // İl sayfaları URL'leri (Bursa ve İstanbul)
         const provinceUrls = provinces ? provinces.map(province => {
             return {
                 url: `${baseUrl}/${province.slug}`,
@@ -170,7 +170,7 @@ export default async function sitemap() {
         const provinceServiceUrls = [];
 
 
-        // İlçe sayfaları URL'leri (Sadece Bursa'nın ilçeleri)
+        // İlçe sayfaları URL'leri (Bursa ve İstanbul'un ilçeleri)
         const districtUrls = [];
         if (provinces && provinces.length > 0) {
             provinces.forEach(province => {

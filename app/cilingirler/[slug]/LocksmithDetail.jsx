@@ -298,7 +298,7 @@ export default function LocksmithDetail({ locksmith: initialData, similarLocksmi
                                 <div className="border-t border-gray-200 pt-6 mb-6">
                                     <h2 className="text-xl font-bold text-gray-800 mb-4">Galeri</h2>
                                     <ImageGallery
-                                        images={initialData.locksmith_images.filter(img => !img.is_profile)}
+                                        images={initialData.locksmith_images}
                                         locksmithName={initialData.businessname || initialData.fullname}
                                     />
                                 </div>
@@ -433,11 +433,16 @@ export default function LocksmithDetail({ locksmith: initialData, similarLocksmi
                                     <h3 className="text-lg font-bold text-gray-800 mb-4">Çalışma Saatleri</h3>
                                     <div className="space-y-2">
                                         {initialData.locksmith_working_hours
-                                            .sort((a, b) => a.dayofweek - b.dayofweek)
+                                            .sort((a, b) => {
+                                                // Pazar (0) en sona gitmeli, diğerleri normal sırada
+                                                if (a.dayofweek === 0) return 1
+                                                if (b.dayofweek === 0) return -1
+                                                return a.dayofweek - b.dayofweek
+                                            })
                                             .map((hours) => (
                                                 <div key={hours.dayofweek} className="flex justify-between items-center">
                                                     <span className="text-gray-600">
-                                                        {["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"][hours.dayofweek]}
+                                                        {["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"][hours.dayofweek]}
                                                     </span>
                                                     {hours.is24hopen ? (
                                                         <span className="text-green-600">24 Saat Açık</span>

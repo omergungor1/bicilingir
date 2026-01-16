@@ -96,6 +96,7 @@ export async function generateMetadata({ params }) {
         // locksmiths.slug artık city/district/locksmith formatında
         const fullSlug = `${city}/${district}/${locksmith}`;
 
+
         // Önce çilingir olup olmadığını kontrol et
         const { data: locksmithData, error: locksmithError } = await supabase
             .from('locksmiths')

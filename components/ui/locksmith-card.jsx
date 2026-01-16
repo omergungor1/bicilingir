@@ -318,7 +318,7 @@ export default function LocksmithCard({ locksmith, index, showLocation = false }
 
 
     return (
-        <div key={locksmith.id} className={`border border-gray-200 shadow-lg transition rounded-lg overflow-hidden pt-2 relative`}>
+        <div key={locksmith.id} className={`border shadow-lg transition rounded-lg overflow-hidden ${locksmith.is_verified ? 'border-2 border-blue-500 border-solid' : 'border border-gray-200'} pt-2 relative`}>
             <div className="flex flex-col md:flex-row">
                 <div className={`px-4 pt-2 flex-1`}>
                     <div className="flex items-start mb-2">
@@ -338,7 +338,7 @@ export default function LocksmithCard({ locksmith, index, showLocation = false }
                                 </div>
                                 <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2">
                                     <div className="flex flex-row gap-2">
-                                        {index === 0 && (
+                                        {locksmith.is_verified && (
                                             <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />

@@ -79,6 +79,7 @@ export default function AdminLayout({ children }) {
         { name: 'Blog Listesi', href: '/admin/blogs', icon: '📝' },
         { name: 'Yeni Blog', href: '/admin/blogs/new', icon: '➕' },
         { name: 'Resim Kütüphanesi', href: '/admin/images', icon: '🖼️' },
+        { name: 'Çilingir İmport', href: '/admin/locksmiths/import', icon: '📥' },
         { name: 'Draft Bloglar', href: '/admin/blogs?status=draft', icon: '📄' },
         { name: 'Yayınlanan', href: '/admin/blogs?status=published', icon: '🌐' },
         { name: 'Arşivlenen', href: '/admin/blogs?status=archived', icon: '📦' },

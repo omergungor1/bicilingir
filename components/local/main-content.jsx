@@ -146,13 +146,12 @@ export default function MainContent(params) {
                                     </summary>
                                     <div className="mt-2 pl-4 space-y-1">
                                         {serviceList.neighborhoods.map((neighborhood, index) => (
-                                            <Link
+                                            <span
                                                 key={index}
-                                                href={`/${neighborhood.slug}/${service.slug.split("/").pop()}`}
-                                                className="block text-blue-600 hover:text-blue-800 hover:underline py-1"
+                                                className="block text-gray-700 py-1"
                                             >
                                                 {serviceList.name} {neighborhood.name} {service.name}
-                                            </Link>
+                                            </span>
                                         ))}
                                     </div>
                                 </details>
@@ -189,30 +188,29 @@ export default function MainContent(params) {
                         <h3 className="text-lg font-semibold text-gray-800 mb-3">Ortalama Fiyat Aralıkları</h3>
                         <ul className="space-y-2 text-gray-700">
                             <li className="flex justify-between">
-                                <span><strong>Kapı Açma Ücreti:</strong></span>
-                                <span>300₺ - 600₺</span>
+                                <span><strong>{districtName} Çelik Kapı Çilingir Fiyatları:</strong></span>
+                                <span>500₺ - 1.500₺</span>
                             </li>
                             <li className="flex justify-between">
-                                <span><strong>Oto Çilingir Fiyatı:</strong></span>
-                                <span>400₺ - 800₺</span>
+                                <span><strong>{districtName} Kapı Açma Ücreti:</strong></span>
+                                <span>500₺ - 1.000₺</span>
                             </li>
                             <li className="flex justify-between">
-                                <span><strong>Anahtar Kopyalama Fiyatı:</strong></span>
-                                <span>50₺ - 200₺</span>
+                                <span><strong>{districtName} Oto Çilingir Fiyatı:</strong></span>
+                                <span>600₺ - 1.200₺</span>
                             </li>
                             <li className="flex justify-between">
-                                <span><strong>Kasa Çilingir Fiyatı:</strong></span>
-                                <span>500₺ - 1500₺</span>
+                                <span><strong>{districtName} Kasa Çilingir Fiyatı:</strong></span>
+                                <span>800₺ - 4.000₺</span>
                             </li>
                             <li className="flex justify-between">
-                                <span><strong>Çelik Kapı Çilingir Fiyatları:</strong></span>
-                                <span>600₺ - 1200₺</span>
+                                <span><strong>{districtName} Anahtar Kopyalama Fiyatı:</strong></span>
+                                <span>70₺ - 150₺</span>
                             </li>
                         </ul>
                     </div>
                     <p className="text-sm text-gray-600 italic">
-                        * {districtName} çilingir fiyatları yaklaşık değerlerdir. Kesin fiyat bilgisi için çilingir ile telefonda görüşmeniz gerekmektedir.
-                        Gece ve mesai dışı saatlerde fiyatlar değişiklik gösterebilir.
+                        * {districtName} çilingir fiyatları yaklaşık değerlerdir. Gece ve mesai dışı saatlerde fiyatlar değişiklik gösterebilir. Kesin fiyat bilgisi için çilingir ile telefonda görüşmeniz gerekmektedir.
                     </p>
                 </section>
             )}
@@ -329,12 +327,11 @@ export default function MainContent(params) {
                             <h3 className="font-semibold text-lg mt-4 mb-2 text-gray-900">{detailedDistrictList.secondTitle}</h3>
                             <div className="flex flex-wrap gap-2">
                                 {detailedDistrictList.data.map((mahalle, index) => (
-                                    <Link href={`/${mahalle.slug}`} key={index}>
-                                        <Badge variant="outline" className="cursor-pointer hover:bg-gray-100">
-                                            <MapPin className="h-3 w-3 mr-1" />
-                                            {mahalle.name} Çilingir Anahtarcı
-                                        </Badge>
-                                    </Link>
+                                    <span key={index} className="inline-flex items-center px-3 py-1.5 rounded-full border border-gray-200 bg-white text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                        <MapPin className="h-3 w-3 mr-1 text-gray-500" />
+                                        <span className="font-medium">{mahalle.name}</span>
+                                        <span className="ml-1 text-gray-600">Çilingir Anahtarcı</span>
+                                    </span>
                                 ))}
                             </div>
                         </CardContent>

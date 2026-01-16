@@ -92,7 +92,7 @@ export default function HakkimizdaPage() {
       </section>
 
       {/* İstatistikler */}
-      <section className="w-full py-16 px-4 bg-blue-600 text-white">
+      <section className="w-full py-16 px-4 bg-gradient-to-r from-[#4169E1] to-[#6495ED] text-white">
         <div className="container mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {stats.map((stat) => (
@@ -186,7 +186,7 @@ export default function HakkimizdaPage() {
       </section>
 
       {/* CTA Bölümü */}
-      <section className="w-full py-16 px-4 bg-blue-600 text-white">
+      <section className="w-full py-16 px-4  bg-gradient-to-r from-[#4169E1] to-[#6495ED] text-white">
         <div className="container mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">Hemen Çilingir Bulun</h2>
           <p className="text-xl max-w-3xl mx-auto mb-8">

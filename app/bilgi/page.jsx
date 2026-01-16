@@ -97,7 +97,7 @@ const testimonials = [
 
 const LoginSection = () => {
   return (
-    <section className="w-full py-16 px-4 bg-blue-600 text-white">
+    <section className="w-full py-16 px-4  bg-gradient-to-r from-[#4169E1] to-[#6495ED] text-white">
       <div className="container mx-auto text-center flex flex-col items-center">
         <h2 className="text-3xl font-bold mb-4">Çilingir misin?</h2>
         {/* <p className="text-xl max-w-3xl mx-auto mb-8">
@@ -118,7 +118,7 @@ const LoginSection = () => {
 
 const RegisterSection = () => {
   return (
-    <section className="w-full py-16 px-4 bg-blue-600 text-white">
+    <section className="w-full py-16 px-4  bg-gradient-to-r from-[#4169E1] to-[#6495ED] text-white">
       <div className="container mx-auto text-center">
         <h2 className="text-3xl font-bold mb-4">Hemen Bi Çilingir Ağına Katılın</h2>
         <p className="text-xl max-w-3xl mx-auto mb-8">
@@ -205,7 +205,7 @@ export default function CilingirlerPage() {
         </div>
       </section>
 
-      {/* Hemen Bi Çilingir Ağına Katılın Bölümü */}
+      {/* CTA Bölümü */}
       <RegisterSection />
 
       {/* Nasıl Çalışır Bölümü */}
@@ -216,7 +216,7 @@ export default function CilingirlerPage() {
             {steps.map((step, index) => (
               <div key={step.id} className="flex flex-row justify-between items-start md:mb-0 px-4">
                 <div className="flex-1 text-center">
-                  <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-r from-[#4169E1] to-[#6495ED] text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                     {step.id}
                   </div>
                   <h3 className="text-xl font-bold mb-2 text-gray-800">{step.title}</h3>
@@ -264,8 +264,8 @@ export default function CilingirlerPage() {
       </section>
 
 
-      {/* CTA Bölümü */}
-      <RegisterSection />
+      <LoginSection />
+
 
       {/* SSS Bölümü */}
       <section className="w-full py-16 px-4 bg-gray-50">
@@ -299,8 +299,6 @@ export default function CilingirlerPage() {
           </div>
         </div>
       </section>
-
-      <LoginSection />
 
 
       {/* Bülten Bölümü */}

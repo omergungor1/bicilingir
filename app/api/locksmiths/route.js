@@ -46,6 +46,8 @@ export async function GET(request) {
         }
 
         let locksmithList = [];
+        let finalDistrictId = districtParamId; // İlçe ID'sini sakla
+
         if (districtParamId || districtSlug) {
             if (districtParamId) {
                 const { data: districtData } = await supabase
@@ -62,12 +64,13 @@ export async function GET(request) {
             } else if (districtSlug) {
                 const { data: districtData } = await supabase
                     .from('districts')
-                    .select('locksmith1id,locksmith2id')
+                    .select('id,locksmith1id,locksmith2id')
                     .eq('slug', districtSlug)
                     .single();
 
 
                 if (districtData) {
+                    finalDistrictId = districtData.id; // districtId'yi sakla
                     if (districtData?.locksmith1id) locksmithList.push(districtData.locksmith1id);
                     if (districtData?.locksmith2id) locksmithList.push(districtData.locksmith2id);
                 }
@@ -116,22 +119,44 @@ export async function GET(request) {
                 totalreviewcount,
                 profileimageurl,
                 slug,
+                isverified,
                 provinces:provinceid(name),
                 districts:districtid(name),
                 locksmith_districts: locksmith_districts(districts(name),provinces(name)),
                 locksmith_services: services(name,minPriceMesai,maxPriceMesai,minPriceAksam,maxPriceAksam,minPriceGece,maxPriceGece)
             `)
             .eq('isactive', true)
-            .in('id', locksmithList);
+            .eq('status', 'approved');
 
+        // Eğer locksmithList dolu ise, sadece o listedeki çilingirleri getir
+        // Eğer boş ise ve ilçe bilgisi varsa, ilçedeki tüm çilingirleri getir
+        if (locksmithList.length > 0) {
+            locksmithQuery = locksmithQuery.in('id', locksmithList);
+        } else if (finalDistrictId) {
+            // locksmithList boş ise, ilçedeki tüm çilingirleri getir
+            locksmithQuery = locksmithQuery.eq('districtid', finalDistrictId);
+        }
 
+        // Maksimum 30 çilingir döndür
+        locksmithQuery = locksmithQuery.limit(30);
 
         const { data: locksmithData, error } = await locksmithQuery;
 
-        // Çilingirleri locksmithList sırasına göre sırala
-        const sortedLocksmithData = locksmithData ?
-            locksmithList.map(id => locksmithData.find(locksmith => locksmith.id === id))
-                .filter(locksmith => locksmith !== undefined) : [];
+        // Çilingirleri locksmithList sırasına göre sırala (eğer locksmithList dolu ise)
+        let sortedLocksmithData = locksmithData || [];
+        if (locksmithList.length > 0 && locksmithData) {
+            sortedLocksmithData = locksmithList
+                .map(id => locksmithData.find(locksmith => locksmith.id === id))
+                .filter(locksmith => locksmith !== undefined);
+        }
+
+        // is_verified olan çilingirleri en üste al
+        sortedLocksmithData = sortedLocksmithData.sort((a, b) => {
+            const aVerified = a.isverified === true ? 1 : 0;
+            const bVerified = b.isverified === true ? 1 : 0;
+            return bVerified - aVerified; // Verified olanlar önce (1 - 0 = 1, 0 - 1 = -1)
+        });
+
         // Çilingir verilerini formatlama
         const formattedLocksmiths = sortedLocksmithData?.map(item => ({
             id: item.id,
@@ -151,6 +176,7 @@ export async function GET(request) {
             locksmith_districts: item.locksmith_districts,
             workingHours: item.locksmith_working_hours,
             foundingDate: item.locksmith_details.startdate,
+            is_verified: item.isverified,
             serviceList: item.locksmith_services?.map(service => ({
                 name: service.name,
                 price1: {
