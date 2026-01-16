@@ -317,6 +317,80 @@ export default function LocksmithCard({ locksmith, index, showLocation = false }
     };
 
 
+    // Bugünün gününü bul (0=Pazar, 6=Cumartesi)
+    const today = new Date().getDay();
+    const todayWorkingHours = locksmith.workingHours?.find(hours => hours.dayofweek === today) || null;
+
+    // Şu anki saate göre çilingirin açık olup olmadığını kontrol et
+    const isCurrentlyOpen = () => {
+        if (!todayWorkingHours) return false;
+
+        // 24 saat açıksa her zaman açık
+        if (todayWorkingHours.is24hopen) {
+            return true;
+        }
+
+        // Çalışmıyorsa kapalı
+        if (!todayWorkingHours.isworking) {
+            return false;
+        }
+
+        // Açılış ve kapanış saatleri varsa kontrol et
+        if (todayWorkingHours.opentime && todayWorkingHours.closetime) {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentTime = currentHour * 60 + currentMinute; // Dakika cinsinden
+
+            // Saat formatını parse et (HH:MM:SS veya HH:MM)
+            const openTimeParts = todayWorkingHours.opentime.split(':');
+            const closeTimeParts = todayWorkingHours.closetime.split(':');
+
+            const openHour = parseInt(openTimeParts[0]);
+            const openMinute = parseInt(openTimeParts[1]);
+            const openTime = openHour * 60 + openMinute;
+
+            const closeHour = parseInt(closeTimeParts[0]);
+            const closeMinute = parseInt(closeTimeParts[1]);
+            const closeTime = closeHour * 60 + closeMinute;
+
+            // Eğer kapanış saati açılış saatinden küçükse (gece yarısını geçiyorsa)
+            if (closeTime < openTime) {
+                // Gece yarısını geçen durum: açılıştan gece yarısına kadar veya gece yarısından kapanışa kadar
+                return currentTime >= openTime || currentTime < closeTime;
+            } else {
+                // Normal durum: açılış ve kapanış arasında
+                return currentTime >= openTime && currentTime < closeTime;
+            }
+        }
+
+        return false;
+    };
+
+    // Çalışma saatlerini formatla
+    const getWorkingHoursText = () => {
+        if (!todayWorkingHours) return null;
+
+        if (todayWorkingHours.is24hopen) {
+            return '24 Saat Açık';
+        }
+
+        if (!todayWorkingHours.isworking) {
+            return 'Kapalı';
+        }
+
+        if (todayWorkingHours.opentime && todayWorkingHours.closetime) {
+            const openTime = todayWorkingHours.opentime.substring(0, 5); // HH:MM formatına çevir
+            const closeTime = todayWorkingHours.closetime.substring(0, 5);
+            return `${openTime} - ${closeTime}`;
+        }
+
+        return null;
+    };
+
+    const workingHoursText = getWorkingHoursText();
+    const currentlyOpen = isCurrentlyOpen();
+
     return (
         <div key={locksmith.id} className={`border shadow-lg transition rounded-lg overflow-hidden ${locksmith.is_verified ? 'border-2 border-blue-500 border-solid' : 'border border-gray-200'} pt-2 relative`}>
             <div className="flex flex-col md:flex-row">
@@ -337,7 +411,12 @@ export default function LocksmithCard({ locksmith, index, showLocation = false }
                                     <RatingStars rating={locksmith?.rating?.toFixed(1)} />
                                 </div>
                                 <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2">
-                                    <div className="flex flex-row gap-2">
+                                    <div className="flex flex-row gap-2 flex-wrap">
+                                        {(locksmith.city || locksmith.provinces?.name) && (locksmith.district || locksmith.districts?.name) && (
+                                            <span className="text-gray-600 text-xs px-2 py-1 rounded-full flex items-center w-fit bg-gray-50">
+                                                {locksmith.district || locksmith.districts?.name}
+                                            </span>
+                                        )}
                                         {locksmith.is_verified && (
                                             <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -346,10 +425,23 @@ export default function LocksmithCard({ locksmith, index, showLocation = false }
                                                 Onaylı Çilingir
                                             </span>
                                         )}
-                                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
-                                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-1"></span>
-                                            Şuan Açık
-                                        </span>
+                                        {currentlyOpen && (
+                                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-1"></span>
+                                                Şuan Açık
+                                            </span>
+                                        )}
+                                        {!currentlyOpen && todayWorkingHours && (
+                                            <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                                                <span className="w-2 h-2 bg-red-500 rounded-full mr-1"></span>
+                                                Kapalı
+                                            </span>
+                                        )}
+                                        {workingHoursText && (
+                                            <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                                                {workingHoursText}
+                                            </span>
+                                        )}
                                         {showLocation && (
                                             <span className="text-gray-500 text-sm px-2 rounded-full flex items-center w-fit">
                                                 {locksmith.districts.name}, {locksmith.provinces.name}
