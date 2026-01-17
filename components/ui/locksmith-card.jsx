@@ -13,6 +13,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useToast } from "../ToastContext";
 import { getUserId, getSessionId } from '../../lib/utils';
+import { MapPin } from "lucide-react";
 
 export default function LocksmithCard({ locksmith, index, showLocation = false }) {
     const { showToast } = useToast();
@@ -412,11 +413,6 @@ export default function LocksmithCard({ locksmith, index, showLocation = false }
                                 </div>
                                 <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2">
                                     <div className="flex flex-row gap-2 flex-wrap">
-                                        {(locksmith.city || locksmith.provinces?.name) && (locksmith.district || locksmith.districts?.name) && (
-                                            <span className="text-gray-600 text-xs px-2 py-1 rounded-full flex items-center w-fit bg-gray-50">
-                                                {locksmith.district || locksmith.districts?.name}
-                                            </span>
-                                        )}
                                         {locksmith.is_verified && (
                                             <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -428,7 +424,7 @@ export default function LocksmithCard({ locksmith, index, showLocation = false }
                                         {currentlyOpen && (
                                             <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
                                                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-1"></span>
-                                                Şuan Açık
+                                                Açık
                                             </span>
                                         )}
                                         {!currentlyOpen && todayWorkingHours && (
@@ -438,13 +434,19 @@ export default function LocksmithCard({ locksmith, index, showLocation = false }
                                             </span>
                                         )}
                                         {workingHoursText && (
-                                            <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                                            <span className="bg-gray-100 text-gray-700 border border-gray-500 text-xs px-2 py-1 rounded-full flex items-center w-fit">
                                                 {workingHoursText}
                                             </span>
                                         )}
                                         {showLocation && (
                                             <span className="text-gray-500 text-sm px-2 rounded-full flex items-center w-fit">
                                                 {locksmith.districts.name}, {locksmith.provinces.name}
+                                            </span>
+                                        )}
+                                        {(locksmith.city || locksmith.provinces?.name) && (locksmith.district || locksmith.districts?.name) && (
+                                            <span className="text-orange-600 border border-orange-200 text-xs px-2 py-1 rounded-full flex items-center w-fit bg-orange-50">
+                                                <MapPin className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1 md:mr-1.5 flex-shrink-0 text-orange-500" />
+                                                {locksmith.district || locksmith.districts?.name}
                                             </span>
                                         )}
                                     </div>

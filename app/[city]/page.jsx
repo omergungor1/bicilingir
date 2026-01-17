@@ -254,6 +254,8 @@ async function getCityData(citySlug) {
 
         // MainContent için parametreleri hazırla
         const mainContentParams = {
+            citySlug: citySlug,
+            cityId: cityData.id,
             navbarList: [
                 { id: 1, name: 'Ana Sayfa', slug: '/' },
                 { id: 2, name: cityData.name, slug: '#' },

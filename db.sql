@@ -32,6 +32,7 @@ CREATE TABLE districts (
     province_id INTEGER NOT NULL REFERENCES provinces(id),
     name TEXT NOT NULL,
     slug TEXT UNIQUE NOT NULL,
+    description TEXT,
     lat DOUBLE PRECISION,
     lng DOUBLE PRECISION,
     locksmith1Id UUID REFERENCES locksmiths(id) ON DELETE SET NULL,

@@ -2,12 +2,11 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { MapPin, ChevronDown, ChevronUp } from 'lucide-react';
+import { MapPin, ChevronDown, ChevronUp, X, SearchX } from 'lucide-react';
 import turkiyeIlIlce from '../../data/turkiye-il-ilce';
 
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Badge } from '../ui/badge';
 import LocksmithCard from '../ui/locksmith-card';
 import SideMenu from '../local/side-menu';
 
@@ -22,12 +21,19 @@ export default function MainContent(params) {
         serviceList = { title: '', description: '', data: [{ id: 1, name: '', description: '', icon: '', slug: '' }] },
         sssList = { title: '', description: '', data: [{ id: 1, question: '', answer: '' }] },
         detailedDistrictList = { title: '', description: '', secondTitle: '', data: [{ id: 1, name: '', slug: '' }] },
+        districtDescription = null,
+        citySlug = null,
+        districtSlug = null,
+        cityId = null,
+        districtId = null,
         sideMenuParams,
         formatedName,
         type = 'city' } = params;
 
-    // Bursa ilçelerini filtrele
-    const bursaDistricts = turkiyeIlIlce.districts.filter(district => district.province_id === 16);
+    // İlgili şehrin ilçelerini filtrele (cityId varsa)
+    const cityDistricts = cityId
+        ? turkiyeIlIlce.districts.filter(district => district.province_id === cityId)
+        : [];
 
     // Toggle state
     const [isDistrictListOpen, setIsDistrictListOpen] = useState(false);
@@ -61,6 +67,7 @@ export default function MainContent(params) {
 
             {/* İlçe Seçim Bileşeni */}
             <div className="mb-1 md:mb-3 py-1">
+                {!isDistrictListOpen && ( 
                 <button
                     data-gtm="ilce-secimi"
                     id="ilce-secimi"
@@ -70,24 +77,33 @@ export default function MainContent(params) {
                     aria-label="İlçe seç"
                 >
                     <MapPin className="h-4 w-4" />
-                    <span>Başka ilçede misin? İlçeni seç!</span>
-                    {isDistrictListOpen ? (
-                        <ChevronUp className="h-4 w-4" />
-                    ) : (
-                        <ChevronDown className="h-4 w-4" />
-                    )}
+                    <span>
+                        {type === 'district'
+                            ? 'Başka ilçede misin? İlçeni seç!'
+                            : 'İlçeni seç!'}
+                    </span>
+                    <ChevronDown className="h-4 w-4" />
                 </button>
-
-                {isDistrictListOpen && (
+                )}
+                {isDistrictListOpen && citySlug && cityDistricts.length > 0 && (
                     <div className="mt-3 p-3 md:p-4 bg-white border border-gray-200 rounded-lg shadow-md transition-all duration-200 ease-in-out">
-                        <h3 className="text-xs md:text-sm font-semibold text-gray-700 mb-2 md:mb-3">Bursa İlçeleri</h3>
+                        <div className="flex items-center justify-between mb-2 md:mb-3">
+                            <h3 className="text-xs md:text-sm font-semibold text-gray-700">{cityName} İlçeleri</h3>
+                            <button
+                                onClick={() => setIsDistrictListOpen(false)}
+                                className="p-1 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+                                aria-label="İlçe listesini kapat"
+                            >
+                                <X className="h-4 w-4 text-gray-500" />
+                            </button>
+                        </div>
                         <div className="flex flex-wrap gap-1.5 md:gap-2">
-                            {bursaDistricts.map((district) => {
-                                const districtSlug = district.slug;
+                            {cityDistricts.map((district) => {
+                                const currentDistrictSlug = district.slug;
                                 return (
                                     <Link
                                         key={district.id}
-                                        href={`/bursa/${districtSlug}`}
+                                        href={`/${citySlug}/${currentDistrictSlug}`}
                                         className="inline-flex items-center px-2 py-1 md:px-3 md:py-1.5 text-xs md:text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-md hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 active:bg-blue-100 transition-all duration-150"
                                         onClick={() => setIsDistrictListOpen(false)}
                                         prefetch={true}
@@ -102,15 +118,33 @@ export default function MainContent(params) {
                 )}
             </div>
 
-            <p className="text-gray-600 mb-2 md:mb-6 text-base leading-relaxed">{locksmitList.description}</p>
+            {locksmitList.description && locksmitList.description.split('\n').map((line, index) => (
+                <p className="text-gray-600 mb-2 md:mb-6 text-base leading-relaxed" key={index}>{line}</p>
+            ))}
 
             {/* Çilingirler Listesi */}
             <section className="mb-4 md:mb-8">
-                <div className="grid grid-cols-1 gap-2 md:gap-6">
-                    {locksmitList.data.map((locksmith, index) => (
-                        <LocksmithCard key={index} locksmith={locksmith} index={index} />
-                    ))}
-                </div>
+                {locksmitList.data && locksmitList.data.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-2 md:gap-6">
+                        {locksmitList.data.map((locksmith, index) => (
+                            <LocksmithCard key={index} locksmith={locksmith} index={index} />
+                        ))}
+                    </div>
+                ) : (
+                    <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200">
+                        <CardContent className="flex flex-col items-center justify-center py-12 px-6 text-center">
+                            <div className="mb-4 p-4 bg-white rounded-full shadow-lg">
+                                <SearchX className="h-12 w-12 text-blue-500" />
+                            </div>
+                            <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
+                                Bölgenizde Çilingir Bulunamadı
+                            </h3>
+                            <p className="text-gray-600 text-base md:text-lg max-w-md">
+                                Maalesef bu bölgede şu anda aktif çilingir bulunmamaktadır. Lütfen daha sonra tekrar kontrol edin veya yakındaki bölgeleri deneyin.
+                            </p>
+                        </CardContent>
+                    </Card>
+                )}
             </section>
 
             {/* Ana İçerik Bölümü */}
@@ -120,8 +154,15 @@ export default function MainContent(params) {
             </section>
 
             {/* İlçe Hakkında Bölümü */}
-            <section className="bg-white p-6 rounded-lg shadow-sm mb-8">
+            <section className="mb-8">
                 <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-900">{seconCard.title}</h2>
+                {districtDescription && districtDescription.split('\n').map((paragraph, index) => (
+                    paragraph.trim() && (
+                        <p className="mt-4 text-gray-700 leading-relaxed text-base" key={index}>
+                            {paragraph.trim()}
+                        </p>
+                    )
+                ))}
                 {seconCard.longDescription && seconCard.longDescription.split('\n').map((line, index) => (
                     <p className="mt-2 text-gray-700 leading-relaxed" key={index}>{line}</p>
                 ))}

@@ -341,7 +341,7 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
         // İlçe bilgilerini çek
         const { data: districtData, error: districtError } = await supabase
             .from('districts')
-            .select('id, name, slug, lat, lng')
+            .select('id, name, slug, lat, lng, description')
             .eq('slug', districtSlug)
             .eq('province_id', cityData.id)
             .single();
@@ -390,6 +390,7 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
             city: cityData.name,
             description: `${cityData.name} ${districtData.name} de çilingir hizmetine mi ihtiyacınız var? ${districtData.name} ilçesinde biçok çilingir hizmetleri geniş bir ağla sunulmaktadır. Aşağıda listelenen çilingirlerin hepsi ${cityData.name} ${districtData.name} ilçesinde hizmet vermektedir.`,
             longDescription: `${cityData.name} ${districtData.name} de çilingir hizmetleri geniş bir ağla sunulmaktadır. Biçok çilingir bölgede aktif olarak hizmet vermektedir.\n${cityData.name} ${districtData.name} de çilingir fiyatı, ilçe ve hizmete göre değişkenlikler göstermektedir. ${cityData.name} ${districtData.name} de ev çilingiri, otomobil çilingiri, acil çilingir, 724 çilingir hizmetleri bulmak oldukça kolaydır.\nBiÇilingir ile en yakın çilingiri saniyeler içinde bulabilir ve hemen arayabilirsiniz. Hizmetlere göre güncel yaklaşık fiyat bilgilerini görebilirsiniz. Net fiyat bilgisi için çilingir ile telefonda görüşebilirsiniz.`,
+            districtDescription: districtData.description || null, // İlçe description alanı
             neighborhoods: neighborhoodsData ? neighborhoodsData : [],
             location: { lat: districtData.lat, lng: districtData.lng }
         };
@@ -441,6 +442,10 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
 
         // MainContent için parametreleri hazırla
         const mainContentParams = {
+            citySlug: citySlug,
+            districtSlug: districtSlug,
+            cityId: cityData.id,
+            districtId: districtData.id,
             navbarList: [
                 { id: 1, name: 'Ana Sayfa', slug: '/' },
                 { id: 2, name: districtInfo.city, slug: `/${citySlug}` },
@@ -459,6 +464,7 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
                 title: `${districtInfo.name} Çilingir ve Anahtarcı Hizmetleri Hakkında`,
                 longDescription: `${districtInfo.city} ${districtInfo.name} ilçesinde çilingir hizmetleri geniş bir ağla sunulmaktadır. ${districtInfo.name} çilingir, ${districtInfo.name} anahtarcı ve ${districtInfo.name} oto çilingir hizmetleri için birçok çilingir bölgede aktif olarak hizmet vermektedir.\n\n${districtInfo.city} ${districtInfo.name} ilçesinde çilingir fiyatları, ilçe ve hizmete göre değişkenlikler göstermektedir. ${districtInfo.name} çilingir fiyatları, ${districtInfo.name} anahtarcı fiyatları ve ${districtInfo.name} oto çilingir fiyatları hizmet türüne göre değişmektedir. ${districtInfo.city} ${districtInfo.name} ilçesinde ev çilingiri, otomobil çilingiri, acil çilingir, 7/24 çilingir, kasa çilingiri ve anahtar kopyalama hizmetleri bulmak oldukça kolaydır.\n\n${districtInfo.name} en yakın çilingir ve ${districtInfo.name} en yakın anahtarcı hizmeti için BiÇilingir ile en yakın çilingiri saniyeler içinde bulabilir ve hemen arayabilirsiniz. ${districtInfo.name} çilingir numarası ile iletişime geçerek hizmetlere göre güncel yaklaşık fiyat bilgilerini görebilirsiniz. Net fiyat bilgisi için ${districtInfo.name} çilingir ile telefonda görüşebilirsiniz.\n\n${districtInfo.name} oto çilingir hizmetleri kapsamında araç anahtarı kopyalama, oto anahtar yapımı, motor anahtar, araç kapısı açma ve immobilizer programlama gibi tüm hizmetler sunulmaktadır. ${districtInfo.name} anahtarcı hizmetleri için ev anahtarı kopyalama, anahtar çoğaltma ve özel kilit sistemleri için anahtar yapımı hizmetleri mevcuttur.`
             },
+            districtDescription: districtInfo.districtDescription, // İlçe description alanı
             serviceList: {
                 title: `${districtInfo.name} Çilingir Anahtarcı Hizmetleri`,
                 description: `${districtInfo.name} ilçesinde aşağıdaki çilingir hizmetleri bölgenizdeki çilingirler ve anahtarcılar tarafından verilmektedir. ${districtInfo.name} çilingir, ${districtInfo.name} anahtarcı, ${districtInfo.name} oto çilingir, ${districtInfo.name} kasa çilingiri ve ${districtInfo.name} acil çilingir hizmetleri için aşağıdaki kategorilerden seçim yapabilirsiniz.`,
