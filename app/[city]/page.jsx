@@ -12,11 +12,11 @@ export async function generateStaticParams() {
     try {
         const supabase = getSupabaseServer();
 
-        // Bursa (id: 16) ve İstanbul (id: 34) için static generate et
+        // Bursa (id: 16), İstanbul (id: 34), İzmir (id: 35) ve Ankara (id: 6) için static generate et
         const { data: cities, error } = await supabase
             .from('provinces')
             .select('slug')
-            .in('id', [16, 34]); // Bursa (16) ve İstanbul (34)
+            .in('id', [16, 34, 35, 6]); // Bursa (16) ve İstanbul (34)
 
         if (error) {
             console.error('Şehir slugları alınırken hata:', error);

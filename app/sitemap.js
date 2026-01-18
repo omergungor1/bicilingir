@@ -56,7 +56,7 @@ export default async function sitemap() {
         const { data: provinces, error: provinceError } = await supabase
             .from('provinces')
             .select('id, name, slug')
-            .in('id', [16, 34]);  // Bursa ve İstanbul'u filtrele
+            .in('id', [16, 34, 35, 6]);  // Bursa, İstanbul, İzmir ve Ankara illerini filtrele
 
         if (provinceError) {
             console.error('İller yüklenirken hata:', provinceError);
@@ -64,24 +64,24 @@ export default async function sitemap() {
             return staticPages;
         }
 
-        // Bursa ve İstanbul'un ilçelerini getir
+        // Bursa, İstanbul, İzmir ve Ankara illerinin ilçelerini getir
         const { data: districts, error: districtError } = await supabase
             .from('districts')
             .select('id, name, slug, province_id')
-            .in('province_id', [16, 34]);  // Bursa ve İstanbul'un ilçelerini filtrele
+            .in('province_id', [16, 34, 35, 6]);  // Bursa ve İstanbul'un ilçelerini filtrele
 
         if (districtError) {
             console.error('İlçeler yüklenirken hata:', districtError);
             return staticPages;
         }
 
-        // Bursa ve İstanbul ilçelerinin mahallelerini getir
+        // Bursa, İstanbul, İzmir ve Ankara ilçelerinin mahallelerini getir
         const districtIds = districts ? districts.map(d => d.id) : [];
 
         const { data: neighborhoods, error: neighbourhoodError } = await supabase
             .from('neighborhoods')
             .select('id, name, slug, district_id')
-            .in('district_id', districtIds);  // Bursa ve İstanbul ilçelerinin mahallelerini filtrele
+            .in('district_id', districtIds);  // Bursa, İstanbul, İzmir ve Ankara ilçelerinin mahallelerini filtrele
 
         if (neighbourhoodError) {
             console.error('Mahalleler yüklenirken hata:', neighbourhoodError);

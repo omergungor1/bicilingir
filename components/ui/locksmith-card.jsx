@@ -408,7 +408,12 @@ export default function LocksmithCard({ locksmith, index, showLocation = false }
                         <div>
                             <div className="flex flex-col gap-1">
                                 <div className="flex flex-row items-center gap-2">
-                                    <h2 className={`text-xl font-bold text-blue-800`}>{locksmith.name}</h2>
+                                    <h2 
+                                        className={`text-xl font-bold text-blue-800 cursor-pointer hover:text-blue-900 hover:underline transition-colors`}
+                                        onClick={() => handleViewDetails(locksmith.id, locksmith.slug)}
+                                    >
+                                        {locksmith.name}
+                                    </h2>
                                     <RatingStars rating={locksmith?.rating?.toFixed(1)} />
                                 </div>
                                 <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2">

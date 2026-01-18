@@ -18,7 +18,7 @@ export async function generateStaticParams() {
         const { data: districts, error: districtsError } = await supabase
             .from('districts')
             .select('slug, province_id, provinces(slug)')
-            .in('province_id', [16, 34]); // Bursa (16) ve İstanbul (34)
+            .in('province_id', [16, 34, 35, 6]); // Bursa (16), İstanbul (34), İzmir (35) ve Ankara (6)
 
         if (districtsError) {
             console.error('İlçe bilgileri alınırken hata:', districtsError);
