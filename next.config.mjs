@@ -26,6 +26,7 @@ const nextConfig = {
   // onDemandEntries Pages Router için kullanılır, App Router'da gerek yok
   async redirects() {
     return [
+      // www → non-www redirect
       {
         source: '/:path*',
         destination: 'https://bicilingir.com/:path*',
@@ -36,6 +37,13 @@ const nextConfig = {
             value: 'www.bicilingir.com',
           },
         ],
+        permanent: true,
+      },
+      // Trailing slash'li URL'leri slash'siz canonical'a yönlendir
+      // Örnek: /bursa/ → /bursa (301)
+      {
+        source: '/:path+/',
+        destination: '/:path+',
         permanent: true,
       },
     ]

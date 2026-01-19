@@ -9,7 +9,7 @@ export default function TermsPage() {
     <main className="flex min-h-screen flex-col items-center justify-between py-12 px-4 sm:px-6 lg:px-8">
       <div className="container max-w-5xl mx-auto">
         <Breadcrumb className="mb-6">
-          <BreadcrumbItem>
+          <BreadcrumbItem isFirst>
             <BreadcrumbLink href="/">Ana Sayfa</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbItem isCurrentPage>

@@ -25,9 +25,14 @@ export function BreadcrumbList({ className, children, ...props }) {
 }
 
 // Breadcrumb öğesi bileşeni
-export function BreadcrumbItem({ className, children, ...props }) {
+export function BreadcrumbItem({ className, children, isCurrentPage, isFirst = false, ...props }) {
   return (
-    <li className={`inline-flex items-center ${className || ""}`} {...props}>
+    <li
+      className={`inline-flex items-center ${className || ""}`}
+      {...(isCurrentPage ? { 'aria-current': 'page' } : {})}
+      {...props}
+    >
+      {!isFirst && <ChevronRight size={16} className="mx-1.5 text-gray-400 flex-shrink-0" />}
       {children}
     </li>
   );
