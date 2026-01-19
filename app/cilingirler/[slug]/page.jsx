@@ -12,6 +12,7 @@ const OLD_TO_NEW_SLUG_MAP = {
   'osmangazi-cilingir-6e71': 'bursa/osmangazi/osmangazi-cilingir',
   'nilufer-cilingir-a790': 'bursa/nilufer/nilufer-cilingir',
   'anahtarci-emin-cda2': 'bursa/nilufer/anahtarci-emin',
+  'iznik-cilingir-a790': 'bursa/iznik/iznik-cilingir',
   'yasa-cilingir-4905': 'istanbul/bayrampasa/yasa-cilingir',
   'tarsus-cilingir-erat-ev-oto-anahtarci-e774': 'mersin/tarsus/tarsus-cilingir-erat-ev-oto-anahtarci',
   'cilingir-omer-94dd': 'bursa/nilufer/cilingir-omer',

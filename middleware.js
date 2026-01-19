@@ -115,6 +115,15 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000); // Her 5 dakikada bir temizlik
 
+// Eski servis sayfalarından ana sayfaya 301 kalıcı yönlendirme
+const OLD_SERVICE_REDIRECTS = {
+  '/otomobil-cilingir': '/',
+  '/7-24-cilingir': '/',
+  '/kasa-cilingir': '/',
+  '/ev-cilingir': '/',
+  '/acil-cilingir': '/'
+};
+
 export async function middleware(req) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -128,6 +137,11 @@ export async function middleware(req) {
   }
 
   const pathname = req.nextUrl.pathname;
+
+  // Eski servis sayfaları için 301 kalıcı yönlendirme
+  if (OLD_SERVICE_REDIRECTS[pathname]) {
+    return NextResponse.redirect(new URL(OLD_SERVICE_REDIRECTS[pathname], req.url), 301);
+  }
 
   // Şifre sıfırlama endpoint'i için auth kontrolü yapma
   if (pathname === '/api/locksmith/account/forgot-password' || pathname === '/api/locksmith/account/reset-password') {
@@ -255,6 +269,11 @@ export const config = {
     '/cilingir/:path*',
     '/api/locksmith/:path*',
     '/api/admin/:path*',
-    '/api/:path*'
+    '/api/:path*',
+    '/otomobil-cilingir',
+    '/7-24-cilingir',
+    '/kasa-cilingir',
+    '/ev-cilingir',
+    '/acil-cilingir',
   ],
 } 
