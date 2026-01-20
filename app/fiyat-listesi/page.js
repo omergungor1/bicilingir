@@ -1,5 +1,12 @@
 import Link from 'next/link';
 
+// Build zamanında tarih oluştur (SSG için)
+const BUILD_DATE = new Date().toLocaleDateString('tr-TR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+});
+
 export const metadata = {
     title: '2026 Güncel Çilingir Fiyat Listesi - Kapı Açma, Anahtar Yapımı, Oto Çilingir Fiyatları',
     description: 'Türkiye genelinde 2026 yılı güncel çilingir hizmet fiyatları. Ev, otomobil, kasa açma ve anahtar yapımı için güncel ve detaylı fiyat listesi.',
@@ -8,6 +15,11 @@ export const metadata = {
         canonical: 'https://bicilingir.com/fiyat-listesi'
     }
 };
+
+// Static generation yapılandırma - Vercel CDN için optimize
+export const dynamic = 'force-static';
+export const revalidate = false; // ISR kapalı, tam statik
+export const fetchCache = 'force-cache';
 
 export default function FiyatListesi() {
     return (
@@ -354,7 +366,7 @@ export default function FiyatListesi() {
 
             <div className="text-center mt-10">
                 <p className="text-gray-500 text-sm">
-                    Fiyatlar son güncelleme tarihi: 01/05/2026
+                    Fiyatlar son güncelleme tarihi: {BUILD_DATE}
                 </p>
             </div>
 

@@ -3,6 +3,10 @@ import Link from "next/link";
 import { Button } from "../../components/ui/button";
 import Hero from "../../components/Hero";
 
+// Static generation yapılandırma - Vercel CDN için optimize
+export const dynamic = 'force-static';
+export const revalidate = false;
+
 
 const stats = [
   { id: 1, value: "10,000+", label: "Tamamlanan İş" },

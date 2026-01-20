@@ -1,8 +1,17 @@
-"use client";
-
 import React from "react";
 import Link from "next/link";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink } from "../../components/ui/breadcrumb";
+
+// Static generation yapılandırma - Vercel CDN için optimize
+export const dynamic = 'force-static';
+export const revalidate = false;
+
+// Build zamanında tarih oluştur
+const BUILD_DATE = new Date().toLocaleDateString('tr-TR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+});
 
 export default function PrivacyPage() {
   return (
@@ -22,7 +31,7 @@ export default function PrivacyPage() {
 
           <div className="prose max-w-none">
             <p className="text-gray-600 mb-6">
-              Son güncelleme: {new Date().toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' })}
+              Son güncelleme: {BUILD_DATE}
             </p>
 
             <h2 className="text-xl font-semibold mb-4 text-gray-800">1. Giriş</h2>

@@ -4,11 +4,16 @@ CREATE TABLE services (
     name TEXT UNIQUE NOT NULL,
     description TEXT,
     icon_url TEXT,
-    is_active BOOLEAN DEFAULT TRUE,
+    isActive BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    minPrice int2,
-    maxPrice int2,
+    minPriceMesai int2,
+    maxPriceMesai int2,
+    minPriceAksam int2,
+    maxPriceAksam int2,
+    minPriceGece int2,
+    maxPriceGece int2,
+    note TEXT,
     slug TEXT UNIQUE NOT NULL,
     sortOrder INT DEFAULT 0
 );
@@ -20,6 +25,7 @@ CREATE TABLE provinces (
     slug TEXT UNIQUE NOT NULL,
     lat DOUBLE PRECISION,
     lng DOUBLE PRECISION,
+    description TEXT,
     locksmith1Id UUID REFERENCES locksmiths(id) ON DELETE SET NULL,
     locksmith2Id UUID REFERENCES locksmiths(id) ON DELETE SET NULL,
     adsCallLocksmithId UUID REFERENCES locksmiths(id) ON DELETE SET NULL,
@@ -30,6 +36,7 @@ CREATE TABLE provinces (
 CREATE TABLE districts (
     id SERIAL PRIMARY KEY,
     province_id INTEGER NOT NULL REFERENCES provinces(id),
+    region VARCHAR(20) NULL, -- avrupa, anadolu
     name TEXT NOT NULL,
     slug TEXT UNIQUE NOT NULL,
     description TEXT,
