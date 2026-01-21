@@ -52,6 +52,15 @@ const defaultTheme = {
     hover: 'hover:border-gray-400'
 };
 
+// Markdown'dan HTML'e çevir (sadece bold için basit versiyon)
+const markdownToHtml = (markdown) => {
+    if (!markdown) return ''
+    return markdown
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')
+        .replace(/\n\n/g, '</p><p class="mb-4 text-gray-700 leading-relaxed">')
+        .replace(/\n/g, '<br>')
+}
+
 export default function CityPageContent({
     cityName,
     citySlug,
@@ -63,7 +72,8 @@ export default function CityPageContent({
     popularDistricts = [],
     faqList = [],
     priceData = {},
-    buildDate = null // Build zamanında oluşturulan tarih
+    buildDate = null, // Build zamanında oluşturulan tarih
+    description = null // AI ile üretilen şehir açıklaması
 }) {
     // Popüler ilçeler - eğer belirtilmemişse ilk 6 ilçeyi al
     const displayPopularDistricts = popularDistricts.length > 0
@@ -180,6 +190,58 @@ export default function CityPageContent({
                 </div>
             </section>
 
+
+            {/* Şehir Hakkında SEO İçerik */}
+            <section className="py-8 md:py-12 bg-gray-50">
+                <div className="container mx-auto px-4">
+                    <div className="max-w-4xl mx-auto">
+                        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
+                            {cityName} Çilingir ve Anahtarcı Hizmetleri Hakkında
+                        </h2>
+                        <div className="prose prose-lg max-w-none">
+                            {/* AI ile üretilen description - İlk olarak göster */}
+                            {description && (
+                                <div className="text-gray-700 leading-relaxed mb-6">
+                                    {description.split('\n\n').map((paragraph, index) => (
+                                        <p
+                                            key={index}
+                                            className="mb-4"
+                                            dangerouslySetInnerHTML={{ __html: markdownToHtml(paragraph) }}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Ek bilgiler - Description yoksa göster */}
+                            {!description && (
+                                <>
+                                    <p className="text-gray-700 leading-relaxed mb-4">
+                                        {cityName}&apos;da çilingir hizmetine mi ihtiyacınız var? {cityName} genelinde {hasRegion ? "Avrupa ve Anadolu Yakası'nda" : 'tüm ilçelerde'} profesyonel çilingir ve anahtarcı hizmetleri sunulmaktadır.
+                                        Acil kapı açma, kilit değiştirme, anahtar kopyalama, oto çilingir ve kasa çilingir hizmetleri 7/24 güvenilir ustalar tarafından sağlanmaktadır.
+                                    </p>
+                                    <p className="text-gray-700 leading-relaxed mb-4">
+                                        {cityName}&apos;da çilingir hizmetleri geniş bir ağla sunulmaktadır. Deneyimli çilingir ve anahtarcılar bölgede aktif olarak hizmet vermektedir.
+                                        {cityName} çilingir fiyatları, ilçe ve hizmete göre değişkenlik göstermektedir. Ev çilingiri, otomobil çilingiri, acil çilingir, 7/24 çilingir,
+                                        oto anahtar, çelik kapı çilingir ve kasa çilingir hizmetleri kolayca bulunabilmektedir.
+                                    </p>
+                                </>
+                            )}
+
+                            {/* Her zaman gösterilecek ek bilgiler - Description'dan sonra */}
+                            <p className="text-gray-700 leading-relaxed mb-4">
+                                <strong>{cityName}&apos;da En Yakın Çilingir Nasıl Bulunur?</strong> BiÇilingir platformu sayesinde {cityName}&apos;da tüm ilçelerde hizmet veren en yakın çilingiri bulabilir,
+                                çilingir fiyatlarını görebilirsiniz. İlçenizi seçerek size en yakın çilingir ve anahtarcı hizmetine hemen ulaşabilirsiniz.
+                            </p>
+                            <p className="text-gray-700 leading-relaxed">
+                                <strong>{cityName} Çilingir Hizmetleri:</strong> Kapı açma, kilit değiştirme, anahtar kopyalama, oto anahtar, araç anahtarı,
+                                çelik kapı çilingir, kasa çilingir, şifreli kilit ve akıllı kilit hizmetleri verilmektedir. {cityName} çilingirleri 7/24 açık ve acil durumlarda
+                                hızlı hizmet vermektedir.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* Hizmetler Bölümü */}
             <section className="py-8 md:py-12 bg-white">
                 <div className="container mx-auto px-4">
@@ -233,36 +295,6 @@ export default function CityPageContent({
                 </div>
             </section>
 
-            {/* Şehir Hakkında SEO İçerik */}
-            <section className="py-8 md:py-12 bg-gray-50">
-                <div className="container mx-auto px-4">
-                    <div className="max-w-4xl mx-auto">
-                        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
-                            {cityName} Çilingir ve Anahtarcı Hizmetleri Hakkında
-                        </h2>
-                        <div className="prose prose-lg max-w-none">
-                            <p className="text-gray-700 leading-relaxed mb-4">
-                                {cityName}&apos;da çilingir hizmetine mi ihtiyacınız var? {cityName} genelinde {hasRegion ? "Avrupa ve Anadolu Yakası'nda" : 'tüm ilçelerde'} profesyonel çilingir ve anahtarcı hizmetleri sunulmaktadır.
-                                Acil kapı açma, kilit değiştirme, anahtar kopyalama, oto çilingir ve kasa çilingir hizmetleri 7/24 güvenilir ustalar tarafından sağlanmaktadır.
-                            </p>
-                            <p className="text-gray-700 leading-relaxed mb-4">
-                                {cityName}&apos;da çilingir hizmetleri geniş bir ağla sunulmaktadır. Deneyimli çilingir ve anahtarcılar bölgede aktif olarak hizmet vermektedir.
-                                {cityName} çilingir fiyatları, ilçe ve hizmete göre değişkenlik göstermektedir. Ev çilingiri, otomobil çilingiri, acil çilingir, 7/24 çilingir,
-                                oto anahtar, çelik kapı çilingir ve kasa çilingir hizmetleri kolayca bulunabilmektedir.
-                            </p>
-                            <p className="text-gray-700 leading-relaxed mb-4">
-                                <strong>{cityName}&apos;da En Yakın Çilingir Nasıl Bulunur?</strong> BiÇilingir platformu sayesinde {cityName}&apos;da tüm ilçelerde hizmet veren en yakın çilingiri bulabilir,
-                                çilingir fiyatlarını görebilirsiniz. İlçenizi seçerek size en yakın çilingir ve anahtarcı hizmetine hemen ulaşabilirsiniz.
-                            </p>
-                            <p className="text-gray-700 leading-relaxed">
-                                <strong>{cityName} Çilingir Hizmetleri:</strong> Kapı açma, kilit değiştirme, anahtar kopyalama, oto anahtar, araç anahtarı,
-                                çelik kapı çilingir, kasa çilingir, şifreli kilit ve akıllı kilit hizmetleri verilmektedir. {cityName} çilingirleri 7/24 açık ve acil durumlarda
-                                hızlı hizmet vermektedir.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </section>
 
             {/* Fiyat Rehberi */}
             <section className="py-8 md:py-12 bg-white">

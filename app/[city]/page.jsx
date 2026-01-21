@@ -49,7 +49,7 @@ async function getCityData(citySlug) {
         // Şehir bilgilerini çek
         const { data: cityData, error: cityError } = await supabase
             .from('provinces')
-            .select('id, name, slug, lat, lng')
+            .select('id, name, slug, lat, lng, description')
             .eq('slug', citySlug)
             .single();
 
@@ -287,6 +287,7 @@ export default async function CityPage({ params }) {
                 faqList={faqList}
                 priceData={priceData}
                 buildDate={BUILD_DATE}
+                description={cityData.description}
             />
         </>
     );

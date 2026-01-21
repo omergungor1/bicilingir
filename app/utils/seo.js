@@ -130,7 +130,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
             const districtName = district.name;
             const cityName = city.name;
 
-            title = `${neighborhoodName} ${serviceTypeName} - ${cityName} ${districtName} | 7/24 En Yakın Çilingirler | Biçilingir`;
+            title = `${neighborhoodName} ${serviceTypeName} - ${cityName} ${districtName} | 7/24 Açık Çilingirleri Karşılaştır | Fiyatları Gör | Biçilingir`;
             description = `${neighborhoodName} ${serviceTypeName} ihtiyaçlarınız için Bi Çilingir ile 7/24 hizmet veren profesyonel çilingirlere hemen ulaşın. ${cityName} ${districtName} çilingir fiyarlarını kıyaslayın, dilediğiniz çilingiri anında çağırın.`;
             keywords = `${neighborhoodName} ${serviceTypeName.toLowerCase()}, ${districtName} çilingir, ${cityName} çilingir anahtarcı, acil çilingir, çilingir fiyatları, ekonomik çilingir`;
         }
@@ -138,19 +138,19 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
             const districtName = district.name;
             const cityName = city.name;
 
-            title = `${districtName} ${serviceTypeName} - ${cityName} | 7/24 En Yakın Çilingirler | Biçilingir`;
+            title = `${districtName} ${serviceTypeName} - ${cityName} | 7/24 Açık Çilingirleri Karşılaştır | Fiyatları Gör | Biçilingir`;
             description = `${districtName} ${serviceTypeName} ihtiyaçlarınız için Bi Çilingir ile 7/24 hizmet veren profesyonel çilingirlere hemen ulaşın. ${cityName} ${districtName} çilingir fiyarlarını kıyaslayın, dilediğiniz çilingiri anında çağırın.`;
             keywords = `${districtName} ${serviceTypeName.toLowerCase()}, ${districtName} çilingir, ${cityName} çilingir anahtarcı, acil çilingir`;
         }
         else if (city) {
             const cityName = city.name;
 
-            title = `${cityName} ${serviceTypeName} | 7/24 En Yakın Çilingirler | Biçilingir`;
+            title = `${cityName} ${serviceTypeName} | 7/24 Açık Çilingirleri Karşılaştır | Fiyatları Gör | Biçilingir`;
             description = `${cityName} ${serviceTypeName} ihtiyaçlarınız için Bi Çilingir ile 7/24 hizmet veren profesyonel çilingirlere hemen ulaşın. ${cityName} çilingir fiyarlarını kıyaslayın, dilediğiniz çilingiri anında çağırın.`;
             keywords = `${cityName} ${serviceTypeName.toLowerCase()}, ${cityName} çilingir, ${cityName} çilingir anahtarcı, acil çilingir`;
         }
         else {
-            title = `${serviceTypeName} | 7/24 En Yakın Çilingirler | Biçilingir`;
+            title = `${serviceTypeName} | 7/24 Açık Çilingirleri Karşılaştır | Fiyatları Gör | Biçilingir`;
             description = `${serviceTypeName} ihtiyaçlarınız için Bi Çilingir ile 7/24 hizmet veren profesyonel çilingirlere hemen ulaşın. Çilingir fiyarlarını kıyaslayın, dilediğiniz çilingiri anında çağırın.`;
             keywords = `${serviceTypeName.toLowerCase()}, çilingir, anahtarcı, acil çilingir`;
         }
@@ -160,7 +160,7 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
         const districtName = district.name;
         const cityName = city.name;
 
-        title = `${neighborhoodName} Çilingir - ${cityName} ${districtName} | 7/24 En Yakın Çilingirler | Biçilingir`;
+        title = `${neighborhoodName} Çilingir - ${cityName} ${districtName} | 7/24 Açık Çilingirleri Karşılaştır | Fiyatları Gör | Biçilingir`;
         description = `${neighborhoodName} çilingir ihtiyaçlarınız için Bi Çilingir ile 7/24 hizmet veren profesyonel çilingirlere hemen ulaşın. ${districtName} ${cityName} bölgesinde profesyonel çilingir hizmetleri için hemen arayın.`;
         keywords = `${neighborhoodName} çilingir, ${districtName} çilingir, ${cityName} anahtarcı, kapı açma`;
     }
@@ -168,14 +168,14 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
         const districtName = district.name;
         const cityName = city.name;
 
-        title = `${districtName} Çilingir - ${cityName} | 7/24 En Yakın Çilingirler | Biçilingir`;
+        title = `${districtName} Çilingir - ${cityName} | 7/24 Açık Çilingirleri Karşılaştır | Fiyatları Gör | Biçilingir`;
         description = `${districtName} çilingir ihtiyaçlarınız için Bi Çilingir ile 7/24 hizmet veren profesyonel çilingirlere hemen ulaşın. ${cityName} bölgesinde profesyonel çilingir hizmetleri için hemen arayın.`;
         keywords = `${districtName} çilingir, ${cityName} anahtarcı, kapı açma, kilit değiştirme`;
     }
     else if (city) {
         const cityName = city.name;
 
-        title = `${cityName} Çilingir | 7/24 En Yakın Çilingirler | Biçilingir`;
+        title = `${cityName} Çilingir | 7/24 Açık Çilingirleri Karşılaştır | Fiyatları Gör | Biçilingir`;
         description = `${cityName} çilingir ihtiyaçlarınız için Bi Çilingir ile 7/24 hizmet veren profesyonel çilingirlere hemen ulaşın. Profesyonel çilingir hizmetleri için hemen arayın.`;
         keywords = `${cityName} çilingir, ${cityName} anahtarcı, kapı açma, kilit değiştirme`;
     }
