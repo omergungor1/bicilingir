@@ -397,12 +397,15 @@ async function getJsonLd({ citySlug, districtSlug, neighborhoodSlug, servicetype
 
 export async function getLocksmithsList({ citySlug, districtSlug, neighborhoodSlug, servicetypeSlug, count = 2 }) {
     try {
+
+
         const params = new URLSearchParams();
         if (citySlug) params.append('citySlug', citySlug);
         if (districtSlug) params.append('districtSlug', districtSlug);
         if (neighborhoodSlug) params.append('neighborhoodSlug', neighborhoodSlug);
         if (servicetypeSlug) params.append('servicetypeSlug', servicetypeSlug);
         params.append('count', count);
+
 
         // Tam URL belirt (protokol ve ana bilgisayarı dahil et)
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';

@@ -19,8 +19,8 @@ export async function GET(request) {
         // Slug tabanlı parametreler
         const citySlug = searchParams.get('citySlug');
         const districtSlug = searchParams.get('districtSlug');
-        const neighborhoodSlug = searchParams.get('neighborhoodSlug');
-        const servicetypeSlug = searchParams.get('servicetypeSlug');
+        // const neighborhoodSlug = searchParams.get('neighborhoodSlug');
+        // const servicetypeSlug = searchParams.get('servicetypeSlug');
 
 
         // Doğrudan ID tabanlı parametreler
@@ -33,27 +33,43 @@ export async function GET(request) {
         const supabase = getSupabaseServer();
 
 
-        if (neighborhoodSlug) {
-            const { data: neighborhoodData } = await supabase
-                .from('neighborhoods')
-                .select('district_id')
-                .eq('slug', neighborhoodSlug)
-                .single();
+        // if (neighborhoodSlug) {
+        //     const { data: neighborhoodData } = await supabase
+        //         .from('neighborhoods')
+        //         .select('district_id')
+        //         .eq('slug', neighborhoodSlug)
+        //         .single();
 
-            if (neighborhoodData) {
-                districtParamId = neighborhoodData.district_id;
-            }
-        }
+        //     if (neighborhoodData) {
+        //         districtParamId = neighborhoodData.district_id;
+        //     }
+        // }
 
         let locksmithList = [];
         let finalDistrictId = districtParamId; // İlçe ID'sini sakla
 
         if (districtParamId || districtSlug) {
+
+            let cityId = provinceParamId || null;
+            if (citySlug && !cityId) {
+                const { data: cityData } = await supabase
+                    .from('provinces')
+                    .select('id')
+                    .eq('slug', citySlug)
+                    .single();
+
+                if (cityData) {
+                    cityId = cityData.id;
+                }
+            }
+
+
             if (districtParamId) {
                 const { data: districtData } = await supabase
                     .from('districts')
                     .select('locksmith1id,locksmith2id')
                     .eq('id', districtParamId)
+                    .eq('province_id', cityId)
                     .single();
 
 
@@ -66,8 +82,8 @@ export async function GET(request) {
                     .from('districts')
                     .select('id,locksmith1id,locksmith2id')
                     .eq('slug', districtSlug)
+                    .eq('province_id', cityId)
                     .single();
-
 
                 if (districtData) {
                     finalDistrictId = districtData.id; // districtId'yi sakla
@@ -127,6 +143,7 @@ export async function GET(request) {
             `)
             .eq('isactive', true)
             .eq('status', 'approved');
+
 
         // Eğer locksmithList dolu ise, sadece o listedeki çilingirleri getir
         // Eğer boş ise ve ilçe bilgisi varsa, ilçedeki tüm çilingirleri getir
@@ -194,7 +211,7 @@ export async function GET(request) {
             })),
             slug: item.slug,
             // openingHours: "Mo-Su 00:00-23:59",
-            serviceType: servicetypeSlug ? servicetypeSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : "Çilingir Hizmeti",
+            // serviceType: servicetypeSlug ? servicetypeSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : "Çilingir Hizmeti",
             location: {
                 lat: item.locksmith_details.lat,
                 lng: item.locksmith_details.lng

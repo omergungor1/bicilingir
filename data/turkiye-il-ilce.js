@@ -167,7 +167,7 @@ const turkiyeIlIlce = {
     { id: 68, province_id: 6, name: "Ayaş", slug: "ayas" },
     { id: 69, province_id: 6, name: "Bala", slug: "bala" },
     { id: 70, province_id: 6, name: "Beypazarı", slug: "beypazari" },
-    { id: 71, province_id: 6, name: "Çamlıdere", slug: "camli" },
+    { id: 71, province_id: 6, name: "Çamlıdere", slug: "camlidere" },
     { id: 72, province_id: 6, name: "Çankaya", slug: "cankaya" },
     { id: 73, province_id: 6, name: "Çubuk", slug: "cubuk" },
     { id: 74, province_id: 6, name: "Elmadağ", slug: "elmadag" },

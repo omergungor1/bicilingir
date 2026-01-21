@@ -52,11 +52,11 @@ export default async function sitemap() {
             },
         ];
 
-        // Bursa (id=16) ve İstanbul (id=34) getir
+
         const { data: provinces, error: provinceError } = await supabase
             .from('provinces')
             .select('id, name, slug')
-            .in('id', [16, 34, 35, 6]);  // Bursa, İstanbul, İzmir ve Ankara illerini filtrele
+            .in('id', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 34, 35]);
 
         if (provinceError) {
             console.error('İller yüklenirken hata:', provinceError);
@@ -68,7 +68,7 @@ export default async function sitemap() {
         const { data: districts, error: districtError } = await supabase
             .from('districts')
             .select('id, name, slug, province_id')
-            .in('province_id', [16, 34, 35, 6]);  // Bursa ve İstanbul'un ilçelerini filtrele
+            .in('province_id', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 34, 35]);
 
         if (districtError) {
             console.error('İlçeler yüklenirken hata:', districtError);

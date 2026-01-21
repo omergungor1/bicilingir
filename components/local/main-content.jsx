@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { MapPin, ChevronDown, ChevronUp, X, SearchX } from 'lucide-react';
+import { MapPin, ChevronDown, X, SearchX } from 'lucide-react';
 import turkiyeIlIlce from '../../data/turkiye-il-ilce';
 
 
@@ -67,23 +67,23 @@ export default function MainContent(params) {
 
             {/* İlçe Seçim Bileşeni */}
             <div className="mb-1 md:mb-3 py-1">
-                {!isDistrictListOpen && ( 
-                <button
-                    data-gtm="ilce-secimi"
-                    id="ilce-secimi"
-                    onClick={() => setIsDistrictListOpen(!isDistrictListOpen)}
-                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium transition-colors"
-                    aria-expanded={isDistrictListOpen}
-                    aria-label="İlçe seç"
-                >
-                    <MapPin className="h-4 w-4" />
-                    <span>
-                        {type === 'district'
-                            ? 'Başka ilçede misin? İlçeni seç!'
-                            : 'İlçeni seç!'}
-                    </span>
-                    <ChevronDown className="h-4 w-4" />
-                </button>
+                {!isDistrictListOpen && (
+                    <button
+                        data-gtm="ilce-secimi"
+                        id="ilce-secimi"
+                        onClick={() => setIsDistrictListOpen(!isDistrictListOpen)}
+                        className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                        aria-expanded={isDistrictListOpen}
+                        aria-label="İlçe seç"
+                    >
+                        <MapPin className="h-4 w-4" />
+                        <span>
+                            {type === 'district'
+                                ? 'Başka ilçede misin? İlçeni seç!'
+                                : 'İlçeni seç!'}
+                        </span>
+                        <ChevronDown className="h-4 w-4" />
+                    </button>
                 )}
                 {isDistrictListOpen && citySlug && cityDistricts.length > 0 && (
                     <div className="mt-3 p-3 md:p-4 bg-white border border-gray-200 rounded-lg shadow-md transition-all duration-200 ease-in-out">
@@ -197,12 +197,14 @@ export default function MainContent(params) {
                                     </div>
                                 </details>
                             ) : (
-                                <Link
-                                    href={`/${service.slug}`}
-                                    className="text-blue-600 hover:text-blue-800 font-medium"
+                                <button
+                                    onClick={() => {
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    }}
+                                    className="text-blue-600 hover:text-blue-800 font-medium cursor-pointer"
                                 >
                                     {formatedName} {service.name} Bul
-                                </Link>
+                                </button>
                             )}
                         </div>
                     ))}

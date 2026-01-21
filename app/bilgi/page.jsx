@@ -87,8 +87,8 @@ const testimonials = [
   },
   {
     id: 3,
-    name: "Ayhan Çetindağ",
-    location: "Bursa, Gemlik",
+    name: "Ömer Akdemir",
+    location: "Bursa, Nilüfer",
     quote: "İnternette görünür olmak zor. Bi Çilingir sayesinde Google'da öne çıktım. Günde en az 2-3 iş alıyorum. Tavsiye ederim.",
     rating: 5,
     image: "https://randomuser.me/api/portraits/men/34.jpg"

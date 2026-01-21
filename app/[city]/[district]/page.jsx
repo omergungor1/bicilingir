@@ -215,9 +215,9 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
                         .map(service => ({
                             id: service.id,
                             name: service.name,
-                            slug: districtData ?
-                                `${citySlug}/${districtSlug}/${service.slug}` :
-                                `${citySlug}/${service.slug}`
+                            // slug: districtData ?
+                            //     `${citySlug}/${districtSlug}/${service.slug}` :
+                            //     `${citySlug}/${service.slug}`
                         }))
                 },
                 formattedName: formattedName,
@@ -380,9 +380,9 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
             console.error('Hizmet bilgileri alınamadı');
         }
 
-        servicesData.forEach(service => {
-            service.slug = citySlug + '/' + districtSlug + '/' + service.slug;
-        });
+        // servicesData.forEach(service => {
+        //     service.slug = citySlug + '/' + districtSlug + '/' + service.slug;
+        // });
 
         // İlçe bilgilerini hazırla
         const districtInfo = {
@@ -433,7 +433,7 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
                 data: servicesData.map(service => ({
                     id: service.id,
                     name: service.name,
-                    slug: service.slug
+                    // slug: service.slug
                 }))
             },
             formattedName: `${districtInfo.city} ${districtInfo.name}`,
