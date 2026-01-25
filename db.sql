@@ -433,3 +433,15 @@ CREATE TABLE blog_views (
     referrer TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+
+
+-- İlçe İlişkileri Tablosu
+CREATE TABLE district_relations (
+  district_id INT NOT NULL,
+  related_district_id INT NOT NULL,
+  priority SMALLINT DEFAULT 1,
+  PRIMARY KEY (district_id, related_district_id),
+  FOREIGN KEY (district_id) REFERENCES districts(id),
+  FOREIGN KEY (related_district_id) REFERENCES districts(id)
+);

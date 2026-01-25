@@ -56,7 +56,7 @@ export default async function sitemap() {
         const { data: provinces, error: provinceError } = await supabase
             .from('provinces')
             .select('id, name, slug')
-            .in('id', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 34, 35]);
+            .in('id', [34, 6, 35, 16, 7, 42, 1, 63, 27, 41]);
 
         if (provinceError) {
             console.error('İller yüklenirken hata:', provinceError);
@@ -68,7 +68,7 @@ export default async function sitemap() {
         const { data: districts, error: districtError } = await supabase
             .from('districts')
             .select('id, name, slug, province_id')
-            .in('province_id', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 34, 35]);
+            .in('province_id', [34, 6, 35, 16, 7, 42, 1, 63, 27, 41]);
 
         if (districtError) {
             console.error('İlçeler yüklenirken hata:', districtError);
@@ -188,15 +188,6 @@ export default async function sitemap() {
             });
         }
 
-        // İlçe + Hizmet sayfaları URL'leri kaldırıldı - 301 redirect yapıldı
-        const districtServiceUrls = [];
-
-        // Mahalle sayfaları URL'leri kaldırıldı - 301 redirect yapıldı
-        const neighbourhoodUrls = [];
-
-        // Mahalle + Hizmet sayfaları URL'leri kaldırıldı - 301 redirect yapıldı
-        const neighborhoodserviceUrls = [];
-
 
         // Çilingir detay sayfaları URL'leri
         const locksmithUrls = [];
@@ -224,92 +215,21 @@ export default async function sitemap() {
             }
         ];
 
-        // Blog liste sayfaları oluştur
-        const addedBlogListUrls = new Set();
-
+        // Blog detay sayfaları
         if (blogs && blogs.length > 0) {
             blogs.forEach(blog => {
                 if (blog && blog.slug) {
                     const lastMod = blog.updated_at || blog.published_at || now;
-
-                    // Her blog için sadece bir canonical URL oluştur (en spesifik olanı)
-                    let blogUrl = '';
-                    let priority = 0.6;
-
-                    if (blog.provinces && blog.districts && blog.neighborhoods && blog.services &&
-                        blog.provinces.slug && blog.districts.slug && blog.neighborhoods.slug && blog.services.slug) {
-                        // En spesifik: Province + District + Neighborhood + Service
-                        blogUrl = `${baseUrl}/${blog.provinces.slug}/${blog.districts.slug}/${blog.neighborhoods.slug}/${blog.services.slug}/blog/${blog.slug}`;
-                        priority = 1.0;
-                    } else if (blog.provinces && blog.districts && blog.neighborhoods &&
-                        blog.provinces.slug && blog.districts.slug && blog.neighborhoods.slug) {
-                        // Province + District + Neighborhood
-                        blogUrl = `${baseUrl}/${blog.provinces.slug}/${blog.districts.slug}/${blog.neighborhoods.slug}/blog/${blog.slug}`;
-                        priority = 0.9;
-                    } else if (blog.provinces && blog.districts && blog.services &&
-                        blog.provinces.slug && blog.districts.slug && blog.services.slug) {
-                        // Province + District + Service
-                        blogUrl = `${baseUrl}/${blog.provinces.slug}/${blog.districts.slug}/${blog.services.slug}/blog/${blog.slug}`;
-                        priority = 0.9;
-                    } else if (blog.provinces && blog.districts &&
-                        blog.provinces.slug && blog.districts.slug) {
-                        // Province + District
-                        blogUrl = `${baseUrl}/${blog.provinces.slug}/${blog.districts.slug}/blog/${blog.slug}`;
-                        priority = 0.8;
-                    } else if (blog.provinces && blog.services &&
-                        blog.provinces.slug && blog.services.slug) {
-                        // Province + Service
-                        blogUrl = `${baseUrl}/${blog.provinces.slug}/${blog.services.slug}/blog/${blog.slug}`;
-                        priority = 0.8;
-                    } else if (blog.provinces && blog.provinces.slug) {
-                        // Sadece Province
-                        blogUrl = `${baseUrl}/${blog.provinces.slug}/blog/${blog.slug}`;
-                        priority = 0.7;
-                    } else {
-                        // Genel blog
-                        blogUrl = `${baseUrl}/blog/${blog.slug}`;
-                        priority = 0.6;
-                    }
-
-                    // Blog detay URL'ini ekle
-                    if (blogUrl) {
-                        blogUrls.push({
-                            url: blogUrl,
-                            lastModified: lastMod,
-                            changeFrequency: 'weekly',
-                            priority: priority,
-                        });
-                    }
-
-                    // Blog liste sayfalarını ekle (sadece province ve district kombinasyonları)
-                    if (blog.provinces && blog.provinces.slug) {
-                        const provinceListUrl = `${baseUrl}/${blog.provinces.slug}/blog`;
-                        if (!addedBlogListUrls.has(provinceListUrl)) {
-                            blogUrls.push({
-                                url: provinceListUrl,
-                                lastModified: lastMod,
-                                changeFrequency: 'weekly',
-                                priority: 0.7,
-                            });
-                            addedBlogListUrls.add(provinceListUrl);
-                        }
-
-                        if (blog.districts && blog.districts.slug) {
-                            const districtListUrl = `${baseUrl}/${blog.provinces.slug}/${blog.districts.slug}/blog`;
-                            if (!addedBlogListUrls.has(districtListUrl)) {
-                                blogUrls.push({
-                                    url: districtListUrl,
-                                    lastModified: lastMod,
-                                    changeFrequency: 'weekly',
-                                    priority: 0.8,
-                                });
-                                addedBlogListUrls.add(districtListUrl);
-                            }
-                        }
-                    }
+                    blogUrls.push({
+                        url: `${baseUrl}/blog/${blog.slug}`,
+                        lastModified: lastMod,
+                        changeFrequency: 'weekly',
+                        priority: 0.7,
+                    });
                 }
             });
         }
+
 
         // Tüm URL'leri birleştir
         return [

@@ -1,15 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseServer } from '../../../lib/supabase';
 
-// /**
-//  * Supabase bağlantısı oluştur
-//  * @returns {Object} Supabase istemcisi
-//  */
-// function createSupabaseClient() {
-//     return getSupabaseServer();
-// }
-
-
 /**
  * Çilingir verilerini getir API endpoint'i
  */
@@ -19,9 +10,6 @@ export async function GET(request) {
         // Slug tabanlı parametreler
         const citySlug = searchParams.get('citySlug');
         const districtSlug = searchParams.get('districtSlug');
-        // const neighborhoodSlug = searchParams.get('neighborhoodSlug');
-        // const servicetypeSlug = searchParams.get('servicetypeSlug');
-
 
         // Doğrudan ID tabanlı parametreler
         const provinceParamId = searchParams.get('provinceId');
@@ -29,21 +17,7 @@ export async function GET(request) {
 
 
         // Supabase bağlantısı oluştur
-        // const supabase = createSupabaseClient();
         const supabase = getSupabaseServer();
-
-
-        // if (neighborhoodSlug) {
-        //     const { data: neighborhoodData } = await supabase
-        //         .from('neighborhoods')
-        //         .select('district_id')
-        //         .eq('slug', neighborhoodSlug)
-        //         .single();
-
-        //     if (neighborhoodData) {
-        //         districtParamId = neighborhoodData.district_id;
-        //     }
-        // }
 
         let locksmithList = [];
         let finalDistrictId = districtParamId; // İlçe ID'sini sakla
@@ -127,6 +101,7 @@ export async function GET(request) {
                 businessname,
                 fullname,
                 tagline,
+                districtid,
                 locksmith_details: locksmith_details(fulladdress,postal_code,lat,lng,startdate),
                 locksmith_working_hours: locksmith_working_hours(dayofweek,is24hopen,isworking,opentime,closetime),
                 phonenumber,
@@ -145,17 +120,38 @@ export async function GET(request) {
             .eq('status', 'approved');
 
 
+        // Yakın ilçeleri saklamak için
+        let relatedDistrictIds = [];
+
+        // Eğer ilçe bilgisi varsa, yakın ilçeleri district_relations tablosundan al (sıralama için)
+        if (finalDistrictId) {
+            const { data: relatedDistricts } = await supabase
+                .from('district_relations')
+                .select('related_district_id')
+                .eq('district_id', finalDistrictId)
+                .order('priority', { ascending: true });
+
+            if (relatedDistricts && relatedDistricts.length > 0) {
+                relatedDistrictIds = relatedDistricts.map(rd => rd.related_district_id);
+            }
+        }
+
         // Eğer locksmithList dolu ise, sadece o listedeki çilingirleri getir
-        // Eğer boş ise ve ilçe bilgisi varsa, ilçedeki tüm çilingirleri getir
+        // Eğer boş ise ve ilçe bilgisi varsa, ilçedeki ve yakın ilçelerdeki tüm çilingirleri getir
         if (locksmithList.length > 0) {
             locksmithQuery = locksmithQuery.in('id', locksmithList);
         } else if (finalDistrictId) {
-            // locksmithList boş ise, ilçedeki tüm çilingirleri getir
-            locksmithQuery = locksmithQuery.eq('districtid', finalDistrictId);
+            // Seçili ilçe ve yakın ilçelerdeki çilingirleri getir
+            const districtIdsToSearch = [finalDistrictId, ...relatedDistrictIds];
+            locksmithQuery = locksmithQuery.in('districtid', districtIdsToSearch);
+            console.log('### Burda ###');
+            console.log('provinceParamId:', provinceParamId);
+            console.log('districtParamId:', districtParamId);
+            // locksmithQuery = locksmithQuery.eq('provinceid', provinceId);
         }
 
-        // Maksimum 30 çilingir döndür
-        locksmithQuery = locksmithQuery.limit(30);
+        // Maksimum 50 çilingir döndür
+        locksmithQuery = locksmithQuery.limit(20);
 
         const { data: locksmithData, error } = await locksmithQuery;
 
@@ -167,12 +163,41 @@ export async function GET(request) {
                 .filter(locksmith => locksmith !== undefined);
         }
 
-        // is_verified olan çilingirleri en üste al
-        sortedLocksmithData = sortedLocksmithData.sort((a, b) => {
-            const aVerified = a.isverified === true ? 1 : 0;
-            const bVerified = b.isverified === true ? 1 : 0;
-            return bVerified - aVerified; // Verified olanlar önce (1 - 0 = 1, 0 - 1 = -1)
-        });
+        // Sıralama: 1) is_verified olanlar en üstte, 2) Seçili ilçedeki çilingirler, 3) Yakın ilçelerdeki çilingirler
+        if (finalDistrictId) {
+            // Yakın ilçeler varsa, hem verified hem de ilçe tipine göre sırala
+            if (relatedDistrictIds.length > 0) {
+                sortedLocksmithData = sortedLocksmithData.sort((a, b) => {
+                    const aVerified = a.isverified === true ? 1 : 0;
+                    const bVerified = b.isverified === true ? 1 : 0;
+
+                    // Önce verified durumuna göre sırala (verified olanlar en üstte)
+                    if (aVerified !== bVerified) {
+                        return bVerified - aVerified; // Verified olanlar önce
+                    }
+
+                    // Verified durumu aynıysa, ilçe tipine göre sırala (seçili ilçe önce)
+                    const aIsSelectedDistrict = a.districtid === finalDistrictId ? 1 : 0;
+                    const bIsSelectedDistrict = b.districtid === finalDistrictId ? 1 : 0;
+
+                    return bIsSelectedDistrict - aIsSelectedDistrict; // Seçili ilçedekiler önce
+                });
+            } else {
+                // Yakın ilçe yoksa, sadece verified durumuna göre sırala
+                sortedLocksmithData = sortedLocksmithData.sort((a, b) => {
+                    const aVerified = a.isverified === true ? 1 : 0;
+                    const bVerified = b.isverified === true ? 1 : 0;
+                    return bVerified - aVerified; // Verified olanlar önce
+                });
+            }
+        } else {
+            // İlçe bilgisi yoksa, sadece verified durumuna göre sırala
+            sortedLocksmithData = sortedLocksmithData.sort((a, b) => {
+                const aVerified = a.isverified === true ? 1 : 0;
+                const bVerified = b.isverified === true ? 1 : 0;
+                return bVerified - aVerified; // Verified olanlar önce
+            });
+        }
 
         // Çilingir verilerini formatlama
         const formattedLocksmiths = sortedLocksmithData?.map(item => ({
