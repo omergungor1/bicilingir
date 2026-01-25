@@ -121,7 +121,8 @@ const OLD_SERVICE_REDIRECTS = {
   '/7-24-cilingir': '/',
   '/kasa-cilingir': '/',
   '/ev-cilingir': '/',
-  '/acil-cilingir': '/'
+  '/acil-cilingir': '/',
+  '/bursa/nilufer-2': '/bursa/nilufer'
 };
 
 export async function middleware(req) {
@@ -275,5 +276,6 @@ export const config = {
     '/kasa-cilingir',
     '/ev-cilingir',
     '/acil-cilingir',
+    '/bursa/nilufer-2',
   ],
 } 
