@@ -457,7 +457,7 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
             },
             locksmitList: {
                 title: `${districtInfo.city} ${districtInfo.name} Çilingirler ve Anahtarcılar - ${districtInfo.name} En Yakın Çilingir`,
-                description: `${districtInfo.name} en yakın çilingir ve ${districtInfo.name} en yakın anahtarcı hizmeti için size en yakın çilingirler bulundu. ${districtInfo.name} çilingir telefonu ile hemen arayabilir, ${districtInfo.name} anahtarcı hizmeti alabilirsiniz. Tüm çilingirler şuan açık ve 7/24 hizmet vermektedir. \n${districtInfo.name} ilçesinde ${locksmiths.length} çilingir bulundu. Hemen ara!`,
+                description: `${districtInfo.name} en yakın çilingir ve ${districtInfo.name} en yakın anahtarcı hizmeti için size en yakın çilingirler bulundu. ${districtInfo.name} çilingir telefonu ile hemen arayabilir, ${districtInfo.name} anahtarcı hizmeti alabilirsiniz. Tüm çilingirler şuan açık ve 7/24 hizmet vermektedir. \n${districtInfo.name} ilçesine yakın ${locksmiths.length} çilingir bulundu. Hemen ara!`,
                 data: locksmiths
             },
             seconCard: {

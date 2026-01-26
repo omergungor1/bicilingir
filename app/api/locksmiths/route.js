@@ -120,40 +120,124 @@ export async function GET(request) {
             .eq('status', 'approved');
 
 
-        // Yakın ilçeleri saklamak için
+        let locksmithData = [];
         let relatedDistrictIds = [];
 
-        // Eğer ilçe bilgisi varsa, yakın ilçeleri district_relations tablosundan al (sıralama için)
-        if (finalDistrictId) {
-            const { data: relatedDistricts } = await supabase
-                .from('district_relations')
-                .select('related_district_id')
-                .eq('district_id', finalDistrictId)
-                .order('priority', { ascending: true });
-
-            if (relatedDistricts && relatedDistricts.length > 0) {
-                relatedDistrictIds = relatedDistricts.map(rd => rd.related_district_id);
-            }
-        }
-
         // Eğer locksmithList dolu ise, sadece o listedeki çilingirleri getir
-        // Eğer boş ise ve ilçe bilgisi varsa, ilçedeki ve yakın ilçelerdeki tüm çilingirleri getir
         if (locksmithList.length > 0) {
             locksmithQuery = locksmithQuery.in('id', locksmithList);
+            const { data: data, error } = await locksmithQuery;
+            if (error) {
+                console.error('Çilingir verileri yüklenirken hata:', error);
+            } else {
+                locksmithData = data || [];
+            }
         } else if (finalDistrictId) {
-            // Seçili ilçe ve yakın ilçelerdeki çilingirleri getir
-            const districtIdsToSearch = [finalDistrictId, ...relatedDistrictIds];
-            locksmithQuery = locksmithQuery.in('districtid', districtIdsToSearch);
-            console.log('### Burda ###');
-            console.log('provinceParamId:', provinceParamId);
-            console.log('districtParamId:', districtParamId);
-            // locksmithQuery = locksmithQuery.eq('provinceid', provinceId);
+            // Önce seçili ilçedeki tüm çilingirleri çek (limit yok)
+            let selectedDistrictQuery = supabase
+                .from('locksmiths')
+                .select(`
+                    id, 
+                    businessname,
+                    fullname,
+                    tagline,
+                    districtid,
+                    locksmith_details: locksmith_details(fulladdress,postal_code,lat,lng,startdate),
+                    locksmith_working_hours: locksmith_working_hours(dayofweek,is24hopen,isworking,opentime,closetime),
+                    phonenumber,
+                    whatsappnumber,
+                    avgrating,
+                    totalreviewcount,
+                    profileimageurl,
+                    slug,
+                    isverified,
+                    provinces:provinceid(name),
+                    districts:districtid(name),
+                    locksmith_districts: locksmith_districts(districts(name),provinces(name)),
+                    locksmith_services: services(name,minPriceMesai,maxPriceMesai,minPriceAksam,maxPriceAksam,minPriceGece,maxPriceGece)
+                `)
+                .eq('isactive', true)
+                .eq('status', 'approved')
+                .eq('districtid', finalDistrictId);
+
+            const { data: selectedDistrictData, error: selectedError } = await selectedDistrictQuery;
+
+            if (selectedError) {
+                console.error('Seçili ilçe çilingirleri yüklenirken hata:', selectedError);
+            } else {
+                locksmithData = selectedDistrictData || [];
+            }
+
+            // Eğer seçili ilçede 10'dan az çilingir varsa, yakın ilçelerden de çek
+            if (locksmithData.length < 9) {
+                // Yakın ilçeleri district_relations tablosundan al
+                const { data: relatedDistricts } = await supabase
+                    .from('district_relations')
+                    .select('related_district_id')
+                    .eq('district_id', finalDistrictId)
+                    .order('priority', { ascending: true });
+
+                if (relatedDistricts && relatedDistricts.length > 0) {
+                    relatedDistrictIds = relatedDistricts.map(rd => rd.related_district_id);
+
+                    // Yakın ilçelerden maksimum 30 çilingir çek
+                    let relatedDistrictQuery = supabase
+                        .from('locksmiths')
+                        .select(`
+                            id, 
+                            businessname,
+                            fullname,
+                            tagline,
+                            districtid,
+                            locksmith_details: locksmith_details(fulladdress,postal_code,lat,lng,startdate),
+                            locksmith_working_hours: locksmith_working_hours(dayofweek,is24hopen,isworking,opentime,closetime),
+                            phonenumber,
+                            whatsappnumber,
+                            avgrating,
+                            totalreviewcount,
+                            profileimageurl,
+                            slug,
+                            isverified,
+                            provinces:provinceid(name),
+                            districts:districtid(name),
+                            locksmith_districts: locksmith_districts(districts(name),provinces(name)),
+                            locksmith_services: services(name,minPriceMesai,maxPriceMesai,minPriceAksam,maxPriceAksam,minPriceGece,maxPriceGece)
+                        `)
+                        .eq('isactive', true)
+                        .eq('status', 'approved')
+                        .in('districtid', relatedDistrictIds)
+                        .limit(20);
+
+                    const { data: relatedDistrictData, error: relatedError } = await relatedDistrictQuery;
+
+                    if (relatedError) {
+                        console.error('Yakın ilçe çilingirleri yüklenirken hata:', relatedError);
+                    } else {
+                        // Seçili ilçe ve yakın ilçe çilingirlerini birleştir
+                        locksmithData = [...locksmithData, ...(relatedDistrictData || [])];
+                    }
+                }
+            } else {
+                // Seçili ilçede 10 veya daha fazla çilingir varsa, yakın ilçeleri de al (sadece sıralama için)
+                const { data: relatedDistricts } = await supabase
+                    .from('district_relations')
+                    .select('related_district_id')
+                    .eq('district_id', finalDistrictId)
+                    .order('priority', { ascending: true });
+
+                if (relatedDistricts && relatedDistricts.length > 0) {
+                    relatedDistrictIds = relatedDistricts.map(rd => rd.related_district_id);
+                }
+            }
+        } else {
+            // İlçe bilgisi yoksa, normal sorguyu çalıştır
+            const { data: data, error } = await locksmithQuery.limit(30);
+            if (error) {
+                console.error('Çilingir verileri yüklenirken hata:', error);
+            } else {
+                locksmithData = data || [];
+            }
         }
-
-        // Maksimum 50 çilingir döndür
-        locksmithQuery = locksmithQuery.limit(20);
-
-        const { data: locksmithData, error } = await locksmithQuery;
 
         // Çilingirleri locksmithList sırasına göre sırala (eğer locksmithList dolu ise)
         let sortedLocksmithData = locksmithData || [];
