@@ -72,19 +72,32 @@ export default function RootLayout({ children }) {
             height="0" width="0" style={{ display: 'none', visibility: 'hidden' }}></iframe>
         </noscript>
 
-        {/* ClickCease - Lazy load, sadece gerektiğinde yükle */}
-        <Script
-          src="https://www.clickcease.com/monitor/stat.js"
-          // strategy="afterInteractive"
-          strategy="lazyOnload"
-        />
-
-        {/* ClickCease noscript fallback (isteğe bağlı) */}
+        {/* TrafficGuard Integration */}
+        <Script id="trafficguard" strategy="afterInteractive">
+          {`
+            var dataTrafficGuard = window.dataTrafficGuard || [];
+            dataTrafficGuard.push(['property', 'tg-023507-001']);
+            dataTrafficGuard.push(['event','pageview']);
+            (function() {
+              var tg = document.createElement('script');
+              tg.type = 'text/javascript';
+              tg.async = true;
+              tg.src = '//tgtag.io/tg.js?pid=tg-023507-001';
+              var s = document.getElementsByTagName('script')[0];
+              s.parentNode.insertBefore(tg, s);
+            })();
+          `}
+        </Script>
         <noscript>
-          <a href="https://www.clickcease.com" rel="nofollow">
-            <img src="https://monitor.clickcease.com" alt="ClickCease" />
-          </a>
+          <img
+            src="//p.tgtag.io/event?property_id=tg-023507-001&event_name=pageview&no_script=1"
+            width="1"
+            height="1"
+            border="0"
+            alt=""
+          />
         </noscript>
+        {/* TrafficGuard End */}
 
         <ClientLayout>{children}</ClientLayout>
       </body>

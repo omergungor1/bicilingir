@@ -1,13 +1,15 @@
 import React from 'react';
 import Script from 'next/script';
-import StorySection from './components/StorySection';
-import PostFeed from './components/PostFeed';
-import VideoSection from './components/VideoSection';
-import ImageGallery from './components/ImageGallery';
+import StorySection from '../../components/StorySection';
+import PostFeed from '../../components/PostFeed';
+import VideoSection from '../../components/VideoSection';
+import ImageGallery from '../../components/ImageGallery';
 import PriceTable from './components/PriceTable';
 import TrustSection from './components/TrustSection';
 import FAQSection from './components/FAQSection';
 import RelatedLinks from './components/RelatedLinks';
+import EnYakinCilingirHero from '../../components/EnYakinCilingirHero';
+import { stories, posts, videos, images } from './data';
 
 // SEO uyumlu metadata
 export const metadata = {
@@ -40,7 +42,7 @@ export default function CilingirCagirmadanOnceBilmenizGerekenlerPage() {
         <main className="min-h-screen bg-gray-50">
             {/* Story Section */}
             <section className="w-full py-4 bg-white border-b">
-                <StorySection />
+                <StorySection stories={stories} />
             </section>
 
             {/* SEO Çekirdek - Başlık ve Açıklama */}
@@ -74,8 +76,13 @@ export default function CilingirCagirmadanOnceBilmenizGerekenlerPage() {
             {/* Post Feed Section */}
             <section id="yapilan-hatalar" className="w-full py-8 bg-white">
                 <div className="container mx-auto max-w-2xl">
-                    <PostFeed />
+                    <PostFeed posts={posts} />
                 </div>
+            </section>
+
+            {/* En yakın çilingir - Hero */}
+            <section className="w-full bg-gray-50">
+                <EnYakinCilingirHero />
             </section>
 
             {/* Video Section */}
@@ -84,7 +91,7 @@ export default function CilingirCagirmadanOnceBilmenizGerekenlerPage() {
                     <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8 text-center">
                         Çilingir İşlemlerini İzleyin
                     </h2>
-                    <VideoSection />
+                    <VideoSection videos={videos} />
                 </div>
             </section>
 
@@ -94,7 +101,7 @@ export default function CilingirCagirmadanOnceBilmenizGerekenlerPage() {
                     <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8 text-center">
                         Çilingir İşlemleri Galerisi
                     </h2>
-                    <ImageGallery />
+                    <ImageGallery images={images} />
                 </div>
             </section>
 

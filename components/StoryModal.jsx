@@ -17,7 +17,6 @@ export default function StoryModal({ stories, initialIndex, onClose }) {
 
     // initialIndex değiştiğinde currentIndex'i güncelle (sadece initialIndex değiştiğinde)
     useEffect(() => {
-        console.log('🔄 initialIndex değişti, currentIndex güncelleniyor:', { initialIndex, mevcutCurrentIndex: currentIndex });
         setCurrentIndex(initialIndex);
         setProgress(0);
         startTimeRef.current = Date.now();
@@ -36,7 +35,6 @@ export default function StoryModal({ stories, initialIndex, onClose }) {
                 if (prev < storiesLengthRef.current - 1) {
                     return prev + 1;
                 } else {
-                    // Modal kapatmayı render dışına taşı
                     setTimeout(() => {
                         onCloseRef.current();
                     }, 0);
@@ -69,8 +67,6 @@ export default function StoryModal({ stories, initialIndex, onClose }) {
     }, []);
 
     useEffect(() => {
-        // Progress bar animasyonu
-        console.log('🔄 Animation başlatılıyor, currentIndex:', currentIndex);
         isMountedRef.current = true;
         setProgress(0);
         startTimeRef.current = Date.now();
@@ -88,8 +84,6 @@ export default function StoryModal({ stories, initialIndex, onClose }) {
             if (newProgress < 100 && isMountedRef.current) {
                 intervalRef.current = requestAnimationFrame(animate);
             } else if (newProgress >= 100 && isMountedRef.current) {
-                console.log('✅ Progress tamamlandı, sonraki story\'ye geçiliyor');
-                // Progress tamamlandı, sonraki story'ye geç
                 setTimeout(() => {
                     if (isMountedRef.current) {
                         nextStoryRef.current?.();
@@ -98,11 +92,9 @@ export default function StoryModal({ stories, initialIndex, onClose }) {
             }
         };
 
-        // İlk frame'i başlat
         intervalRef.current = requestAnimationFrame(animate);
 
         return () => {
-            console.log('🧹 Cleanup - animation iptal ediliyor');
             isMountedRef.current = false;
             if (intervalRef.current) {
                 cancelAnimationFrame(intervalRef.current);
@@ -113,7 +105,6 @@ export default function StoryModal({ stories, initialIndex, onClose }) {
 
     const handleKeyDown = useCallback((e) => {
         if (e.key === 'Escape') {
-            // ESC tuşu - render dışına taşı
             setTimeout(() => {
                 onClose();
             }, 0);
@@ -133,7 +124,6 @@ export default function StoryModal({ stories, initialIndex, onClose }) {
         };
     }, [handleKeyDown]);
 
-    // Swipe down to close
     const handleTouchStart = (e) => {
         touchStartY.current = e.touches[0].clientY;
     };
@@ -145,7 +135,6 @@ export default function StoryModal({ stories, initialIndex, onClose }) {
     const handleTouchEnd = () => {
         const swipeDistance = touchEndY.current - touchStartY.current;
         if (swipeDistance > 100) {
-            // Swipe down - render dışına taşı
             setTimeout(() => {
                 onClose();
             }, 0);
@@ -158,7 +147,6 @@ export default function StoryModal({ stories, initialIndex, onClose }) {
         <div
             className="fixed inset-0 z-50 bg-black flex items-center justify-center"
             onClick={(e) => {
-                // Boşluğa tıklama - render dışına taşı
                 if (e.target === e.currentTarget) {
                     setTimeout(() => {
                         onClose();
@@ -188,7 +176,7 @@ export default function StoryModal({ stories, initialIndex, onClose }) {
                             className="flex-1 h-0.5 rounded-full overflow-hidden relative"
                             style={{
                                 zIndex: 50 + index,
-                                backgroundColor: 'rgba(255, 255, 255, 0.3)' // İzlenmeyen story'ler için açık beyaz
+                                backgroundColor: 'rgba(255, 255, 255, 0.3)'
                             }}
                         >
                             <div
@@ -196,7 +184,7 @@ export default function StoryModal({ stories, initialIndex, onClose }) {
                                 className="h-full absolute left-0 top-0 bg-white"
                                 style={{
                                     width: `${progressWidth}%`,
-                                    transition: 'none', // Tüm geçişlerde anında değişim
+                                    transition: 'none',
                                     willChange: isCurrent ? 'width' : 'auto',
                                     zIndex: 51 + index
                                 }}
@@ -223,7 +211,6 @@ export default function StoryModal({ stories, initialIndex, onClose }) {
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            // X butonu - render dışına taşı
                             setTimeout(() => {
                                 onClose();
                             }, 0);
@@ -246,7 +233,6 @@ export default function StoryModal({ stories, initialIndex, onClose }) {
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
             >
-                {/* Left Click Area - Previous Story */}
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
@@ -257,19 +243,16 @@ export default function StoryModal({ stories, initialIndex, onClose }) {
                     aria-label="Önceki story"
                 />
 
-                {/* Story Image */}
                 <div className="relative w-full h-full max-w-md mx-auto">
                     <Image
-                        src={currentStory.image}
+                        src={currentStory.imageFull || currentStory.image}
                         alt={currentStory.title}
                         fill
-                        sizes="100vw"
+                        sizes="(max-width: 768px) 100vw, 448px"
                         className="object-contain"
-                        priority
                     />
                 </div>
 
-                {/* Right Click Area - Next Story */}
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
@@ -280,7 +263,6 @@ export default function StoryModal({ stories, initialIndex, onClose }) {
                     aria-label="Sonraki story"
                 />
             </div>
-
         </div>
     );
 }

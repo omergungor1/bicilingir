@@ -570,7 +570,7 @@ export default function HomeClient() {
       {/* Hero Bölümü */}
       <Hero
         title="En yakın çilingirleri bulun"
-        description="Kapınız kilitli mi kaldı? Anahtarınızı mı kaybettiniz? Endişelenmeyin, Bi Çilingir yanınızda!"
+        description="Kapınız kilitli mi kaldı? Anahtarınızı mı kaybettiniz? Endişelenmeyin, Bi Çilingir yanınızda! Aşağıya ilçenizi yazınız..."
       >
         <div className="w-full max-w-4xl mx-auto">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">

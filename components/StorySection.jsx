@@ -4,46 +4,11 @@ import React, { useRef, useState } from 'react';
 import Image from 'next/image';
 import StoryModal from './StoryModal';
 
-const stories = [
-    {
-        id: 1,
-        title: 'Kapıda kaldım',
-        image: 'https://ocljqspluklgxppjctnj.supabase.co/storage/v1/object/public/storybox/images/img-1.avif',
-        description: 'Kapınız kilitli kaldıysa panik yapmayın. Profesyonel çilingirler özel aletlerle kapıyı hasarsız açabilir.',
-        scrollTo: 'kapida-kaldim'
-    },
-    {
-        id: 2,
-        title: 'Anahtar içeride',
-        image: 'https://ocljqspluklgxppjctnj.supabase.co/storage/v1/object/public/storybox/images/img-2.jpg',
-        description: 'Anahtarınız içeride kaldıysa, kapıyı zorlamak yerine çilingir çağırın. Zorlama kalıcı hasara yol açar.',
-        scrollTo: 'anahtar-iceride'
-    },
-    {
-        id: 3,
-        title: 'Fiyatlar',
-        image: 'https://ocljqspluklgxppjctnj.supabase.co/storage/v1/object/public/storybox/images/img-3.jpg',
-        description: 'Çilingir fiyatları hizmet türüne, saate ve mesafeye göre değişir. Önceden fiyat bilgisi alın.',
-        scrollTo: 'fiyatlar'
-    },
-    {
-        id: 4,
-        title: 'Gece çilingir',
-        image: 'https://ocljqspluklgxppjctnj.supabase.co/storage/v1/object/public/storybox/images/img-4.jpg',
-        description: 'Gece saatlerinde çilingir hizmeti için ek ücret alınabilir. Acil durumlarda 7/24 hizmet veren çilingirler mevcuttur.',
-        scrollTo: 'gece-cilingir'
-    },
-    {
-        id: 5,
-        title: 'Yapılan hatalar',
-        image: 'https://ocljqspluklgxppjctnj.supabase.co/storage/v1/object/public/storybox/images/img-1.avif',
-        description: 'Kapıyı zorlamak, fiyat sormadan çağırmak ve güvenilir olmayan çilingir seçmek en büyük hatalardır.',
-        scrollTo: 'yapilan-hatalar'
-    }
-];
-
-export default function StorySection() {
+export default function StorySection({ stories = [] }) {
     const scrollRef = useRef(null);
+    const storyList = stories || [];
+
+    if (storyList.length === 0) return null;
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedStoryIndex, setSelectedStoryIndex] = useState(0);
 
@@ -58,7 +23,6 @@ export default function StorySection() {
     };
 
     const handleStoryClick = (index) => {
-        console.log('🎯 Story tıklandı, modal açılıyor:', { index, storyTitle: stories[index]?.title });
         setSelectedStoryIndex(index);
         setIsModalOpen(true);
     };
@@ -79,11 +43,11 @@ export default function StorySection() {
                     className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-2"
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
-                    {stories.map((story, index) => (
+                    {storyList.map((story, index) => (
                         <button
                             key={story.id}
                             onClick={() => handleStoryClick(index)}
-                            className="flex flex-col items-center gap-2 flex-shrink-0 group"
+                            className="flex flex-col items-center gap-2 flex-shrink-0 group outline-none focus:outline-none focus:ring-0 focus-visible:ring-0"
                             aria-label={story.title}
                         >
                             <div
@@ -121,15 +85,11 @@ export default function StorySection() {
                 </button>
             </div>
 
-            {/* Story Modal */}
             {isModalOpen && (
                 <StoryModal
-                    stories={stories}
+                    stories={storyList}
                     initialIndex={selectedStoryIndex}
-                    onClose={() => {
-                        console.log('🚪 Modal kapatılıyor');
-                        setIsModalOpen(false);
-                    }}
+                    onClose={() => setIsModalOpen(false)}
                 />
             )}
         </div>

@@ -53,7 +53,7 @@ export default function SearchForm({ onSearch, selectedValues, setSelectedValues
 
           <AdresArama
             onPlaceSelect={handlePlaceSelect}
-            placeholder="Lütfen ilçenizi seçiniz"
+            placeholder="Lütfen ilçenizi yazınız..."
             className={`pl-10 h-10 md:h-14 py-3 bg-white text-gray-800 border-0 rounded-lg focus:ring-2 focus:ring-blue-500 w-full`}
             defaultValue={selectedValues}
           />

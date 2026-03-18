@@ -29,11 +29,12 @@ export default function AdresArama({ onPlaceSelect, placeholder, className, defa
     }
 
     const filteredSuggestions = [];
-    const searchTerm = inputValue.toLowerCase();
+    // Türkçe locale ile büyük/küçük harf dönüşümü (İ↔i, I↔ı uyumu için)
+    const searchTerm = inputValue.toLocaleLowerCase('tr-TR');
 
     // İl adına göre ilçeleri filtrele
     const matchingProvinces = turkiyeIlIlce.provinces.filter(il => 
-      il.name.toLowerCase().includes(searchTerm)
+      il.name.toLocaleLowerCase('tr-TR').includes(searchTerm)
     );
     
     if (matchingProvinces.length > 0) {
@@ -55,7 +56,7 @@ export default function AdresArama({ onPlaceSelect, placeholder, className, defa
     } else {
       // İlçe adına göre filtrele
       turkiyeIlIlce.districts.forEach(ilce => {
-        if (ilce.name.toLowerCase().includes(searchTerm)) {
+        if (ilce.name.toLocaleLowerCase('tr-TR').includes(searchTerm)) {
           const parentProvince = turkiyeIlIlce.provinces.find(p => p.id === ilce.province_id);
           if (parentProvince) {
             filteredSuggestions.push({
