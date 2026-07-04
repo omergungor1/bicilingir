@@ -168,8 +168,9 @@ export async function getMetaData({ citySlug, districtSlug, neighborhoodSlug, se
         const districtName = district.name;
         const cityName = city.name;
 
-        title = `${districtName} Çilingir - ${cityName} | 7/24 Açık Çilingirleri Karşılaştır | Fiyatları Gör | Biçilingir`;
-        description = `${districtName} çilingir ihtiyaçlarınız için Bi Çilingir ile 7/24 hizmet veren profesyonel çilingirlere hemen ulaşın. ${cityName} bölgesinde profesyonel çilingir hizmetleri için hemen arayın.`;
+        title = `${districtName} Çilingir Anahtarcı | 7/24 Acil Kapı Açma | ${cityName}`;
+        const firstPhone = locksmiths?.[0]?.phone;
+        description = `${districtName} çilingir ve anahtarcı hizmetleri için 7/24 hizmet veren profesyoneller. Kapı açma, kilit değişimi, anahtar kopyalama.${firstPhone ? ` Hemen ara: ${firstPhone}` : ''}`;
         keywords = `${districtName} çilingir, ${cityName} anahtarcı, kapı açma, kilit değiştirme`;
     }
     else if (city) {

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { MapPin, ChevronDown, X, SearchX } from 'lucide-react';
+import { MapPin, ChevronDown, ChevronUp, X, SearchX, Phone, Clock } from 'lucide-react';
 import turkiyeIlIlce from '../../data/turkiye-il-ilce';
 
 
@@ -37,10 +37,21 @@ export default function MainContent(params) {
 
     // Toggle state
     const [isDistrictListOpen, setIsDistrictListOpen] = useState(false);
+    const [isMahalleListOpen, setIsMahalleListOpen] = useState(false);
+
+    const MAHALLE_PREVIEW_COUNT = 8;
 
     // İlçe adını formatedName'den çıkar (örn: "Bursa Nilüfer" -> "Nilüfer")
     const districtName = formatedName ? formatedName.split(' ').slice(1).join(' ') : '';
     const cityName = formatedName ? formatedName.split(' ')[0] : '';
+
+    const firstLocksmith = locksmitList.data?.[0];
+    const firstPhone = firstLocksmith?.phone;
+    const telHref = firstPhone ? `tel:${String(firstPhone).replace(/\D/g, '')}` : null;
+    const firstWhatsapp = firstLocksmith?.whatsapp;
+    const whatsappHref = firstWhatsapp
+        ? `https://wa.me/${String(firstWhatsapp).replace(/\D/g, '')}?text=${encodeURIComponent('Merhaba, çilingir hizmetiniz hakkında bilgi almak istiyorum.')}`
+        : null;
 
     return (
         <article>
@@ -118,9 +129,71 @@ export default function MainContent(params) {
                 )}
             </div>
 
-            {locksmitList.description && locksmitList.description.split('\n').map((line, index) => (
-                <p className="text-gray-600 mb-2 md:mb-6 text-base leading-relaxed" key={index}>{line}</p>
-            ))}
+            {locksmitList.description && (
+                <div className="mb-4 md:mb-6 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 md:p-6 shadow-sm">
+                    {locksmitList.description.split('\n').map((line, index) => (
+                        <p
+                            className="text-gray-700 text-base md:text-lg leading-relaxed mb-2 last:mb-0"
+                            key={index}
+                        >
+                            {line}
+                        </p>
+                    ))}
+
+                    {telHref && (
+                        <div className="mt-5 rounded-2xl bg-gradient-to-br from-green-600 to-green-700 p-5 md:p-6 shadow-xl shadow-green-700/20">
+                            {/* Banner başlık */}
+                            <div className="mb-4 text-center sm:text-left">
+                                <p className="text-white/90 font-extrabold text-lg md:text-2xl leading-snug">
+                                    {districtName || cityName
+                                        ? `${districtName || cityName} Çilingir — 7/24 Hizmet`
+                                        : 'Çilingir — 7/24 Hizmet'}
+                                </p>
+                                <p className="mt-1 flex items-center justify-center sm:justify-start gap-1.5 text-white/80 text-sm md:text-base font-medium">
+                                    <Clock className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                                    Ortalama 15 Dakikada Kapınızdayız
+                                </p>
+                            </div>
+
+                            {/* Butonlar */}
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                {/* Hemen Ara */}
+                                <a
+                                    href={telHref}
+                                    data-gtm="hemen-ara-cta"
+                                    id="hemen-ara-cta"
+                                    className="flex-1 inline-flex items-center justify-center gap-3 rounded-xl bg-white text-green-700 hover:bg-green-50 active:bg-green-100 font-extrabold text-base md:text-xl px-5 py-4 shadow-md transition-all duration-150 hover:shadow-lg hover:scale-[1.01] active:scale-[0.99]"
+                                    aria-label={`${firstLocksmith?.name || 'Çilingir'} hemen ara`}
+                                >
+                                    <Phone className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+                                    <span className="flex items-center gap-2 flex-wrap justify-center leading-tight">
+                                        <span>{firstPhone}</span>
+                                        <span className="font-bold opacity-80">— Hemen Ara</span>
+                                    </span>
+                                </a>
+
+                                {/* WhatsApp */}
+                                {whatsappHref && (
+                                    <a
+                                        href={whatsappHref}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        data-gtm="whatsapp-cta"
+                                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl text-white font-bold text-base md:text-lg px-5 py-4 transition-all duration-150 shadow-md"
+                                        style={{ backgroundColor: '#25D366' }}
+                                        aria-label="WhatsApp ile mesaj gönder"
+                                    >
+                                        <svg className="h-5 w-5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                                        </svg>
+                                        WhatsApp ile Yaz
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Çilingirler Listesi */}
             <section className="mb-4 md:mb-8">
@@ -369,7 +442,10 @@ export default function MainContent(params) {
                         <CardContent>
                             <h3 className="font-semibold text-lg mt-4 mb-2 text-gray-900">{detailedDistrictList.secondTitle}</h3>
                             <div className="flex flex-wrap gap-2">
-                                {detailedDistrictList.data.map((mahalle, index) => (
+                                {(isMahalleListOpen
+                                    ? detailedDistrictList.data
+                                    : detailedDistrictList.data.slice(0, MAHALLE_PREVIEW_COUNT)
+                                ).map((mahalle, index) => (
                                     <span key={index} className="inline-flex items-center px-3 py-1.5 rounded-full border border-gray-200 bg-white text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                                         <MapPin className="h-3 w-3 mr-1 text-gray-500" />
                                         <span className="font-medium">{mahalle.name}</span>
@@ -377,6 +453,26 @@ export default function MainContent(params) {
                                     </span>
                                 ))}
                             </div>
+
+                            {detailedDistrictList.data.length > MAHALLE_PREVIEW_COUNT && (
+                                <button
+                                    onClick={() => setIsMahalleListOpen(prev => !prev)}
+                                    className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                                    aria-expanded={isMahalleListOpen}
+                                >
+                                    {isMahalleListOpen ? (
+                                        <>
+                                            <ChevronUp className="h-4 w-4" />
+                                            Daha az göster
+                                        </>
+                                    ) : (
+                                        <>
+                                            <ChevronDown className="h-4 w-4" />
+                                            Tümünü Göster ({detailedDistrictList.data.length} mahalle)
+                                        </>
+                                    )}
+                                </button>
+                            )}
                         </CardContent>
                     </Card>
                 </section>

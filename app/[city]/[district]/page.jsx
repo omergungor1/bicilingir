@@ -4,6 +4,7 @@ import DistrictContent from '../../../components/district/DistrictContent';
 import { ServiceList } from '../../../lib/service-list';
 import { getMetaData, getLocksmithsList } from '../../utils/seo';
 import { getSupabaseServer } from '../../../lib/supabase';
+import { yerIsmiBulunmaEkiEkle } from '../../utils/stringUtils';
 import Script from 'next/script';
 import { notFound, permanentRedirect } from 'next/navigation';
 
@@ -456,8 +457,10 @@ async function getDistrictData(citySlug, districtSlug, servicetypeSlug) {
                 description: `${districtInfo.city} ${districtInfo.name} ilçesinde çilingir ve anahtarcı hizmetine mi ihtiyacınız var? ${districtInfo.name} çilingir, ${districtInfo.name} anahtarcı ve ${districtInfo.name} oto çilingir hizmetleri geniş bir ağla sunulmaktadır. ${districtInfo.name} en yakın çilingir ve ${districtInfo.name} en yakın anahtarcı hizmeti için aşağıda listelenen çilingirlerin hepsi ${districtInfo.city} ${districtInfo.name} ilçesinde hizmet vermektedir. ${districtInfo.name} çilingir numarası ile hemen iletişime geçebilirsiniz.`
             },
             locksmitList: {
-                title: `${districtInfo.city} ${districtInfo.name} Çilingirler ve Anahtarcılar - ${districtInfo.name} En Yakın Çilingir`,
-                description: `${districtInfo.name} en yakın çilingir ve ${districtInfo.name} en yakın anahtarcı hizmeti için size en yakın çilingirler bulundu. ${districtInfo.name} çilingir telefonu ile hemen arayabilir, ${districtInfo.name} anahtarcı hizmeti alabilirsiniz. Tüm çilingirler şuan açık ve 7/24 hizmet vermektedir. \n${districtInfo.name} ilçesine yakın ${locksmiths.length} çilingir bulundu. Hemen ara!`,
+                // title: `${districtInfo.city} ${districtInfo.name} Çilingirler ve Anahtarcılar - ${districtInfo.name} En Yakın Çilingir`,
+                title: `${districtInfo.name} Çilingir | 7/24 Hızlı ve Güvenilir Çilingir Hizmeti`,
+                // description: `${districtInfo.name} en yakın çilingir ve ${districtInfo.name} en yakın anahtarcı hizmeti için size en yakın çilingirler bulundu. ${districtInfo.name} çilingir telefonu ile hemen arayabilir, ${districtInfo.name} anahtarcı hizmeti alabilirsiniz. Tüm çilingirler şuan açık ve 7/24 hizmet vermektedir. \n${districtInfo.name} ilçesine yakın ${locksmiths.length} çilingir bulundu. Hemen ara!`,
+                description: `${yerIsmiBulunmaEkiEkle(districtInfo.name)} çilingir mi arıyorsunuz? 7/24 hizmet veren profesyonel çilingirlerimiz ortalama 15 dakikada kapınızda. Kapı açma, kilit değişimi ve acil çilingir hizmeti için hemen arayın.`,
                 data: locksmiths
             },
             seconCard: {
